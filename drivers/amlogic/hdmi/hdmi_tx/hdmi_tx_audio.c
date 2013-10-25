@@ -48,7 +48,10 @@ static void hdmi_tx_construct_aud_packet(Hdmi_tx_audio_para_t* audio_param, unsi
         hdmi_print(INF, AUD "Audio Type: PCM\n");
         if(AUD_DB){
 //Note: HDMI Spec V1.4 Page 154
-            AUD_DB[0] = (CT_PCM<<4)|(audio_param->channel_num) ;
+            if((audio_param->channel_num == CC_2CH) || (audio_param->channel_num == CC_REFER_TO_STREAM))
+                AUD_DB[0] = 0;
+            else
+                AUD_DB[0] = (0<<4)|(audio_param->channel_num);
             AUD_DB[1] = (FS_REFER_TO_STREAM<<2)|SS_REFER_TO_STREAM;
             AUD_DB[2] = 0x0;
             if(audio_param->channel_num == CC_6CH)
