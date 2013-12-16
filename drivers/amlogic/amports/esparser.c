@@ -427,6 +427,11 @@ void esparser_release(struct stream_buf_s *buf)
         return;
     }
 
+    if (atomic_read(&esparser_use_count) == 0) {
+        printk("[%s:%d]###warning, esparser has been released already\n", __FUNCTION__, __LINE__);
+        return;
+    }
+    
     if (atomic_dec_and_test(&esparser_use_count)) {
         WRITE_MPEG_REG(PARSER_INT_ENABLE, 0);
         free_irq(INT_PARSER, (void *)esparser_id);

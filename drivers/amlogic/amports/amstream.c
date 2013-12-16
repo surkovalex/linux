@@ -537,7 +537,7 @@ static  int audio_port_init(stream_port_t *port, struct stream_buf_s * pbuf)
 
 static void sub_port_release(stream_port_t *port, struct stream_buf_s * pbuf)
 {
-    if (port->sid == 0xffff) { // this is es sub
+    if ((port->sid == 0xffff) && ((port->type & (PORT_TYPE_MPPS | PORT_TYPE_MPTS)) == 0)) { // this is es sub
         esparser_release(pbuf);
     }
     stbuf_release(pbuf);
@@ -558,7 +558,7 @@ static int sub_port_init(stream_port_t *port, struct stream_buf_s * pbuf)
         return r;
     }
 
-    if (port->sid == 0xffff) { // es sub
+    if ((port->sid == 0xffff) && ((port->type & (PORT_TYPE_MPPS | PORT_TYPE_MPTS)) == 0)) { // es sub
         r = esparser_init(pbuf);
         if (r < 0) {
             sub_port_release(port, pbuf);
