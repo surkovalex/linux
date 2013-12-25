@@ -861,7 +861,7 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 
 	set_memory_start_addr(phys_offset);
 	set_memory_total_size(total);
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
 	early_init_dt_add_memory_arch(aml_reserved_end+1,phys_offset+total-aml_reserved_end-1-high_reserve_size);
 #else
 	if(aml_reserved_end+1 > FIRMWARE_ADDR)
