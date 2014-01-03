@@ -99,6 +99,60 @@
 
 	};
 
+/// ***************************************************************************************
+///	-	ION
+//$$ MODULE="ION"
+//$$ DEVICE="ion_dev"
+//$$ L2 PROP_STR = "status"
+	ion_dev {
+		compatible = "amlogic,ion_dev";
+		dev_name = "ion_dev";
+		status = "ok";
+		reserve-memory = <0x01200000>;
+	};
+
+//$$ DEVICE="deinterlace"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "reserve-memory"
+	deinterlace {
+		compatible = "amlogic,deinterlace";
+		dev_name = "deinterlace";
+		status = "okay";
+		reserve-memory = <0x02300000>;
+	};
+
+/// ***************************************************************************************
+///	-	DISP&MM-A/V stream
+//$$ MODULE = "DISP&MM-A/V stream"
+//$$ DEVICE="mesonstream"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 2 ="reserve-memory"
+	mesonstream {
+		compatible = "amlogic,mesonstream";
+		dev_name = "mesonstream.0";
+		status = "okay";
+		reserve-memory = <0x04000000 0x00a00000>;
+	};
+
+/// ***************************************************************************************
+///	-	DISP&MM-PostProcess
+//$$ MODULE="DISP&MM-PostProcess"
+//$$ DEVICE="ppmgr"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 ="reserve-memory"
+	ppmgr {
+		compatible = "amlogic,ppmgr";
+		dev_name = "ppmgr";
+		status = "okay";
+		reserve-memory = <0x02c00000>;
+	};
+
+
+/// ***************************************************************************************
+///	-	DISP&MM-Vout
+//$$ MODULE = "DISP&MM-Vout"
+//$$ DEVICE = "mesonvout"
+//$$ L2 PROP_STR = "status"
 	mesonvout {
 		compatible = "amlogic,mesonvout";
 		dev_name = "mesonvout";

@@ -19,6 +19,9 @@ endif
 ifeq ($(CONFIG_ARCH_MESON6TV),y)
 obj-y = m6/
 endif
+ifeq ($(CONFIG_ARCH_MESON6TVD),y)
+obj-y = m6tvd/
+endif
 ifeq ($(CONFIG_ARCH_MESON8),y)
 obj-y = m8/
 endif
@@ -38,8 +41,13 @@ ifeq ($(CONFIG_ARCH_MESON6TV),y)
 amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
 amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
 else
+ifeq ($(CONFIG_ARCH_MESON6TVD),y)
+amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+else
 amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amve.o amcm.o amstream_profile.o
 amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amve.o amcm.o amstream_profile.o
+endif
 endif
 endif
 endif
