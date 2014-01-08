@@ -54,7 +54,7 @@ int clk_enable_usb(struct clk *clk)
 {
 	int port_idx;
 	char * clk_name;
-	usb_peri_reg_t * peri_a,* peri_b,*peri;
+	usb_peri_reg_t * peri_a,* peri_b,* peri_c,*peri;
 	usb_config_data_t config;
 	usb_ctrl_data_t control;
 	int clk_sel,clk_div,clk_src;
@@ -77,6 +77,7 @@ int clk_enable_usb(struct clk *clk)
 #endif
 	peri_a = (usb_peri_reg_t *)P_USB_ADDR0;
 	peri_b = (usb_peri_reg_t *)P_USB_ADDR8;
+        peri_c = (usb_peri_reg_t *)P_USB_ADDR16;
 
 	if(!strcmp(clk_name,"usb0")){
 		peri = peri_a;
@@ -84,6 +85,9 @@ int clk_enable_usb(struct clk *clk)
 	}else if(!strcmp(clk_name,"usb1")){
 		peri = peri_b;
 		port_idx = USB_PORT_IDX_B;
+        }else if(!strcmp(clk_name,"usb2")){
+		peri = peri_c;
+		port_idx = USB_PORT_IDX_C;
 	}else{
 		printk(KERN_ERR "bad usb clk name: %s\n",clk_name);
 		return -1;
@@ -128,7 +132,7 @@ EXPORT_SYMBOL(clk_enable_usb);
 int clk_disable_usb(struct clk *clk)
 {
 	char * clk_name;
-	usb_peri_reg_t * peri_a,* peri_b,*peri;
+	usb_peri_reg_t * peri_a,* peri_b,* peri_c,*peri;
 
 	if(!clk)
 		return -1;
@@ -141,6 +145,8 @@ int clk_disable_usb(struct clk *clk)
 		peri = peri_a;
 	else if(!strcmp(clk_name,"usb1"))
 		peri = peri_b;
+        else if(!strcmp(clk_name,"usb2"))
+		peri = peri_c;
 	else{
 		printk(KERN_ERR "bad usb clk name: %s\n",clk_name);
 		return -1;

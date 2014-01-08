@@ -2838,6 +2838,11 @@ static int __init meson_clock_init(void)
   	meson_clk_register(&clk_usb1,&clk_xtal);
     clk_usb1.clk_gate_reg_adr = P_USB_ADDR8;
     clk_usb1.clk_gate_reg_mask = (1<<0);
+
+    CLK_DEFINE(usb2,xtal,31,NULL,clk_msr_get,clk_enable_usb,clk_disable_usb,"usb2");
+    meson_clk_register(&clk_usb2,&clk_xtal);
+    clk_usb2.clk_gate_reg_adr = P_USB_ADDR16;
+    clk_usb2.clk_gate_reg_mask = (1<<0);
     #endif
 
 	{
