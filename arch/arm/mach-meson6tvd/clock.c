@@ -41,6 +41,12 @@
 #include <plat/regops.h>
 #include <plat/cpufreq.h>
 #include <linux/printk.h>
+#ifdef CONFIG_AMLOGIC_USB
+#include <mach/usbclock.h>
+#endif
+#include <mach/am_regs.h>
+
+
 static DEFINE_SPINLOCK(mali_clk_lock);
 static DEFINE_SPINLOCK(clockfw_lock);
 static DEFINE_MUTEX(clock_ops_lock);
@@ -2819,19 +2825,21 @@ static int __init meson_clock_init(void)
 	//clk_mali.status = clk_status_mali;
 	CLK_PLL_CHILD_DEF(mali, fixed);
 	//clk_ops_register(&clk_mali, &mali_clk_ops);
-#if 0
+
+#ifdef CONFIG_AMLOGIC_USB
     // Add clk usb0
-    CLK_DEFINE(usb0,xtal,4,NULL,clk_msr_get,NULL,NULL,NULL);
+    CLK_DEFINE(usb0,xtal,4,NULL,clk_msr_get,clk_enable_usb,clk_disable_usb,"usb0");
     meson_clk_register(&clk_usb0,&clk_xtal);
     clk_usb0.clk_gate_reg_adr = P_USB_ADDR0;
     clk_usb0.clk_gate_reg_mask = (1<<0);
 
     // Add clk usb1
-    CLK_DEFINE(usb1,xtal,5,NULL,clk_msr_get,NULL,NULL,NULL);
+    CLK_DEFINE(usb1,xtal,5,NULL,clk_msr_get,clk_enable_usb,clk_disable_usb,"usb1");
   	meson_clk_register(&clk_usb1,&clk_xtal);
     clk_usb1.clk_gate_reg_adr = P_USB_ADDR8;
     clk_usb1.clk_gate_reg_mask = (1<<0);
-#endif
+    #endif
+
 	{
 		// Dump clocks
 		char *clks[] = {
