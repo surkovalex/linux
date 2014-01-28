@@ -109,6 +109,7 @@
 		dev_name = "ion_dev";
 		status = "ok";
 		reserve-memory = <0x01200000>;
+		reserve-iomap = "true";
 	};
 
 //$$ DEVICE="deinterlace"
@@ -119,6 +120,7 @@
 		dev_name = "deinterlace";
 		status = "okay";
 		reserve-memory = <0x02300000>;
+		reserve-iomap = "true";
 	};
 
 /// ***************************************************************************************
@@ -132,6 +134,7 @@
 		dev_name = "mesonstream.0";
 		status = "okay";
 		reserve-memory = <0x04000000 0x00a00000>;
+		reserve-iomap = "true";
 	};
 
 /// ***************************************************************************************
@@ -145,6 +148,7 @@
 		dev_name = "ppmgr";
 		status = "okay";
 		reserve-memory = <0x02c00000>;
+		reserve-iomap = "true";
 	};
 
 
@@ -164,6 +168,7 @@
 		dev_name = "mesonfb";
 		status = "okay";
 		reserve-memory = <0x01000000 0x00100000>;
+		reserve-iomap = "true";
 		vmode = <2>; /*0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P*/
 		display_size_default = <1920 1080 1920 2160 32>;
 	};
@@ -568,6 +573,7 @@
 		dev_name = "vdin0";
 		status = "ok";
 		reserve-memory = <0x2400000>;
+		reserve-iomap = "true";
 		irq = <115>;
 		vdin_id = <0>;
 	};
@@ -577,6 +583,7 @@
 		dev_name = "vdin1";
 		status = "ok";
 		reserve-memory = <0x2400000>;
+		reserve-iomap = "true";
 		irq = <117>;
 		vdin_id = <1>;
 	};
@@ -586,6 +593,7 @@
 		dev_name = "tvafe";
 		status = "ok";
 		reserve-memory = <0x500000>;
+		reserve-iomap = "true";
 		tvafe_id = <0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vga_pins>;
