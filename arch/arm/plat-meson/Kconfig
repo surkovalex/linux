@@ -26,9 +26,27 @@ config ARCH_MESON8
     help
         Enable support for Amlogic Meson8 based system
 
+config ARCH_MESON8B
+    bool "Meson8 baby series"
+    help
+        Enable support for Amlogic Meson8 baby based system
+
 endchoice
 
-choice
+menu "Meson development boards"
+
+source "arch/arm/mach-meson6/Kconfig.boards"
+source "arch/arm/mach-meson8/Kconfig.boards"
+source "arch/arm/mach-meson8b/Kconfig.boards"
+
+#if MESON_CUSTOM_BOARD_SUPPORT
+#isource "customer/meson/dt/Kconfig"
+#endif # MESON_CUSTOM_BOARD_SUPPORT
+
+endmenu # "Meson reference boards"
+
+choice 
+>>>>>>> 3c525bb... meson8b: compile ok
 	prompt "Interrupt Controller Select"
 	default MESON_ARM_GIC
 config MESON_IRQ
@@ -92,6 +110,7 @@ source "arch/arm/mach-meson6/Kconfig"
 source "arch/arm/mach-meson6tv/Kconfig"
 source "arch/arm/mach-meson6tvd/Kconfig"
 source "arch/arm/mach-meson8/Kconfig"
+source "arch/arm/mach-meson8b/Kconfig"
 
 config MESON_CUSTOM_BOARD_SUPPORT
 	bool "Support customer board"
@@ -99,6 +118,7 @@ config MESON_CUSTOM_BOARD_SUPPORT
 	help
 	  This enables board definition from external customer directory
 
+<<<<<<< HEAD
 menu "Meson development boards"
 
 source "arch/arm/mach-meson6/Kconfig.boards"
@@ -112,6 +132,8 @@ source "arch/arm/mach-meson8/Kconfig.boards"
 
 endmenu # "Meson reference boards"
 
+=======
+>>>>>>> 3c525bb... meson8b: compile ok
 menu "Meson customer board drivers"
 depends on MESON_CUSTOM_BOARD_SUPPORT
 #isource "customer/drivers/Kconfig"
