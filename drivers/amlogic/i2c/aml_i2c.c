@@ -62,7 +62,11 @@ struct aml_i2c_property{
 	int index;
 	kernel_ulong_t drv_data;
 };
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define AML_I2C_DEVICE_NUM		5
+#else
+#define AML_I2C_DEVICE_NUM		3
+#endif
 static struct aml_i2c_property aml_i2c_properties_config[];
 
 
@@ -1062,6 +1066,7 @@ static struct aml_i2c_platform aml_i2c_driver_data_b = {
     .master_state_name  = NULL,
 };
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static struct aml_i2c_platform aml_i2c_driver_data_c = {
     .wait_count         = 50000,
     .wait_ack_interval = 5,
@@ -1083,6 +1088,7 @@ static struct aml_i2c_platform aml_i2c_driver_data_d = {
     .master_i2c_speed   = AML_I2C_SPPED_300K,
     .master_state_name  = NULL,
 };
+#endif
 
 static struct aml_i2c_property aml_i2c_properties_config[AML_I2C_DEVICE_NUM]={
 	{
@@ -1097,6 +1103,7 @@ static struct aml_i2c_property aml_i2c_properties_config[AML_I2C_DEVICE_NUM]={
 		.name = "device_id",
 		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_b),
 	},
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	{
 		.name = "device_id",
 		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_c),
@@ -1105,6 +1112,7 @@ static struct aml_i2c_property aml_i2c_properties_config[AML_I2C_DEVICE_NUM]={
 		.name = "device_id",
 		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_d),
 	},
+#endif
 };
 
 #endif
