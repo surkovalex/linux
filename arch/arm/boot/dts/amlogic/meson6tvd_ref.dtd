@@ -341,6 +341,7 @@
 		compatible = "amlogic,aml_dummy_codec";
 		dev_name = "dummy_codec.0";
 	};
+
 	syno9629_codec {
 		status = "okay";
 		compatible = "amlogic,syno9629";

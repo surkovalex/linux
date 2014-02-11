@@ -191,13 +191,6 @@ static struct snd_soc_dai_link m6tv_audio_dai_link[] = {
 #endif
 };
 struct snd_soc_aux_dev m6tv_audio_aux_dev[] = {
-#ifdef CONFIG_SND_AML_M6TV_RT5631
-	{
-		.name = "rt5631",
-		.codec_name = "rt5631.0-001a",
-		.init = NULL,
-	},
-#endif
 #ifdef CONFIG_SND_AML_M6TV_STA380
 	{
 		.name = "sta381xx",
