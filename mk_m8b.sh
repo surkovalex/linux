@@ -4,8 +4,8 @@
 make uImage -j
 #make modules
 
-make meson8_skt.dtd
-make meson8_skt.dtb
+make meson8b_skt.dtd
+make meson8b_skt.dtb
 
 #cd ../root/g18
 #find .| cpio -o -H newc | gzip -9 > ../ramdisk.img
