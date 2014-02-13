@@ -187,7 +187,7 @@ static u32 last_interlaced;
 static u8 neg_poc_counter;
 static unsigned char h264_first_pts_ready;
 static u32 h264pts1, h264pts2;
-static u32 h264_pts_count, duration_from_pts_done;
+static u32 h264_pts_count, duration_from_pts_done,duration_on_correcting;
 static u32 vh264_error_count;
 static u32 vh264_no_disp_count;
 static u32 fatal_error_flag;
@@ -950,10 +950,10 @@ static void vh264_isr(void)
                 
                     if (pts_valid && (pts > h264pts1) && h264_pts_count > 24) {
                         if (duration_from_pts_done == 0) {
+                            unsigned int old_duration=frame_dur;
                             h264pts2 = pts;
 						
                             pts_duration = ((h264pts2 - h264pts1) / h264_pts_count) * 16 / 15;
-                            duration_from_pts_done = 1;
 
 							if ((pts_duration != frame_dur) && (!pts_outside)) {
 								if(use_idr_framerate)
@@ -963,11 +963,29 @@ static void vh264_isr(void)
 										|| (close_to(pts_duration, RATE_25_FPS, RATE_CORRECTION_THRESHOLD) &&
 										close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD))) {
 										frame_dur = pts_duration;
+										duration_from_pts_done = 1;
+										printk("used calculate frame rate,on frame_dur problem=%d\n",frame_dur);
+									}else if(frame_dur<96000/240 && pts_duration>96000/240 || duration_on_correcting){//>if frameRate>240fps,I think have error,use calculate rate.
+										frame_dur = pts_duration;
+										//printk("used calculate frame rate,on frame_dur error=%d\n",frame_dur);
+										duration_on_correcting=1;
 									}
 								} else {
 									frame_dur = pts_duration;
+									//printk("used calculate frame rate,on duration =%d\n",frame_dur);
 								}
                             }
+							if(duration_from_pts_done == 0){
+								if(close_to(pts_duration, old_duration, RATE_CORRECTION_THRESHOLD)){
+									//printk("finished correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
+									duration_from_pts_done = 1;
+								}else{/*not the same,redo it.*/
+								   // printk("restart correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
+									h264pts1 = h264pts2;
+									h264_pts_count = 0;
+									duration_from_pts_done = 0;
+								}
+							}
                         }
                     }
                 }
@@ -1452,7 +1470,7 @@ static s32 vh264_init(void)
 
     vh264_running = 0;    //init here to reset last_mb_width&last_mb_height
     vh264_eos = 0;
-
+    duration_on_correcting=0;
     vh264_local_init();
 
     query_video_status(0, &trickmode_fffb);
