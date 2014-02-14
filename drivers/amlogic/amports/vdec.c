@@ -94,7 +94,7 @@ HHI_VDEC_CLK_CNTL
     VDEC1_CLOCK_OFF(); \
     VDEC1_255M(); \
     VDEC1_CLOCK_ON(); \
-    clock_level = 0; 
+    clock_level = 0;
 
 #define vdec_clock_hi_enable() \
     VDEC1_CLOCK_OFF(); \
@@ -106,7 +106,7 @@ HHI_VDEC_CLK_CNTL
     VDEC2_CLOCK_OFF(); \
     VDEC2_255M(); \
     VDEC2_CLOCK_ON(); \
-    clock_level2 = 0; 
+    clock_level2 = 0;
 
 #define vdec2_clock_hi_enable() \
     VDEC2_CLOCK_OFF(); \
@@ -119,13 +119,14 @@ HHI_VDEC_CLK_CNTL
     HCODEC_255M(); \
     HCODEC_CLOCK_ON();
 
-#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD))
+
 /*
 HHI_VDEC_CLK_CNTL..
 bits,9~11:
 0x106d[11:9] :
-0 for fclk_div2,  1GHz   
-1 for fclk_div3,  2G/3Hz  
+0 for fclk_div2,  1GHz
+1 for fclk_div3,  2G/3Hz
 2 for fclk_div5, 2G/5Hz
 3 for fclk_div7, 2G/7HZ
 
@@ -194,7 +195,7 @@ bit8: vdec.gate
 #define SUPPORT_VCODEC_NUM  1
 static int inited_vcodec_num = 0;
 static int clock_level;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static int clock_level2;
 #endif
 static struct platform_device *vdec_device = NULL;
@@ -326,7 +327,7 @@ s32 vdec_release(vformat_t vf)
     return 0;
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 void vdec_poweron(vdec_type_t core)
 {
     ulong flags;
@@ -525,7 +526,7 @@ static ssize_t amrisc_regs_show(struct class *class, struct class_attribute *att
     int i;
     unsigned  val;
 	unsigned long flags;
-	
+
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     spin_lock_irqsave(&lock, flags);
 	if(!vdec_on(VDEC_1)){
