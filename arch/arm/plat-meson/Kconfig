@@ -16,6 +16,11 @@ config ARCH_MESON6TV
     help
         Enable support for Amlogic Meson6TV based system
 
+config ARCH_MESON6TVD
+    bool "Meson6TVD series"
+    help
+        Enable support for Amlogic Meson6TVD based system
+
 config ARCH_MESON8
     bool "Meson8 series"
     help
@@ -85,6 +90,7 @@ config MESON_CPU_EMULATOR
 
 source "arch/arm/mach-meson6/Kconfig"
 source "arch/arm/mach-meson6tv/Kconfig"
+source "arch/arm/mach-meson6tvd/Kconfig"
 source "arch/arm/mach-meson8/Kconfig"
 
 config MESON_CUSTOM_BOARD_SUPPORT
@@ -97,6 +103,7 @@ menu "Meson development boards"
 
 source "arch/arm/mach-meson6/Kconfig.boards"
 source "arch/arm/mach-meson6tv/Kconfig.boards"
+source "arch/arm/mach-meson6tvd/Kconfig.boards"
 source "arch/arm/mach-meson8/Kconfig.boards"
 
 #if MESON_CUSTOM_BOARD_SUPPORT

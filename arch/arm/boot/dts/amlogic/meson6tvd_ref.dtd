@@ -1,0 +1,544 @@
+/*
+ * Amlogic-MX REF Device Tree Source
+ *
+ * Copyright Amlogic 2013
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ */
+
+/dts-v1/;
+/{
+	compatible = "AMLOGIC,8726_MX";
+	model = "AMLOGIC";
+	interrupt-parent = <&gic>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <0x200>;
+		};
+
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <0x1>;
+		};
+	};
+
+	/*start memory config*/
+	memory {
+		device_type = "memory";
+		aml_reserved_start = <0x85000000>;
+		aml_reserved_end = <0x84000000>;
+		phys_offset = <0x80000000>;
+		linux,total-memory = <0x40000000>;
+	};
+
+	gic:interrupt-controller {
+	        compatible = "arm,cortex-a9-gic";
+	        reg = <0xc4301000 0x1000
+	               0xc4300100 0x0100>;
+	        interrupt-controller;
+	        #interrupt-cells = <3>;
+	        #address-cells = <0>;
+	};
+
+	uart_ao {
+		compatible = "amlogic,aml_uart";
+		port_name = "uart_ao";
+		status = "okay";
+		dev_name = "uart_ao";
+		pinctrl-names = "default";
+		pinctrl-0 = <&ao_uart_pins>;
+	};
+
+	uart_0 {
+		compatible = "amlogic,aml_uart";
+		port_name = "uart_a";
+		status = "okay";
+		dev_name = "uart_0";
+		pinctrl-names = "default";
+	};
+
+	uart_1 {
+		compatible = "amlogic,aml_uart";
+		port_name = "uart_b";
+		status = "disabled";
+		dev_name = "uart_1";
+	};
+
+	uart_2 {
+		compatible = "amlogic,aml_uart";
+		port_name = "uart_c";
+		status = "disabled";
+		dev_name = "uart_2";
+	};
+
+	uart_3 {
+		compatible = "amlogic,aml_uart";
+		port_name = "uart_d";
+		status = "ok";
+		dev_name = "uart_3";
+	};
+
+	mesonvout {
+		compatible = "amlogic,mesonvout";
+		dev_name = "mesonvout";
+		status = "okay";
+	};
+
+	mesonfb {
+		compatible = "amlogic,mesonfb";
+		dev_name = "mesonfb";
+		status = "okay";
+		reserve-memory = <0x01000000 0x00100000>;
+		vmode = <2>; /*0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P*/
+		display_size_default = <1920 1080 1920 2160 32>;
+	};
+
+	aml_pm {
+		compatible = "amlogic,pm";
+		dev_name = "aml_pm";
+		status = "okay";
+	};
+
+	cpufreq-meson {
+		compatible = "amlogic,cpufreq-meson";
+		status = "okay";
+	};
+
+
+	i2c@c1108500 { /*I2C-A*/
+		compatible = "amlogic,aml_i2c";
+		dev_name = "i2c-A";
+		status = "ok";
+		reg = <0xC1108500 0x20>;
+		device_id = <1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&a_i2c_master>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+
+	i2c@c11087c0 { /*I2C-B*/
+		compatible = "amlogic,aml_i2c";
+		dev_name = "i2c-B";
+		status = "ok";
+		reg = <0xC11087C0 0x20>;
+		device_id = <2>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&b_i2c_master>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+
+	lvds {
+		compatible = "amlogic,lvds";
+		status = "okay";
+		basic_setting = <1920 1080 2200 1125 16 9 127 203 2 8>; /**  hactive,vactive,hperiod,vperiod,hstart,vstart, */
+		                                             /**  hratio,vratio,screen_width,screen_height,lvd_type,lcd bit */
+		delay_setting = <500 50 20 20 50 0 0 200>;  /** CLK ON/OFF,PWM ON/OFF,PANEL_PWR ON/OFF,BL ON/OFF delay */
+
+	};
+
+	audio {
+		compatible = "amlogic,aml-audio";
+		dev_name = "aml-audio.0";
+	};
+
+	audio_dai {
+		compatible = "amlogic,aml-dai";
+		dev_name = "aml-dai.0";
+	};
+
+
+	dummy_codec_audio {
+		status = "okay";
+		compatible = "amlogic,aml_dummy_codec_audio";
+		dev_name = "aml_dummy_codec_audio.0";
+		pinctrl-names = "dummy_codec_audio";
+		pinctrl-0 = <&aml_dummy_codec_pins>;
+	};
+
+	dummy_codec {
+		status = "okay";
+		compatible = "amlogic,aml_dummy_codec";
+		dev_name = "dummy_codec.0";
+	};
+
+	sdio {
+		compatible = "amlogic,aml_sdio";
+		dev_name = "aml_sdio.0";
+		reg = <0xc1108c20 0x20>;
+		pinctrl-names = "sd_clk_cmd_pins", "sd_all_pins", "emmc_clk_cmd_pins", "emmc_all_pins", "sdio_clk_cmd_pins", "sdio_all_pins"; /*sd:sdio_b, emmc:sdio_c, sdio:sdio_a*/
+		// pinctrl-0 = <&sd_pins>;
+		// pinctrl-1 = <&emmc_pins>;
+		// pinctrl-2 = <&sdio_pins>;
+		pinctrl-0 = <&sd_clk_cmd_pins>;
+		pinctrl-1 = <&sd_all_pins>;
+		pinctrl-2 = <&emmc_clk_cmd_pins>;
+		pinctrl-3 = <&emmc_all_pins>;
+		pinctrl-4 = <&sdio_clk_cmd_pins>;
+		pinctrl-5 = <&sdio_all_pins>;
+
+		sd {
+			port = <1>; /*0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+			pinname = "sd";
+			ocr_avail = <0x200000>;		/*VDD voltage 3.3 ~ 3.4 */
+			caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED";
+			f_min = <300000>;
+			f_max = <40000000>;
+			f_max_w = <40000000>;
+			max_req_size = <0x20000>;	/*128KB*/
+			gpio_dat3 = "CARD_3";
+			gpio_cd = "CARD_6";
+			gpio_power = "CARD_8";
+			power_level = <0>;
+			irq_in = <5>;
+			#irq_in_edge = "GPIO_IRQ_FALLING";
+			irq_out = <6>;
+			#irq_out_edge = "GPIO_IRQ_RISING";
+			card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+		};
+
+		emmc {
+			port = <2>; /*0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+			pinname = "emmc";
+			ocr_avail = <0x200000>; /*VDD voltage 3.3 ~ 3.4 */
+			caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
+			f_min = <300000>;
+			f_max = <50000000>;
+			f_max_w = <50000000>;
+			max_req_size = <0x20000>; /*128KB*/
+			gpio_dat3 = "BOOT_3";
+			#gpio_cd = "CARD_6";
+			#gpio_power = "CARD_8";
+			#power_level = <0>;
+			card_type = <1>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+		};
+	}; /* end of sdio */
+
+	saradc {
+		compatible = "amlogic,saradc";
+		status = "okay";
+	};
+
+	adc_keypad {
+		compatible = "amlogic,adc_keypad";
+		status = "okay";
+		key_num = <5>;
+		name_len = <20>;
+		key_name = "menu","vol-","vol+","back","home";
+		key_code = <139 114 115 158 102>;
+		key_chan = <4 4 4 4 4>;
+		key_val = <9 275 150 392 513>;
+		key_tolerance = <40 40 40 40 40>;
+	};
+
+	key_input {
+		compatible = "amlogic,key_input";
+		status = "okay";
+		scan_period = <20>;
+		fuzz_time = <60>;
+		key_code_list = <116>;
+		key_num = <1>;
+		config = <0>;
+	};
+
+	meson-remote {
+		compatible = "amlogic,aml_remote";
+		dev_name = "meson-remote";
+		status = "okay";
+		ao_baseaddr = <0xf3100480>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&remote_pins>;
+	};
+
+	gpio:gpio {
+		compatible = "amlogic,m6tv-gpio";
+		dev_name = "gpio";
+		#gpio-cells = <2>;
+	};
+
+	pinmux {
+		compatible = "amlogic,pinmux-m6tv";
+		dev_name = "pinmux";
+		#pinmux-cells = <2>;
+
+		ao_uart_pins:ao_uart {
+			amlogic,setmask = <10 0x1800>;
+			amlogic,pins = "GPIOAO_0", "GPIOAO_1";
+		};
+
+		a_i2c_master:a_i2c {
+			amlogic,setmask = <5 0xC0000000>;
+			amlogic,clrmask = <5 0x30000000>;
+			amlogic,pins = "GPIOZ_6","GPIOZ_7";
+		};
+
+		b_i2c_master:b_i2c {
+			amlogic,setmask = <5 0x0C000000>;
+			amlogic,clrmask = <5 0x03000000>;
+			amlogic,pins = "GPIOZ_8","GPIOZ_9";
+		};
+
+		aml_dummy_codec_pins:aml_dummy_codec_pins {
+			amlogic,setmask = <8 0x6A00000
+					   3 0x800000>;
+			amlogic,clrmask = <8 0x1461000
+					   1 0x1
+					   3 0x5400000
+					   7 0x10000000>;
+			amlogic,pins = "GPIOZ_14", "GPIOZ_15", "GPIOZ_16", "GPIOZ_17", "GPIOZ_19";
+		};
+
+		sdio_all_pins:sdio_all_pins {
+			amlogic,setmask = <8 0x0000003f>;	/*sdio a*/
+			amlogic,clrmask = <6 0x3f000000		/*sdio c*/
+					   2 0x0000fc00		/*sdio b*/
+					   5 0x00006c00>;	/*sdhc a*/
+			amlogic,pins = "GPIOX_0","GPIOX_1","GPIOX_2","GPIOX_3","GPIOX_8","GPIOX_9";
+			amlogic,enable-output = <1>; /* 0:output, 1:input */
+			amlogic,pullup = <0>;
+		};
+
+		sdio_clk_cmd_pins:sdio_clk_cmd_pins {
+			amlogic,setmask = <8 0x00000003>;	/*sdio a*/
+			amlogic,clrmask = <6 0x3f000000		/*sdio c*/
+					   2 0x0000fc00		/*sdio b*/
+					   5 0x00006c00>;	/*sdhc a*/
+			amlogic,pins = "GPIOX_8","GPIOX_9";
+			amlogic,enable-output = <1>; /* 0:output, 1:input */
+			amlogic,pullup = <0>;
+		};
+
+		sd_all_pins:sd_all_pins {
+			amlogic,setmask = <2 0x0000fc00>;	/*sdio b*/
+			amlogic,clrmask = <6 0x3f000000		/*sdio c*/
+					   8 0x0000003f		/*sdio a*/
+					   2 0x000000f0>;	/*sdhc b*/
+			amlogic,pins = "CARD_0","CARD_1","CARD_2","CARD_3","CARD_4","CARD_5";
+			amlogic,enable-output = <1>; /* 0:output, 1:input */
+			amlogic,pullup = <0>;
+		};
+
+		sd_clk_cmd_pins:sd_clk_cmd_pins {
+			amlogic,setmask = <2 0x00000c00>;	/*sdio b*/
+			amlogic,clrmask = <6 0x3f000000		/*sdio c*/
+					   8 0x0000003f		/*sdio a*/
+					   2 0x000000f0>;	/*sdhc b*/
+			amlogic,pins = "CARD_4","CARD_5"; /* CARD_4:CLK, CARD_5:CMD */
+			amlogic,enable-output = <1>; /* 0:output, 1:input */
+			amlogic,pullup = <0>;
+		};
+
+		emmc_all_pins:emmc_all_pins {
+			amlogic,setmask = <6 0x3f000000>;	/*sdio c, */
+			amlogic,clrmask = <2 0x04c3fc00		/*sdio b & nand*/
+					   8 0x0000003f		/*sdio a*/
+					   4 0x6c000000		/*sdhc c*/
+					   3 0x80000000>;	/*I2C*/
+			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_10","BOOT_11";
+			amlogic,enable-output = <1>; /* 0:output, 1:input */
+			amlogic,pullup = <0>;
+		};
+
+		emmc_clk_cmd_pins:emmc_clk_cmd_pins {
+			amlogic,setmask = <6 0x03000000>;	/*bit[24-25] */
+			amlogic,clrmask = <2 0x04c3fc00		/*sdio b & nand*/
+					   8 0x0000003f		/*sdio a*/
+					   4 0x6c000000		/*sdhc c*/
+					   3 0x80000000>;	/*I2C*/
+			amlogic,pins = "BOOT_10","BOOT_11";
+			amlogic,enable-output = <1>; /* 0:output, 1:input */
+			amlogic,pullup = <0>;
+		};
+
+		remote_pins:remote_pin {
+			amlogic,setmask = <10 0x1>;
+			amlogic,pins = "GPIOAO_7";
+		};
+	}; /* end of pinmux*/
+
+	hdmirx {
+		compatible = "amlogic,hdmirx";
+		dev_name = "hdmirx";
+	};
+
+	vdin0 {
+		compatible = "amlogic,vdin";
+		dev_name = "vdin0";
+		status = "ok";
+		reserve-memory = <0x2400000>;
+		irq = <115>;
+		vdin_id = <0>;
+	};
+
+	vdin1 {
+		compatible = "amlogic,vdin";
+		dev_name = "vdin1";
+		status = "ok";
+		reserve-memory = <0x2400000>;
+		irq = <117>;
+		vdin_id = <1>;
+	};
+
+	tvafe {
+		compatible = "amlogic,tvafe";
+		dev_name = "tvafe";
+		status = "ok";
+		reserve-memory = <0x500000>;
+		tvafe_id = <0>;
+		tvafe_pin_mux = < /*!!particular sequence, no more and no less!!!*/
+			1	/*// TVAFE_ADC_PIN_A_PGA_0,  //CVBS0_Y = 0,*/
+			48	/*// TVAFE_ADC_PIN_SOG_7,    //CVBS0_SOG,*/
+			3	/*// TVAFE_ADC_PIN_A_PGA_2,  //CVBS1_Y,share with ypbpr*/
+			41	/*// TVAFE_ADC_PIN_SOG_0,    //CVBS1_SOG,*/
+			2	/*// TVAFE_ADC_PIN_A_PGA_1,  //CVBS2_Y,*/
+			41	/*// TVAFE_ADC_PIN_SOG_0,    //CVBS2_SOG,*/
+			12	/*// TVAFE_ADC_PIN_A_3,  //CVBS3_Y,*/
+			48	/*// TVAFE_ADC_PIN_SOG_7,    //CVBS3_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS4_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS4_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS5_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS5_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS6_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS6_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS7_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //CVBS7_SOG,*/
+			3	/*// TVAFE_ADC_PIN_A_PGA_2,  //S_VIDEO0_Y,*/
+			21	/*// TVAFE_ADC_PIN_B_4,  //S_VIDEO0_C,*/
+			47	/*// TVAFE_ADC_PIN_SOG_6,    //S_VIDEO0_SOG,*/
+			4	/*// TVAFE_ADC_PIN_A_PGA_3,  //S_VIDEO1_Y,*/
+			29	/*// TVAFE_ADC_PIN_C_4,   //S_VIDEO1_C,*/
+			48	/*// TVAFE_ADC_PIN_SOG_7,    //S_VIDEO1_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO2_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO2_C,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO2_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO3_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO3_C,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO3_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO4_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO4_C,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO4_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO5_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO5_C,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO5_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO6_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO6_C,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO6_SOG,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO7_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO7_C,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //S_VIDEO7_SOG,*/
+			11	/*// TVAFE_ADC_PIN_A_2,     //VGA0_G,*/
+			19	/*// TVAFE_ADC_PIN_B_2,     //VGA0_B,*/
+			27	/*// TVAFE_ADC_PIN_C_2,     //VGA0_R,*/
+			43	/*// TVAFE_ADC_PIN_SOG_2,    //VGA0_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA1_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA1_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA1_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA1_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA2_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA2_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA2_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA2_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA3_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA3_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA3_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA3_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA4_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA4_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA4_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA4_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA5_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA5_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA5_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA5_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA6_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA6_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA6_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA6_SOG*/
+			0	/*/ TVAFE_ADC_PIN_NULL,     //VGA7_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA7_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA7_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //VGA7_SOG*/
+			9	/*// TVAFE_ADC_PIN_A_0,     //COMP0_Y,*/
+			17	/*// TVAFE_ADC_PIN_B_0,     //COMP0_PB,*/
+			25	/*// TVAFE_ADC_PIN_C_0,     //COMP0_PR,*/
+			41	/*// TVAFE_ADC_PIN_SOG_0,    //COMP0_SOG*/
+			10	/*// TVAFE_ADC_PIN_A_1,     //COMP1_Y,*/
+			18	/*// TVAFE_ADC_PIN_B_1,     //COMP1_PB,*/
+			26	/*// TVAFE_ADC_PIN_C_1,     //COMP1_PR,*/
+			42	/*// TVAFE_ADC_PIN_SOG_1,    //COMP1_SOG*/
+			11	/*// TVAFE_ADC_PIN_A_2,     //COMP2_Y,*/
+			19	/*// TVAFE_ADC_PIN_B_2,     //COMP2_PB,*/
+			27	/*// TVAFE_ADC_PIN_C_2,     //COMP2_PR,*/
+			43	/*// TVAFE_ADC_PIN_SOG_2,    //COMP2_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP3_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP3_PB,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP3_PR,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP3_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP4_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP4_PB,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP4_PR,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP4_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP5_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP5_PB,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP5_PR,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP5_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP6_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP6_PB,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP6_PR,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP6_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP7_Y,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP7_PB,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP7_PR,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //COMP7_SOG*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART0_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART0_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART0_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART0_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART1_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART1_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART1_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART1_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART2_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART2_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART2_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART2_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART3_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART3_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART3_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART3_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART4_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART4_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART4_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART4_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART5_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART5_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART5_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART5_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART6_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART6_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART6_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART6_CVBS,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART7_G,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART7_B,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART7_R,*/
+			0	/*// TVAFE_ADC_PIN_NULL,     //SCART7_CVBS,*/
+		>;
+	};
+
+}; /* end of / */
+
