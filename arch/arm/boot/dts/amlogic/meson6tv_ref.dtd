@@ -212,6 +212,14 @@
 		pinctrl-0 = <&remote_pins>;
 	};
 
+	meson-eth {
+		compatible = "amlogic,meson-eth";
+		dev_name = "meson-eth";
+		status = "okay";
+		ethbaseaddr = <0xf3610000>;
+		interruptnum = <40>;
+	};
+
 	gpio:gpio {
 		compatible = "amlogic,m6tv-gpio";
 		dev_name = "gpio";
