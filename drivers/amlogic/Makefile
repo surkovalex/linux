@@ -52,7 +52,7 @@ obj-$(CONFIG_AM_CANVAS) += canvas/
 obj-y += amports/
 
 # ve&cm
-#obj-y += amvecm/
+obj-y += amvecm/
 
 obj-$(CONFIG_I2C) += i2c/
 
