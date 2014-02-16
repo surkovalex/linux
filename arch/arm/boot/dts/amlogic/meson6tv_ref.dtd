@@ -90,6 +90,14 @@
 		dev_name = "uart_3";
 	};
 
+	lvds {
+		compatible = "amlogic,lvds";
+		status = "okay";
+		basic_setting = <1920 1080 2200 1125 16 9 127 203 2 8>; /**  hactive,vactive,hperiod,vperiod,hstart,vstart, */
+		/**  hratio,vratio,screen_width,screen_height,lvd_type,lcd bit */
+		delay_setting = <500 50 20 20 50 0 0 200>;  /** CLK ON/OFF,PWM ON/OFF,PANEL_PWR ON/OFF,BL ON/OFF delay */
+	};
+
 	mesonvout {
 		compatible = "amlogic,mesonvout";
 		dev_name = "mesonvout";
@@ -142,11 +150,6 @@
 		#size-cells = <0>;
 	};
 
-
-	lvds {
-		compatible = "amlogic,lvds";
-		status = "okay";
-	};
 
 	audio {
 		compatible = "amlogic,aml-audio";

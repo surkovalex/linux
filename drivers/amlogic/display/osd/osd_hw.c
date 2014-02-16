@@ -2346,14 +2346,14 @@ void osd_init_hw(u32  logo_loaded)
 	osd_hw.updated[OSD1]=0;
 	osd_hw.updated[OSD2]=0;
 	//here we will init default value ,these value only set once .
-#ifdef CONFIG_ARCH_MESON6TV
+#if defined(CONFIG_ARCH_MESON6TVD)||(defined(CONFIG_ARCH_MESON6TV))
 	aml_set_reg32_mask(P_VPU_OSD1_MMC_CTRL, 1<<12); // set OSD to vdisp2
 	aml_write_reg32(P_MMC_CHAN4_CTRL, 0xc01f); // adjust vdisp weight and age limit
 #endif
 	if(!logo_loaded)
 	{
 		data32 = 1;          // Set DDR request priority to be urgent
-		#ifdef CONFIG_ARCH_MESON6TV
+#if defined(CONFIG_ARCH_MESON6TVD)||(defined(CONFIG_ARCH_MESON6TV))
 		data32 |= 18  << 5;  // hold_fifo_lines
 		#else
 		data32 |= 4   << 5;  // hold_fifo_lines
@@ -2368,7 +2368,7 @@ void osd_init_hw(u32  logo_loaded)
 		aml_clr_reg32_mask(P_VPP_MISC, VPP_PREBLEND_EN);
 		aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND|VPP_OSD2_POSTBLEND );
 		// just disable osd to avoid booting hang up
-		#ifdef CONFIG_ARCH_MESON6TV
+		#if defined(CONFIG_ARCH_MESON6TVD)||(defined(CONFIG_ARCH_MESON6TV))
 		data32 = 0x0 << 0; // osd_blk_enable
 		#else
 		data32 = 0x1 << 0;
