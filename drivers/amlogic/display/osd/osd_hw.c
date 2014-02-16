@@ -39,7 +39,6 @@
 #include <linux/amlogic/amports/vframe_receiver.h>
 #include "osd_hw_def.h"
 #include "osd_prot.h"
-//#include <mach/utils.h>
 #include "osd_antiflicker.h"
 
 #ifdef CONFIG_AML_VSYNC_FIQ_ENABLE
@@ -1679,7 +1678,7 @@ static   void  osd1_update_color_mode(void)
 		data32 |= osd_hw.fb_gem[OSD1].canvas_idx << 16 ;
 		if(!osd_hw.rotate[OSD1].on_off)
 		data32 |= OSD_DATA_LITTLE_ENDIAN	 <<15 ;
-		
+
 		data32 |= osd_hw.color_info[OSD1]->hw_colormat<< 2;
 		if(osd_hw.color_info[OSD1]->color_index < COLOR_INDEX_YUV_422)
 			data32 |= 1                      << 7; /* rgb enable */
@@ -1700,7 +1699,7 @@ static   void  osd2_update_color_mode(void)
 		data32 |= osd_hw.fb_gem[OSD2].canvas_idx << 16 ;
 		if(!osd_hw.rotate[OSD1].on_off)
 		data32 |= OSD_DATA_LITTLE_ENDIAN	 <<15 ;
-		
+
 		data32 |= osd_hw.color_info[OSD2]->hw_colormat<< 2;
 		if(osd_hw.color_info[OSD2]->color_index < COLOR_INDEX_YUV_422)
 			data32 |= 1                      << 7; /* rgb enable */
@@ -1924,7 +1923,7 @@ static void osd2_update_disp_osd_rotate(void)
 	  case 1:
 	  y_rev=1;
 	  break;
-	  case 2://anti-clockwise  
+	  case 2://anti-clockwise
 	  x_rev=1;
           break;
 	  case 3://anti-clockwise H flip(dst)
@@ -1932,7 +1931,7 @@ static void osd2_update_disp_osd_rotate(void)
 	  y_rev=1;
 	  break;
 	}
-	
+
 	x_start = osd_hw.rotation_pandata[OSD2].x_start;
 	x_end = osd_hw.rotation_pandata[OSD2].x_end;
 	y_start = osd_hw.rotation_pandata[OSD2].y_start;
