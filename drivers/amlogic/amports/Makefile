@@ -17,7 +17,7 @@ ifeq ($(CONFIG_ARCH_MESON6),y)
 obj-y = m6/
 endif
 ifeq ($(CONFIG_ARCH_MESON6TV),y)
-obj-y = m6/
+obj-y = m6tv/
 endif
 ifeq ($(CONFIG_ARCH_MESON6TVD),y)
 obj-y = m6tvd/
