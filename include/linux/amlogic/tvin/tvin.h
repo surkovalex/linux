@@ -433,6 +433,8 @@ typedef struct tvin_info_s {
         enum tvin_trans_fmt    trans_fmt;
         enum tvin_sig_fmt_e    fmt;
         enum tvin_sig_status_e status;
+		enum tvin_color_fmt_e  cfmt;
+		unsigned int		   fps;
         unsigned int           reserved;
 }tvin_info_t;
 
@@ -452,22 +454,25 @@ typedef struct tvin_video_buf_s {
 
 // hs=he=vs=ve=0 is to disable Cut Window
 typedef struct tvin_cutwin_s {
-        unsigned int hs;
-        unsigned int he;
-        unsigned int vs;
-        unsigned int ve;
+        unsigned short hs;
+        unsigned short he;
+        unsigned short vs;
+        unsigned short ve;
 } tvin_cutwin_t;
 
 typedef struct tvin_parm_s {
         int                         index;    // index of frontend for vdin
         enum tvin_port_e            port;     // must set port in IOCTL
         struct tvin_info_s          info;
-        struct tvin_cutwin_s        cutwin;
         unsigned int                hist_pow;
         unsigned int                luma_sum;
         unsigned int                pixel_sum;
         unsigned short              histgram[64];
         unsigned int                flag;
+	unsigned short              dest_width;//for vdin horizontal scale down
+	unsigned short              dest_height;//for vdin vertical scale down
+		bool                h_reverse;//for vdin horizontal reverse
+		bool                v_reverse;//for vdin vertical reverse
         unsigned int                reserved;
 } tvin_parm_t;
 
