@@ -127,7 +127,8 @@ obj-$(CONFIG_AMLOGIC_MIPI) += mipi/
 
 #obj-$(CONFIG_D2D3_PROCESS) += d2d3/
 
-#obj-$(CONFIG_AML_REG_DEBUG) += regd/
+obj-$(CONFIG_AML_REG_DEBUG) += regd/
+
 #obj-$(CONFIG_AMLOGIC_SPI_HW_MASTER) += spi/
 
 #obj-$(CONFIG_DEFERRED_DRIVERINIT) +=  load_deferred_module/

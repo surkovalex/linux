@@ -10,7 +10,7 @@ menu "Amlogic Device Drivers"
 comment "Char devices"
 
 source "drivers/amlogic/early_init/Kconfig"
-#source "drivers/amlogic/regd/Kconfig"
+source "drivers/amlogic/regd/Kconfig"
 source "drivers/amlogic/uart/Kconfig"
 source "drivers/amlogic/of/Kconfig"
 source "drivers/amlogic/rtc/Kconfig"
