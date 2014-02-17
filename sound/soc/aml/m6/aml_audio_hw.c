@@ -724,7 +724,7 @@ void audio_set_clk(unsigned freq, unsigned fs_config)
 	// gate the clock on
 	WRITE_MPEG_REG( HHI_AUD_CLK_CNTL, READ_MPEG_REG(HHI_AUD_CLK_CNTL) | (1 << 8));
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
 	//Audio DAC Clock enable
 	WRITE_MPEG_REG(HHI_AUD_CLK_CNTL, READ_MPEG_REG(HHI_AUD_CLK_CNTL) |(1<<23));
 /* ADC clock  configuration */

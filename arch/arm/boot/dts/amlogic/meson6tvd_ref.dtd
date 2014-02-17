@@ -289,17 +289,48 @@
 
 
 	dummy_codec_audio {
-		status = "okay";
+		status = "disabled";
 		compatible = "amlogic,aml_dummy_codec_audio";
 		dev_name = "aml_dummy_codec_audio.0";
 		pinctrl-names = "dummy_codec_audio";
-		pinctrl-0 = <&aml_dummy_codec_pins>;
+		pinctrl-0 = <&aml_i2s_pins>;
 	};
 
 	dummy_codec {
-		status = "okay";
+		status = "disabled";
 		compatible = "amlogic,aml_dummy_codec";
 		dev_name = "dummy_codec.0";
+	};
+	syno9629_codec {
+		status = "okay";
+		compatible = "amlogic,syno9629";
+		dev_name = "syno9629.0";
+	};
+
+	aml_audio_codec{
+        compatible = "amlogic,audio_codec";
+        tas5711:tas5711{
+            codec_name = "tas5711";
+            i2c_addr = <0x1B>;
+            i2c_bus = "i2c_bus_a";
+            status = "okay";
+        };
+        tas5707:tas5707{
+            codec_name = "tas5707";
+            i2c_addr = <0x1B>;
+            i2c_bus = "i2c_bus_a";
+            status = "disabled";
+        };
+    };
+	m6tv_audio {
+		status = "okay";
+		compatible = "sound_card,aml_m6tv_audio";
+		aml,sound_card = "AML-M6TV";
+		//aml,codec_dai = "tas5711-","rt5616-aif1","rt5631-hifi","wm8960-hifi";
+		dev_name = "aml_m6tv_audio.0";
+		mute_gpio = "GPIOW_19";
+		pinctrl-names = "aml_m6tv_audio";
+		pinctrl-0 = <&aml_i2s_pins>;
 	};
 
 	sdio {
@@ -434,7 +465,7 @@
 			amlogic,pins = "GPIOZ_8","GPIOZ_9";
 		};
 
-		aml_dummy_codec_pins:aml_dummy_codec_pins {
+		aml_i2s_pins:aml_i2s_pins {
 			amlogic,setmask = <8 0x6A00000
 					   3 0x800000>;
 			amlogic,clrmask = <8 0x1461000
