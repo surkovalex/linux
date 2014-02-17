@@ -1,11 +1,5 @@
 if ARCH_MESON6TVD
 
-config MESON_M6C_ENHANCEMENT
-       bool "M6C chip enhancement based on M6TV"
-       default n
-       help
-               If using M6C chip instead of M6W or M6L .
-
 config MESON_M6TV_RECOVERY_MODE
 	bool "Recovery mode"
 	help

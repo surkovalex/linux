@@ -2348,7 +2348,6 @@ void osd_init_hw(u32  logo_loaded)
 	//here we will init default value ,these value only set once .
 #if defined(CONFIG_ARCH_MESON6TVD)||(defined(CONFIG_ARCH_MESON6TV))
 	aml_set_reg32_mask(P_VPU_OSD1_MMC_CTRL, 1<<12); // set OSD to vdisp2
-	aml_write_reg32(P_MMC_CHAN4_CTRL, 0xc01f); // adjust vdisp weight and age limit
 #endif
 	if(!logo_loaded)
 	{
