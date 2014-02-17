@@ -23,7 +23,7 @@
 #define VFRAME_H
 
 #include <linux/types.h>
-#include <linux/tvin/tvin.h>
+#include <linux/amlogic/tvin/tvin.h>
 
 #define VIDTYPE_PROGRESSIVE             0x0
 #define VIDTYPE_INTERLACE_TOP           0x1

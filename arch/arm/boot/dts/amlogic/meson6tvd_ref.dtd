@@ -502,6 +502,11 @@
 			amlogic,setmask = <10 0x1>;
 			amlogic,pins = "GPIOAO_7";
 		};
+
+		vga_pins:vga_pin {
+			amlogic,setmask = <9 0x18>;
+			amlogic,pins = "GPIOY_26", "GPIOY_27";
+		};
 	}; /* end of pinmux*/
 
 	hdmirx {
@@ -533,6 +538,8 @@
 		status = "ok";
 		reserve-memory = <0x500000>;
 		tvafe_id = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vga_pins>;
 		tvafe_pin_mux = < /*!!particular sequence, no more and no less!!!*/
 			1	/*// TVAFE_ADC_PIN_A_PGA_0,  //CVBS0_Y = 0,*/
 			48	/*// TVAFE_ADC_PIN_SOG_7,    //CVBS0_SOG,*/
