@@ -98,7 +98,7 @@ else
 #obj-$(CONFIG_AM_DVB) += dvb/
 endif
 
-#obj-$(CONFIG_AM_SMARTCARD) += smartcard/
+obj-$(CONFIG_AM_SMARTCARD) += smartcard/
 
 ifneq ($(CONFIG_AM_NEW_TV_ARCH),y)
 #obj-y += demod/
