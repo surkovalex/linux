@@ -5,15 +5,9 @@
 #include <linux/module.h>
 
 #include <mach/am_regs.h>
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <linux/amlogic/amports/canvas.h>
 #include <linux/amlogic/amports/vframe.h>
 #include <linux/amlogic/amports/vframe_provider.h>
-#else
-#include <linux/amports/canvas.h>
-#include <linux/amports/vframe.h>
-#include <linux/amports/vframe_provider.h>
-#endif
 //#include <linux/iw7023.h>
 #include "deinterlace.h"
 #ifdef DET3D
@@ -41,7 +35,7 @@ uint di_mtn_1_ctrl1;
 uint ei_ctrl0;
 uint ei_ctrl1;
 uint ei_ctrl2;
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 uint ei_ctrl3;
 #endif
 uint nr_ctrl0;
@@ -183,14 +177,9 @@ void reset_di_para(void)
                   (10 << 16) |       				// close1
                   (10 << 8 ) |       				// far2
                    93;             				// far1
-#ifdef NEW_DI
-    #if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+#ifdef NEW_DI_V1
         ei_ctrl3 = 0x80000013;
         di_mtn_1_ctrl1 = 0xa0202015;
-    #else
-        ei_ctrl3 = 0x80000078;
-        di_mtn_1_ctrl1 = 0xc0400014;
-    #endif
 #endif
 #else       //input is tuner
     ei_ctrl0 =  (255 << 16) |     		// ei_filter.
@@ -213,7 +202,7 @@ void reset_di_para(void)
                        	(0 << 29 ) |          												// max of 3 point.
                        	(nr_hfilt_en << 28 ) |          									// nr hfilter enable.
                        	(nr_hfilt_mb_en << 27 ) |          									// nr hfilter motion_blur enable.
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
                                 (1 << 25)|//enable nr 2
 #endif
                                 (nr_zone_2 <<16 ) |   												// zone 2
@@ -338,7 +327,7 @@ static void set_di_if0_mif ( DI_MIF_t *mif, int urgent, int hold_line );
 
 void di_hw_init(void)
 {
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
     Wr(DI_MTN_1_CTRL1, Rd(DI_MTN_1_CTRL1)&(~(1<<31))); //enable old DI mode for m6tv
     Wr(DI_CLKG_CTRL, Rd(DI_CLKG_CTRL)|0x1); //di no clock gate
 
@@ -371,7 +360,7 @@ void di_hw_uninit(void)
 {
 }
 
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 unsigned int nr2_en = 0x1;
 module_param(nr2_en,uint,0644);
 MODULE_PARM_DESC(nr2_en,"\n nr2_en\n");
@@ -384,7 +373,7 @@ void enable_di_pre_aml (
    DI_MIF_t        *di_chan2_mif,
    DI_SIM_MIF_t    *di_nrwr_mif,
    DI_SIM_MIF_t    *di_mtnwr_mif,
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
    DI_SIM_MIF_t    *di_contp2rd_mif,
    DI_SIM_MIF_t    *di_contprd_mif,
    DI_SIM_MIF_t    *di_contwr_mif,
@@ -436,7 +425,7 @@ void enable_di_pre_aml (
    	// motion wr mif.
     if (mtn_en )
     {
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
         Wr(DI_CONTWR_X,    (di_contwr_mif->start_x <<16) | (di_contwr_mif->end_x));   // start_x 0 end_x 719.
         Wr(DI_CONTWR_Y,    (di_contwr_mif->start_y <<16) | (di_contwr_mif->end_y));   // start_y 0 end_y 239.
         Wr(DI_CONTWR_CTRL,  di_contwr_mif->canvas_num |  // canvas index.
@@ -474,10 +463,13 @@ void enable_di_pre_aml (
 #endif
     }
 
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
         Wr(NR2_FRM_SIZE,((di_nrwr_mif->end_y - di_nrwr_mif->start_y + 1) <<16) |
                                           (di_nrwr_mif->end_x - di_nrwr_mif->start_x + 1));
-        Wr_reg_bits(NR2_SW_EN,nr2_en,4,1);
+	/*gate for nr*/
+	Wr_reg_bits(NR2_SW_EN,nr2_en,4,1);
+	/*enable noise meter*/
+	Wr_reg_bits(NR2_SW_EN,1,17,1);
 #endif
   	// reset pre
   	Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL) |
@@ -794,7 +786,7 @@ static void set_di_mem_fmt_more (int hfmt_en,
             	);
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 static void set_di_chan2_fmt_more (int hfmt_en,
                 int hz_yc_ratio,        //2bit
                 int hz_ini_phase,       //4bit
@@ -1270,7 +1262,7 @@ static void set_di_chan2_mif ( DI_MIF_t *mif, int urgent, int hold_line)
     // Dummy pixel value
     Wr(DI_CHAN2_DUMMY_PIXEL, 0x00808000);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
     if ( (mif->set_separate_en != 0))   // 4:2:0 block mode.
     {
         set_di_chan2_fmt_more (
@@ -1518,7 +1510,7 @@ void initial_di_post_2 ( int hsize_post, int vsize_post, int hold_line )
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL0, ei_ctrl0);
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL1, ei_ctrl1);
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL2, ei_ctrl2);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 	VSYNC_WR_MPEG_REG(DI_EI_CTRL3, ei_ctrl3);
 #endif
    	VSYNC_WR_MPEG_REG(DI_POST_CTRL, (0 << 0 ) |        		// line buffer 0 enable
@@ -1614,7 +1606,7 @@ void di_post_switch_buffer (
 	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,((blend_ctrl&0xffffff00) | kdeint2));}
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL1, (blend_ctrl1_char_level<< 24 ) |    ( blend_ctrl1_angle_thd << 16 ) |    ( blend_ctrl1_filt_thd<< 8 )  |    ( blend_ctrl1_diff_thd));
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL2,   (blend_ctrl2_black_level<< 8 ) |     (blend_ctrl2_mtn_no_mov)  );
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 //    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)&(~(1<<31)));
 #endif
 #endif
@@ -1640,7 +1632,7 @@ void enable_di_post_2 (
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL0, ei_ctrl0);
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL1, ei_ctrl1);
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL2, ei_ctrl2);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL3, ei_ctrl3);
 #endif
     /**/
@@ -1704,7 +1696,7 @@ void enable_di_post_2 (
 	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,((blend_ctrl&0xffffff00) | kdeint2));}
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL1, (blend_ctrl1_char_level<< 24 ) |    ( blend_ctrl1_angle_thd << 16 ) |    ( blend_ctrl1_filt_thd<< 8 )  |    ( blend_ctrl1_diff_thd));
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL2,   (blend_ctrl2_black_level<< 8 ) |     (blend_ctrl2_mtn_no_mov)  );
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 //    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)&(~(1<<31)));
 #endif
 #endif
@@ -1747,7 +1739,7 @@ void enable_di_post_2 (
                       (0x1 << 30 )       							// post soft rst  post frame rst.
         );
 #endif
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
         VSYNC_WR_MPEG_REG(DI_EI_CTRL3, ei_ctrl3);
 #endif
 }

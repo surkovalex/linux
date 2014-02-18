@@ -41,24 +41,16 @@
 //#include <linux/aml_common.h>
 #include <asm/uaccess.h>
 #include <mach/am_regs.h>
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <linux/of_fdt.h>
 #include <linux/amlogic/osd/osd_dev.h>
 #include <linux/amlogic/amports/vframe.h>
 #include <linux/amlogic/amports/vframe_provider.h>
 #include <linux/amlogic/amports/vframe_receiver.h>
 #include <linux/amlogic/amports/canvas.h>
-#else
-#include <linux/osd/osd_dev.h>
-#include <linux/amports/vframe.h>
-#include <linux/amports/vframe_provider.h>
-#include <linux/amports/vframe_receiver.h>
-#include <linux/amports/canvas.h>
-#endif
 #include "deinterlace.h"
 #include "deinterlace_module.h"
 
-#if defined(CONFIG_ARCH_MESON2)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+#if defined(CONFIG_ARCH_MESON2)||defined(NEW_DI_V1)
 #define FORCE_BOB_SUPPORT
 #else
 #define ENABLE_SPIN_LOCK_ALWAYS
@@ -72,7 +64,7 @@
     #undef RUN_REG_IN_IRQ
 #elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     #define RUN_DI_PROCESS_IN_IRQ
-    #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+    #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD)
         #undef RUN_REG_IN_IRQ
     #else
         #define RUN_REG_IN_IRQ
@@ -187,7 +179,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-01-16a";
+static char version_s[] = "2014-02-12a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -232,7 +224,7 @@ static int post_ready_empty_count = 0;
 
 static int force_width = 0;
 static int force_height = 0;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 int di_vscale_skip_enable = 3;
 #else
 int di_vscale_skip_enable = 1;
@@ -251,13 +243,13 @@ int di_vscale_skip_enable = 1;
     important:
      to set input2pre, VFRAME_EVENT_PROVIDER_VFRAME_READY of vdin should be sent in irq
 */
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 #undef CHECK_DI_DONE
 #else
 #define CHECK_DI_DONE
 #endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 static int input2pre = 1;
 #else
 static int input2pre = 0;
@@ -265,7 +257,7 @@ static int input2pre = 0;
 static int input2pre_buf_miss_count = 0;
 static int input2pre_proc_miss_count = 0;
 static int input2pre_throw_count = 6;
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+#ifdef NEW_DI_V1
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
 #else
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
@@ -322,7 +314,7 @@ static unsigned int det3d_mode = 0;
 
 int force_duration_0 = 0;
 
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 static unsigned int di_new_mode_mask = 0xffff;
 static unsigned int di_new_mode = 0x1;
 static int use_reg_cfg = 1;
@@ -549,7 +541,7 @@ static void force_source_change(void);
 static int run_flag = DI_RUN_FLAG_RUN;
 static int pre_run_flag = DI_RUN_FLAG_RUN;
 static int dump_state_flag = 0;
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 static char dump_path[20]={NULL};
 static int capture_flag =0 ;
 #endif
@@ -622,8 +614,7 @@ static ssize_t store_dbg(struct device * dev, struct device_attribute *attr, con
 
     return count;
 }
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
+#ifdef NEW_DI_V1
 static int __init di_read_canvas_reverse(char *str)
 {
         unsigned char *ptr = str;
@@ -838,7 +829,7 @@ static int set_noise_reduction_level(void)
                        	(0 << 29 ) |          												// max of 3 point.
                        	(nr_hfilt_en << 28 ) |          									// nr hfilter enable.
                        	(nr_hfilt_mb_en << 27 ) |          									// nr hfilter motion_blur enable.
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
                                 (1 << 25)                 |//enable nr2
 #endif
                                 (nr_zone_2 <<16 ) |   												// zone 2
@@ -871,7 +862,7 @@ di_param_t di_params[]=
     {"ei_ctrl0",     &ei_ctrl0, NULL  },
     {"ei_ctrl1",     &ei_ctrl1, NULL   },
     {"ei_ctrl2",     &ei_ctrl2, NULL   },
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     {"ei_ctrl3",     &ei_ctrl3, NULL   },
 #endif
     {"nr_ctrl0",     &nr_ctrl0, NULL   },
@@ -1090,13 +1081,13 @@ static ssize_t show_vframe_status(struct class *cla, struct class_attribute* att
 
     return ret;
 }
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 static ssize_t store_dump_mem(struct device * dev, struct device_attribute *attr, const char * buf, size_t len);
 #endif
 static DEVICE_ATTR(config, 0664, show_config, store_config);
 static DEVICE_ATTR(parameters, 0664, show_parameters, store_parameters);
 static DEVICE_ATTR(debug, 0664, NULL, store_dbg);
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 static DEVICE_ATTR(dump_pic, 0664, NULL, store_dump_mem);
 #endif
 static DEVICE_ATTR(log, 0664, show_log, store_log);
@@ -1592,7 +1583,7 @@ typedef struct{
     DI_SIM_MIF_t di_nrwr_mif;
     DI_SIM_MIF_t di_mtnwr_mif;
     di_buf_t* di_wr_buf;
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     DI_SIM_MIF_t di_contp2rd_mif;
     DI_SIM_MIF_t di_contprd_mif;
     DI_SIM_MIF_t di_contwr_mif;
@@ -1696,7 +1687,7 @@ typedef struct{
     bool vscale_skip_flag;
 }di_post_stru_t;
 static di_post_stru_t di_post_stru;
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 static ssize_t store_dump_mem(struct device * dev, struct device_attribute *attr, const char * buf, size_t len)
 {
 	    unsigned int n=0, fps=0;
@@ -1782,192 +1773,7 @@ static void recycle_vframe_type_post_print(di_buf_t* di_buf, const char* func);
 
 reg_cfg_t* reg_cfg_head = NULL;
 
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
-
-/*new table
-reg_cfg_t di_default_pre_tuner =
-{
-		NULL,
-		((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-		 (1 << VFRAME_SOURCE_TYPE_TUNER)  |
-		 (1 << VFRAME_SOURCE_TYPE_CVBS)   |
-		 (0 << VFRAME_SOURCE_TYPE_COMP)   |
-		 (0 << VFRAME_SOURCE_TYPE_HDMI)
-		 ),
-		0,
-		0,
-		{
-				((TVIN_SIG_FMT_CVBS_NTSC_M << 16) | TVIN_SIG_FMT_CVBS_SECAM),
-				0
-		},
-		{
-				{DI_EI_CTRL3,  0x0000013, 0, 27},
-				{DI_EI_CTRL4, 0x151b3084, 0, 31},
-				{DI_EI_CTRL5, 0x5273204f, 0, 31},
-				{DI_EI_CTRL6, 0x50232815, 0, 31},
-				{DI_EI_CTRL7, 0x2fb56650, 0, 31},
-				{DI_EI_CTRL8, 0x230019a4, 0, 31},
-				{DI_EI_CTRL9, 0x7cb9bb33, 0, 31},
-//#define DI_EI_CTRL10
-				{0x1793, 0x0842c6a9,0, 31},
-//#define DI_EI_CTRL11
-				{0x179e, 0x486ab07a,0, 31},
-//#define DI_EI_CTRL12
-				{0x179f, 0xdb0c2503,0, 31},
-//#define DI_EI_CTRL13
-				{0x17a8, 0x0f021414 ,0, 31},
-				{0},
-		}
-
-};
-reg_cfg_t di_default_pre_comp =
-{
-		NULL,
-		((0 << VFRAME_SOURCE_TYPE_OTHERS) |
-		 (0 << VFRAME_SOURCE_TYPE_TUNER)  |
-		 (0 << VFRAME_SOURCE_TYPE_CVBS)   |
-		 (1 << VFRAME_SOURCE_TYPE_COMP)   |
-		 (0 << VFRAME_SOURCE_TYPE_HDMI)
-		 ),
-		0,
-		0,
-		{
-				((TVIN_SIG_FMT_COMP_480P_60HZ_D000 << 16) | TVIN_SIG_FMT_COMP_576I_50HZ_D000),
-				0
-		},
-		{
-				{DI_EI_CTRL3,  0x0000013, 0, 27},
-				{DI_EI_CTRL4, 0x151b3084, 0, 31},
-				{DI_EI_CTRL5, 0x5273204f, 0, 31},
-				{DI_EI_CTRL6, 0x50232815, 0, 31},
-				{DI_EI_CTRL7, 0x2fb56650, 0, 31},
-				{DI_EI_CTRL8, 0x230019a4, 0, 31},
-				{DI_EI_CTRL9, 0x7cb9bb33, 0, 31},
-//#define DI_EI_CTRL10
-				{0x1793, 0x0842c6a9,0, 31},
-//#define DI_EI_CTRL11
-				{0x179e, 0x486ab07a,0, 31},
-//#define DI_EI_CTRL12
-				{0x179f, 0xdb0c2503,0, 31},
-//#define DI_EI_CTRL13
-				{0x17a8, 0x0f021414 ,0, 31},
-				{0},
-		}
-};
-
-reg_cfg_t di_default_pre_hdmi =
-{
-		NULL,
-		((0 << VFRAME_SOURCE_TYPE_OTHERS) |
-		 (0 << VFRAME_SOURCE_TYPE_TUNER)  |
-		 (0 << VFRAME_SOURCE_TYPE_CVBS)   |
-		 (0 << VFRAME_SOURCE_TYPE_COMP)   |
-		 (1 << VFRAME_SOURCE_TYPE_HDMI)
-		 ),
-		0,
-		0,
-		{
-				((TVIN_SIG_FMT_HDMI_640X480P_60HZ << 16) | TVIN_SIG_FMT_HDMI_720X480P_60HZ),
-				((TVIN_SIG_FMT_HDMI_1440X480I_60HZ << 16) | TVIN_SIG_FMT_HDMI_1440X480P_60HZ),
-				((TVIN_SIG_FMT_HDMI_720X576P_50HZ << 16) | TVIN_SIG_FMT_HDMI_720X576P_50HZ),
-				((TVIN_SIG_FMT_HDMI_1440X576I_50HZ << 16) | TVIN_SIG_FMT_HDMI_1440X576P_50HZ),
-				((TVIN_SIG_FMT_HDMI_2880X480P_60HZ << 16) | TVIN_SIG_FMT_HDMI_2880X576P_60HZ),
-				((TVIN_SIG_FMT_HDMI_720X576P_100HZ << 16) | TVIN_SIG_FMT_HDMI_1440X576I_100HZ),
-				((TVIN_SIG_FMT_HDMI_720X480P_120HZ << 16) | TVIN_SIG_FMT_HDMI_1440X480I_240HZ),
-				((TVIN_SIG_FMT_HDMI_720X480P_60HZ_FRAME_PACKING << 16) | TVIN_SIG_FMT_HDMI_720X576P_50HZ_FRAME_PACKING),
-				0
-		},
-		{
-				{DI_EI_CTRL3,  0x0000013, 0, 27},
-				{DI_EI_CTRL4, 0x151b3084, 0, 31},
-				{DI_EI_CTRL5, 0x5273204f, 0, 31},
-				{DI_EI_CTRL6, 0x50232815, 0, 31},
-				{DI_EI_CTRL7, 0x2fb56650, 0, 31},
-				{DI_EI_CTRL8, 0x230019a4, 0, 31},
-				{DI_EI_CTRL9, 0x7cb9bb33, 0, 31},
-//#define DI_EI_CTRL10
-				{0x1793, 0x0842c6a9,0, 31},
-//#define DI_EI_CTRL11
-				{0x179e, 0x486ab07a,0, 31},
-//#define DI_EI_CTRL12
-				{0x179f, 0xdb0c2503,0, 31},
-//#define DI_EI_CTRL13
-				{0x17a8, 0x0f021414 ,0, 31},
-				{0},
-		}
-};
-
-
-reg_cfg_t di_default_pre_hd =
-{
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
-        NULL,
-        ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-         (0 << VFRAME_SOURCE_TYPE_TUNER)  |
-         (0 << VFRAME_SOURCE_TYPE_CVBS)   |
-         (1 << VFRAME_SOURCE_TYPE_COMP)	  |
-         (1 << VFRAME_SOURCE_TYPE_HDMI)
-         ),
-        0,
-        0,
-        {
-                ((TVIN_SIG_FMT_COMP_720P_59HZ_D940 << 16) | TVIN_SIG_FMT_COMP_1080I_60HZ_D000),
-		((TVIN_SIG_FMT_HDMI_1280X720P_60HZ << 16) | TVIN_SIG_FMT_HDMI_1920X1080I_60HZ),
-		((TVIN_SIG_FMT_HDMI_1920X1080P_60HZ << 16) | TVIN_SIG_FMT_HDMI_1920X1080P_60HZ),
-		((TVIN_SIG_FMT_HDMI_1280X720P_50HZ << 16) | TVIN_SIG_FMT_HDMI_1920X1080I_50HZ_A),
-		((TVIN_SIG_FMT_HDMI_1920X1080P_50HZ << 16) | TVIN_SIG_FMT_HDMI_1920X1080P_30HZ),
-		((TVIN_SIG_FMT_HDMI_1920X1080I_50HZ_B << 16) | TVIN_SIG_FMT_HDMI_1920X1080I_100HZ),
-		((TVIN_SIG_FMT_HDMI_1920X1080I_120HZ << 16) | TVIN_SIG_FMT_HDMI_1280X720P_120HZ),
-		((TVIN_SIG_FMT_HDMI_1280X720P_24HZ << 16) | TVIN_SIG_FMT_HDMI_1920X1080P_30HZ_FRAME_PACKING),
-		((TVIN_SIG_FMT_HDMI_1920X1080I_60HZ_ALTERNATIVE << 16) | TVIN_SIG_FMT_HDMI_1920X1080P_30HZ_ALTERNATIVE),
-                0
-        },
-        {
-                {DI_EI_CTRL3,  0x0000013, 0, 27},
-                {DI_EI_CTRL4, 0x151b3084, 0, 31},
-                {DI_EI_CTRL5, 0x5273204f, 0, 31},
-                {DI_EI_CTRL6, 0x50232815, 0, 31},
-                {DI_EI_CTRL7, 0x2fb56650, 0, 31},
-                {DI_EI_CTRL8, 0x230019a4, 0, 31},
-                {DI_EI_CTRL9, 0x7cb9bb33, 0, 31},
-//#define DI_EI_CTRL10
-                {0x1793, 0x0842c6a9,0, 31},
-//#define DI_EI_CTRL11
-                {0x179e, 0x486ab07a,0, 31},
-//#define DI_EI_CTRL12
-                {0x179f, 0xdb0c2503,0, 31},
-//#define DI_EI_CTRL13
-                {0x17a8, 0x0f021414 ,0, 31},
-                {0},
-        }
-#else
-        NULL,
-        ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-         (1 << VFRAME_SOURCE_TYPE_TUNER)  |
-         (1 << VFRAME_SOURCE_TYPE_CVBS)   |
-         (1 << VFRAME_SOURCE_TYPE_COMP)   |
-         (1 << VFRAME_SOURCE_TYPE_HDMI)
-         ),
-        0,
-        {
-                ((TVIN_SIG_FMT_COMP_480P_60HZ_D000 << 16) | TVIN_SIG_FMT_HDMI_720X576P_50HZ_FRAME_PACKING),
-                0
-        },
-        {
-                {DI_EI_CTRL3,  0x0000078, 0, 27},
-                {DI_EI_CTRL4, 0x06000014, 0, 31},
-                {DI_EI_CTRL5, 0x4800003c, 0, 31},
-                {DI_EI_CTRL6, 0x0014003c, 0, 31},
-                {DI_EI_CTRL7, 0x00000050, 0, 31},
-                {DI_EI_CTRL8, 0x10000e07, 0, 31},
-                {DI_EI_CTRL9, 0x00300c0c, 0, 31},
-                {0},
-        }
-#endif
-};
-*/
-
-
+#ifdef NEW_DI_V1
 /*****************cvbs and tuner stand defintion******************************/
 reg_cfg_t di_default_post_tuner =
 {
@@ -2096,13 +1902,11 @@ reg_cfg_t di_default_post_hdmi =
 				{0},
 		}
 };
-
-
 /*****************high defintion******************************/
 
 reg_cfg_t di_default_post_hd =
 {
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+
         NULL,
         ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
          (0 << VFRAME_SOURCE_TYPE_TUNER)  |
@@ -2146,37 +1950,12 @@ reg_cfg_t di_default_post_hd =
                 {0x17af, 0x40020a04, 0, 31},
                 {0},
         }
-#else
-        NULL,
-        ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-         (1 << VFRAME_SOURCE_TYPE_TUNER)  |
-         (1 << VFRAME_SOURCE_TYPE_CVBS)   |
-         (1 << VFRAME_SOURCE_TYPE_COMP)   |
-         (1 << VFRAME_SOURCE_TYPE_HDMI)
-         ),
-        1,
-        {
-               ((TVIN_SIG_FMT_COMP_480P_60HZ_D000 << 16) | TVIN_SIG_FMT_CVBS_SECAM),
-                0
-        },
-        {
-                {DI_MTN_1_CTRL1,         0, 30, 1},
-                {DI_MTN_1_CTRL1, 0x040000B,  0, 27},
-                {DI_MTN_1_CTRL2, 0x00141412, 0, 31},
-                {DI_MTN_1_CTRL3, 0x001c001f, 0, 31},
-                {DI_MTN_1_CTRL4, 0x50280014, 0, 31},
-                {DI_MTN_1_CTRL5, 0x00030804, 0, 31},
-                {0},
-        }
-#endif
 };
-
-
 /*****************dtv stand  defintion******************************/
 
 reg_cfg_t di_dtv_post_stand =
 {
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+
         NULL,
         ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
          (0 << VFRAME_SOURCE_TYPE_TUNER)  |
@@ -2211,35 +1990,10 @@ reg_cfg_t di_dtv_post_stand =
                 {0x17af, 0x40020a04, 0, 31},
                 {0},
         }
-#else
-        NULL,
-        ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-         (1 << VFRAME_SOURCE_TYPE_TUNER)  |
-         (1 << VFRAME_SOURCE_TYPE_CVBS)   |
-         (1 << VFRAME_SOURCE_TYPE_COMP)   |
-         (1 << VFRAME_SOURCE_TYPE_HDMI)
-         ),
-        1,
-        {
-               ((TVIN_SIG_FMT_COMP_480P_60HZ_D000 << 16) | TVIN_SIG_FMT_CVBS_SECAM),
-                0
-        },
-        {
-                {DI_MTN_1_CTRL1,         0, 30, 1},
-                {DI_MTN_1_CTRL1, 0x040000B,  0, 27},
-                {DI_MTN_1_CTRL2, 0x00141412, 0, 31},
-                {DI_MTN_1_CTRL3, 0x001c001f, 0, 31},
-                {DI_MTN_1_CTRL4, 0x50280014, 0, 31},
-                {DI_MTN_1_CTRL5, 0x00030804, 0, 31},
-                {0},
-        }
-#endif
 };
-
 /* new pre and post di setting */
 reg_cfg_t di_default_pre =
 {
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
         NULL,
         ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
          (1 << VFRAME_SOURCE_TYPE_TUNER)  |
@@ -2271,34 +2025,9 @@ reg_cfg_t di_default_pre =
                 {0x17a8, 0x0f021414 ,0, 31},
                 {0},
         }
-#else
-        NULL,
-        ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-         (1 << VFRAME_SOURCE_TYPE_TUNER)  |
-         (1 << VFRAME_SOURCE_TYPE_CVBS)   |
-         (1 << VFRAME_SOURCE_TYPE_COMP)   |
-         (1 << VFRAME_SOURCE_TYPE_HDMI)
-         ),
-        0,
-        {
-                ((TVIN_SIG_FMT_COMP_480P_60HZ_D000 << 16) | TVIN_SIG_FMT_CVBS_SECAM),
-                0
-        },
-        {
-                {DI_EI_CTRL3,  0x0000078, 0, 27},
-                {DI_EI_CTRL4, 0x06000014, 0, 31},
-                {DI_EI_CTRL5, 0x4800003c, 0, 31},
-                {DI_EI_CTRL6, 0x0014003c, 0, 31},
-                {DI_EI_CTRL7, 0x00000050, 0, 31},
-                {DI_EI_CTRL8, 0x10000e07, 0, 31},
-                {DI_EI_CTRL9, 0x00300c0c, 0, 31},
-                {0},
-        }
-#endif
 };
 reg_cfg_t di_default_post =
 {
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
         NULL,
         ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
          (1 << VFRAME_SOURCE_TYPE_TUNER)  |
@@ -2335,29 +2064,6 @@ reg_cfg_t di_default_post =
                 {0x17af, 0x40020a04, 0, 31},
                 {0},
         }
-#else
-        NULL,
-        ((1 << VFRAME_SOURCE_TYPE_OTHERS) |
-         (1 << VFRAME_SOURCE_TYPE_TUNER)  |
-         (1 << VFRAME_SOURCE_TYPE_CVBS)   |
-         (1 << VFRAME_SOURCE_TYPE_COMP)   |
-         (1 << VFRAME_SOURCE_TYPE_HDMI)
-         ),
-        1,
-        {
-               ((TVIN_SIG_FMT_COMP_480P_60HZ_D000 << 16) | TVIN_SIG_FMT_CVBS_SECAM),
-                0
-        },
-        {
-                {DI_MTN_1_CTRL1,         0, 30, 1},
-                {DI_MTN_1_CTRL1, 0x040000B,  0, 27},
-                {DI_MTN_1_CTRL2, 0x00141412, 0, 31},
-                {DI_MTN_1_CTRL3, 0x001c001f, 0, 31},
-                {DI_MTN_1_CTRL4, 0x50280014, 0, 31},
-                {DI_MTN_1_CTRL5, 0x00030804, 0, 31},
-                {0},
-        }
-#endif
 };
 
 
@@ -2384,7 +2090,7 @@ static void di_apply_reg_cfg(unsigned char pre_post_type)
 	    			set_flag = 1;
 	    		}else if(di_pre_stru.cur_height>=720&&(!reg_cfg->dtv_defintion_type)){
 				set_flag = 1;
-    			}		
+    			}
 
 	    	}else{
                 for(ii=0; ii<FMT_MAX_NUM; ii++){
@@ -2402,14 +2108,14 @@ static void di_apply_reg_cfg(unsigned char pre_post_type)
             if(set_flag){
                 for(ii=0; ii<REG_SET_MAX_NUM; ii++){
                     if(reg_cfg->reg_set[ii].adr){
-						
+
                         if(pre_post_type){
-                            VSYNC_WR_MPEG_REG_BITS(reg_cfg->reg_set[ii].adr, reg_cfg->reg_set[ii].val, 
-                                reg_cfg->reg_set[ii].start, reg_cfg->reg_set[ii].len);    
+                            VSYNC_WR_MPEG_REG_BITS(reg_cfg->reg_set[ii].adr, reg_cfg->reg_set[ii].val,
+                                reg_cfg->reg_set[ii].start, reg_cfg->reg_set[ii].len);
                         	}
-                        else    
-                            Wr_reg_bits(reg_cfg->reg_set[ii].adr, reg_cfg->reg_set[ii].val, 
-                                reg_cfg->reg_set[ii].start, reg_cfg->reg_set[ii].len);    
+                        else
+                            Wr_reg_bits(reg_cfg->reg_set[ii].adr, reg_cfg->reg_set[ii].val,
+                                reg_cfg->reg_set[ii].start, reg_cfg->reg_set[ii].len);
                     }
                     else{
                         break;
@@ -2606,13 +2312,13 @@ static unsigned char is_input2pre(void)
     if( input2pre
         &&vdin_source_flag
         &&(bypass_state==0)){
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+#ifdef NEW_DI_V1
         pre_urgent = 1;
 #endif
         return 1;
     }
 
-#if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+#ifdef NEW_DI_V1
     pre_urgent = 0;
 #endif
     return 0;
@@ -2661,7 +2367,7 @@ static void config_canvas_idx(di_buf_t* di_buf, int nr_canvas_idx, int mtn_canva
     }
 }
 
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 static void config_cnt_canvas_idx(di_buf_t* di_buf, int cnt_canvas_idx)
 {
     if(di_buf){
@@ -2738,7 +2444,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
 #ifdef D2D3_SUPPORT
         if(d2d3_enable){
             dp_buf_size = 256*canvas_height/2;
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
             local_buf_num = di_mem_size/((width*canvas_height*6/4)+dp_buf_size);
             dp_mem_start = di_mem_start + (width*canvas_height*6/4)*local_buf_num;
 #else
@@ -2748,7 +2454,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
         }
         else
 #endif
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
         local_buf_num = di_mem_size/(width*canvas_height*6/4);
 #else
         local_buf_num = di_mem_size/(width*canvas_height*5/4);
@@ -2808,7 +2514,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
 #endif
             }
             else{
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
                 di_buf->nr_adr = di_mem_start + (width*canvas_height*6/4)*i;
 #else
                 di_buf->nr_adr = di_mem_start + (width*canvas_height*5/4)*i;
@@ -2817,7 +2523,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
     	          di_buf->nr_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i*2;
 #endif
 	              //canvas_config(di_buf->nr_canvas_idx, di_buf->nr_adr, width*2, canvas_height/2, 0, 0);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
                 di_buf->mtn_adr = di_mem_start + (width*canvas_height*6/4)*i + (width*canvas_height);
                 di_buf->cnt_adr = di_mem_start + (width*canvas_height*6/4)*i + (width*canvas_height)*5/4;
 #else
@@ -3133,7 +2839,7 @@ static void dump_di_buf(di_buf_t* di_buf)
         di_buf->di_buf[0],di_buf->di_buf[1],di_buf->di_buf_dup_p[0],di_buf->di_buf_dup_p[1],di_buf->di_buf_dup_p[2],di_buf->di_buf_dup_p[3],di_buf->di_buf_dup_p[4]);
     printk("nr_adr 0x%x, nr_canvas_idx 0x%x, mtn_adr 0x%x, mtn_canvas_idx 0x%x",
         di_buf->nr_adr, di_buf->nr_canvas_idx, di_buf->mtn_adr, di_buf->mtn_canvas_idx);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     printk("cnt_adr 0x%x, cnt_canvas_idx 0x%x\n",
         di_buf->cnt_adr, di_buf->cnt_canvas_idx);
 #endif
@@ -3319,7 +3025,7 @@ static unsigned char check_di_buf(di_buf_t* di_buf, int reason)
 /*
 *  di pre process
 */
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 static void config_di_cnt_mif(DI_SIM_MIF_t* di_cnt_mif, di_buf_t* di_buf)
 {
  			if(di_buf){
@@ -3505,18 +3211,18 @@ static void pre_de_process(void)
 #ifdef DI_USE_FIXED_CANVAS_IDX
     if((di_pre_stru.di_mem_buf_dup_p!=NULL && di_pre_stru.di_mem_buf_dup_p!=di_pre_stru.di_inp_buf)){
         config_canvas_idx(di_pre_stru.di_mem_buf_dup_p, DI_PRE_MEM_NR_CANVAS_IDX, -1);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
         config_cnt_canvas_idx(di_pre_stru.di_mem_buf_dup_p, DI_CONTP2RD_CANVAS_IDX);
 #endif
     }
     if(di_pre_stru.di_chan2_buf_dup_p!=NULL){
         config_canvas_idx(di_pre_stru.di_chan2_buf_dup_p, DI_PRE_CHAN2_NR_CANVAS_IDX, -1);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
         config_cnt_canvas_idx(di_pre_stru.di_chan2_buf_dup_p, DI_CONTPRD_CANVAS_IDX);
 #endif
     }
     config_canvas_idx(di_pre_stru.di_wr_buf, DI_PRE_WR_NR_CANVAS_IDX, DI_PRE_WR_MTN_CANVAS_IDX);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     config_cnt_canvas_idx(di_pre_stru.di_wr_buf, DI_CONTWR_CANVAS_IDX);
 #endif
 #endif
@@ -3524,7 +3230,7 @@ static void pre_de_process(void)
     config_di_mif(&di_pre_stru.di_chan2_mif, di_pre_stru.di_chan2_buf_dup_p);
     config_di_wr_mif(&di_pre_stru.di_nrwr_mif, &di_pre_stru.di_mtnwr_mif,
         di_pre_stru.di_wr_buf, di_pre_stru.di_inp_buf->vframe);
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     config_di_cnt_mif(&di_pre_stru.di_contp2rd_mif, di_pre_stru.di_mem_buf_dup_p);
     config_di_cnt_mif(&di_pre_stru.di_contprd_mif, di_pre_stru.di_chan2_buf_dup_p);
     config_di_cnt_mif(&di_pre_stru.di_contwr_mif, di_pre_stru.di_wr_buf);
@@ -3538,7 +3244,7 @@ static void pre_de_process(void)
     Wr(DI_PRE_SIZE,    di_pre_stru.di_nrwr_mif.end_x|(di_pre_stru.di_nrwr_mif.end_y << 16) );
 
     // set interrupt mask for pre module.
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
   Wr(DI_INTR_CTRL, ((di_pre_stru.enable_mtnwr?1:0) << 16) |       // mask nrwr interrupt.
                 ((di_pre_stru.enable_mtnwr?0:1) << 17) |       //  mtnwr interrupt.
                     (1 << 18) |       // mask diwr interrupt.
@@ -3592,7 +3298,7 @@ static void pre_de_process(void)
                &di_pre_stru.di_chan2_mif,               // chan2
                &di_pre_stru.di_nrwr_mif,               // nrwrite
                &di_pre_stru.di_mtnwr_mif,            // mtn write
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
                &di_pre_stru.di_contp2rd_mif,
                &di_pre_stru.di_contprd_mif,
                &di_pre_stru.di_contwr_mif,
@@ -3612,28 +3318,20 @@ static void pre_de_process(void)
                pre_urgent
              );
 		Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL)|(0x3 << 30)); //add for M6, reset
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     if(get_new_mode_flag() == 1){
     if (di_pre_stru.cur_prog_flag == 1) {
 		di_mtn_1_ctrl1 &= (~(1<<31)); // disable contwr
-	#ifdef CONFIG_MESON_M6C_ENHANCEMENT
                 di_mtn_1_ctrl1 &= (~(1<<29));//disable txt
-        #endif
 		cont_rd = 0;
     } else {
         di_mtn_1_ctrl1 |= (1<<31); //enable contwr
-        #ifdef CONFIG_MESON_M6C_ENHANCEMENT
         di_mtn_1_ctrl1 &= (~(1<<29));//disable txt
-        #endif
         cont_rd = 1;
 	}
         if(di_pre_stru.field_count_for_cont >= 3){
-            #ifdef CONFIG_MESON_M6C_ENHANCEMENT
 	    di_mtn_1_ctrl1 &= (~(1<<30)); // enable contp2rd and contprd
             di_mtn_1_ctrl1 |= 1<<29;//enable txt
-            #else
-            di_mtn_1_ctrl1 &= (~(1<<28));  // enable contp2rd and contprd
-	    #endif
             Wr(DI_CLKG_CTRL, 0xfeff0000); //di enable nr clock gate
             Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL)|(cont_rd<<25));
         }
@@ -3644,8 +3342,6 @@ static void pre_de_process(void)
     }
 	Wr(DI_MTN_1_CTRL1, di_mtn_1_ctrl1);
 	//Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL)|(1<<25));
-#endif
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
     di_apply_reg_cfg(0);
 #endif
 
@@ -3839,7 +3535,7 @@ static void pre_de_done_buf_config(void)
     }
 }
 
-#if defined(CONFIG_ARCH_MESON2)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+#if defined(CONFIG_ARCH_MESON2)||defined(NEW_DI_V1)
 /* add for di Reg re-init */
 static enum vframe_source_type_e  vframe_source_type = VFRAME_SOURCE_TYPE_OTHERS;
 static void di_set_para_by_tvinfo(vframe_t* vframe)
@@ -3871,12 +3567,8 @@ static void di_set_para_by_tvinfo(vframe_t* vframe)
                       (10 << 16) |       				// close1
                       (10 << 8 ) |       				// far2
                        93;             				// far1
- #ifdef NEW_DI
-    #if defined(CONFIG_MESON_M6C_ENHANCEMENT)
-            ei_ctrl3 = 0x80000013;
-    #else
-            ei_ctrl3 = 0x80000078;
- #endif
+ #ifdef NEW_DI_V1
+       ei_ctrl3 = 0x80000013;
 #endif
         kdeint2 = 25;
 	mtn_ctrl= 0xe228c440;
@@ -3904,12 +3596,8 @@ static void di_set_para_by_tvinfo(vframe_t* vframe)
                       (255 << 16) |       				// close1
                       (10 << 8 ) |       				// far2
                        255;             				// far1
- #ifdef NEW_DI
-    #if defined(CONFIG_MESON_M6C_ENHANCEMENT)
+ #ifdef NEW_DI_V1
         ei_ctrl3 = 0x80000013;
-    #else
-            ei_ctrl3 = 0x80000078;
-  #endif
 #endif
 	if(kdeint1==0x10){
               kdeint2 = 25;
@@ -4081,10 +3769,10 @@ static unsigned char pre_de_buf_config(void)
             di_pre_stru.cur_sig_fmt = di_buf->vframe->sig_fmt;
             di_pre_stru.source_change_flag = 1;
             di_pre_stru.same_field_source_flag = 0;
-#if defined(CONFIG_ARCH_MESON2)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+#if defined(CONFIG_ARCH_MESON2)||defined (NEW_DI_V1)
             di_set_para_by_tvinfo(vframe);
 #endif
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
             di_pre_stru.field_count_for_cont = 0;
 #endif
         }
@@ -4240,15 +3928,12 @@ static unsigned char pre_de_buf_config(void)
                 }
             }
             else{
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
             if(get_new_mode_flag() == 1){
                 if(di_pre_stru.di_chan2_buf_dup_p == NULL){
                     di_pre_stru.field_count_for_cont = 0;
-		    #ifdef CONFIG_MESON_M6C_ENHANCEMENT
 		    di_mtn_1_ctrl1 |= (1<<30); //ignore contp2rd and contprd
-		    #else
-                    di_mtn_1_ctrl1 |= (1<<28); //ignore contp2rd and contprd
-                    #endif
+
                 }
             }
 #endif
@@ -4740,7 +4425,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
    	int post_blend_en, post_blend_mode;
 
     if(di_get_power_control(1)==0){
-        return 0;        
+        return 0;
     }
     get_vscale_skip_count(zoom_start_x_lines);
 
@@ -4848,7 +4533,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 
 
     	post_blend_en = 1;
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
     if(get_new_mode_flag() == 1){
         blend_ctrl |= (1<<31);
     }
@@ -4894,12 +4579,12 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    		reg_mtn_info
 	    	);
 
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
     if(di_post_stru.update_post_reg_flag)
     	{
         di_apply_reg_cfg(1);
     	}
-	
+
     di_post_read_reverse_irq(overturn);
 #endif
 
@@ -4917,7 +4602,7 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
    	int post_blend_mode;
 
     if(di_get_power_control(1)==0){
-        return 0;        
+        return 0;
     }
     get_vscale_skip_count(zoom_start_x_lines);
 
@@ -5054,7 +4739,7 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
 	    		hold_line,
 	    		post_urgent
 	    	);
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
     di_post_read_reverse_irq(overturn);
 #endif
     if(di_post_stru.update_post_reg_flag>0)
@@ -5072,7 +4757,7 @@ static int de_post_process_prog(void* arg, unsigned zoom_start_x_lines,
    	int post_blend_mode;
 
     if(di_get_power_control(1)==0){
-        return 0;        
+        return 0;
     }
     get_vscale_skip_count(zoom_start_x_lines);
 
@@ -5197,7 +4882,7 @@ static int de_post_process_prog(void* arg, unsigned zoom_start_x_lines,
 	    		hold_line,
 	    		post_urgent
 	    	);
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
     di_post_read_reverse_irq(overturn);
 #endif
 
@@ -6106,7 +5791,7 @@ static void di_reg_process(void)
         if(vframe){
             di_set_power_control(0,1);
             di_set_power_control(1,1);
-            
+
             set_output_mode_info();
 /* add for di Reg re-init */
 #if defined(CONFIG_ARCH_MESON2)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
@@ -6262,7 +5947,7 @@ static void di_process(void)
             }
                 }
             }
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
     di_post_read_reverse(overturn);
 #endif
             while(process_post_vframe()){};
@@ -6875,9 +6560,7 @@ const static struct file_operations di_fops = {
 #endif
 };
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static struct resource memobj;
-#endif
 static int di_probe(struct platform_device *pdev)
 {
     int r, i;
@@ -6909,7 +6592,7 @@ static int di_probe(struct platform_device *pdev)
 #endif
 
     /* call di_add_reg_cfg() */
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 	#if (defined(CONFIG_MACH_MESON6TV_H31)||defined(CONFIG_MACH_MESON6TV_H32))  //tcl
 	{
 		di_add_reg_cfg(&di_default_pre);
@@ -6966,13 +6649,6 @@ static int di_probe(struct platform_device *pdev)
     device_create_file(di_device.dev, &dev_attr_status);
     device_create_file(di_device.dev, &dev_attr_provider_vframe_status);
 
-#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
-    if (!(mem = platform_get_resource(pdev, IORESOURCE_MEM, 0)))
-    {
-    	  pr_error("\ndeinterlace memory resource undefined.\n");
-        return -EFAULT;
-    }
-#else
     mem = &memobj;
     r = find_reserve_block(pdev->dev.of_node->name,0);
     if(r < 0){
@@ -6981,13 +6657,13 @@ static int di_probe(struct platform_device *pdev)
     }
     mem->start = (phys_addr_t)get_reserve_block_addr(r);
     mem->end = mem->start+ (phys_addr_t)get_reserve_block_size(r)-1;
-#endif
-		for(i=0; i<USED_LOCAL_BUF_MAX; i++){
+
+    for(i=0; i<USED_LOCAL_BUF_MAX; i++){
     	used_local_buf_index[i] = -1;
- 		}
- 		used_post_buf_index = -1;
-	    // declare deinterlace memory
-	  di_print("Deinterlace memory: start = 0x%x, end = 0x%x, size=0x%x\n", mem->start, mem->end, mem->end-mem->start);
+    }
+    used_post_buf_index = -1;
+// declare deinterlace memory
+    di_print("Deinterlace memory: start = 0x%x, end = 0x%x, size=0x%x\n", mem->start, mem->end, mem->end-mem->start);
 
     di_mem_start = mem->start;
     di_mem_size = mem->end - mem->start + 1;
@@ -7113,7 +6789,7 @@ static int di_suspend(struct platform_device *pdev,pm_message_t state)
 {
 #if (defined RUN_DI_PROCESS_IN_IRQ)&&(!(defined FIQ_VSYNC))
     Wr_reg_bits(ISA_TIMER_MUX,0,18,1);// disable timer c
-#endif  
+#endif
 #if 1
 //fix suspend/resume crash problem
     save_init_flag = init_flag;
@@ -7126,7 +6802,7 @@ static int di_suspend(struct platform_device *pdev,pm_message_t state)
         }
 	}
 #endif
-  
+
     di_set_power_control(0,0);
     di_set_power_control(1,0);
     pr_info("di: di_suspend\n");
@@ -7357,7 +7033,7 @@ MODULE_PARM_DESC(det3d_mode, "\n det3d_mode\n");
 module_param(det3d_mode, uint, 0664);
 #endif
 
-#ifdef NEW_DI
+#ifdef NEW_DI_V1
 MODULE_PARM_DESC(di_new_mode_mask, "\n di_new_mode_mask\n");
 module_param(di_new_mode_mask, uint, 0664);
 #endif

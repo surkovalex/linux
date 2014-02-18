@@ -38,19 +38,12 @@
 #include <linux/list.h>
 #include <asm/uaccess.h>
 #include <mach/am_regs.h>
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+
 #include <linux/amlogic/osd/osd_dev.h>
 #include <linux/amlogic/amports/vframe.h>
 #include <linux/amlogic/amports/vframe_provider.h>
 #include <linux/amlogic/amports/vframe_receiver.h>
 #include <linux/amlogic/amports/canvas.h>
-#else
-#include <linux/osd/osd_dev.h>
-#include <linux/amports/vframe.h>
-#include <linux/amports/vframe_provider.h>
-#include <linux/amports/vframe_receiver.h>
-#include <linux/amports/canvas.h>
-#endif
 #include "deinterlace.h"
 #include "deinterlace_module.h"
 /*for hisense patch*/
