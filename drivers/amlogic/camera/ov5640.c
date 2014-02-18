@@ -90,7 +90,7 @@ static DECLARE_DELAYED_WORK(dl_work, do_download);
 static struct vdin_v4l2_ops_s *vops;
 
 static bool bDoingAutoFocusMode=false;
-
+static int temp_frame=-1;
 static struct v4l2_fract ov5640_frmintervals_active = {
 	.numerator = 1,
 	.denominator = 15,
@@ -4157,11 +4157,17 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 
         printk("ov5640: h_active = %d; v_active = %d, frame_rate=%d\n",
                         para.h_active, para.v_active, para.frame_rate);
+        if(temp_frame<0){
+            temp_frame=para.frame_rate;
+            para.skip_count =  2;
+        }else{
+            temp_frame=para.frame_rate;
+            para.skip_count =  5;
+        }
         para.cfmt = TVIN_YUV422;
         para.dfmt = TVIN_NV21;
         para.hsync_phase = 1;
         para.vsync_phase  = 1;    
-        para.skip_count =  2;
         para.bt_path = dev->cam_info.bt_path;
         ret =  videobuf_streamon(&fh->vb_vidq);
         if(ret == 0){
@@ -4535,6 +4541,7 @@ static int ov5640_close(struct file *file)
 	ov5640_qctrl[2].default_value=0;
 	ov5640_qctrl[10].default_value=100;
 	ov5640_qctrl[11].default_value=0;
+	temp_frame=-1;
 	power_down_ov5640(dev);
 #endif
 	ov5640_frmintervals_active.numerator = 1;
