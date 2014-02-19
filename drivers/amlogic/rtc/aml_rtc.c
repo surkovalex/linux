@@ -132,6 +132,7 @@ struct aml_rtc_priv{
 };
 
 static void reset_gpo_work(struct work_struct *work);
+static int get_gpo_flag(void);
 
 static void delay_us(int us)
 {
@@ -631,6 +632,17 @@ static int aml_rtc_suspend(struct platform_device *pdev, pm_message_t state)
 #endif /* CONFIG_MESON_SUSPEND_TEST */
 	return 0;
 }
+int aml_rtc_resume(struct platform_device *pdev)
+{	
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6	
+		ser_access_write(RTC_GPO_COUNTER_ADDR,0x500000);
+#else		
+		ser_access_write(RTC_GPO_COUNTER_ADDR,0x100000);
+#endif						
+	
+	printk("resume reset gpo !\n");
+	return 0;
+}
 
 static char *rtc_reg[8]={
 	"RTC_COUNTER    ",
@@ -854,6 +866,7 @@ struct platform_driver aml_rtc_driver = {
 //	.remove = __devexit_p(aml_rtc_remove),
 	.remove = (aml_rtc_remove),
 	.suspend = aml_rtc_suspend,
+	.resume=aml_rtc_resume,
 	.shutdown = aml_rtc_shutdown,
 };
 
