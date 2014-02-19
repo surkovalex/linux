@@ -184,6 +184,41 @@
 		status = "okay";
 	};
 
+/// ***************************************************************************************
+///	-	Power
+//$$ MODULE="Power"
+//$$ DEVICE="dvfs"
+//$$ L2 PROP_STR = "status"
+	dvfs {
+		compatible = "amlogic, amlogic-dvfs"; /** fixed for driver, don't change       */
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "ok";
+
+//$$ L2 PROP_U32 = "dvfs_id"
+//$$ L2 PROP_U32 = "table_count"
+//$$ L2 PROP_U32 11*3 = "dvfs_table"
+	vcck_dvfs {
+		dvfs_id     = <1>;  /** must be value of (1 << n) */
+		table_count = <11>; /** must be correct count for dvfs_table */
+		dvfs_table  = <
+			/* NOTE: frequent in this table must be ascending order */
+			/* frequent(Khz)    min_uV      max_uV                  */
+			200000		1040000		1040000
+			600000		1040000		1040000
+			792000		1040000		1040000
+			816000		1110000		1110000
+			840000		1110000		1110000
+			984000		1140000		1140000
+			1000000		1140000		1140000
+			1080000		1240000		1240000
+			1200000		1260000		1260000
+			1320000		1330000		1330000
+			1500000		1330000		1330000
+			>;
+		};
+	};
+
 
 /// ***************************************************************************************
 ///	-	USB Controller
@@ -312,21 +347,24 @@
 		dev_name = "syno9629.0";
 	};
 
-	aml_audio_codec{
-        compatible = "amlogic,audio_codec";
-        tas5711:tas5711{
-            codec_name = "tas5711";
-            i2c_addr = <0x1B>;
-            i2c_bus = "i2c_bus_a";
-            status = "okay";
-        };
-        tas5707:tas5707{
-            codec_name = "tas5707";
-            i2c_addr = <0x1B>;
-            i2c_bus = "i2c_bus_a";
-            status = "disabled";
-        };
-    };
+	aml_audio_codec {
+		compatible = "amlogic,audio_codec";
+
+		tas5711:tas5711 {
+			codec_name = "tas5711";
+			i2c_addr = <0x1B>;
+			i2c_bus = "i2c_bus_a";
+			status = "okay";
+		};
+
+		tas5707:tas5707 {
+			codec_name = "tas5707";
+			i2c_addr = <0x1B>;
+			i2c_bus = "i2c_bus_a";
+			status = "disabled";
+		};
+	};
+
 	m6tv_audio {
 		status = "okay";
 		compatible = "sound_card,aml_m6tv_audio";
