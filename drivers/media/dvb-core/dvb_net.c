@@ -58,7 +58,7 @@
 #include <linux/kernel.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
-#include <linux/dvb/net.h>
+#include <uapi/linux/dvb/net.h>
 #include <linux/uio.h>
 #include <asm/uaccess.h>
 #include <linux/crc32.h>

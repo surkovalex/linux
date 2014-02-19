@@ -90,7 +90,7 @@ source "drivers/amlogic/deinterlace/Kconfig"
 source "drivers/amlogic/mipi/Kconfig"
 #source "drivers/amlogic/d2d3/Kconfig"
 source "drivers/amlogic/amvecm/Kconfig"
-
+source "drivers/amlogic/dvb_tv/Kconfig"
 #deferred module for speed
 #source "drivers/amlogic/load_deferred_module/Kconfig"
 

@@ -92,17 +92,8 @@ obj-$(CONFIG_AMAUDIO) += amaudio/
 obj-y += mhl/
 obj-y += hdmi/
 
-ifeq ($(CONFIG_AM_NEW_TV_ARCH),y)
-#obj-$(CONFIG_AM_DVB) += dvb_tv/
-else
-#obj-$(CONFIG_AM_DVB) += dvb/
-endif
-
+obj-$(CONFIG_AM_DVB) += dvb_tv/
 obj-$(CONFIG_AM_SMARTCARD) += smartcard/
-
-ifneq ($(CONFIG_AM_NEW_TV_ARCH),y)
-#obj-y += demod/
-endif
 
 obj-$(CONFIG_AM_WIFI) += wifi/
 obj-$(CONFIG_SDIO_DHD_CDC_WIFI_40181_MODULE) += ../../../hardware/wifi/broadcom/drivers/ap6xxx/broadcm_40181/

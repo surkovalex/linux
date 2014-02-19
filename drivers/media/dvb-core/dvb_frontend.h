@@ -38,7 +38,9 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 
-#include <linux/dvb/frontend.h>
+//#include <linux/dvb/frontend.h>
+#include <uapi/linux/dvb/frontend.h>
+
 
 #include "dvbdev.h"
 
@@ -52,6 +54,7 @@ struct dvb_frontend_tune_settings {
 	int min_delay_ms;
 	int step_size;
 	int max_drift;
+	struct dvb_frontend_parameters parameters;
 };
 
 struct dvb_frontend;
@@ -71,8 +74,12 @@ struct dvb_tuner_info {
 struct analog_parameters {
 	unsigned int frequency;
 	unsigned int mode;
+	unsigned int soundsys;//A2,BTSC/EIAJ/NICAM
 	unsigned int audmode;
-	u64 std;
+	unsigned int lock_range;
+	unsigned int leap_step;
+	v4l2_std_id std;
+	unsigned int reserved;
 };
 
 enum dvbfe_modcod {
@@ -207,7 +214,7 @@ struct dvb_tuner_ops {
 	int (*set_analog_params)(struct dvb_frontend *fe, struct analog_parameters *p);
 
 	/** This is support for demods like the mt352 - fills out the supplied buffer with what to write. */
-	int (*calc_regs)(struct dvb_frontend *fe, u8 *buf, int buf_len);
+	int (*calc_regs)(struct dvb_frontend *fe, struct dvb_frontend_parameters *p, u8 *buf, int buf_len);
 
 	/** This is to allow setting tuner-specific configs */
 	int (*set_config)(struct dvb_frontend *fe, void *priv_cfg);
@@ -219,6 +226,7 @@ struct dvb_tuner_ops {
 #define TUNER_STATUS_LOCKED 1
 #define TUNER_STATUS_STEREO 2
 	int (*get_status)(struct dvb_frontend *fe, u32 *status);
+	int (*get_pll_status)(struct dvb_frontend *fe, u32 *status);
 	int (*get_rf_strength)(struct dvb_frontend *fe, u16 *strength);
 	int (*get_afc)(struct dvb_frontend *fe, s32 *afc);
 
@@ -233,6 +241,10 @@ struct dvb_tuner_ops {
 	 */
 	int (*set_state)(struct dvb_frontend *fe, enum tuner_param param, struct tuner_state *state);
 	int (*get_state)(struct dvb_frontend *fe, enum tuner_param param, struct tuner_state *state);
+    /*add function to get tuner status*/
+    int (*get_tuner_status)(struct dvb_frontend *fe, tuner_status_t *tuner_status);
+    /*add special fine tune function */
+    int (*fine_tune)(struct dvb_frontend *fe, int offset_khz);
 };
 
 struct analog_demod_info {
@@ -243,10 +255,13 @@ struct analog_demod_ops {
 
 	struct analog_demod_info info;
 
-	void (*set_params)(struct dvb_frontend *fe,
-			   struct analog_parameters *params);
-	int  (*has_signal)(struct dvb_frontend *fe, u16 *signal);
-	int  (*get_afc)(struct dvb_frontend *fe, s32 *afc);
+	void (*set_params)(struct dvb_frontend *fe);
+	int  (*has_signal)(struct dvb_frontend *fe);
+	int  (*is_stereo)(struct dvb_frontend *fe);
+	int  (*get_afc)(struct dvb_frontend *fe);
+        int  (*get_snr)(struct dvb_frontend *fe);
+	void (*get_status)(struct dvb_frontend *fe, void *status);
+	void (*get_pll_status)(struct dvb_frontend *fe, void *status);
 	void (*tuner_status)(struct dvb_frontend *fe);
 	void (*standby)(struct dvb_frontend *fe);
 	void (*release)(struct dvb_frontend *fe);
@@ -254,9 +269,36 @@ struct analog_demod_ops {
 
 	/** This is to allow setting tuner-specific configuration */
 	int (*set_config)(struct dvb_frontend *fe, void *priv_cfg);
+    /*add function to get atv_demod & stereo_demod status*/
+    int (*get_atv_status)(struct dvb_frontend *fe, atv_status_t *atv_status);
+    int (*get_sd_status)(struct dvb_frontend *fe, sound_status_t *sd_status);
 };
 
 struct dtv_frontend_properties;
+
+struct dvbsx_blindscan_info {
+	/* timeout of get blindscan event */
+	struct dvbsx_blindscanpara bspara;
+	int (*blindscan_callback)(struct dvb_frontend *fe, struct dvbsx_blindscanevent *pbsevent);
+};
+
+struct dvbsx_blindscan_ops {
+	struct dvbsx_blindscan_info info;
+
+	/*
+	 *  These are provided start and stop blindscan
+	 */
+	int (*blindscan_scan)(struct dvb_frontend* fe, struct dvbsx_blindscanpara *pbspara);
+	int (*blindscan_cancel)(struct dvb_frontend* fe);
+};
+
+struct dvb_frontend_asyncinfo {
+	int set_frontend_asyncenable;
+	int (*set_frontend_asyncpreproc)(struct dvb_frontend *fe);
+	/*return value = 1 interrupt, = 0 timeout,  = -1 error*/
+	int (*set_frontend_asyncwait)(struct dvb_frontend *fe, u32 timeout);
+	int (*set_frontend_asyncpostproc)(struct dvb_frontend *fe, int asyncwait_ret);
+};
 
 struct dvb_frontend_ops {
 
@@ -274,7 +316,7 @@ struct dvb_frontend_ops {
 
 	/* if this is set, it overrides the default swzigzag */
 	int (*tune)(struct dvb_frontend* fe,
-		    bool re_tune,
+		    struct dvb_frontend_parameters* params,
 		    unsigned int mode_flags,
 		    unsigned int *delay,
 		    fe_status_t *status);
@@ -282,16 +324,17 @@ struct dvb_frontend_ops {
 	enum dvbfe_algo (*get_frontend_algo)(struct dvb_frontend *fe);
 
 	/* these two are only used for the swzigzag code */
-	int (*set_frontend)(struct dvb_frontend *fe);
+	int (*set_frontend)(struct dvb_frontend* fe);
 	int (*get_tune_settings)(struct dvb_frontend* fe, struct dvb_frontend_tune_settings* settings);
 
-	int (*get_frontend)(struct dvb_frontend *fe);
+	int (*get_frontend)(struct dvb_frontend* fe);
 
 	int (*read_status)(struct dvb_frontend* fe, fe_status_t* status);
 	int (*read_ber)(struct dvb_frontend* fe, u32* ber);
 	int (*read_signal_strength)(struct dvb_frontend* fe, u16* strength);
 	int (*read_snr)(struct dvb_frontend* fe, u16* snr);
 	int (*read_ucblocks)(struct dvb_frontend* fe, u32* ucblocks);
+	int (*set_qam_mode)(struct dvb_frontend* fe);
 
 	int (*diseqc_reset_overload)(struct dvb_frontend* fe);
 	int (*diseqc_send_master_cmd)(struct dvb_frontend* fe, struct dvb_diseqc_master_cmd* cmd);
@@ -308,16 +351,23 @@ struct dvb_frontend_ops {
 	/* These callbacks are for devices that implement their own
 	 * tuning algorithms, rather than a simple swzigzag
 	 */
-	enum dvbfe_search (*search)(struct dvb_frontend *fe);
+	enum dvbfe_search (*search)(struct dvb_frontend *fe, struct dvb_frontend_parameters *p);
+	int (*track)(struct dvb_frontend *fe, struct dvb_frontend_parameters *p);
 
 	struct dvb_tuner_ops tuner_ops;
 	struct analog_demod_ops analog_ops;
 
 	int (*set_property)(struct dvb_frontend* fe, struct dtv_property* tvp);
 	int (*get_property)(struct dvb_frontend* fe, struct dtv_property* tvp);
+
+	struct dvbsx_blindscan_ops blindscan_ops;
+
+	int (*set_mode)(struct dvb_frontend* fe, fe_type_t type);
+	int (*read_ts)(struct dvb_frontend* fe, int *ts);
+
+	struct dvb_frontend_asyncinfo asyncinfo;
 };
 
-#ifdef __DVB_CORE__
 #define MAX_EVENT 8
 
 struct dvb_fe_events {
@@ -328,7 +378,17 @@ struct dvb_fe_events {
 	wait_queue_head_t	  wait_queue;
 	struct mutex		  mtx;
 };
-#endif
+
+#define MAX_BLINDSCAN_EVENT 32
+
+struct dvbsx_blindscan_events {
+	struct dvbsx_blindscanevent events[MAX_BLINDSCAN_EVENT];
+	int			  eventw;
+	int			  eventr;
+	int			  overflow;
+	wait_queue_head_t	  wait_queue;
+	struct mutex		  mtx;
+};
 
 struct dtv_frontend_properties {
 
@@ -353,6 +413,8 @@ struct dtv_frontend_properties {
 	fe_pilot_t		pilot;
 	fe_rolloff_t		rolloff;
 
+	fe_ofdm_mode_t      ofdm_mode;
+
 	fe_delivery_system_t	delivery_system;
 
 	enum fe_interleaving	interleaving;
@@ -374,6 +436,11 @@ struct dtv_frontend_properties {
 	/* Multistream specifics */
 	u32			stream_id;
 
+	u32         dvbt2_plp_id;
+
+	/* Analog specifics */
+	struct dvb_analog_parameters analog;
+	struct dvb_analog_parameters param;
 	/* ATSC-MH specifics */
 	u8			atscmh_fic_ver;
 	u8			atscmh_parade_id;
