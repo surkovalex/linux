@@ -123,6 +123,14 @@ config AM_VDEC_REAL
     help
       Driver for real video decoder.
 
+config AM_VDEC_AVS
+	tristate "Amlogic AVS Video Decoder"
+    default n
+    
+	select AM_PTSSERVER
+    help
+      Driver for avs video decoder.
+
 config AM_JPEGDEC
     tristate "Amlogic HW jpeg decoder"
     default y

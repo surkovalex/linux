@@ -84,6 +84,12 @@ obj-$(CONFIG_AM_VDEC_REAL) += amvdec_real.o
 amvdec_real-objs := vreal.o
 amvdec_real-y    := vreal.o
 
+ifeq ($(CONFIG_ARCH_MESON6TVD),y)
+obj-$(CONFIG_AM_VDEC_AVS) += amvdec_avs.o
+amvdec_avs-objs := vavs.o
+amvdec_avs-y    := vavs.o
+endif
+
 obj-$(CONFIG_AM_JPEGDEC) += jpegdec.o
 
 obj-$(CONFIG_AM_ENCODER) += encoder.o
