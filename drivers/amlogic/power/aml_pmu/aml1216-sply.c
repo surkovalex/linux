@@ -254,19 +254,19 @@ int aml1216_set_usb_voltage_limit(int voltage)
     val &= ~(0xc0);
     switch (voltage) {
     case 4300:
-        val |= (0x01 << 6);
+        val |= (0x01 << 5);
         break;
 
     case 4400:
-        val |= (0x02 << 6);
+        val |= (0x02 << 5);
         break;
 
     case 4500:
-        val |= (0x00 << 6);
+        val |= (0x00 << 5);
         break;
 
     case 4600:
-        val |= (0x03 << 6);
+        val |= (0x03 << 5);
         break;
     
     default:
@@ -304,8 +304,8 @@ int aml1216_set_charging_current(int curr)
     } else {                                    // input is charge ratio
         curr = (curr * aml1216_battery->pmu_battery_cap) / 100 + 100; 
     } 
-    if (curr > 1050) {                       // limit current to 1050mA 
-        curr = 1050;    
+    if (curr < 750) {                       // limit current to 600mA for stable issue
+        curr = 750;    
     }
     idx_to = (curr - 300) / 150;
     aml1216_read(0x012b, (unsigned char *)&val);
