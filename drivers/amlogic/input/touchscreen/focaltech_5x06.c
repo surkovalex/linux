@@ -1312,7 +1312,8 @@ ft5x0x_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 			     ABS_MT_TOUCH_MAJOR, 0, PRESS_MAX, 0, 0);
 	input_set_abs_params(input_dev,
 			     ABS_MT_WIDTH_MAJOR, 0, 200, 0, 0);
-
+	input_set_abs_params(input_dev, 
+			     ABS_MT_TRACKING_ID, 0, FT5X0X_EVENT_MAX, 0, 0);
 	set_bit(EV_ABS, input_dev->evbit);
 	set_bit(EV_KEY, input_dev->evbit);
 
