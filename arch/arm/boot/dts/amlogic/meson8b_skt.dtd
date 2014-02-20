@@ -887,7 +887,7 @@ void root_func(){
             id_reg = <0x00>;
             id_val = <0x21>;
             capless = <0>;
-            status = "okay";
+            status = "disable";
         };
         rt5631:rt5631{
             codec_name = "rt5631";
