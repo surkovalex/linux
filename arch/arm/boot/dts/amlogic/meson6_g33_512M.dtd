@@ -1086,6 +1086,7 @@ void root_func(){
             status = "okay";
             address = <0x4c>;
             i2c_bus = "i2c_bus_b";
+            acc_dir = <0x0110>;
         };
     };
 
