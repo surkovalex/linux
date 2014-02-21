@@ -392,6 +392,7 @@ typedef struct {
 	u16 GammaTableB[256];
 } Lcd_Effect_t;
 
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 typedef struct {
 	int channel_num;
 	int hv_sel;
@@ -414,7 +415,9 @@ typedef struct {
 	int TL080_phase;
 	int scan_function;
 } MLVDS_Config_t;
+#endif
 
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 typedef struct DSI_Config_s{
         unsigned int    dsi_clk_div;
         unsigned int    dsi_clk_max;
@@ -448,13 +451,6 @@ typedef struct DSI_Config_s{
 }DSI_Config_t;
 
 typedef struct {
-	unsigned lvds_vswing;
-	unsigned lvds_repack_user;
-	unsigned lvds_repack;
-	unsigned pn_swap;
-} LVDS_Config_t;
-
-typedef struct {
 	unsigned char link_user;
 	unsigned char lane_count;
 	unsigned char link_rate;
@@ -463,6 +459,14 @@ typedef struct {
 	unsigned char preemphasis;
 	unsigned int bit_rate;
 } EDP_Config_t;
+#endif
+
+typedef struct {
+	unsigned lvds_vswing;
+	unsigned lvds_repack_user;
+	unsigned lvds_repack;
+	unsigned pn_swap;
+} LVDS_Config_t;
 
 typedef struct {
 	unsigned char rb_swap;
@@ -470,17 +474,16 @@ typedef struct {
 } TTL_Config_t;
 
 typedef struct {
-	unsigned phy_ctrl;
-} DPHY_Config_t;
-
-typedef struct {
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	DSI_Config_t *mipi_config;
-	LVDS_Config_t *lvds_config;
 	EDP_Config_t *edp_config;
+#endif
+	LVDS_Config_t *lvds_config;
 	TTL_Config_t *ttl_config;
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 	MLVDS_Config_t *mlvds_config;
 	MLVDS_Tcon_Config_t *mlvds_tcon_config;
-	DPHY_Config_t *dphy_config;
+#endif
 } Lcd_Control_Config_t;
 
 typedef enum {
