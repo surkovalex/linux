@@ -1077,9 +1077,9 @@ sdio{
 //$$ L2 PROP_STR = "key-dataformat"
 //$$ L2 PROP_STR 3 = "key-permit"
 		keysn_0: key_0{
-			key-name = "key0";
+			key-name = "usid";
 			key-device = "nandkey";
-			key-dataformat = "hexdata";
+			key-dataformat = "allascii"";
 			key-permit = "read","write","del";
 		};
 		
@@ -1089,7 +1089,7 @@ sdio{
 //$$ L2 PROP_STR = "key-dataformat"
 //$$ L2 PROP_STR 3 = "key-permit"
 		keysn_1:key_1{
-			key-name = "key1";
+			key-name = "mac";
 			key-device = "nandkey";
 			key-dataformat = "hexdata";
 			key-permit = "read","write","del";
