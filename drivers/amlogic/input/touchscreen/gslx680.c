@@ -104,7 +104,7 @@ struct gsl_ts {
 	struct early_suspend early_suspend;
 #endif
 	struct work_struct dl_work;
-	struct semaphore fw_sema;
+	struct completion fw_completion;
 	int dl_fw;
 };
 
@@ -137,6 +137,8 @@ static struct fw_data *ptr_fw = NULL;
 static u32 fw_len = 0;
 static struct aml_gsl_api *api = NULL;
 #endif
+//extern int aml_get_backlight_status(void);
+
 static int gslX680_shutdown_low(struct touch_pdata *pdata)
 {
 #ifdef CONFIG_OF
@@ -255,6 +257,8 @@ static void gsl_load_fw(struct i2c_client *client)
 	u8 *cur = buf + 1;
 	u32 source_line = 0;
 	u32 source_len = 0;
+	struct gsl_ts *ts = dev_get_drvdata(&(client->dev));
+	u32 state = 0;
 	
 #ifdef LATE_UPGRADE
 	if (!ptr_fw) return;
@@ -290,7 +294,20 @@ static void gsl_load_fw(struct i2c_client *client)
 
 			send_flag++;
 		}
+		if (ts->dl_fw && !state && (source_line == (source_len>>1) + (source_len>>4))) {
+			//if (!aml_get_backlight_status()) {
+				complete(&ts->fw_completion);
+				state = 1;
+				printk("1111 fw_completion complete\n");
+			//}
+		}
 	}
+#if 0
+	if (ts->dl_fw && !state) {
+		complete(&ts->fw_completion);
+		printk("2222 fw_completion complete\n");
+	}
+#endif
 	printk("=============gsl_load_fw end==============\n");
 
 }
@@ -472,6 +489,7 @@ static void check_mem_data(struct i2c_client *client)
 {
 	char write_buf;
 	char read_buf[4]  = {0};
+	struct gsl_ts *ts = dev_get_drvdata(&(client->dev));
 	
 	msleep(30);
 	write_buf = 0x00;
@@ -483,11 +501,16 @@ static void check_mem_data(struct i2c_client *client)
 		printk("!!!!!!!!!!!page: %x offset: %x val: %x %x %x %x\n",0x0, 0x0, read_buf[3], read_buf[2], read_buf[1], read_buf[0]);
 		init_chip(client);
 	}
+	else {
+		if (ts->dl_fw)
+			complete(&ts->fw_completion);
+	}
 }
 
 static void check_mem_data_b(struct i2c_client *client)
 {
 	u8 read_buf[4]  = {0};
+	struct gsl_ts *ts = dev_get_drvdata(&(client->dev));
 	
 	msleep(30);
 	gsl_ts_read(client,0xb0, read_buf, sizeof(read_buf));
@@ -496,6 +519,10 @@ static void check_mem_data_b(struct i2c_client *client)
 	{
 		printk("#########check mem read 0xb0 = %x %x %x %x #########\n", read_buf[3], read_buf[2], read_buf[1], read_buf[0]);
 		init_chip(client);
+	}
+	else {
+		if (ts->dl_fw)
+			complete(&ts->fw_completion);
 	}
 }
 
@@ -1066,6 +1093,8 @@ error_alloc_dev:
 static void do_download(struct work_struct *work)
 {
 	struct gsl_ts *ts = container_of(work, struct gsl_ts, dl_work);
+	int need_delay = 0;
+
 	print_info("gsl1680 call func start%s\n", __func__);
 
 	gslX680_shutdown_high(g_pdata);
@@ -1078,7 +1107,12 @@ static void do_download(struct work_struct *work)
 		check_mem_data(ts->client);
 	print_info("gsl1680 0000\n");
 
-	up(&ts->fw_sema);
+	if (ts->is_suspended == true) {
+		enable_irq(ts->irq);
+		ts->is_suspended = false;
+	}
+	if (need_delay)
+		msleep(200);
 	
 	print_info("gsl1680 call func end%s\n", __func__);
 }
@@ -1104,7 +1138,7 @@ static int gsl_ts_resume(struct i2c_client *client)
 
   	print_info("gsl1680 call func start%s\n", __func__);
 	
-	while (!down_trylock(&ts->fw_sema));
+	INIT_COMPLETION(ts->fw_completion);
 	schedule_work(&(ts->dl_work));
 	ts->dl_fw = 1;
 	print_info("gsl1680 call func end%s\n", __func__);
@@ -1129,11 +1163,10 @@ static void gsl_ts_early_suspend(struct early_suspend *h)
 static void gsl_ts_late_resume(struct early_suspend *h)
 {
 	struct gsl_ts *ts = container_of(h, struct gsl_ts, early_suspend);
-	int need_delay = 0;
 	print_info("gsl1680 call func start %s\n", __func__);
 	if (ts->dl_fw) {
-		if (down_interruptible(&ts->fw_sema))
-			printk("%s: down_interruptible fw_sema fail\n",__func__);
+		if (wait_for_completion_interruptible(&ts->fw_completion))
+			printk("%s: wait_for_completion_interruptible fw_completion fail\n",__func__);
 		ts->dl_fw = 0;
 		//need_delay = 1;
 	} else {
@@ -1141,12 +1174,10 @@ static void gsl_ts_late_resume(struct early_suspend *h)
 		msleep(20); 	
 		reset_chip(ts->client);
 		startup_chip(ts->client);
+		enable_irq(ts->irq);
+		ts->is_suspended = false;
 	}	
-	enable_irq(ts->irq);
-	ts->is_suspended = false;
 
-	if (need_delay)
-		msleep(200);
 	print_info("gsl1680 call func end %s\n", __func__);
 }
 #endif
@@ -1282,7 +1313,7 @@ static int gsl_ts_probe(struct i2c_client *client,
 	
 	INIT_WORK(&(ts->dl_work), do_download);
 	
-	sema_init(&ts->fw_sema,0);
+	init_completion(&ts->fw_completion);
 	
 	rc = gsl_ts_init_ts(client, ts);
 	if (rc < 0) {
@@ -1316,7 +1347,7 @@ static int gsl_ts_probe(struct i2c_client *client,
 	//rc = device_create_file(&ts->input->dev, &dev_attr_debug_enable);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
-	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN-1;
+	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN;
 	ts->early_suspend.suspend = gsl_ts_early_suspend;
 	ts->early_suspend.resume = gsl_ts_late_resume;
 	register_early_suspend(&ts->early_suspend);
