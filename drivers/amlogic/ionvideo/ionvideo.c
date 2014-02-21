@@ -120,7 +120,7 @@ static void videoc_omx_compute_pts(struct ionvideo_dev *dev, struct vframe_s* vf
         dev->receiver_register = 0;
         dev->pts = vf->pts_us64;
     } else if (dev->receiver_register){
-        timestamp_vpts_set(timestamp_pcrscr_get());
+        timestamp_vpts_set(0);
         dev->receiver_register = 0;
         dev->pts = timestamp_vpts_get();
     } else {
