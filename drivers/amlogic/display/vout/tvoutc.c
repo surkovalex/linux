@@ -372,6 +372,7 @@ printk(" clk_util_clk_msr 27 = %d\n", clk_util_clk_msr(27));
 printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
 #endif
 
+#ifdef CONFIG_ARCH_MESON8
 	if( (mode==TVMODE_480CVBS) || (mode==TVMODE_576CVBS) )
 	{
 		msleep(1000);
@@ -379,6 +380,7 @@ printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
 		aml_write_reg32(P_HHI_VDAC_CNTL0,0x650001);
 		aml_write_reg32(P_HHI_VDAC_CNTL1,0x1);
 	}
+#endif
 //while(1);
 
 
