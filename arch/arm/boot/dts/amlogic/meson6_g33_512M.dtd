@@ -1293,7 +1293,7 @@ void root_func(){
 	meson-remote{
 		compatible = "amlogic,aml_remote";
 		dev_name = "meson-remote";
-		status = "okay";
+		status = "disable";
 		ao_baseaddr = <0xf3100480>;
 		pinctrl-names="default";
 		pinctrl-0=<&remote_pins>;
