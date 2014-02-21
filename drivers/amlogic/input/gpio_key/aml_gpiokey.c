@@ -186,6 +186,10 @@ void kp_timer_sr(unsigned long data)
 {
     struct kp *kp_data=(struct kp *)data;
     schedule_work(&(kp_data->work_update));
+
+    if(!deep_suspend_flag)
+                clr_pwr_key();
+
     mod_timer(&kp_data->timer,jiffies+msecs_to_jiffies(25));
 }
 #endif
