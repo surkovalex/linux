@@ -51,7 +51,7 @@
 #include <linux/of.h>
 #include <linux/amlogic/aml_gpio_consumer.h>
 #include <linux/pinctrl/consumer.h>
-#include "../backlight/aml_lcd_bl.h"
+#include <linux/amlogic/aml_lcd_bl.h>
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 #include <mach/mlvds_regs.h>
 #endif
@@ -2838,17 +2838,13 @@ static void switch_lcd_gates(Lcd_Type_t lcd_type)
 {
 	switch(lcd_type){
 		case LCD_DIGITAL_TTL:
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 			switch_mod_gate_by_name("tcon", 1);
 			switch_mod_gate_by_name("lvds", 0);
-#endif
 			break;
 		case LCD_DIGITAL_LVDS:
 		case LCD_DIGITAL_MINILVDS:
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 			switch_mod_gate_by_name("lvds", 1);
 			switch_mod_gate_by_name("tcon", 0);
-#endif
 			break;
 		default:
 			break;
@@ -2947,12 +2943,13 @@ static int _init_lcd_driver_post(Lcd_Config_t *pConf)	//after power on lcd
 			break;
 		case LCD_DIGITAL_EDP:
 			ret = set_control_edp(pConf);
-			mdelay(200);
 			break;
 #endif
 		case LCD_DIGITAL_LVDS:
 		case LCD_DIGITAL_TTL:
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 		case LCD_DIGITAL_MINILVDS:
+#endif
 		default:
 			break;
 	}
@@ -2974,7 +2971,9 @@ static void _disable_lcd_driver_pre(Lcd_Config_t *pConf)	//before power off lcd
 #endif
 		case LCD_DIGITAL_LVDS:
 		case LCD_DIGITAL_TTL:
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 		case LCD_DIGITAL_MINILVDS:
+#endif
 		default:
 			break;
 	}
