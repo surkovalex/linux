@@ -874,7 +874,6 @@ sdio{
 //$$ L4 PROP_U32 3 = "edp_user_link_rate_lane_count"
 //$$ L4 PROP_U32 2 = "edp_link_adaptive_vswing"
 //$$ L4 PROP_U32 2 = "rgb_base_coeff"
-//$$ L4 PROP_U32 2 = "video_on_pixel_line"
 
 //$$ L2 PROP_STR 3 = "power_on_uboot"
 //$$ L2 PROP_STR 3 = "power_on_step_1"
@@ -937,7 +936,7 @@ sdio{
 
 		/* recommend settings, you can modify them if needed. */
 		valid_hvsync_de=<1 1>;	/** hvsync_signal_valid, DE_signal_valid : (0=disable signal, 1=enable signal) */
-		hsign_hoffset_vsign_voffset=<1 0 1 0>;	/** hsign, hoffset, vsign, voffset :("sign-offset" is a pair. sign: 0 for positive, 1 for negative) */
+		hsign_hoffset_vsign_voffset=<0 0 0 0>;	/** hsign, hoffset, vsign, voffset :("sign-offset" is a pair. sign: 0=positive, 1=negative) */
 
 		dither_user_ctrl=<0 0x000>;	/**  dither_user(0=auto setting, 1=user define), dither_ctrl(user defined dither control, only valid when user_define=1) */
 		vadj_brightness_contrast_saturation=<0x0 0x80 0x100>;	/** video adjust brightness, contrast, saturation */
@@ -964,7 +963,6 @@ sdio{
 		edp_user_link_rate_lane_count=<1 1 4>;	/** edp_user(0=auto setting, 1=user define), link_rate(0=1.62G, 1=2.7G, only valid when edp_user=1), lane_count(support 1,2,4, only valid when edp_user=1) */
 		edp_link_adaptive_vswing=<0 0>;	/** adaptive(0=fixed user defined vswing, 1=auto setting vswing by training), vswing(support level 0,1,2,3, user defined vswing, only valid when adaptive=0) */
 		rgb_base_coeff=<0xf0 0x74a>;	/** rgb_base, rgb_coeff */
-		video_on_pixel_line=<120 32>;  /** video_on_pixel, video_on_line */  
 
 		//lcd power ctrl	//support up to 15 steps for each sequence
 		power_on_uboot="n","n","n";	/** only for uboot, ahead of lcd_power_on, no need config delay */
@@ -1041,8 +1039,8 @@ sdio{
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
 //$$ L2 PROP_U32 = "dsi_lane_num"
-//$$ L2 PROP_U32 = "dsi_bit_rate_min_max"
-//$$ L2 PROP_U32 = "dsi_sleep_out_display_on_delay"
+//$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
+//$$ L2 PROP_U32 2 = "dsi_sleep_out_display_on_delay"
 	lcd_B080XAN01:lcd_B080XAN01{	//k101
 		model_name="B080XAN01";	/** lcd model name */
 		interface="mipi";		/** lcd_interface(mipi, lvds, edp, ttl) */
@@ -1056,10 +1054,10 @@ sdio{
 		hsync_width_backporch=<64 120>;	/** hsync_width, hsync_backporch(include hsync_width) */
 		vsync_width_backporch=<50 80>;	/** vsync_width, vsync_backporch(include vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
-		
-    dsi_lane_num=<4>;/** mipi dsi data lane number */
-    dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-    dsi_sleep_out_display_on_delay=<20 20>; /** mipi dsi basic delay: (unit: ms) */
+
+        dsi_lane_num=<4>;/** mipi dsi data lane number */
+        dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+        dsi_sleep_out_display_on_delay=<20 20>; /** mipi dsi basic delay: (unit: ms) */
 	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_LD070WX4>
@@ -1076,8 +1074,8 @@ sdio{
 //$$ L2 PROP_U32 = "vsync_horizontal_phase"
 //$$ L2 PROP_U32 = "dsi_lane_num"
 //$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
-//$$ L2 PROP_U32 2 = "dsi_transfer_mode"
-//$$ L2 PROP_U32 2 = "dsi_power_on_cmd"
+//$$ L2 PROP_U32 = "dsi_transfer_mode"
+//$$ L2 PROP_U32 18 = "dsi_power_on_cmd"
 //$$ L2 PROP_U32 2 = "dsi_sleep_out_display_on_delay"
 lcd_LD070WX4:lcd_LD070WX4{
 		model_name="LD070WX4";	/** lcd model name */
@@ -1093,21 +1091,21 @@ lcd_LD070WX4:lcd_LD070WX4{
 		vsync_width_backporch=<2 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 		vsync_horizontal_phase=<1 4>; /** adj_sign(0=positive, 1=negative), adj_value. default is <0 0> */
-		
-		dsi_lane_num=<4>;/** mipi dsi data lane number */
-		dsi_bit_rate_min_max=<400 500>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-		dsi_transfer_mode=<0>;/** mipi dsi transfer mode: (0=command mode, 1=video mode) */
-		dsi_power_on_cmd =<  0x01  0x0
-										 0xFF  0x20     
-										 0xAE  0x0B 
-										 0xEE  0xEA 
-										 0xEF  0x5F 
-										 0xF2  0x68 
-										 0xEE  0x0 
-										 0xEF  0x0 
-										 0xFF  0xFF
-           				>;/** special power on command, 2 data is a pair(reg, value), if the first valu is 0xff, second value is delay time(unit: ms), ending flag is 0xff,0xff.*/
-   dsi_sleep_out_display_on_delay=<200 100>; /** mipi dsi basic delay: (unit: ms) */
+
+        dsi_lane_num=<4>;/** mipi dsi data lane number */
+        dsi_bit_rate_min_max=<400 500>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+        dsi_transfer_mode=<0>;/** mipi dsi transfer mode: (0=command mode, 1=video mode) */
+        dsi_power_on_cmd =< 0x01  0x0
+                            0xFF  0x20
+                            0xAE  0x0B 
+                            0xEE  0xEA 
+                            0xEF  0x5F 
+                            0xF2  0x68 
+                            0xEE  0x0 
+                            0xEF  0x0 
+                            0xFF  0xFF
+                          >;/** special power on command, 2 data is a pair(reg, value), if the first valu is 0xff, second value is delay time(unit: ms), ending flag is 0xff,0xff.*/
+        dsi_sleep_out_display_on_delay=<200 100>; /** mipi dsi basic delay: (unit: ms) */
 	};
 
 
@@ -1201,7 +1199,7 @@ lcd_LD070WX4:lcd_LD070WX4{
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
 //$$ L2 PROP_U32 = "dsi_lane_num"
-//$$ L2 PROP_U32 2 = "pclk_lanebyteclk_factor"
+//$$ L2 PROP_U32 = "pclk_lanebyteclk_factor"
 //$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
 	lcd_CLAA101FP05XG:lcd_CLAA101FP05XG{
 		model_name="CLAA101FP05XG";	/** lcd model name */
@@ -1216,10 +1214,10 @@ lcd_LD070WX4:lcd_LD070WX4{
 		hsync_width_backporch=<32 80>;	/** hsync_width, hsync_backporch(include hsync_width) */
 		vsync_width_backporch=<6 26>;	/** vsync_width, vsync_backporch(include vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
-		
-    dsi_lane_num=<4>;/** mipi dsi data lane number */
-    dsi_bit_rate_min_max=<900 1000>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-    pclk_lanebyteclk_factor =<15>;/** special adjust, default is 0 */
+
+        dsi_lane_num=<4>;/** mipi dsi data lane number */
+        dsi_bit_rate_min_max=<900 1000>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+        pclk_lanebyteclk_factor =<15>;/** special adjust, default is 0 */
 	};
 
 //$$ DEVICE="lcd_extern"

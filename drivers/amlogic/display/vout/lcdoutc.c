@@ -76,7 +76,7 @@
 #endif
 
 #define PANEL_NAME		"panel"
-#define DRIVER_DATE		"20140106"
+#define DRIVER_DATE		"20140212"
 #define DRIVER_VER		"310"
 
 //#define LCD_DEBUG_INFO
@@ -2589,7 +2589,7 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
 			h_delay = 0;
 			break;
 	}
-	
+#if 0
 	h_offset = (pConf->lcd_timing.h_offset & 0xffff);
 	v_offset = (pConf->lcd_timing.v_offset & 0xffff);
 	if ((pConf->lcd_timing.h_offset >> 31) & 1)
@@ -2627,7 +2627,46 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
 	pConf->lcd_timing.oeh_he_addr = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_active) % pConf->lcd_basic.h_period;
 	pConf->lcd_timing.oeh_vs_addr = pConf->lcd_timing.de_vstart;
 	pConf->lcd_timing.oeh_ve_addr = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
-	
+#else
+    pConf->lcd_timing.video_on_pixel = pConf->lcd_basic.h_period - pConf->lcd_basic.h_active -h_delay;
+    pConf->lcd_timing.video_on_line = pConf->lcd_basic.v_period - pConf->lcd_basic.v_active;
+
+    h_offset = (pConf->lcd_timing.h_offset & 0xffff);
+    v_offset = (pConf->lcd_timing.v_offset & 0xffff);
+    if ((pConf->lcd_timing.h_offset >> 31) & 1)
+        pConf->lcd_timing.de_hstart = (pConf->lcd_basic.h_period - pConf->lcd_basic.h_active + pConf->lcd_basic.h_period - h_offset) % pConf->lcd_basic.h_period;
+    else
+        pConf->lcd_timing.de_hstart = (pConf->lcd_basic.h_period - pConf->lcd_basic.h_active + h_offset) % pConf->lcd_basic.h_period;
+    if ((pConf->lcd_timing.v_offset >> 31) & 1)
+        pConf->lcd_timing.de_vstart = (pConf->lcd_basic.v_period - pConf->lcd_basic.v_active + pConf->lcd_basic.v_period - v_offset) % pConf->lcd_basic.v_period;
+    else
+        pConf->lcd_timing.de_vstart = (pConf->lcd_basic.v_period - pConf->lcd_basic.v_active + v_offset) % pConf->lcd_basic.v_period;
+
+    hstart = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp) % pConf->lcd_basic.h_period;
+    hend = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp + pConf->lcd_timing.hsync_width) % pConf->lcd_basic.h_period;	
+    pConf->lcd_timing.sth1_hs_addr = hstart;
+    pConf->lcd_timing.sth1_he_addr = hend;
+    pConf->lcd_timing.sth1_vs_addr = 0;
+    pConf->lcd_timing.sth1_ve_addr = pConf->lcd_basic.v_period - 1;
+
+    vsync_h_phase = (pConf->lcd_timing.vsync_h_phase & 0xffff);
+    if ((pConf->lcd_timing.vsync_h_phase >> 31) & 1) //negative
+        vsync_h_phase = (hstart + pConf->lcd_basic.h_period - vsync_h_phase) % pConf->lcd_basic.h_period;
+    else	//positive
+        vsync_h_phase = (hstart + pConf->lcd_basic.h_period + vsync_h_phase) % pConf->lcd_basic.h_period;
+    pConf->lcd_timing.stv1_hs_addr = vsync_h_phase;
+    pConf->lcd_timing.stv1_he_addr = vsync_h_phase;
+    vstart = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp) % pConf->lcd_basic.v_period;
+    vend = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp + pConf->lcd_timing.vsync_width) % pConf->lcd_basic.v_period;
+    pConf->lcd_timing.stv1_vs_addr = vstart;
+    pConf->lcd_timing.stv1_ve_addr = vend;
+
+    pConf->lcd_timing.oeh_hs_addr = pConf->lcd_timing.de_hstart;
+    pConf->lcd_timing.oeh_he_addr = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_active) % pConf->lcd_basic.h_period;
+    pConf->lcd_timing.oeh_vs_addr = pConf->lcd_timing.de_vstart;
+    pConf->lcd_timing.oeh_ve_addr = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
+#endif
+
 	DBG_PRINT("sth1_hs_addr=%d, sth1_he_addr=%d, sth1_vs_addr=%d, sth1_ve_addr=%d\n", pConf->lcd_timing.sth1_hs_addr, pConf->lcd_timing.sth1_he_addr, pConf->lcd_timing.sth1_vs_addr, pConf->lcd_timing.sth1_ve_addr);
 	DBG_PRINT("stv1_hs_addr=%d, stv1_he_addr=%d, stv1_vs_addr=%d, stv1_ve_addr=%d\n", pConf->lcd_timing.stv1_hs_addr, pConf->lcd_timing.stv1_he_addr, pConf->lcd_timing.stv1_vs_addr, pConf->lcd_timing.stv1_ve_addr);
 	DBG_PRINT("oeh_hs_addr=%d, oeh_he_addr=%d, oeh_vs_addr=%d, oeh_ve_addr=%d\n", pConf->lcd_timing.oeh_hs_addr, pConf->lcd_timing.oeh_he_addr, pConf->lcd_timing.oeh_vs_addr, pConf->lcd_timing.oeh_ve_addr);
@@ -3553,7 +3592,7 @@ static Lcd_Basic_t temp_lcd_basic;
 static Lcd_Timing_t temp_lcd_timing;
 static unsigned short temp_dith_user, temp_dith_ctrl;
 static unsigned int temp_vadj_brightness, temp_vadj_contrast, temp_vadj_saturation;
-static int temp_lvds_repack, temp_pn_swap;
+static int temp_lvds_repack, temp_pn_swap, temp_lvds_vswing;
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 static unsigned char temp_edp_link_rate, temp_edp_lane_count, temp_edp_vswing, temp_edp_preemphasis;
 #endif
@@ -3577,9 +3616,9 @@ static const char * lcd_usage_str =
 "    echo lvds <vswing_level> <lvds_repack> <pn_swap> > debug ; write lvds config\n"
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 "    echo edp <link_rate> <lane_count> > debug ; write edp config\n"
-"    echo mreg register > debug ; read mipi register\n"
-"    echo mfactor denominator numerator  > debug ; write factor to config hline hsa hbp\n"
-"    echo mdsi dsi_clk_min dsi_clk_max > debug ; write dsi_clk to config dsi_clk_min dsi_clk_max\n"
+"    echo mreg <register> > debug ; read mipi register\n"
+"    echo mfactor <denominator> <numerator>  > debug ; write factor to config hline hsa hbp\n"
+"    echo mdsi <bit_rate_min> <bit_rate_max> > debug ; config dsi bit_rate_min dsi_bit_rate_max\n"
 #endif
 "\n"
 "data format:\n"
@@ -3592,11 +3631,10 @@ static const char * lcd_usage_str =
 #endif
 "\n"
 "    echo offset <h_sign> <h_offset> <v_sign> <v_offset> > debug ; write ttl display offset\n"
-"    echo video <video_on_pixel> <video_on_line> > debug ; write video on pixel/line config\n"
 "    echo dither <dither_user> <dither_ctrl> > debug ; write user dither ctrl config\n"
 "    echo vadj <brightness> <contrast> <saturation> > debug ; write video adjust config\n"
 "data format:\n"
-"    <xx_sign>     : 0=negative, 1=positive\n"
+"    <xx_sign>     : 0=positive, 1=negative\n"
 "    <dither_user> : 0=disable user control, 1=enable user control\n"
 "    <dither_ctrl> : dither ctrl in Hex, such as 0x400 or 0x600\n"
 "    <brightness>  : negative 0x1ff~0x101, positive 0x0~0xff, signed value in Hex, default is 0x0\n"
@@ -3635,8 +3673,7 @@ static void read_current_lcd_config(Lcd_Config_t *pConf)
 	printk("hs_width	%d\nhs_backporch	%d\nhs_pol		%d\n", pConf->lcd_timing.hsync_width, pConf->lcd_timing.hsync_bp, (pConf->lcd_timing.pol_cntl_addr >> LCD_HS_POL) & 1);
 	printk("vs_width	%d\nvs_backporch	%d\nvs_pol		%d\n", pConf->lcd_timing.vsync_width, pConf->lcd_timing.vsync_bp, (pConf->lcd_timing.pol_cntl_addr >> LCD_VS_POL) & 1);
 	printk("hvsync_valid	%d\nde_valid	%d\n", pConf->lcd_timing.hvsync_valid, pConf->lcd_timing.de_valid);
-	printk("h_offset	%s%d\nv_offset	%s%d\n", (h_adj ? "" : "-"), (pConf->lcd_timing.h_offset & 0xffff), (v_adj ? "" : "-"), (pConf->lcd_timing.v_offset & 0xffff));
-	printk("video_on_pixel	%d\nvideo_on_line	%d\n\n", pConf->lcd_timing.video_on_pixel, pConf->lcd_timing.video_on_line);
+	printk("h_offset	%s%d\nv_offset	%s%d\n\n", (h_adj ? "-" : ""), (pConf->lcd_timing.h_offset & 0xffff), (v_adj ? "-" : ""), (pConf->lcd_timing.v_offset & 0xffff));
 	
 	switch (pConf->lcd_basic.lcd_type) {
 		case LCD_DIGITAL_TTL:
@@ -3677,6 +3714,8 @@ static void read_current_lcd_config(Lcd_Config_t *pConf)
 	
 	if (pConf->lcd_effect.dith_user)
 		printk("dither_user_ctrl	0x%x\n", pConf->lcd_effect.dith_cntl_addr);
+	
+	printk("video_on_pixel	%d\nvideo_on_line	%d\n\n", pConf->lcd_timing.video_on_pixel, pConf->lcd_timing.video_on_line);
 }
 
 static void scale_framebuffer(void)
@@ -3731,7 +3770,9 @@ static void save_lcd_config(Lcd_Config_t *pConf)
 	
 	temp_lvds_repack = pConf->lcd_control.lvds_config->lvds_repack;
 	temp_pn_swap = pConf->lcd_control.lvds_config->pn_swap;
-
+	
+	temp_lvds_vswing = pConf->lcd_control.lvds_config->lvds_vswing;
+	
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)	
 	temp_edp_link_rate = pConf->lcd_control.edp_config->link_rate;
 	temp_edp_lane_count = pConf->lcd_control.edp_config->lane_count;
@@ -3783,6 +3824,8 @@ static void reset_lcd_config(Lcd_Config_t *pConf)
 	
 	pConf->lcd_control.lvds_config->lvds_repack = temp_lvds_repack;
 	pConf->lcd_control.lvds_config->pn_swap = temp_pn_swap;
+
+	pConf->lcd_control.lvds_config->lvds_vswing = temp_lvds_vswing;
 	
 	pConf->lcd_effect.dith_user = temp_dith_user;
 	pConf->lcd_effect.dith_cntl_addr = temp_dith_ctrl;
@@ -3790,7 +3833,6 @@ static void reset_lcd_config(Lcd_Config_t *pConf)
 	pConf->lcd_effect.vadj_contrast = temp_vadj_contrast;
 	pConf->lcd_effect.vadj_saturation = temp_vadj_saturation;
 	
-	lcd_config_init(pDev->pConf);
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	//restore edp link config, for they are translate from user value to reg value
 	pConf->lcd_control.edp_config->link_rate = temp_edp_link_rate;
@@ -3799,6 +3841,7 @@ static void reset_lcd_config(Lcd_Config_t *pConf)
 	pConf->lcd_control.edp_config->preemphasis = temp_edp_preemphasis;
 #endif
 	
+	lcd_config_init(pDev->pConf);
 	_lcd_module_enable();
 	
 	pDev->lcd_info.sync_duration_num = pDev->pConf->lcd_timing.sync_duration_num;
@@ -3983,25 +4026,25 @@ static ssize_t lcd_debug(struct class *class, struct class_attribute *attr, cons
 			printk("vswing_level: %u, lvds_repack: %s, rb_swap: %s\n", t[0], ((t[1] == 1) ? "VESA mode" : "JEIDA mode"), ((t[2] == 0) ? "disable" : "enable"));
 			break;
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
-		case 'm':	//write mlvds config
-			if (buf[1] == 'r'){
-  			ret = sscanf(buf, "mreg %d ", &t[0]);
-  			printk("mipi_reg%x=%x\n",t[0],READ_DSI_REG(t[0]));
-  		}
-  		else if (buf[1] == 'f'){
-  			ret = sscanf(buf, "mfactor %d %d", &t[0], &t[1]);
-  			pDev->pConf->lcd_control.mipi_config->numerator=t[0];
-  			pDev->pConf->lcd_control.mipi_config->denominator=t[1];
-  			dsi_probe(pDev->pConf);
-       }
-      else if (buf[1] == 'd'){
-       	ret = sscanf(buf, "mdsi %d %d", &t[0],&t[1]);
-  			pDev->pConf->lcd_control.mipi_config->dsi_clk_min = t[0];
-  			pDev->pConf->lcd_control.mipi_config->dsi_clk_max = t[1];
-  			lcd_config_init(pDev->pConf);
-  			printk("dsi_clk_min_max_div=%d,%d",pDev->pConf->lcd_control.mipi_config->dsi_clk_min,pDev->pConf->lcd_control.mipi_config->dsi_clk_max);    	
-       }
-			break;
+        case 'm':	//write mipi config
+            if (buf[1] == 'r'){
+                ret = sscanf(buf, "mreg %x ", &t[0]);
+                printk("mipi_reg 0x%04x=0x%08x\n",t[0],READ_DSI_REG(t[0]));
+            }
+            else if (buf[1] == 'f'){
+                ret = sscanf(buf, "mfactor %d %d", &t[0], &t[1]);
+                pDev->pConf->lcd_control.mipi_config->numerator=t[0];
+                pDev->pConf->lcd_control.mipi_config->denominator=t[1];
+                dsi_probe(pDev->pConf);
+            }
+            else if (buf[1] == 'd'){
+                ret = sscanf(buf, "mdsi %d %d", &t[0],&t[1]);
+                pDev->pConf->lcd_control.mipi_config->dsi_clk_min = t[0];
+                pDev->pConf->lcd_control.mipi_config->dsi_clk_max = t[1];
+                lcd_config_init(pDev->pConf);
+                printk("dsi bit_rate min=%dMHz, max=%dMHz\n",pDev->pConf->lcd_control.mipi_config->dsi_clk_min,pDev->pConf->lcd_control.mipi_config->dsi_clk_max);
+            }
+            break;
 #endif
 		case 'd':
 			if (buf[2] == 't') {
@@ -4349,8 +4392,8 @@ static inline int _get_lcd_default_config(struct platform_device *pdev)
 		else {
 			pDev->pConf->lcd_timing.h_offset = ((lcd_para[0] << 31) | ((lcd_para[1] & 0xffff) << 0));
 			pDev->pConf->lcd_timing.v_offset = ((lcd_para[2] << 31) | ((lcd_para[3] & 0xffff) << 0));
-			DBG_PRINT("h_offset = %s%u, ", (((pDev->pConf->lcd_timing.h_offset >> 31) & 1) ? "" : "-"), (pDev->pConf->lcd_timing.h_offset & 0xffff));
-			DBG_PRINT("v_offset = %s%u\n", (((pDev->pConf->lcd_timing.v_offset >> 31) & 1) ? "" : "-"), (pDev->pConf->lcd_timing.v_offset & 0xffff));
+			DBG_PRINT("h_offset = %s%u, ", (((pDev->pConf->lcd_timing.h_offset >> 31) & 1) ? "-" : ""), (pDev->pConf->lcd_timing.h_offset & 0xffff));
+			DBG_PRINT("v_offset = %s%u\n", (((pDev->pConf->lcd_timing.v_offset >> 31) & 1) ? "-" : ""), (pDev->pConf->lcd_timing.v_offset & 0xffff));
 		}
 		ret = of_property_read_u32_array(pdev->dev.of_node,"dither_user_ctrl",&lcd_para[0], 2);
 		if(ret){
@@ -4556,15 +4599,15 @@ static inline int _get_lcd_default_config(struct platform_device *pdev)
 			pDev->pConf->lcd_effect.rgb_coeff_addr = (unsigned short)(lcd_para[1]);
 			DBG_PRINT("rgb_base = 0x%x, rgb_coeff = 0x%x\n", pDev->pConf->lcd_effect.rgb_base_addr, pDev->pConf->lcd_effect.rgb_coeff_addr);
 		}
-		ret = of_property_read_u32_array(pdev->dev.of_node,"video_on_pixel_line",&lcd_para[0], 2);
-		if(ret){
-			printk("don't find to match video_on_pixel_line, use default setting.\n");
-		}
-		else {
-			pDev->pConf->lcd_timing.video_on_pixel = (unsigned short)(lcd_para[0]);
-			pDev->pConf->lcd_timing.video_on_line = (unsigned short)(lcd_para[1]);
-			DBG_PRINT("video_on_pixel = %u, video_on_line = %u\n", pDev->pConf->lcd_timing.video_on_pixel, pDev->pConf->lcd_timing.video_on_line);
-		}
+		// ret = of_property_read_u32_array(pdev->dev.of_node,"video_on_pixel_line",&lcd_para[0], 2);
+		// if(ret){
+			// printk("don't find to match video_on_pixel_line, use default setting.\n");
+		// }
+		// else {
+			// pDev->pConf->lcd_timing.video_on_pixel = (unsigned short)(lcd_para[0]);
+			// pDev->pConf->lcd_timing.video_on_line = (unsigned short)(lcd_para[1]);
+			// DBG_PRINT("video_on_pixel = %u, video_on_line = %u\n", pDev->pConf->lcd_timing.video_on_pixel, pDev->pConf->lcd_timing.video_on_line);
+		// }
 	}
 	
 	return ret;
