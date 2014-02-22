@@ -49,7 +49,7 @@
 #include <plat/wakeup.h>
 
 #define MOD_NAME       "gpio_key"
-//#define USE_IRQ     1
+#define USE_IRQ     1
 
 struct gpio_key{
 	int code;	  /* input key code */
@@ -91,13 +91,6 @@ static struct kp *gp_kp=NULL;
 
 static int timer_count = 0;
 
-static int quick_boot_mode = 0;
-
-static struct switch_dev powerkey_data;
-
-#define PWRKEY_UP_VALUE 0
-#define PWRKEY_DOWN_VALUE 1
-
 static void kp_work(struct kp *kp)
 {
 	struct gpio_key *key;
@@ -110,28 +103,14 @@ static void kp_work(struct kp *kp)
 		//printk("get gpio key status %s(%d)\n",key->name, io_status);
 		if(io_status != key->status ){
 			if (io_status) {
-				//printk("key %d up, quick_boot_mode:%d\n", key->code, quick_boot_mode);
 				printk("key %d up\n", key->code);
-				if( quick_boot_mode == 0 ) {
-					input_report_key(kp->input, key->code, 0);
-					input_sync(kp->input);
-				} else {
-					if( KEY_POWER == key->code ) {
-						switch_set_state((struct switch_dev *)&powerkey_data, PWRKEY_UP_VALUE );
-					}
-				}
+				input_report_key(kp->input, key->code, 0);
+				input_sync(kp->input);
 			}
 			else {
-				//printk("key %d down, quick_boot_mode:%d\n", key->code, quick_boot_mode);
 				printk("key %d down\n", key->code);
-				if( quick_boot_mode == 0 ) {
-					input_report_key(kp->input, key->code, 1);
-					input_sync(kp->input);
-				} else {
-					if( KEY_POWER == key->code ) {	
-						switch_set_state((struct switch_dev *)&powerkey_data, PWRKEY_DOWN_VALUE );
-					}
-				}
+				input_report_key(kp->input, key->code, 1);
+				input_sync(kp->input);
 			}
 			key->status = io_status;
 		}
@@ -227,66 +206,6 @@ static int register_keypad_dev(struct kp  *kp)
     kp->config_dev=device_create(kp->config_class,	NULL,
     		MKDEV(kp->config_major,0),NULL,kp->config_name);
     return ret;
-}
-
-static ssize_t set_quick_boot_mode(struct device_driver *ddri, const char *buf, size_t count)
-{
-        unsigned int value;
-
-        if ( (sscanf(buf, "%u", &value) != 1) || ( value != 1 && value != 0 ) ) {
-                printk("set_quick_boot_mode: Invalid values\n");
-                return -EINVAL;
-        }
-
-        quick_boot_mode = value;
-        printk("set_quick_boot_mode, quick_boot_mode=%d \n",quick_boot_mode);
-
-        return count;
-}
-
-
-static DRIVER_ATTR(quick_boot_mode, S_IWUSR | S_IRUGO, NULL, set_quick_boot_mode );
-
-static struct driver_attribute *gpiokey_attr_list[] = {
-        &driver_attr_quick_boot_mode,        
-};
-
-static int gpiokey_create_attr(struct device_driver *driver) 
-{
-        int idx, err = 0;
-        int num = (int)(sizeof(gpiokey_attr_list)/sizeof(gpiokey_attr_list[0]));
-        if (driver == NULL)
-        {
-                return -EINVAL;
-        }
-
-        for(idx = 0; idx < num; idx++)
-        {
-                if((err = driver_create_file(driver, gpiokey_attr_list[idx])))
-                {            
-                        printk("driver_create_file (%s) = %d\n", gpiokey_attr_list[idx]->attr.name, err);
-                        break;
-                }
-        }    
-        return err;
-}
-
-static int gpiokey_delete_attr(struct device_driver *driver)
-{
-        int idx ,err = 0;
-        int num = (int)(sizeof(gpiokey_attr_list)/sizeof(gpiokey_attr_list[0]));
-
-        if(driver == NULL)
-        {
-                return -EINVAL;
-        }
-        
-        for(idx = 0; idx < num; idx++)
-        {
-                driver_remove_file(driver, gpiokey_attr_list[idx]);
-        }
-
-        return err;
 }
 
 static int gpio_key_probe(struct platform_device *pdev)
@@ -521,7 +440,8 @@ static int gpio_key_resume(struct platform_device *dev)
 {
     printk("gpio_key_resume");
     if (READ_AOBUS_REG(AO_RTI_STATUS_REG2) == FLAG_WAKEUP_PWRKEY) {
-			if( quick_boot_mode == 0 ) { 
+			//if( quick_boot_mode == 0 ) 
+			{ 
 		        	// power button, not alarm
 				//printk("gpio_key_resume send KEY_POWER\n");
 		        	input_report_key(gp_kp->input, KEY_POWER, 0);
@@ -563,42 +483,12 @@ static struct platform_driver gpio_driver = {
 static int __init gpio_key_init(void)
 {
     printk(KERN_INFO "GPIO Keypad Driver init.\n");
-
-    int ret = 0;
-
-    ret = platform_driver_register(&gpio_driver);
-
-    if( gpiokey_create_attr(&gpio_driver.driver) != 0 )
-    {
-        printk("create attribute error\n");
-    }
-
-    powerkey_data.name = "powerkey";
-    powerkey_data.index = 0;
-    powerkey_data.state = 0;
-			
-    ret = switch_dev_register(&powerkey_data);
-    if(ret)
-    {
-	printk("switch_dev_register returned:%d!\n", ret);
-	return 1;
-    }
-
-    return ret;
+    return platform_driver_register(&gpio_driver);
 }
 
 static void __exit gpio_key_exit(void)
 {
     printk(KERN_INFO "GPIO Keypad Driver exit.\n");
-   
-    switch_dev_unregister(&powerkey_data);
- 
-    int nRet = 0;
-    if((nRet = gpiokey_delete_attr(&gpio_driver.driver)))
-    {
-        printk("delete attribute err = %d\n", nRet);
-    }
-
     platform_driver_unregister(&gpio_driver);
 }
 
