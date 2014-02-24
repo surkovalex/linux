@@ -388,8 +388,20 @@ void root_func(){
 		irq_num = <4>;
 		irq_trigger_type = "GPIO_IRQ_HIGH";
 		power_on_pin = "GPIOAO_6";
+		power_on_pin2 = "GPIOX_11";
 		clock_32k_pin = "GPIOX_10";
 	};
+	
+//$$ DEVICE="wifi_power"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_STR = "power_gpio"
+	wifi_power{
+            compatible = "amlogic,wifi_power";
+            dev_name = "wifi_power";
+            status = "okay";
+            power_gpio = "GPIOAO_6";
+            power_gpio2 = "GPIOX_11";
+	}; 
 
 /// ***************************************************************************************
 ///	-	MMC
@@ -439,7 +451,7 @@ sdio{
             port = <1>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
             pinname = "sd";
             ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
-            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED";
+            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED","MMC_PM_KEEP_POWER";
             f_min = <300000>;
             f_max = <50000000>;
             max_req_size = <0x20000>;          /**128KB*/
@@ -867,8 +879,7 @@ sdio{
 		
 		/* backlight power ctrl */
 		bl_power_on_delay=<100>; /** delay time before backlight power on(unit: ms) */
-		bl_ctrl_method=<1>;	/** backlight control method(0=gpio, 1=pwm_negative, 2=pwm_positive. decided by hardware design) */
-		
+		bl_ctrl_method=<1>;	/** backlight control method(0=gpio, 1=pwm_negative, 2=pwm_positive, 3=pwm_combo. decided by hardware design) */
 		bl_gpio_port="GPIODV_28";	/** backlight control gpio port */
 		bl_gpio_dim_max_min=<0x0 0xf>;	/** brightness diming level_max, level_min : (0x0~0xf, negative logic, only for gpio control method) */
 		bl_pwm_port_gpio_used="PWM_C","1";	/** pwm_port_name(for pwm control method), pwm_gpio_used(0=use pwm_port only, 1=use bl_gpio_port to control on/off) */
@@ -991,7 +1002,7 @@ sdio{
 					223 224 225 226 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255>;
 
 		/* default settings, don't modify them unless there is display problem */
-		clock_spread_spectrum=<0>;	/** ss_level(0=disable, 1=0.5%, 2=1%, 3=1.5%, 4=2%) */
+		clock_spread_spectrum=<0>;	/** ss_level(0=disable, 1=0.5%, 2=1%, 3=2%, 4=3%, 5=4%, 6=5%) */
 		clock_auto_generation=<1>;	/** clk_auto_generation(0=use customer clock parameters, as clk_pll_div_clk_ctrl defined, 1=auto generate clock parameters by lcd_clock) */
 		clk_pll_div_clk_ctrl=<0x100042b 0x18833 0x03a82102>;	/** pll_ctrl, div_ctrl, clk_ctrl : (only valid when clk_auto_generation=0) */
 		mipi_dsi_lane_speed_user_min_max=<0 200 1000>; /** mipi_lane_speed_user(0=auto setting, 1=user define), speed_min,spend_max(unit in MHz, only valid when mipi_lane_speed_user=1)*/
@@ -1001,7 +1012,7 @@ sdio{
 		edp_link_adaptive_vswing=<0 0>;	/** adaptive(0=fixed user defined vswing, 1=auto setting vswing by training), vswing(support level 0,1,2,3, user defined vswing, only valid when adaptive=0) */
 		rgb_base_coeff=<0xf0 0x74a>;	/** rgb_base, rgb_coeff */
 
-		//lcd power ctrl	//support up to 15 steps for each sequence===============================================
+		//lcd power ctrl	//support up to 15 steps for each sequence
 		power_on_uboot="n","n","n";	/** only for uboot, ahead of lcd_power_on, no need config delay */
 		power_on_step_1="cpu","GPIODV_0","0";
 		power_on_step_2="pmu","GPIO0","0";	/** gpio_type(cpu, pmu, signal), gpio_name(valid when gpio_type is cpu or pmu), gpio_value(valid when gpio_type is cpu or pmu) */
@@ -1018,7 +1029,7 @@ sdio{
 		power_on_step_13="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_on_step_14="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_on_step_15="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
- 		power_on_delay=<15 20 15 85 85 25 0 0 0 0 0 0 0 0 0>;	/** power on delay after each step */
+ 		power_on_delay=<5 20 14 5 75 5 0 0 0 0 0 0 0 0 0>;	/** power on delay after each step */
 		power_off_step_1="signal";	
  		power_off_step_2="cpu","GPIODV_29","1";
 		power_off_step_3="cpu","GPIODV_0","0";
@@ -1034,7 +1045,7 @@ sdio{
 		power_off_step_13="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_off_step_14="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_off_step_15="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_delay=<100 14 20 200 0 0 0 0 0 0 0 0 0 0 00>;	/** power off delay after each step */
+		power_off_delay=<5 14 0 120 0 0 0 0 0 0 0 0 0 0 0>;	/** power off delay after each step */
 		power_off_uboot="n","n","n";	/** only for uboot, at the end of lcd_power_off, no need config delay */
 	};
 
@@ -1094,7 +1105,7 @@ sdio{
 		
     dsi_lane_num=<4>;/** mipi dsi data lane number */
     dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-    dsi_sleep_out_display_on_delay=<100 100>; /** mipi dsi basic delay: (unit: ms) */
+    dsi_sleep_out_display_on_delay=<20 20>; /** mipi dsi basic delay: (unit: ms) */
 	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_LD070WX4>
@@ -1123,6 +1134,7 @@ lcd_LD070WX4:lcd_LD070WX4{
 		resolution=<800 1280>;	/** horizontal resolution, vertical resolution */
 		period=<864 1315>;		/** horizontal period(htotal), vertical period(vtotal) */
 
+		clock_hz_pol=<56800000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
 		hsync_width_backporch=<4 48>;	/** hsync_width, hsync_backporch(include hsync_width) */
 		vsync_width_backporch=<2 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
@@ -1817,27 +1829,6 @@ lcd_LD070WX4:lcd_LD070WX4{
 		dev_name = "aml_pm_m8";
 		status = "okay";
 	};
-/// ***************************************************************************************
-///	-	NFC
-//$$ MODULE="Nfc"
-//$$ DEVICE="nfc"
-//$$ L2 PROP_STR = "status"
-    nfc{
-        compatible = "amlogic,aml_nfc";
-        status = "okay";
-	#address-cells = <1>;
-		#size-cells = <0>;
-		nfc_bcm2079x:bcm2079x {
-			nfc_name = "bcm2079x";
-			status = "okay";
-			i2c_bus = "i2c_bus_d";
-			reg = <0x76>;
-			irq = <1>;
-			gpio_interrupt = "GPIOX_19";
-			gpio_en = "GPIOX_18";
-			gpio_wake = "GPIOX_11";
-		};		
-   };
 	
 /// ***************************************************************************************
 ///	-	Touch
@@ -1877,8 +1868,7 @@ lcd_LD070WX4:lcd_LD070WX4{
 			ic_type = <0x801>;
 		};
    };
- 
-/// 			fw_file = "/etc/touch/ct36x.dat";
+
 /// ***************************************************************************************
 ///	-	Cpufreq
 //$$ MODULE="Cpufreq"
