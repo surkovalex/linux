@@ -42,8 +42,8 @@
 
 //ring buf must less than the MAX alloc length 131072
 //131072/1536~=85;
-#define TX_RING_SIZE 	64
-#define RX_RING_SIZE 	64
+#define TX_RING_SIZE 	128
+#define RX_RING_SIZE 	128
 #define CACHE_LINE 32
 #define IS_CACHE_ALIGNED(x)		(!((unsigned long )x &(CACHE_LINE-1)))
 #define CACHE_HEAD_ALIGNED(x)	((x-CACHE_LINE) & (~(CACHE_LINE-1)))

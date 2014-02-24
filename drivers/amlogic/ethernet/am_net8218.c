@@ -77,6 +77,9 @@ static int g_debug = 1;
 static unsigned int g_tx_cnt = 0;
 static unsigned int g_rx_cnt = 0;
 static int g_mdcclk = 2;
+static int g_rxnum = 64;
+static int g_txnum = 64;
+
 static unsigned int ethbaseaddr = ETHBASE;
 static unsigned int savepowermode = 0;
 static int interruptnum = ETH_INTERRUPT;
@@ -410,6 +413,8 @@ static inline int update_status(struct net_device *dev, unsigned long status,
 	int res = 0;
 	if (status & NOR_INTR_EN) {	//Normal Interrupts Process
 		if (status & TX_INTR_EN) {	//Transmit Interrupt Process
+			writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+			netif_wake_queue(dev);
 			writel((1 << 0 | 1 << 16),(void*)(np->base_addr + ETH_DMA_5_Status));
 			res |= 1;
 		}
@@ -459,16 +464,22 @@ static inline int update_status(struct net_device *dev, unsigned long status,
 		if (status & EARLY_TX_INTR_EN) {
 			writel((EARLY_TX_INTR_EN | ANOR_INTR_EN),
 			          (void*) (np->base_addr + ETH_DMA_5_Status));
+			writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+			netif_wake_queue(dev);
 		}
 		if (status & TX_STOP_EN) {
 			writel((TX_STOP_EN | ANOR_INTR_EN),
 			           (void*)(np->base_addr + ETH_DMA_5_Status));
+			writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+			netif_wake_queue(dev);
 			res |= 1;
 		}
 		if (status & TX_JABBER_TIMEOUT) {
 			writel((TX_JABBER_TIMEOUT | ANOR_INTR_EN),
 			          (void*) (np->base_addr + ETH_DMA_5_Status));
 			printk(KERN_WARNING "[" DRV_NAME "]" "tx jabber timeout\n");
+			writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+			netif_wake_queue(dev);
 			np->first_tx = 1;
 		}
 		if (status & RX_FIFO_OVER) {
@@ -483,6 +494,8 @@ static inline int update_status(struct net_device *dev, unsigned long status,
 			writel((TX_UNDERFLOW | ANOR_INTR_EN),
 			           (void*)(np->base_addr + ETH_DMA_5_Status));
 			printk(KERN_WARNING "[" DRV_NAME "]" "Tx underflow\n");
+			writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+			netif_wake_queue(dev);
 			np->first_tx = 1;
 			res |= 1;
 		}
@@ -589,13 +602,15 @@ void net_tasklet(unsigned long dev_instance)
 
 	if (result & 1) {
 		struct _tx_desc *c_tx, *tx = NULL;
-
+		int rx_count = 0;
 		c_tx = (void *)readl((void*)(np->base_addr + ETH_DMA_18_Curr_Host_Tr_Descriptor));
 		c_tx = np->tx_ring + (c_tx - np->tx_ring_dma);
 		tx = np->start_tx;
 		CACHE_RSYNC(tx, sizeof(struct _tx_desc));
 		while (tx != NULL && tx != c_tx && !(tx->status & DescOwnByDma)) {
 #ifdef DMA_USE_SKB_BUF
+			rx_count++;
+
 			if(unlikely(!spin_trylock_irqsave(&np->lock,flags)))
                         {
                             break;
@@ -633,7 +648,8 @@ void net_tasklet(unsigned long dev_instance)
 #endif
 			tx = tx->next;
 			CACHE_RSYNC(tx, sizeof(struct _tx_desc));
-
+		if(rx_count == g_txnum)
+			break;
 		}
 		np->start_tx = tx;
 	}
@@ -642,9 +658,11 @@ void net_tasklet(unsigned long dev_instance)
 		c_rx = (void *)readl((void*)(np->base_addr + ETH_DMA_19_Curr_Host_Re_Descriptor));
 		c_rx = np->rx_ring + (c_rx - np->rx_ring_dma);
 		rx = np->last_rx->next;
+		int rx_cnt = 0;
 		while (rx != NULL) {
 			CACHE_RSYNC(rx, sizeof(struct _rx_desc));
 			if (!(rx->status & (DescOwnByDma))) {
+				rx_cnt++;
 				int ip_summed = CHECKSUM_UNNECESSARY;
 				len = (rx->status & DescFrameLengthMask) >> DescFrameLengthShift;
 				if (unlikely(len < 18 || len > np->rx_buf_sz)) {	//here is fatal error we drop it ;
@@ -748,6 +766,8 @@ to_next:
 			} else {
 				break;
 			}
+			if(rx_cnt == g_rxnum)
+				break;
 
 		}
 	}
@@ -897,7 +917,7 @@ static int aml_mac_init(struct net_device *ndev)
 	write_mac_addr(ndev, ndev->dev_addr);
 
 	val = 0xc80c |		//8<<8 | 8<<17; //tx and rx all 8bit mode;
-	      1 << 10;		//checksum offload enabled
+	      1 << 10 | 1 << 24;		//checksum offload enabled
 #ifdef MAC_LOOPBACK_TEST
 	val |= 1 << 12; //mac loop back
 #endif
@@ -949,10 +969,19 @@ static void aml_adjust_link(struct net_device *dev)
 		 * If not, we operate in half-duplex mode. */
 		if (phydev->duplex != priv->oldduplex) {
 			new_state = 1;
-			if (!(phydev->duplex))
-				ctrl &= ~(1 << 11);
-			else
-				ctrl |= (1 << 11);
+			if (!(phydev->duplex)) {
+				ctrl &= ~((1 << 11)|(7<< 17)|(3<<5));
+				ctrl |= (4 << 17);
+				ctrl |= (3 << 5);
+				g_rxnum = 128;
+				g_txnum = 128;
+			}
+			else {
+				ctrl &= ~((7 << 17)|(3 << 5));
+				ctrl |= (1 << 11)|(2 << 17);
+				g_rxnum = 128;
+				g_txnum = 128;
+			}
 
 			priv->oldduplex = phydev->duplex;
 		}
@@ -968,7 +997,7 @@ static void aml_adjust_link(struct net_device *dev)
 					PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					break;
 				case 10:
-					ctrl &= ~(1 << 14);
+					ctrl &= ~((1 << 14)|(3 << 5));//10m half backoff = 00
 					PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					if(phydev->phy_id == INTERNALPHY_ID){
 						val =0x4100b040;
@@ -1078,7 +1107,7 @@ static int ethernet_reset(struct net_device *dev)
 	struct am_net_private *np = netdev_priv(dev);
 	int res;
 	unsigned long flags;
-
+	int tmp;
 	printk(KERN_INFO "Ethernet reset\n");
 
 	spin_lock_irqsave(&np->lock, flags);
@@ -1097,7 +1126,13 @@ static int ethernet_reset(struct net_device *dev)
 
 	aml_mac_init(dev);
 
-	np->first_tx = 1;
+	//np->first_tx = 1;
+	tmp = readl((void*)(np->base_addr + ETH_DMA_6_Operation_Mode));//tx enable
+	tmp |= (7 << 14) | (1 << 13);
+	writel(tmp, (void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
+	tmp = readl((void*)(np->base_addr + ETH_MAC_6_Flow_Control));
+	tmp |= (1 << 1) | (1 << 0);
+	writel(tmp, (void*)(np->base_addr + ETH_MAC_6_Flow_Control));
 
 out_err:
 	return res;
@@ -1202,10 +1237,6 @@ static int netdev_close(struct net_device *dev)
 	if (g_debug > 0) {
 		printk(KERN_DEBUG "%s: closed\n", dev->name);
 	}
-	np->refcnt--;
-	if(np->refcnt == 0){
-//		switch_mod_gate_by_name("ethernet",0);
-	}
 	return 0;
 }
 
@@ -1282,9 +1313,11 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
 		writel(tmp, (void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
 	} else {
 		//ETH_DMA_1_Tr_Poll_Demand
-		writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+	//	writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
 	}
-	writel(np->irq_mask, (void*)(np->base_addr + ETH_DMA_7_Interrupt_Enable));
+
+	writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
+	writel(np->irq_mask, (void*)(np->base_addr + ETH_DMA_7_Interrupt_Enable));	
 	spin_unlock_irqrestore(&np->lock, flags);
 	tasklet_enable(&np->rx_tasklet);
 	return NETDEV_TX_OK;
@@ -2388,8 +2421,8 @@ static ssize_t eth_debug_store(struct class *class, struct class_attribute *attr
 /* --------------------------------------------------------------------------*/
 static ssize_t eth_count_show(struct class *class, struct class_attribute *attr, char *buf)
 {
-	printk("Ethernet TX count: 0x%08x\n", g_tx_cnt);
-	printk("Ethernet RX count: 0x%08x\n", g_rx_cnt);
+	printk("Ethernet TX count: %08d\n", g_tx_cnt);
+	printk("Ethernet RX count: %08d\n", g_rx_cnt);
 
 	return 0;
 }
@@ -2651,8 +2684,7 @@ static int ethernet_remove(struct platform_device *pdev)
 static int ethernet_suspend(struct platform_device *dev, pm_message_t event)
 {
 	printk("ethernet_suspend!\n");
-	netdev_close(my_ndev);
-	switch_mod_gate_by_name("ethernet",0);
+	netdev_close(my_ndev);	
 	return 0;
 }
 
