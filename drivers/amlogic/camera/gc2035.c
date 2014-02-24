@@ -3388,15 +3388,6 @@ static int gc2035_open(struct file *file)
         resource_size_t mem_start = 0;
         unsigned int mem_size = 0;
 
-#if CONFIG_CMA
-    retval = vm_init_buf(16*SZ_1M);
-    if(retval <0)
-    {
-        pr_err("%s : Allocation from CMA failed\n", __func__);
-        return -1;
-    }
-#endif
-
 #ifdef MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 	switch_mod_gate_by_name("ge2d", 1);
 #endif	
@@ -3532,9 +3523,6 @@ static int gc2035_close(struct file *file)
 #endif	
 	wake_unlock(&(dev->wake_lock));
 
-#ifdef CONFIG_CMA
-    vm_deinit_buf();
-#endif
 	return 0;
 }
 

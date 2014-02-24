@@ -34,7 +34,6 @@
 #include <linux/poll.h>
 #include <linux/of.h>
 #include <linux/of_fdt.h>
-#include <linux/dma-contiguous.h>
 
 #define ENC_CANVAS_OFFSET  AMVENC_CANVAS_INDEX
 
@@ -1310,10 +1309,6 @@ void amvenc_avc_stop(void)
 	avc_poweroff();
 	debug_level(1,"amvenc_avc_stop\n");
 }
-
-static struct platform_device *this_pdev;
-static struct page *venc_pages;
-
 static int amvenc_avc_open(struct inode *inode, struct file *file)
 {
     int r = 0;
@@ -1328,40 +1323,6 @@ static int amvenc_avc_open(struct inode *inode, struct file *file)
         amlog_level(LOG_LEVEL_ERROR, "amvenc_avc open busy.\n");
         return -EBUSY;
     }
-
-#ifdef CONFIG_CMA
-    venc_pages = dma_alloc_from_contiguous(&this_pdev->dev, (15 * SZ_1M) >> PAGE_SHIFT, 0);
-    if(venc_pages)
-    {
-        gAmvencbuff.buf_start = page_to_phys(venc_pages);
-        gAmvencbuff.buf_size = 15 * SZ_1M;
-        pr_info("%s: allocating phys %p, size %dk\n", __func__, gAmvencbuff.buf_start, gAmvencbuff.buf_size >> 10);
-    }
-    else
-    {
-        pr_err("CMA failed to allocate dma buffer for %s\n", this_pdev->name);
-        return -ENOMEM;
-    }
-
-    if(gAmvencbuff.buf_size>=amvenc_buffspec[AMVENC_BUFFER_LEVEL_1080P].min_buffsize){
-        gAmvencbuff.cur_buf_lev = AMVENC_BUFFER_LEVEL_1080P;
-        gAmvencbuff.bufspec = (BuffInfo_t*)&amvenc_buffspec[AMVENC_BUFFER_LEVEL_1080P];
-    }else if(gAmvencbuff.buf_size>=amvenc_buffspec[AMVENC_BUFFER_LEVEL_720P].min_buffsize){
-        gAmvencbuff.cur_buf_lev = AMVENC_BUFFER_LEVEL_720P;
-        gAmvencbuff.bufspec= (BuffInfo_t*)&amvenc_buffspec[AMVENC_BUFFER_LEVEL_720P];
-    }else if(gAmvencbuff.buf_size>=amvenc_buffspec[AMVENC_BUFFER_LEVEL_480P].min_buffsize){
-        gAmvencbuff.cur_buf_lev = AMVENC_BUFFER_LEVEL_480P;
-        gAmvencbuff.bufspec= (BuffInfo_t*)&amvenc_buffspec[AMVENC_BUFFER_LEVEL_480P];
-    }else{
-        gAmvencbuff.buf_start = 0;
-        gAmvencbuff.buf_size = 0;
-        amlog_level(LOG_LEVEL_ERROR, "amvenc_avc memory resource too small, size is %d.\n",gAmvencbuff.buf_size);
-        return -EFAULT;
-    }
-    debug_level(1,"amvenc_avc  memory config sucess, buff size is 0x%x, level is %s\n",gAmvencbuff.buf_size,(gAmvencbuff.cur_buf_lev == 0)?"480P":(gAmvencbuff.cur_buf_lev == 1)?"720P":"1080P");
-
-#endif
-
     init_waitqueue_head(&avc_wait);
     atomic_set(&avc_ready, 0);
     tasklet_init(&encode_tasklet, encode_isr_tasklet, 0);
@@ -1379,15 +1340,6 @@ static int amvenc_avc_release(struct inode *inode, struct file *file)
     }
     if(encode_opened>0)
         encode_opened--;
-
-#ifdef CONFIG_CMA
-    if(venc_pages)
-    {
-        dma_release_from_contiguous(&this_pdev->dev, venc_pages, (15 * SZ_1M)>>PAGE_SHIFT); 
-        venc_pages = 0;
-    }
-#endif
-
     debug_level(1,"avc release\n");
     return 0;
 }
@@ -1626,8 +1578,11 @@ static int amvenc_avc_probe(struct platform_device *pdev)
 
     amlog_level(LOG_LEVEL_INFO, "amvenc_avc probe start.\n");
 
-#ifdef CONFIG_CMA
-    this_pdev = pdev;
+#if 0
+    if (!(mem = platform_get_resource(pdev, IORESOURCE_MEM, 0))) {
+        amlog_level(LOG_LEVEL_ERROR, "amvenc_avc memory resource undefined.\n");
+        return -EFAULT;
+    }
 #else
     mem = &memobj;
     idx = find_reserve_block(pdev->dev.of_node->name,0);
@@ -1637,6 +1592,7 @@ static int amvenc_avc_probe(struct platform_device *pdev)
     }
     mem->start = (phys_addr_t)get_reserve_block_addr(idx);
     mem->end = mem->start+ (phys_addr_t)get_reserve_block_size(idx)-1;
+#endif
     gAmvencbuff.buf_start = mem->start;
     gAmvencbuff.buf_size = mem->end - mem->start + 1;
 
@@ -1656,9 +1612,6 @@ static int amvenc_avc_probe(struct platform_device *pdev)
         return -EFAULT;
     }
     debug_level(1,"amvenc_avc  memory config sucess, buff size is 0x%x, level is %s\n",gAmvencbuff.buf_size,(gAmvencbuff.cur_buf_lev == 0)?"480P":(gAmvencbuff.cur_buf_lev == 1)?"720P":"1080P");
-
-#endif
-
     init_avc_device();
     amlog_level(LOG_LEVEL_INFO, "amvenc_avc probe end.\n");
     return 0;

@@ -4252,11 +4252,6 @@ static int ov5647_open(struct file *file)
     unsigned int mem_size = 0;
     int retval = 0;
     capture_proc = 0;
-#if CONFIG_CMA
-    retval = vm_init_buf(24*SZ_1M);
-    if(retval <0)
-        return -1;
-#endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     switch_mod_gate_by_name("ge2d", 1);
 #endif		
@@ -4486,9 +4481,6 @@ static int ov5647_close(struct file *file)
     class_remove_file(cam_class,&class_attr_version_debug);
     class_destroy(cam_class);
     printk("close success\n");
-#ifdef CONFIG_CMA
-    vm_deinit_buf();
-#endif
     return 0;
 }
 

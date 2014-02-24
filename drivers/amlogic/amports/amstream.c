@@ -49,7 +49,6 @@
 #include <linux/mutex.h>
 #include <linux/poll.h>
 #include <linux/dma-mapping.h>
-#include <linux/dma-contiguous.h>
 #include <asm/uaccess.h>
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 #include <mach/mod_gate.h>
@@ -108,7 +107,45 @@ void debug_file_write(const char __user *buf, size_t count)
 #define DEFAULT_VIDEO_BUFFER_SIZE       (1024*1024*3)
 #define DEFAULT_AUDIO_BUFFER_SIZE       (1024*768*2)
 #define DEFAULT_SUBTITLE_BUFFER_SIZE     (1024*256)
+#if 0
+static ulong vbuf_start;
+module_param(vbuf_start, ulong, 0644);
+MODULE_PARM_DESC(vbuf_start, "Amstreaming ports video buffer start address");
 
+static ulong vbuf_size;
+module_param(vbuf_size, ulong, 0644);
+MODULE_PARM_DESC(vbuf_size, "Amstreaming ports video buffer size");
+
+static ulong abuf_start;
+module_param(abuf_start, ulong, 0644);
+MODULE_PARM_DESC(abuf_start, "Amstreaming ports audio buffer start address");
+
+static ulong abuf_size;
+module_param(abuf_size, ulong, 0644);
+MODULE_PARM_DESC(abuf_size, "Amstreaming ports audio buffer size");
+#endif
+#if 0
+typedef struct stream_port_s {
+    /* driver info */
+    const char *name;
+    struct device *class_dev;
+    const struct file_operations *fops;
+
+    /* ports control */
+    s32 type;
+    s32 flag;
+
+    /* decoder info */
+    s32 vformat;
+    s32 aformat;
+    s32 achanl;
+    s32 asamprate;
+
+    /* parser info */
+    u32 vid;
+    u32 aid;
+} stream_port_t;
+#endif
 static int amstream_open
 (struct inode *inode, struct file *file);
 static int amstream_release
@@ -333,26 +370,21 @@ struct audio_info *get_audio_info(void) {
 }
 
 EXPORT_SYMBOL(get_audio_info);
-
 static void amstream_change_vbufsize(stream_port_t *port,struct stream_buf_s *pvbuf)
 {
-    if (pvbuf->type == BUF_TYPE_VIDEO){ 
-        if (port->vformat == VFORMAT_H264_4K2K){				
-            pvbuf->buf_size = pvbuf->default_buf_size;
-
-            printk(" amstream_change_vbufsize 4k2k bufsize[0x%x] defaultsize[0x%x]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);
-        }else if((pvbuf->default_buf_size > MAX_STREAMBUFFER_SIZE)&& (port->vformat != VFORMAT_H264_4K2K)) {
-            pvbuf->buf_size = MAX_STREAMBUFFER_SIZE;
-
-            printk(" amstream_change_vbufsize MAX_STREAMBUFFER_SIZE-[0x%x] defaultsize-[0x%x] vformat-[%d]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size,port->vformat);
-        } else {
-            printk(" amstream_change_vbufsize bufsize[0x%x] defaultbufsize [0x%x] \n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);	
-        }
-
+	if (pvbuf->type == BUF_TYPE_VIDEO){ 
+		if (port->vformat == VFORMAT_H264_4K2K){				
+			pvbuf->buf_size = pvbuf->default_buf_size;
+			printk(" amstream_change_vbufsize 4k2k bufsize[0x%x] defaultsize[0x%x]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);
+		}else if((pvbuf->default_buf_size > MAX_STREAMBUFFER_SIZE)&& (port->vformat != VFORMAT_H264_4K2K)) {
+			pvbuf->buf_size = MAX_STREAMBUFFER_SIZE;
+			printk(" amstream_change_vbufsize MAX_STREAMBUFFER_SIZE-[0x%x] defaultsize-[0x%x] vformat-[%d]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size,port->vformat);
+		}else{
+		    printk(" amstream_change_vbufsize bufsize[0x%x] defaultbufsize [0x%x] \n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);	
+		}
         reset_canuse_buferlevel(10000);
-    }
-
-    return;
+	}
+	return;
 }
 
 static  void video_port_release(stream_port_t *port, struct stream_buf_s * pbuf, int release_num)
@@ -380,7 +412,7 @@ static  int video_port_init(stream_port_t *port, struct stream_buf_s * pbuf)
         return -EPERM;
     }
 	
-    amstream_change_vbufsize(port,pbuf);
+	amstream_change_vbufsize(port,pbuf);
 
     r = stbuf_init(pbuf);
     if (r < 0) {
@@ -1283,8 +1315,8 @@ static long amstream_ioctl(struct file *file,
         	((PORT_TYPE_AUDIO | PORT_TYPE_VIDEO))) {	
         	r = -EINVAL;
         } else{
-            u64 pts;
-            memcpy(&pts,(void *)arg,sizeof(u64));
+			u64 pts;
+			memcpy(&pts,arg,sizeof(u64));
             if (this->type & PORT_TYPE_VIDEO) {
                 r = es_vpts_checkin_us64(&bufs[BUF_TYPE_VIDEO],pts);
             } else if (this->type & PORT_TYPE_AUDIO) {
@@ -1846,8 +1878,21 @@ static int  amstream_probe(struct platform_device *pdev)
 
         goto error2;
     }
-
-    vdec_set_decinfo(&amstream_dec_info);
+#if 0 ///changed for get resourse on vdec
+    vdec_set_resource(platform_get_resource(pdev, IORESOURCE_MEM, 0), (void *)&amstream_dec_info);
+///#else
+    res = &memobj;
+    r = find_reserve_block(pdev->dev.of_node->name,0);
+    if(r < 0){
+        printk("can not find %s%d reserve block\n",pdev->dev.of_node->name,0);
+	 r = -EFAULT;
+	 goto error2;
+    }
+    res->start = (phys_addr_t)get_reserve_block_addr(r);
+    res->end = res->start+ (phys_addr_t)get_reserve_block_size(r)-1;
+    res->flags = IORESOURCE_MEM;
+#endif	
+    vdec_set_resource(NULL, (void *)&amstream_dec_info);
 
     amstream_dev_class = class_create(THIS_MODULE, DEVICE_NAME);
 
