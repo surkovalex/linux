@@ -4405,6 +4405,13 @@ static int ov5640_open(struct file *file)
 	int retval = 0;
 	//int reg_val;
 	//int i = 0;
+#if CONFIG_CMA
+    retval = vm_init_buf(24*SZ_1M);
+    if(retval <0) {
+    	printk("error: no cma memory\n");
+        return -1;
+    }
+#endif
 	mutex_lock(&firmware_mutex);
 	ov5640_have_opened=1;
 	mutex_unlock(&firmware_mutex);
@@ -4552,6 +4559,9 @@ static int ov5640_close(struct file *file)
 	switch_mod_gate_by_name("ge2d", 0);
 #endif	
 	wake_unlock(&(dev->wake_lock));
+#ifdef CONFIG_CMA
+    vm_deinit_buf();
+#endif
 	return 0;
 }
 

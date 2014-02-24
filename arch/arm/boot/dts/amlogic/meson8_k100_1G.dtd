@@ -80,6 +80,16 @@ void root_func(){
 		aml_reserved_end = <0x05000000>;/**reserved memory end */
 		phys_offset = <0x00000000>;
 		linux,total-memory = <0x40000000>;
+
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        cma_0:region@0 {
+           region_name = "cma_0";
+           reg = <0 0x02700000>;
+           linux,contiguous-region;
+        };
+
 	};
 /// ***************************************************************************************
 ///	-	GIC
@@ -193,8 +203,7 @@ void root_func(){
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
-		reserve-memory = <0x00f00000>;//use for camera encoder,720P use 12M,1080P use 15M
-		reserve-iomap = "true";
+        linux,contiguous-region = <&cma_0>;
 	};
 
 /// ***************************************************************************************
@@ -255,8 +264,7 @@ void root_func(){
 		compatible = "amlogic,vm";
 		dev_name = "vm.0";
 		status = "okay";
-		reserve-memory = <0x01400000>;//camera is gc5647,the picture resolution is 2592x1944;but it need rotate funtion for MID and must be multiple for 64,so 2624X2624*3=20M
-		reserve-iomap = "true";
+        linux,contiguous-region = <&cma_0>;
 	};
 
 /// ***************************************************************************************

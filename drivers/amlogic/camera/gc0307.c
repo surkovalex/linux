@@ -2593,6 +2593,12 @@ static int gc0307_open(struct file *file)
 	int retval = 0;
 	gc0307_have_open=1;
 
+#if CONFIG_CMA
+    retval = vm_init_buf(16*SZ_1M);
+    if(retval <0)
+        return -1;
+#endif
+
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 	switch_mod_gate_by_name("ge2d", 1);
 #endif	
@@ -2726,6 +2732,9 @@ static int gc0307_close(struct file *file)
 #endif	
 	wake_unlock(&(dev->wake_lock));
 
+#ifdef CONFIG_CMA
+    vm_deinit_buf();
+#endif
 
 	return 0;
 }

@@ -2444,6 +2444,15 @@ static int hm2057_open(struct file *file)
 	struct hm2057_fh *fh = NULL;
 	int retval = 0;
 
+#if CONFIG_CMA
+    retval = vm_init_buf(16*SZ_1M);
+    if(retval <0)
+    {
+        pr_err("%s : Allocation from CMA failed\n", __func__);
+        return -1;
+    }
+#endif
+
 #ifdef CONFIG_ARCH_MESON6
 	switch_mod_gate_by_name("ge2d", 1);
 #endif	
@@ -2575,6 +2584,9 @@ static int hm2057_close(struct file *file)
 	switch_mod_gate_by_name("ge2d", 0);
 #endif	
 	wake_unlock(&(dev->wake_lock));
+#ifdef CONFIG_CMA
+    vm_deinit_buf();
+#endif
 	return 0;
 }
 

@@ -213,7 +213,12 @@ static struct resource amvdec_mem_resource[]  = {
         .start = 0,
         .end   = 0,
         .flags = 0,
-    }
+    },
+    [2] = {
+        .start = 0,
+        .end   = 0,
+        .flags = 0,
+    },
 };
 
 static const char *vdec_device_name[] = {
@@ -230,24 +235,25 @@ static const char *vdec_device_name[] = {
     "amvdec_h264_4k2k"
 };
 
-/*
-This function used for change the memory reasource on system run;
-It can used for system swap memory for codec and some othor use;
-We must call it at the amstream start for register a memory resource
-*/
-int vdec_set_resource(struct resource *s, void *param)
+void vdec_set_decinfo(void *p)
+{
+    amvdec_mem_resource[1].start = (resource_size_t)p;
+}
+
+int vdec_set_resource(struct resource *s, struct device *p)
 {
     if (inited_vcodec_num != 0) {
         printk("ERROR:We can't support the change resource at code running\n");
         return -1;
     }
+
     if(s){
         amvdec_mem_resource[0].start = s->start;
         amvdec_mem_resource[0].end = s->end;
         amvdec_mem_resource[0].flags = s->flags;
     }
-	if(param)
-        amvdec_mem_resource[1].start = (resource_size_t)param;
+
+    amvdec_mem_resource[2].start = (resource_size_t)p;
 
     return 0;
 }
@@ -585,17 +591,22 @@ static int  vdec_probe(struct platform_device *pdev)
     }
     res.start = (phys_addr_t)get_reserve_block_addr(r);
     res.end = res.start+ (phys_addr_t)get_reserve_block_size(r)-1;
-	printk("init vdec memsource %d->%d\n",res.start,res.end);
+
+    printk("init vdec memsource %d->%d\n",res.start,res.end);
     res.flags = IORESOURCE_MEM;
-    vdec_set_resource(&res,NULL);
+
+    vdec_set_resource(&res, &pdev->dev);
+
 #if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
     /* default to 250MHz */
     vdec_clock_hi_enable();
 #endif
     return 0;
+
 error:
-	class_unregister(&vdec_class);
-	return r;
+    class_unregister(&vdec_class);
+
+    return r;
 }
 
 static int  vdec_remove(struct platform_device *pdev)

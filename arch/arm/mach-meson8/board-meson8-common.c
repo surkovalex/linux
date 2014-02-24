@@ -45,6 +45,7 @@
 #include <linux/syscore_ops.h>
 #include <mach/am_regs.h>
 
+#include <linux/of_fdt.h>
 #include <linux/amlogic/vmapi.h>
 
 static void meson_map_board_io(void);
