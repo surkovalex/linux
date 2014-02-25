@@ -23,6 +23,7 @@
 #include <linux/workqueue.h>
 #include <linux/sysfs.h>
 
+#define EACH_CPU_ON
 /*
  * The polling frequency depends on the capability of the processor. Default
  * polling frequency is 1000 times the transition latency of the processor. The
@@ -42,6 +43,9 @@
 
 /* default number of sampling periods to average before hotplug-out decision */
 #define DEFAULT_HOTPLUG_OUT_SAMPLING_PERIODS		(20)
+#ifdef EACH_CPU_ON
+#define DEFAULT_EACHCPU_OUT_SAMPLING_PERIODS		(20)
+#endif
 /* Ondemand Sampling types */
 enum {OD_NORMAL_SAMPLE, OD_SUB_SAMPLE};
 
@@ -201,13 +205,22 @@ struct hg_dbs_tuners {
 	unsigned int down_threshold;
 	unsigned int hotplug_in_sampling_periods;
 	unsigned int hotplug_out_sampling_periods;
+//#ifdef EACH_CPU_ON
+	unsigned int each_cpu_out_sampling_periods;
+//#endif
 	unsigned int hotplug_load_index;
 	unsigned int *hotplug_load_history;
+//#ifdef EACH_CPU_ON
+	unsigned int *cpu_load_history[NR_CPUS];
+//#endif
 	unsigned int ignore_nice_load;
 	unsigned int io_is_busy;
 	unsigned int max_load_freq;
 	unsigned int default_freq;
 	unsigned int cpu_num_unplug_once;
+//#ifdef EACH_CPU_ON
+	unsigned int each_cpu_num_unplug_once;
+//#endif
 	unsigned int cpu_num_plug_once;
 	unsigned int hotplug_min_freq;
 	unsigned int hotplug_max_freq;

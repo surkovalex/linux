@@ -163,16 +163,19 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 
 		if (dbs_data->cdata->governor == GOV_HOTPLUG) {
 			total_load += load;
+			hg_tuners->cpu_load_history[j][hg_tuners->hotplug_load_index] = load;
 		}
 		if (load > max_load)
 			max_load = load;
 	}
-
 	if (dbs_data->cdata->governor == GOV_HOTPLUG) {
 		/* calculate the average load across all related CPUs */
 		avg_load = total_load / num_online_cpus();
 		hg_tuners->hotplug_load_history[hg_tuners->hotplug_load_index] = avg_load;
 		hg_tuners->max_load_freq = max_load * policy->cur;
+		for_each_cpu_not(j, policy->cpus){
+			hg_tuners->cpu_load_history[j][hg_tuners->hotplug_load_index] = 0;
+		}
 	}
 	dbs_data->cdata->gov_check_cpu(cpu, max_load);
 }
@@ -209,9 +212,6 @@ void gov_cancel_work(struct dbs_data *dbs_data,
 	for_each_cpu(i, policy->cpus) {
 		cdbs = dbs_data->cdata->get_cpu_cdbs(i);
 		cancel_delayed_work_sync(&cdbs->work);
-		if(dbs_data->cdata->governor == GOV_HOTPLUG){
-			break;
-		}
 	}
 }
 
@@ -405,11 +405,6 @@ int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 					kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 
 			mutex_init(&j_cdbs->timer_mutex);
-			if(dbs_data->cdata->governor == GOV_HOTPLUG){
-				if(j == policy->cpu)
-					INIT_DEFERRABLE_WORK(&j_cdbs->work,
-								 dbs_data->cdata->gov_dbs_timer);
-			}else
 				INIT_DEFERRABLE_WORK(&j_cdbs->work,
 							 dbs_data->cdata->gov_dbs_timer);
 		}
@@ -428,8 +423,11 @@ int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 				hg_dbs_info->enable = 1;
 			}
 			hg_tuners = dbs_data->tuners;
+
+			/**********all cpu:hotplug_load_history*******************/
 			max_periods = max(DEFAULT_HOTPLUG_IN_SAMPLING_PERIODS,
 					DEFAULT_HOTPLUG_OUT_SAMPLING_PERIODS);
+			max_periods = max(max_periods, DEFAULT_EACHCPU_OUT_SAMPLING_PERIODS);
 			hg_tuners->hotplug_load_history = kmalloc(
 					(sizeof(unsigned int) * max_periods),
 					GFP_KERNEL);
@@ -439,7 +437,26 @@ int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			}
 			for (i = 0; i < max_periods; i++)
 				hg_tuners->hotplug_load_history[i] = 50;
+			/**********each cpu:cpu_load_history*********************/
+			hg_tuners->cpu_load_history[0] = kmalloc(
+					(sizeof(unsigned int) * max_periods) * NR_CPUS,
+					GFP_KERNEL);
+			if (!hg_tuners->cpu_load_history[0]) {
+				WARN_ON(1);
+				return -ENOMEM;
+			}
 
+			for (i = 0; i < max_periods; i++)
+				hg_tuners->cpu_load_history[0][i] = 50;
+
+			if(NR_CPUS > 1){
+				for (i = 1; i < NR_CPUS; i++){
+					hg_tuners->cpu_load_history[i] = hg_tuners->cpu_load_history[i - 1] +
+						max_periods;
+					for (j = 0; j < max_periods; j++)
+						hg_tuners->cpu_load_history[i][j] = 50;
+				}
+			}
 			hg_ops = dbs_data->cdata->gov_ops;
 			idle_notifier_register(hg_ops->notifier_block);
 		}
@@ -452,11 +469,6 @@ int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 
 		/* Initiate timer time stamp */
 		cpu_cdbs->time_stamp = ktime_get();
-		if(dbs_data->cdata->governor == GOV_HOTPLUG){
-			gov_queue_work(dbs_data, policy,
-					delay_for_sampling_rate(sampling_rate), false);
-		}
-		else
 			gov_queue_work(dbs_data, policy,
 					delay_for_sampling_rate(sampling_rate), true);
 
@@ -487,6 +499,8 @@ int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			if(hg_tuners->hotplug_load_history){
 				kfree(hg_tuners->hotplug_load_history);
 				hg_tuners->hotplug_load_history = NULL;
+				kfree(hg_tuners->cpu_load_history[0]);
+				hg_tuners->cpu_load_history[0] = NULL;
 			}
 		}
 		break;
