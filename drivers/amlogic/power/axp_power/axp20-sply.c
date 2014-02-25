@@ -31,8 +31,10 @@
 #include "axp-mfd.h"
 #include <linux/amlogic/aml_rtc.h>
 #include <linux/amlogic/aml_pmu_common.h>
+#include <mach/usbclock.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/wakelock_android.h>
 #include <linux/earlysuspend.h>
 #endif
 
@@ -56,12 +58,22 @@
         return -ENODEV;                                                 \
     }                                                                   \
 
+#ifdef CONFIG_AMLOGIC_USB
+struct later_job {
+        int flag;
+            int value;
+};
+static struct later_job axp202_charger_job = {};
+#endif
+
 struct battery_parameter *axp_pmu_battery = NULL;
 struct axp20_supply      *g_axp20_supply  = NULL;
 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct early_suspend axp_early_suspend;
+static int    in_early_suspend = 0;
+static struct wake_lock axp202_lock;
 #endif
 
 static inline int axp20_vbat_to_mV(uint16_t reg)
@@ -485,7 +497,8 @@ int axp_charger_set_usbcur_limit_extern(int usbcur_limit)
 	axp_read(g_axp20_supply->master, AXP20_CHARGE_VBUS, &val);
     val &= ~(0x03);
 	switch (usbcur_limit) {
-		case 0:
+        case -1:
+		case  0:
 			val |= 0x3;
 			break;
 		case 100:
@@ -498,9 +511,9 @@ int axp_charger_set_usbcur_limit_extern(int usbcur_limit)
 			val |= 0x0;
 			break;
 		default:
-		AXP_PMU_DBG("usbcur_limit=%d, not in 0,100,500,900. please check!\n", usbcur_limit);
-			return -1;
-			break;
+		    AXP_PMU_DBG("usbcur_limit=%d, not in 0,100,500,900. please check!\n", usbcur_limit);
+		    return -1;
+	        break;
 	}
 	axp_write(g_axp20_supply->master, AXP20_CHARGE_VBUS, val);
 	
@@ -1146,13 +1159,11 @@ static ssize_t dbg_info_show(struct device *dev, struct device_attribute *attr, 
 {
     struct power_supply *battery = dev_get_drvdata(dev);
     struct axp20_supply *supply  = container_of(battery, struct axp20_supply, batt);
-    int    size;
-    struct aml_charger  *charger = &supply->aml_charger;
     struct aml_pmu_api  *api;
     
     api = aml_pmu_get_api();
     if (api && api->pmu_format_dbg_buffer) {
-        return api->pmu_format_dbg_buffer(charger, buf);
+        return api->pmu_format_dbg_buffer(&supply->aml_charger, buf);
     } else {
         return sprintf(buf, "api not found, please insert pmu.ko\n"); 
     }
@@ -1331,6 +1342,45 @@ sysfs_failed:
     }
     return ret;
 }
+
+#ifdef CONFIG_AMLOGIC_USB
+int axp202_otg_change(struct notifier_block *nb, unsigned long value, void *pdata)
+{
+    /*
+     * right now nothing todo
+     */
+    return 0;
+}
+
+int axp202_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata)
+{
+    if (!g_axp20_supply) {
+        AXP_PMU_DBG("%s, driver is not ready, do it later\n", __func__);
+        axp202_charger_job.flag  = 1;
+        axp202_charger_job.value = value;
+        return 0;
+    }
+    switch (value) {
+        case USB_BC_MODE_DISCONNECT:                                        // disconnect
+        case USB_BC_MODE_SDP:                                               // pc
+            if (axp_pmu_battery && axp_pmu_battery->pmu_usbcur_limit) {     // limit usb current
+                axp_charger_set_usbcur_limit_extern(axp_pmu_battery->pmu_usbcur);
+            }
+            break;
+
+        case USB_BC_MODE_DCP:                                               // charger
+        case USB_BC_MODE_CDP:                                               // PC + charger
+            if (axp_pmu_battery) {                                          // limit usb current
+                axp_charger_set_usbcur_limit_extern(-1);                    // not limit usb current
+            }
+            break;
+
+        default:
+            break;
+    }
+    return 0;
+}
+#endif
 
 /*---------------- battery capacity calculate ---------------------------*/
 
@@ -1623,6 +1673,14 @@ static void axp_charging_monitor(struct work_struct *work)
             charger->resume = 0;
         }
         power_supply_changed(&supply->batt);
+    #ifdef CONFIG_HAS_EARLYSUSPEND
+        if (in_early_suspend) {
+            wake_lock(&axp202_lock);
+            AXP_PMU_DBG("%s, usb power status changed in early suspend, wake up now\n", __func__);
+            input_report_key(powerkeydev, KEY_POWER, 1);                        // assume power key pressed 
+            input_sync(powerkeydev);
+        }
+    #endif
     }
 
     schedule_delayed_work(&supply->work, supply->interval);
@@ -1631,9 +1689,11 @@ static void axp_charging_monitor(struct work_struct *work)
 
 
 #if defined CONFIG_HAS_EARLYSUSPEND
+static int early_power_status = 0;
 static void axp_earlysuspend(struct early_suspend *h)
 {
     uint8_t tmp;
+    struct axp20_supply *supply = (struct axp20_supply *)h->param;
 
 #if defined (CONFIG_AXP_CHGCHANGE)
     if (axp_pmu_battery->pmu_suspend_chgcur >= 300000 && axp_pmu_battery->pmu_suspend_chgcur <= 1800000) {
@@ -1641,6 +1701,10 @@ static void axp_earlysuspend(struct early_suspend *h)
         axp_update(g_axp20_supply->master, AXP20_CHARGE_CONTROL1, tmp, 0x0F);
     }
 #endif
+    if (axp_pmu_battery) {
+        early_power_status = supply->aml_charger.ext_valid;    
+    }
+    in_early_suspend = 1;
 }
 
 static void axp_lateresume(struct early_suspend *h)
@@ -1656,6 +1720,13 @@ static void axp_lateresume(struct early_suspend *h)
         axp_update(supply->master, AXP20_CHARGE_CONTROL1, tmp,0x0F);
     }
 #endif
+    if (axp_pmu_battery) {
+        early_power_status = supply->aml_charger.ext_valid;
+        input_report_key(powerkeydev, KEY_POWER, 0);                    // cancel power key 
+        input_sync(powerkeydev);
+    }
+    in_early_suspend = 0;
+    wake_unlock(&axp202_lock);
 }
 #endif
 
@@ -1811,6 +1882,12 @@ static int axp_battery_probe(struct platform_device *pdev)
     supply->interval = msecs_to_jiffies(2 * 1000);
     INIT_DELAYED_WORK(&supply->work, axp_charging_monitor);
     schedule_delayed_work(&supply->work, supply->interval);
+#ifdef CONFIG_AMLOGIC_USB
+    if (axp202_charger_job.flag) {     // do later job for usb charger detect
+        axp202_usb_charger(NULL, axp202_charger_job.value, NULL);
+        axp202_charger_job.flag = 0;
+    }
+#endif
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
     axp_early_suspend.suspend = axp_earlysuspend;
@@ -1818,6 +1895,7 @@ static int axp_battery_probe(struct platform_device *pdev)
     axp_early_suspend.level   = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 2;
     axp_early_suspend.param   = supply;
     register_early_suspend(&axp_early_suspend);
+    wake_lock_init(&axp202_lock, WAKE_LOCK_SUSPEND, "axp202");
 #endif
 
     /* axp202 ntc battery low / high temperature alarm function */
@@ -1883,6 +1961,10 @@ static int axp_battery_remove(struct platform_device *dev)
     aml_pmu_unregister_callback("demo 2");
 #endif /* AML_PMU_CALL_BACK_DEMO*/
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+    wake_lock_destroy(&axp202_lock);
+#endif
+
     return 0;
 }
 
@@ -1921,6 +2003,16 @@ static int axp20_suspend(struct platform_device *dev, pm_message_t state)
     if (api && api->pmu_suspend_process) {
         api->pmu_suspend_process(charger);
     }
+#ifdef CONFIG_HAS_EARLYSUSPEND
+    if (early_power_status != supply->aml_charger.ext_valid) {
+        AXP_PMU_DBG("%s, power status changed, prev:%x, now:%x, exit suspend process\n",
+                    __func__, early_power_status, supply->aml_charger.ext_valid);
+        input_report_key(powerkeydev, KEY_POWER, 1);                    // assume power key pressed 
+        input_sync(powerkeydev);
+        return -1;
+    }
+    in_early_suspend = 0;
+#endif
 	
     return 0;
 }
