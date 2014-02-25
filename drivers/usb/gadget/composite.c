@@ -758,6 +758,7 @@ int usb_add_config(struct usb_composite_dev *cdev,
 	if (status)
 		goto done;
 
+	usb_ep_autoconfig_reset(cdev->gadget);
 	status = bind(config);
 	if (status < 0) {
 		while (!list_empty(&config->functions)) {
