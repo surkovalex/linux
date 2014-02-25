@@ -887,6 +887,7 @@ sdio{
 		/* backlight power ctrl */
 		bl_power_on_delay=<100>; /** delay time before backlight power on(unit: ms) */
 		bl_ctrl_method=<1>;	/** backlight control method(0=gpio, 1=pwm_negative, 2=pwm_positive, 3=pwm_combo. decided by hardware design) */
+		
 		bl_gpio_port="GPIODV_28";	/** backlight control gpio port */
 		bl_gpio_dim_max_min=<0x0 0xf>;	/** brightness diming level_max, level_min : (0x0~0xf, negative logic, only for gpio control method) */
 		bl_pwm_port_gpio_used="PWM_C","1";	/** pwm_port_name(for pwm control method), pwm_gpio_used(0=use pwm_port only, 1=use bl_gpio_port to control on/off) */
@@ -923,7 +924,6 @@ sdio{
 //$$ L4 PROP_U32 = "clock_spread_spectrum"
 //$$ L4 PROP_U32 = "clock_auto_generation"
 //$$ L4 PROP_U32 3 = "clk_pll_div_clk_ctrl"
-//$$ L4 PROP_U32 3 = "mipi_dsi_lane_speed_user_min_max"
 //$$ L4 PROP_U32 = "lvds_vswing"
 //$$ L4 PROP_U32 2 = "lvds_user_repack"
 //$$ L4 PROP_U32 3 = "edp_user_link_rate_lane_count"
@@ -1009,10 +1009,9 @@ sdio{
 					223 224 225 226 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255>;
 
 		/* default settings, don't modify them unless there is display problem */
-		clock_spread_spectrum=<0>;	/** ss_level(0=disable, 1=0.5%, 2=1%, 3=2%, 4=3%, 5=4%, 6=5%) */
+		clock_spread_spectrum=<0>;	/** ss_level(0=disable, 1=0.5%, 2=1%, 3=1.5%, 4=2%) */
 		clock_auto_generation=<1>;	/** clk_auto_generation(0=use customer clock parameters, as clk_pll_div_clk_ctrl defined, 1=auto generate clock parameters by lcd_clock) */
 		clk_pll_div_clk_ctrl=<0x100042b 0x18833 0x03a82102>;	/** pll_ctrl, div_ctrl, clk_ctrl : (only valid when clk_auto_generation=0) */
-		mipi_dsi_lane_speed_user_min_max=<0 200 1000>; /** mipi_lane_speed_user(0=auto setting, 1=user define), speed_min,spend_max(unit in MHz, only valid when mipi_lane_speed_user=1)*/
 		lvds_vswing=<1>;	/** lvds_vswing_level(default level=1, support level 0,1,2,3,4) */
 		lvds_user_repack=<0 0>;	/** lvds_repack_user(0=auto setting, 1=user define), lvds_repack(0=JEIDA mode data mapping, 1=VESA mode data mapping. only valid when lvds_repack_user=1) */
 		edp_user_link_rate_lane_count=<1 1 4>;	/** edp_user(0=auto setting, 1=user define), link_rate(0=1.62G, 1=2.7G, only valid when edp_user=1), lane_count(support 1,2,4, only valid when edp_user=1) */
