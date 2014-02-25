@@ -51,6 +51,7 @@
 
 #include <linux/sizes.h>
 #include <linux/dma-mapping.h>
+#include <linux/of_fdt.h>
 #include <linux/dma-contiguous.h>
 
 /*class property info.*/
@@ -1915,7 +1916,9 @@ static int vm_driver_probe(struct platform_device *pdev)
 	char* buf_start;
 	unsigned int buf_size;
 	struct resource *mem;
+    int idx;
 
+#if 0
 	if (!(mem = platform_get_resource(pdev, IORESOURCE_MEM, 0)))
 	{
 		buf_start = 0;
@@ -1924,7 +1927,20 @@ static int vm_driver_probe(struct platform_device *pdev)
 		buf_start = (char *)mem->start;
 		buf_size = mem->end - mem->start + 1;
 	}
-	set_vm_buf_info(mem->start,buf_size);
+#else
+     idx = find_reserve_block(pdev->dev.of_node->name,0);
+     if(idx < 0){
+         buf_start = 0;
+         buf_size = 0;
+         amlog_level(LOG_LEVEL_HIGH, "vm memory resource undefined.\n");
+     }
+     else
+     {
+         buf_start = (char *)get_reserve_block_addr(idx);
+         buf_size = (unsigned int)get_reserve_block_size(idx);
+     }
+#endif 
+	set_vm_buf_info(buf_start,buf_size);
 #endif
 
 
