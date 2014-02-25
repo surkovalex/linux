@@ -199,7 +199,9 @@ int wifi_setup_dt()
 	SHOW_PIN_OWN("interrupt_pin", wifi_info.interrupt_pin);
 	ret = amlogic_gpio_request(wifi_info.interrupt_pin, OWNER_NAME);
 	CHECK_RET(ret);
-	amlogic_gpio_direction_input(wifi_info.interrupt_pin, OWNER_NAME);
+	ret = amlogic_disable_pullup(wifi_info.interrupt_pin, OWNER_NAME);
+	CHECK_RET(ret);
+	ret = amlogic_gpio_direction_input(wifi_info.interrupt_pin, OWNER_NAME);
 	CHECK_RET(ret);
 	if (wifi_info.irq_num == 4) {
 		flag = AML_GPIO_IRQ(GPIO_IRQ4, FILTER_NUM4, wifi_info.irq_trigger_type);
