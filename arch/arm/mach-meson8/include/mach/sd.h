@@ -639,10 +639,14 @@ extern struct mmc_host *sdio_host;
 	printk("[%s]\033[0;40;35m " fmt "\033[0m", __FUNCTION__, ##args);  \
 }while(0)
 
+//for external codec status, if using external codec, jtag should not be set. 
+extern int ext_codec;
 
 // P_AO_SECURE_REG1 is "Secure Register 1" in <M8-Secure-AHB-Registers.doc>
 #define aml_jtag_gpioao() do{\
     aml_clr_reg32_mask(P_AO_SECURE_REG1, ((1<<5) | (1<<9))); \
+    if(!ext_codec)\
+        aml_set_reg32_mask(P_AO_SECURE_REG1, ((1<<8) | (1<<1))); \
 }while(0)
 
 #define aml_jtag_sd() do{\

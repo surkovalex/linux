@@ -50,10 +50,10 @@
 #include <plat/io.h>
 #endif
 
-#define USE_EXTERNAL_DAC 1
+//#define USE_EXTERNAL_DAC 1
 #define DRV_NAME "aml_snd_m8"
 #define HP_DET                  1
-
+extern int ext_codec;
 static void aml_set_clock(int enable)
 {
     /* set clock gating */
@@ -613,10 +613,12 @@ static void aml_m8_pinmux_init(struct snd_soc_card *card)
     p_aml_audio->pin_ctl = devm_pinctrl_get_select(card->dev, "aml_snd_m8");
     
     p_audio = p_aml_audio;
- #if USE_EXTERNAL_DAC
+ //#if USE_EXTERNAL_DAC
     //aml_write_reg32(P_AO_SECURE_REG1,0x00000000);
-    aml_clr_reg32_mask(P_AO_SECURE_REG1, ((1<<8) | (1<<1)));
- #endif
+    if(ext_codec){
+        aml_clr_reg32_mask(P_AO_SECURE_REG1, ((1<<8) | (1<<1)));
+    }
+// #endif
 	ret = of_property_read_string(card->dev->of_node, "mute_gpio", &str);
 	if (ret < 0) {
 		printk("aml_snd_m8: faild to get mute_gpio!\n");
