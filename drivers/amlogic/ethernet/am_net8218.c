@@ -2522,7 +2522,6 @@ static int ethernet_early_suspend(struct early_suspend *dev)
 {
 	printk("ethernet_early_suspend!\n");
 	netdev_close(my_ndev);
-	switch_mod_gate_by_name("ethernet",0);
 	return 0;
 }
 static int ethernet_late_resume(struct early_suspend *dev)
@@ -2610,7 +2609,7 @@ static int ethernet_probe(struct platform_device *pdev)
 	struct am_net_private *np = netdev_priv(my_ndev);
 	if(np->phydev && savepowermode)
 		np->phydev->drv->suspend(np->phydev);
-	switch_mod_gate_by_name("ethernet",0);
+	//switch_mod_gate_by_name("ethernet",0);
 
 	//if (!eth_pdata) {
 	//	printk("\nethernet pm ops resource undefined.\n");
