@@ -167,7 +167,7 @@ static int ionvideo_size_changed(struct ionvideo_dev *dev, struct vframe_s* vf) 
     int aw = vf->width;
     int ah = vf->height;
 
-    v4l_bound_align_image(&aw, 48, MAX_WIDTH, 5, &ah, 32, MAX_HEIGHT, 0, 0);
+    v4l_bound_align_image(&aw, 48, MAX_WIDTH, 4, &ah, 32, MAX_HEIGHT, 0, 0);
     dev->c_width = aw;
     dev->c_height = ah;
     if (aw != dev->width || ah != dev->height) {
@@ -511,7 +511,7 @@ static int vidioc_try_fmt_vid_cap(struct file *file, void *priv, struct v4l2_for
     }
 
     f->fmt.pix.field = V4L2_FIELD_INTERLACED;
-    v4l_bound_align_image(&f->fmt.pix.width, 48, MAX_WIDTH, 5, &f->fmt.pix.height, 32, MAX_HEIGHT, 0, 0);
+    v4l_bound_align_image(&f->fmt.pix.width, 48, MAX_WIDTH, 4, &f->fmt.pix.height, 32, MAX_HEIGHT, 0, 0);
     f->fmt.pix.bytesperline = (f->fmt.pix.width * fmt->depth) >> 3;
     f->fmt.pix.sizeimage = f->fmt.pix.height * f->fmt.pix.bytesperline;
     if (fmt->is_yuv)
