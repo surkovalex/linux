@@ -2423,7 +2423,7 @@ static int hdmitx_cntl(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned argv)
         }
         if(argv == HDMITX_LATE_RESUME) {
             aml_set_reg32_bits(P_HHI_VID_PLL_CNTL, 1, 30, 1);
-            hdmi_phy_wakeup();
+            //hdmi_phy_wakeup();  	// no need
         }
         return 0;
     }
