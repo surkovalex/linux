@@ -1070,7 +1070,7 @@ sdio{
 		keysn_0: key_0{
 			key-name = "usid";
 			key-device = "nandkey";
-			key-dataformat = "allascii"";
+			key-dataformat = "allascii";
 			key-permit = "read","write","del";
 		};
 		
