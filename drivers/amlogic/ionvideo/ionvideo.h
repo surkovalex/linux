@@ -75,6 +75,8 @@ struct ionvideo_buffer {
     struct vb2_buffer vb;
     struct list_head list;
     const struct ionvideo_fmt *fmt;
+    u64 pts;
+    u32 duration;
 };
 
 struct ionvideo_dmaqueue {
@@ -134,6 +136,7 @@ struct ionvideo_dev {
     struct vframe_receiver_s video_vf_receiver;
     u64 pts;
     u8 receiver_register;
+    u32 skip;
 };
 
 int is_ionvideo_active(void);
