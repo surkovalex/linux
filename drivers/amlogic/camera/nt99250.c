@@ -2569,6 +2569,11 @@ static int nt99250_open(struct file *file)
 	struct nt99250_device *dev = video_drvdata(file);
 	struct nt99250_fh *fh = NULL;
 	int retval = 0;
+#if CONFIG_CMA
+    retval = vm_init_buf(16*SZ_1M);
+    if(retval <0)
+        return -1;
+#endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 	switch_mod_gate_by_name("ge2d", 1);
 #endif		
@@ -2705,6 +2710,9 @@ static int nt99250_close(struct file *file)
 	switch_mod_gate_by_name("ge2d", 0);
 #endif		
 	wake_unlock(&(dev->wake_lock));
+#ifdef CONFIG_CMA
+    vm_deinit_buf();
+#endif
 	return 0;
 }
 

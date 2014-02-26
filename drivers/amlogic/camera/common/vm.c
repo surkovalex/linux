@@ -51,8 +51,7 @@
 
 #include <linux/sizes.h>
 #include <linux/dma-mapping.h>
-#include <linux/of_fdt.h>
-
+#include <linux/dma-contiguous.h>
 
 /*class property info.*/
 #include "vmcls.h"
@@ -1843,6 +1842,64 @@ int uninit_vm_device(void)
 }
 
 
+#ifdef CONFIG_CMA
+void set_vm_buf_info(resource_size_t start,unsigned int size);
+void unset_vm_buf_info();
+
+static size_t vm_buf_size;
+static struct page *vm_pages;
+
+int vm_init_buf(size_t size)
+{
+
+    if(size ==0)
+        return -1;
+
+    if(vm_pages && vm_buf_size != 0)
+    {
+        pr_warn("%s cma space already in use, phys %x size %dk\n", __func__, page_to_phys(vm_pages), size/1024);
+        dma_release_from_contiguous(&vm_device.pdev->dev, vm_pages, vm_buf_size/PAGE_SIZE); 
+    }
+
+    vm_pages = dma_alloc_from_contiguous(&vm_device.pdev->dev, size/PAGE_SIZE, 0);
+    if(vm_pages)
+    {
+        dma_addr_t phys;
+        phys = page_to_phys(vm_pages);
+        pr_info("%s: allocating phys %p, size %dk\n", __func__, phys, size/1024);
+        set_vm_buf_info(phys, size);
+        vm_buf_size = size;
+        return 0;
+    }
+    else
+    {
+        pr_err("CMA failed to allocate dma buffer\n");
+        return -ENOMEM;
+    }
+}
+
+EXPORT_SYMBOL(vm_init_buf);
+
+void vm_deinit_buf()
+{
+    if(0 == vm_buf_size)
+    {
+        pr_warn("vm buf size equals 0\n");
+        return;
+    }
+    unset_vm_buf_info();
+    if(vm_pages)
+    {
+        dma_release_from_contiguous(&vm_device.pdev->dev, vm_pages, vm_buf_size/PAGE_SIZE); 
+        vm_buf_size = 0;
+    }
+}
+
+EXPORT_SYMBOL(vm_deinit_buf);
+#endif
+
+
+
 /*******************************************************************
  *
  * interface for Linux driver
@@ -1854,12 +1911,11 @@ MODULE_AMLOG(AMLOG_DEFAULT_LEVEL, 0xff, LOG_LEVEL_DESC, LOG_MASK_DESC);
 /* for driver. */
 static int vm_driver_probe(struct platform_device *pdev)
 {
+#ifndef CONFIG_CMA
 	char* buf_start;
 	unsigned int buf_size;
 	struct resource *mem;
-    int idx;
 
-#if 0
 	if (!(mem = platform_get_resource(pdev, IORESOURCE_MEM, 0)))
 	{
 		buf_start = 0;
@@ -1868,25 +1924,12 @@ static int vm_driver_probe(struct platform_device *pdev)
 		buf_start = (char *)mem->start;
 		buf_size = mem->end - mem->start + 1;
 	}
-#else
-     idx = find_reserve_block(pdev->dev.of_node->name,0);
-     if(idx < 0){
-         buf_start = 0;
-         buf_size = 0;
-         amlog_level(LOG_LEVEL_HIGH, "vm memory resource undefined.\n");
-     }
-     else
-     {
-         buf_start = (char *)get_reserve_block_addr(idx);
-         buf_size = (unsigned int)get_reserve_block_size(idx);
-     }
-#endif 
-    vm_device.pdev = pdev;
+	set_vm_buf_info(mem->start,buf_size);
+#endif
 
-	set_vm_buf_info(buf_start,buf_size);
 
+	vm_device.pdev = pdev;
 	init_vm_device();
-
 	return 0;
 }
 
@@ -1907,7 +1950,6 @@ static const struct of_device_id amlogic_vm_dt_match[]={
 #define amlogic_vm_dt_match NULL
 #endif
 
-
 /* general interface for a linux driver .*/
 static struct platform_driver vm_drv = {
 	.probe  = vm_driver_probe,
@@ -1924,9 +1966,11 @@ vm_init_module(void)
 {
 	int err;
 
+
 	amlog_level(LOG_LEVEL_HIGH,"vm_init\n");
 	if ((err = platform_driver_register(&vm_drv))) {
 		printk(KERN_ERR "Failed to register vm driver (error=%d\n", err);
+		return err;
 	}
 
 	return err;
