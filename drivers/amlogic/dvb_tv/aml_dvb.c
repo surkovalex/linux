@@ -1211,7 +1211,7 @@ static int aml_dvb_probe(struct platform_device *pdev)
 		goto error;
 	}
 
-	//rsj//tsdemux_set_ops(&aml_tsdemux_ops);
+	tsdemux_set_ops(&aml_tsdemux_ops);
 
 	return ret;
 error:
@@ -1240,7 +1240,7 @@ static int aml_dvb_remove(struct platform_device *pdev)
 	struct aml_dvb *advb = (struct aml_dvb*)dev_get_drvdata(&pdev->dev);
 	int i;
 
-//rsj//	tsdemux_set_ops(NULL);
+	tsdemux_set_ops(NULL);
 
 	aml_unregist_dmx_class();
 	class_unregister(&aml_stb_class);

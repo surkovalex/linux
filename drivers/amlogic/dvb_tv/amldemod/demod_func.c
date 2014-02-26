@@ -865,6 +865,9 @@ void dtmb_initial(struct aml_demod_sta *demod_sta)
 	dtmb_write_reg(0x047, 0x33202);  //20 bits, 1 - fpga. 0 - m6tvd
 	dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
     dtmb_write_reg(0xc, 0x41444400); // shorten che waiting time.
+    dtmb_write_reg(0x18,0x000a1316); // shorten mobile detect time.
+    dtmb_write_reg(0x15,0x0199999A); // shift -5M.
+	dtmb_write_reg(0x2f,0x13064263); // speed up src
 #if 0
 	int i;
 	  for (i=0; list_dtmb_v1[i].adr != 0; i++) {
@@ -971,7 +974,7 @@ int dtmb_read_snr(void){
 		            pr_dbg("*************** local_state = %d ************ \n", local_state);
 
 		            if(SC_mode == 0 && fbe_in_num > 30 && fec_ldpc_it_avg > 640/*2.5*256*/) { // switch to time_eq mode
-		                ddc_phase  = dtmb_read_reg(0x15) & 0xffffff;
+		                ddc_phase  = dtmb_read_reg(0x15) & 0x1ffffff;
 		                icfo_phase = dtmb_read_reg(0xe0) & 0xfffff;
 		                fcfo_phase = dtmb_read_reg(0xe1) & 0xfffff;
 
@@ -1001,6 +1004,7 @@ int dtmb_read_snr(void){
 		                local_state = 8;
 		                pr_dbg("*************** local_state = %d ************ \n", local_state);
 		                dtmb_reset();
+						msleep(300);
 	                        }
 	                    }
 	                }else if(time_cnt >=10) // don't sync, all reset
@@ -1015,6 +1019,8 @@ int dtmb_read_snr(void){
                             dtmb_write_reg(0xc, 0x41444400); // shorten che waiting time.
                             dtmb_write_reg(0x47,0x33202);
 							dtmb_write_reg(0x18,0x000a1316); // shorten mobile detect time.
+				            dtmb_write_reg(0x15,0x0199999A); // shift -5M.
+				            dtmb_write_reg(0x2f,0x13064263); // speed up src
                         }
 
 		 }

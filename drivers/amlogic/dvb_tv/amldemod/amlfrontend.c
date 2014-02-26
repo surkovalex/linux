@@ -52,6 +52,7 @@ module_param(debug_aml, int, S_IRUGO);
 
 static int last_lock=-1;
 #define DEMOD_DEVICE_NAME  "m6_demod"
+static int cci_thread=0;
 
 
 static int freq_dvbc=0;
@@ -531,7 +532,7 @@ static int M6_Demod_Dvbc_Init(struct aml_fe_dev *dev,int mode)
     	sys.demod_clk=Demod_Clk_72M;
 		demod_status.tmp=Cry_mode;
 	}
-	demod_status.ch_if=Si2176_5M_If*1000;
+	demod_status.ch_if=Si2176_6M_If*1000;
 	pr_dbg("[%s]adc_clk is %d,demod_clk is %d\n",__func__,sys.adc_clk,sys.demod_clk);
 	autoFlagsTrig = 1;
 	demod_set_sys(&demod_status, &i2c, &sys);
@@ -938,6 +939,7 @@ static int m6_demod_dtmb_read_status(struct dvb_frontend *fe, fe_status_t * stat
 //	if(s==1)
 	s = dtmb_read_snr();
 	s = amdemod_dtmb_stat_islock(dev);
+//	s=1;
 	if(s==1)
 	{
 		ilock=1;
@@ -965,6 +967,9 @@ static int m6_demod_dtmb_read_ber(struct dvb_frontend *fe, u32 * ber)
 //	struct aml_demod_sta demod_sta;
 
 // check_atsc_fsm_status();
+	int fec_bch_add;
+	fec_bch_add = dtmb_read_reg(0xdf);
+	*ber=fec_bch_add;
 	return 0;
 }
 
@@ -979,14 +984,17 @@ static int m6_demod_dtmb_read_signal_strength(struct dvb_frontend *fe, u16 *stre
 
 static int m6_demod_dtmb_read_snr(struct dvb_frontend *fe, u16 * snr)
 {
-//	struct aml_fe *afe = fe->demodulator_priv;
-//	struct aml_fe_dev *dev = afe->dtv_demod;
+	struct aml_fe *afe = fe->demodulator_priv;
+	struct aml_fe_dev *dev = afe->dtv_demod;
 
-//	struct aml_demod_sts demod_sts;
-//	struct aml_demod_i2c demod_i2c;
-//	struct aml_demod_sta demod_sta;
-
-//	* snr=check_atsc_fsm_status();
+	int tmp,snr_avg;
+	tmp=snr_avg=0;
+	tmp=dtmb_read_reg(0x0e3);
+	snr_avg = (tmp >> 13) & 0xfff;
+		if(snr_avg >= 2048)
+			snr_avg = snr_avg - 4096;
+		snr_avg = snr_avg / 32;
+	*snr = snr_avg;
 	return 0;
 }
 
@@ -1063,8 +1071,8 @@ static int m6_demod_dtmb_get_frontend(struct dvb_frontend *fe)
 {//these content will be writed into eeprom .
 	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 	struct aml_fe *afe = fe->demodulator_priv;
-	printk("p->frequency is %d\n",c->frequency);
 	*c = afe->params;
+	pr_dbg("[get frontend]c->frequency is %d\n",c->frequency);
 	return 0;
 }
 
@@ -1179,7 +1187,7 @@ static int m6_demod_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 	}else if(mode == AM_FE_DTMB){
 
 	fe_ops->info.frequency_min = 51000000;
-	fe_ops->info.frequency_max = 858000000;
+	fe_ops->info.frequency_max = 710000000;
 	fe_ops->info.frequency_stepsize = 0;
 	fe_ops->info.frequency_tolerance = 0;
 	fe_ops->info.caps = FE_CAN_FEC_1_2 | FE_CAN_FEC_2_3 | FE_CAN_FEC_3_4 |
@@ -1230,11 +1238,20 @@ static int m6_demod_fe_enter_mode(struct aml_fe *fe, int mode)
 	}else if (fe->mode==AM_FE_ATSC){
 		M6_Demod_Atsc_Init(dev);
 	}*/
+	//dvbc_timer_init();
+	if(cci_thread){
+		if(dvbc_get_cci_task()==1)
+			dvbc_create_cci_task();
+	}
 	return 0;
 }
 
 static int m6_demod_fe_leave_mode(struct aml_fe *fe, int mode)
 {
+//	dvbc_timer_exit();
+	if(cci_thread){
+		dvbc_kill_cci_task();
+	}
 	return 0;
 }
 

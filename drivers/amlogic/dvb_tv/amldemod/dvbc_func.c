@@ -3,6 +3,281 @@
 #include <linux/delay.h>
 #include "aml_demod.h"
 #include "demod_func.h"
+#include <linux/kthread.h>
+
+
+
+static struct task_struct *cci_task;
+int cciflag=0;
+struct timer_list mytimer;
+static void dvbc_cci_timer(unsigned long data)
+{
+	printk("%s\n", (char *)data);
+
+#if 1
+	int count=100;
+	int maxCCI_p,re,im,j,i,times,maxCCI,sum,sum1,reg_0xf0,tmp1,tmp,tmp2,reg_0xa8,reg_0xac;
+//	while(1){
+		    // search cci((si2176_get_strength()-256)<(-85))
+		if((((apb_read_reg(QAM_BASE+0x18))&0x1)==1)){
+				printk("[cci]lock ");
+				if(cciflag==0){
+					  apb_write_reg(QAM_BASE+0xa8, 0);
+
+					  cciflag=0;
+				}
+				 printk("\n");
+				 mdelay(500);
+			mod_timer(&mytimer, jiffies + 2*HZ);
+			return 0;
+		}
+		 if(cciflag==1){
+		 	printk("[cci]cciflag is 1,wait 20\n");
+			mdelay(20000);
+		}
+	   		times = 300;
+		    tmp = 0x2be2be3; //0x2ae4772;  IF = 6M, fs = 35M, dec2hex(round(8*IF/fs*2^25))
+		    tmp2 = 0x2000;
+		    tmp1 = 8;
+		    int reg_0xa8_t, reg_0xac_t;
+		    reg_0xa8 = 0xc0000000; // bypass CCI
+		    reg_0xac = 0xc0000000; // bypass CCI
+
+		    maxCCI = 0;
+    		maxCCI_p = 0;
+			for(i = 0; i < times; i++) {
+		         //reg_0xa8 = app_apb_read_reg(0xa8);
+		         reg_0xa8_t = reg_0xa8 + tmp + i * tmp2;
+	       		 apb_write_reg(QAM_BASE+0xa8, reg_0xa8_t);
+		         reg_0xac_t = reg_0xac + tmp - i * tmp2;
+	        	 apb_write_reg(QAM_BASE+0xac, reg_0xac_t);
+	       		 sum = 0;
+	        	 sum1 = 0;
+		          for(j = 0; j < tmp1; j++) {
+		              	// msleep(1);
+		              	// mdelay(1);
+			             reg_0xf0 = apb_read_reg(QAM_BASE+0xf0);
+			             re = (reg_0xf0 >> 24) & 0xff;
+			             im = (reg_0xf0 >> 16) & 0xff;
+			             if(re > 127)
+			                 //re = re - 256;
+			                 re = 256 - re;
+			             if(im > 127)
+			                 //im = im - 256;
+			                 im = 256 - im;
+
+			             sum += re + im;
+			             re = (reg_0xf0 >> 8) & 0xff;
+			             im = (reg_0xf0 >> 0) & 0xff;
+			             if(re > 127)
+			                 //re = re - 256;
+			                 re = 256 - re;
+			             if(im > 127)
+			                 //im = im - 256;
+			                 im = 256 - im;
+
+			             sum1 += re + im;
+
+			     }
+		         sum = sum / tmp1;
+		         sum1 = sum1 /tmp1;
+		         if(sum1 > sum) {
+		             sum = sum1;
+		             reg_0xa8_t = reg_0xac_t;
+		         }
+				// printk("0xa8 = %x, sum = %d i is %d\n", reg_0xa8_t, sum,i);
+		         if(sum > maxCCI) {
+		              maxCCI = sum;
+		              if(maxCCI > 24) {
+		                  maxCCI_p = reg_0xa8_t & 0x7fffffff;
+		              }
+		              printk("[cci]maxCCI = %d, maxCCI_p = %x i is %d, sum is %d\n", maxCCI, maxCCI_p,i,sum);
+		         }
+		         if((sum < 24) && (maxCCI_p > 0))
+		             break;  // stop CCI detect.
+	     }
+
+	     if(maxCCI_p > 0) {
+	         printk("[cci]--------- find CCI, loc = %x, value = %d ---------- \n", maxCCI_p, maxCCI);
+	         apb_write_reg(QAM_BASE+0xa8, maxCCI_p & 0x7fffffff); // enable CCI
+	         apb_write_reg(QAM_BASE+0xac, maxCCI_p & 0x7fffffff); // enable CCI
+	    //     if(dvbc.mode == 4) // 256QAM
+	             apb_write_reg(QAM_BASE+0x54, 0xa25705fa); //
+	             cciflag=1;
+	             mdelay(1000);
+	     }
+	     else{
+	         printk("[cci] ------------  find NO CCI ------------------- \n");
+			 cciflag = 0;
+	     }
+
+
+		printk("[cci][%s]--------------------------\n",__func__);
+		mod_timer(&mytimer, jiffies + 2*HZ);
+		return 0;
+//	}
+#endif
+}
+int  dvbc_timer_init(void)
+{
+	printk("%s\n",__func__);
+	setup_timer(&mytimer, dvbc_cci_timer, (unsigned long)"Hello, world!");
+	mytimer.expires = jiffies + 2*HZ;
+	add_timer(&mytimer);
+	return 0;
+}
+void  dvbc_timer_exit(void)
+{
+	printk("%s\n",__func__);
+	del_timer(&mytimer);
+}
+
+void dvbc_cci_task(void)
+{
+	int count=100;
+	int maxCCI_p,re,im,j,i,times,maxCCI,sum,sum1,reg_0xf0,tmp1,tmp,tmp2,reg_0xa8,reg_0xac;
+	while(1){
+			msleep(200);
+		    // search cci((si2176_get_strength()-256)<(-85))
+		if((((apb_read_reg(QAM_BASE+0x18))&0x1)==1)){
+				printk("[cci]lock ");
+				if(cciflag==0){
+					  apb_write_reg(QAM_BASE+0xa8, 0);
+					  apb_write_reg(QAM_BASE+0xac, 0);
+					  printk("no cci ");
+					  cciflag=0;
+				}
+				 printk("\n");
+				 msleep(500);
+			continue;
+		}
+
+		 if(cciflag==1){
+		 	printk("[cci]cciflag is 1,wait 20\n");
+			msleep(20000);
+		}
+	   		times = 300;
+		    tmp = 0x2be2be3; //0x2ae4772;  IF = 6M, fs = 35M, dec2hex(round(8*IF/fs*2^25))
+		    tmp2 = 0x2000;
+		    tmp1 = 8;
+		    int reg_0xa8_t, reg_0xac_t;
+		    reg_0xa8 = 0xc0000000; // bypass CCI
+		    reg_0xac = 0xc0000000; // bypass CCI
+
+		    maxCCI = 0;
+    		maxCCI_p = 0;
+			for(i = 0; i < times; i++) {
+		         //reg_0xa8 = app_apb_read_reg(0xa8);
+		         reg_0xa8_t = reg_0xa8 + tmp + i * tmp2;
+	       		 apb_write_reg(QAM_BASE+0xa8, reg_0xa8_t);
+		         reg_0xac_t = reg_0xac + tmp - i * tmp2;
+	        	 apb_write_reg(QAM_BASE+0xac, reg_0xac_t);
+	       		 sum = 0;
+	        	 sum1 = 0;
+		          for(j = 0; j < tmp1; j++) {
+		              //	 msleep(1);
+			             reg_0xf0 = apb_read_reg(QAM_BASE+0xf0);
+			             re = (reg_0xf0 >> 24) & 0xff;
+			             im = (reg_0xf0 >> 16) & 0xff;
+			             if(re > 127)
+			                 //re = re - 256;
+			                 re = 256 - re;
+			             if(im > 127)
+			                 //im = im - 256;
+			                 im = 256 - im;
+
+			             sum += re + im;
+
+			             re = (reg_0xf0 >> 8) & 0xff;
+			             im = (reg_0xf0 >> 0) & 0xff;
+			             if(re > 127)
+			                 //re = re - 256;
+			                 re = 256 - re;
+			             if(im > 127)
+			                 //im = im - 256;
+			                 im = 256 - im;
+
+			             sum1 += re + im;
+
+
+			     }
+		         sum = sum / tmp1;
+		         sum1 = sum1 /tmp1;
+		         if(sum1 > sum) {
+		             sum = sum1;
+		             reg_0xa8_t = reg_0xac_t;
+		         }
+				// printk("0xa8 = %x, sum = %d i is %d\n", reg_0xa8_t, sum,i);
+		         if(sum > maxCCI) {
+		              maxCCI = sum;
+		              if(maxCCI > 24) {
+		                  maxCCI_p = reg_0xa8_t & 0x7fffffff;
+		              }
+		              printk("[cci]maxCCI = %d, maxCCI_p = %x i is %d, sum is %d\n", maxCCI, maxCCI_p,i,sum);
+		         }
+
+		         if((sum < 24) && (maxCCI_p > 0))
+		             break;  // stop CCI detect.
+	     }
+
+	     if(maxCCI_p > 0) {
+	         printk("[cci]--------- find CCI, loc = %x, value = %d ---------- \n", maxCCI_p, maxCCI);
+	         apb_write_reg(QAM_BASE+0xa8, maxCCI_p & 0x7fffffff); // enable CCI
+	         apb_write_reg(QAM_BASE+0xac, maxCCI_p & 0x7fffffff); // enable CCI
+	    //     if(dvbc.mode == 4) // 256QAM
+	             apb_write_reg(QAM_BASE+0x54, 0xa25705fa); //
+	             cciflag=1;
+	             msleep(1000);
+	     }
+	     else{
+	         printk("[cci] ------------  find NO CCI ------------------- \n");
+			 cciflag = 0;
+	     }
+
+
+		printk("[cci][%s]--------------------------\n",__func__);
+	}
+
+}
+
+int dvbc_get_cci_task(void)
+{
+	if(cci_task)
+		return 0;
+	else
+		return 1;
+
+}
+
+void dvbc_create_cci_task(void)
+{
+
+	int i,ret;
+	//apb_write_reg(QAM_BASE+0xa8, 0x42b2ebe3); // enable CCI
+    // apb_write_reg(QAM_BASE+0xac, 0x42b2ebe3); // enable CCI
+//     if(dvbc.mode == 4) // 256QAM
+    // apb_write_reg(QAM_BASE+0x54, 0xa25705fa); //
+	cci_task=kthread_create(dvbc_cci_task,NULL,"cci_task");
+	if(ret!=0)
+	{
+		printk ("[%s]Create cci kthread error!\n",__func__);
+		cci_task=NULL;
+		return 0;
+	}
+	wake_up_process(cci_task);
+	printk ("[%s]Create cci kthread and wake up!\n",__func__);
+}
+
+void dvbc_kill_cci_task(void)
+{
+	if(cci_task){
+                kthread_stop(cci_task);
+                cci_task = NULL;
+				printk ("[%s]kill cci kthread !\n",__func__);
+     }
+}
+
+
 
 
 u32 dvbc_set_qam_mode(unsigned char mode)
@@ -313,6 +588,7 @@ static void dvbc_reg_initial(struct aml_demod_sta *demod_sta)
     ch_if     = demod_sta->ch_if    ; // kHz
     ch_bw     = demod_sta->ch_bw    ; // kHz
     symb_rate = demod_sta->symb_rate; // k/sec
+    ch_mode=4;
     printk("in dvbc_func, clk_freq is %d, adc_freq is %d,ch_mode is %d,ch_if is %d\n", clk_freq, adc_freq,ch_mode,ch_if);
 //	apb_write_reg(DEMOD_CFG_BASE,0x00000007);
     // disable irq

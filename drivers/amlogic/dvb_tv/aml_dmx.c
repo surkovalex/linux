@@ -2031,7 +2031,7 @@ static int alloc_subtitle_pes_buffer(struct aml_dmx * dmx)
 		WRITE_MPEG_REG(PARSER_SUB_RP, start_ptr);
 		goto exit;
 	}
-	//rsj//sbuff=get_stream_buffer(BUF_TYPE_SUBTITLE);
+	sbuff=get_stream_buffer(BUF_TYPE_SUBTITLE);
 	if(sbuff)
 	{
 		 phy_addr = sbuff->buf_start;

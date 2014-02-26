@@ -234,7 +234,7 @@ static void dvb_frontend_add_event(struct dvb_frontend *fe, fe_status_t status)
 
 	dev_dbg(fe->dvb->device, "%s:\n", __func__);
 
-	if ((status & FE_HAS_LOCK) && has_get_frontend(fe))
+	if (/*(status & FE_HAS_LOCK) && */has_get_frontend(fe))
 		dtv_get_frontend(fe, &fepriv->parameters_out);
 
 	mutex_lock(&events->mtx);
@@ -248,7 +248,7 @@ static void dvb_frontend_add_event(struct dvb_frontend *fe, fe_status_t status)
 	e = &events->events[events->eventw];
 	e->status = status;
 	e->parameters = fepriv->parameters_out;
-
+	printk("[get frontend2] freq is %d\n",e->parameters.frequency);
 	events->eventw = wp;
 
 	mutex_unlock(&events->mtx);
@@ -290,6 +290,7 @@ static int dvb_frontend_get_event(struct dvb_frontend *fe,
 	mutex_lock(&events->mtx);
 	*event = events->events[events->eventr];
 	events->eventr = (events->eventr + 1) % MAX_EVENT;
+	printk("[get frontend1] freq is %d\n",event->parameters.frequency);
 	mutex_unlock(&events->mtx);
 
 	return 0;
@@ -1580,7 +1581,7 @@ static int dtv_property_legacy_params_sync(struct dvb_frontend *fe,
 
 	p->frequency = c->frequency;
 	p->inversion = c->inversion;
-
+	printk("[get frontend]p is %d\n",p->frequency);
 	switch (dvbv3_type(c->delivery_system)) {
 	case DVBV3_UNKNOWN:
 		dev_err(fe->dvb->device,
@@ -2562,16 +2563,16 @@ static int dtv_set_frontend(struct dvb_frontend *fe)
 		case SYS_DVBC_ANNEX_A:
 		case SYS_DVBC_ANNEX_C:
 			fepriv->min_delay = HZ / 20;
-			fepriv->step_size = c->symbol_rate / 16000;
-			fepriv->max_drift = c->symbol_rate / 2000;
+			fepriv->step_size = 0;
+			fepriv->max_drift = 0;
 			break;
 		case SYS_DVBT:
 		case SYS_DVBT2:
 		case SYS_ISDBT:
 		case SYS_DTMB:
 			fepriv->min_delay = HZ / 20;
-			fepriv->step_size = fe->ops.info.frequency_stepsize * 2;
-			fepriv->max_drift = (fe->ops.info.frequency_stepsize * 2) + 1;
+			fepriv->step_size = 0;//fe->ops.info.frequency_stepsize * 2;
+			fepriv->max_drift = 0;//(fe->ops.info.frequency_stepsize * 2) + 1;
 			break;
 		default:
 			/*
