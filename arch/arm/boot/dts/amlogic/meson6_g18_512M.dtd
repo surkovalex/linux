@@ -124,7 +124,7 @@ void root_func(){
 		compatible = "amlogic,deinterlace";
 		dev_name = "deinterlace";
 		status = "okay";
-		reserve-memory = <0x02300000>;
+		reserve-memory = <0x01c00000>;
 		reserve-iomap = "true";
 	};
 
