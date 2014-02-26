@@ -61,7 +61,7 @@ static struct ve_dnlp_s am_ve_dnlp;
 static struct ve_dnlp_table_s am_ve_new_dnlp;
 
 unsigned int vecm_latch_flag;
-unsigned int cm_size;
+unsigned int cm_size,ve_size;
 static int video_rgb_ogo_mode_sw = 0;
 static signed int vd1_brightness = 0, vd1_contrast = 0;
 extern unsigned int cm2_patch_flag;
@@ -85,24 +85,25 @@ MODULE_PARM_DESC(frame_lock_freq, "frame_lock_50");
 */
 static void cm2_frame_switch_patch(void)
 {
-	WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x20f);
-	WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, cm2_patch_flag);
+    WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x20f);
+    WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, cm2_patch_flag);
 }
-
-static void cm2_frame_size_patch(void)
+static void ve_frame_size_patch(unsigned int width,unsigned int height)
 {
-    unsigned int vpp_size , hs, he, vs, ve;
+    unsigned int vpp_size = height|(width << 16);
+    if(ve_size != vpp_size){
+	WRITE_CBUS_REG(VPP_VE_H_V_SIZE, vpp_size);
+	ve_size = vpp_size;
+    }
+}
+static void cm2_frame_size_patch(unsigned int width,unsigned int height)
+{
+    unsigned int vpp_size;
     /*check if the cm2 enable/disable to config the cm2 size*/
     if(!(READ_CBUS_REG(VPP_MISC)&(0x1<<28)))
         return;
 
-    hs = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,16,12);
-    he = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,0,12);
-
-    vs = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,16,12);
-    ve = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,0,12);
-
-    vpp_size = (he - hs + 1) | ((ve - vs + 1) << 16);
+    vpp_size = width|(height << 16);
     if(cm_size == 0){
          WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x205);
          cm_size = READ_CBUS_REG(VPP_CHROMA_DATA_PORT);
@@ -111,9 +112,9 @@ static void cm2_frame_size_patch(void)
         WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x205);
         WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, vpp_size);
         WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x209);
-        WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, (he-hs+1)<<15);
+        WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, width<<15);
         WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x20a);
-        WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, (ve-vs+1)<<16);
+        WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, height<<16);
         cm_size =  vpp_size;
     }
 #ifdef PQ_DEBUG_EN
@@ -123,6 +124,8 @@ static void cm2_frame_size_patch(void)
 
 void amvecm_video_latch(void)
 {
+    unsigned int hs, he, vs, ve;
+
     if ((vecm_latch_flag & FLAG_REG_MAP0) ||
     	(vecm_latch_flag & FLAG_REG_MAP1) ||
     	(vecm_latch_flag & FLAG_REG_MAP2) ||
@@ -174,10 +177,16 @@ void amvecm_video_latch(void)
 #endif
     	}
 
-		if((cm2_patch_flag & 0xff) > 0)
-		cm2_frame_switch_patch();
+	if((cm2_patch_flag & 0xff) > 0)
+	    cm2_frame_switch_patch();
     }
-    cm2_frame_size_patch();
+    hs = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,16,12);
+    he = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,0,12);
+
+    vs = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,16,12);
+    ve = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,0,12);
+    cm2_frame_size_patch(he-hs+1,ve-vs+1);
+    ve_frame_size_patch(he-hs+1,ve-vs+1);
     if (vecm_latch_flag & FLAG_VE_DNLP)
     {
         vecm_latch_flag &= ~FLAG_VE_DNLP;
@@ -1188,14 +1197,13 @@ static int __init amvecm_init(void)
     //    pr_info("failed to register amvecm module, error %d\n", ret);
     //    return -ENODEV;
     //}
+
     int ret = 0;
 	int i = 0;
     struct amvecm_dev_s *devp = &amvecm_dev;
 
     memset(devp, 0, (sizeof(struct amvecm_dev_s)));
-
-    printk("\n\n VECM init \n\n");
-
+	printk("\n\n VECM init \n\n");
     ret = alloc_chrdev_region(&devp->devno, 0, 1, AMVECM_NAME);
     if (ret < 0)
     {
