@@ -102,6 +102,8 @@ obj-$(CONFIG_VIDEO_AMLOGIC_CAPTURE) += camera/
 
 obj-$(CONFIG_AMLOGIC_MIPI) += mipi/
 
+obj-$(CONFIG_D2D3_PROCESS) += d2d3/
+
 obj-$(CONFIG_AML_REG_DEBUG) += regd/
 
 ifneq ($(wildcard $(srctree)/../hardware/arm/gpu),)

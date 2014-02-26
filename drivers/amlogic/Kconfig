@@ -74,6 +74,7 @@ source "drivers/amlogic/video_dev/Kconfig"
 source "drivers/amlogic/ionvideo/Kconfig"
 source "drivers/amlogic/deinterlace/Kconfig"
 source "drivers/amlogic/mipi/Kconfig"
+source "drivers/amlogic/d2d3/Kconfig"
 source "drivers/amlogic/amvecm/Kconfig"
 source "drivers/amlogic/dvb_tv/Kconfig"
 

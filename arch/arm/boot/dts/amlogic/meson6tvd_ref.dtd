@@ -776,6 +776,16 @@
 		>;
 	};
 
+	d2d3 {
+		compatible = "amlogic,d2d3";
+		dev_name = "d2d3";
+		status = "ok";
+		reserve-memory = <0x200000>;
+		reserve-iomap = "true";
+		irq = <165>;
+		d2d3_id = <1>;
+	};
+
 //$$ MATCH "dvb_p_ts0_pins_match" = "&dvb_p_ts0_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
 //$$ L2 PROP_U32 8 = "amlogic,clrmask"
