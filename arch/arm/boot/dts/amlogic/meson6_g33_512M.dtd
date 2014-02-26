@@ -111,10 +111,10 @@ void root_func(){
 		compatible = "amlogic,mesonfb";
 		dev_name = "mesonfb";
 		status = "okay";
-		reserve-memory = <0x00500000 0x00100000>;
+        reserve-memory = <0x0900000  0x00100000>;//8M+1M=9M
 		reserve-iomap = "true";
  		vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P*/
- 		display_size_default = <1024 600 1024 1200 32>;//1024x768x4x2==0x04b0000,4.68MB
+ 		display_size_default = <1024 600 1024 1200 32>;//1024x768x4x3==0x708000,8MB
 	};
 	
 //$$ DEVICE = "mesonfb-ext"
