@@ -15,9 +15,14 @@
 #define VIDEO_LOOKUP_RESOLUTION 2500
 #define AUDIO_LOOKUP_RESOLUTION 1024
 
+#define INTERPOLATE_AUDIO_PTS
+#define INTERPOLATE_AUDIO_RESOLUTION 9000
+
 #define OFFSET_DIFF(x, y)  ((int)(x - y))
 #define OFFSET_LATER(x, y) (OFFSET_DIFF(x, y) > 0)
 #define OFFSET_EQLATER(x, y) (OFFSET_DIFF(x, y) >= 0)
+
+#define VAL_DIFF(x, y) ((int)(x - y))
 
 enum {
     PTS_IDLE       = 0,
@@ -582,7 +587,52 @@ static int pts_lookup_offset_inline(
             }
             return 0;
 
-        } else {
+        }
+#ifdef INTERPOLATE_AUDIO_PTS
+        else if ((type == PTS_TYPE_AUDIO) &&
+            (p2 != NULL) &&
+            (p2->list.next != NULL) &&
+            (VAL_DIFF((p = list_entry(p2->list.next, pts_rec_t, list))->val, p2->val) < INTERPOLATE_AUDIO_RESOLUTION)) {
+            /* do interpolation between [p2, p] */
+            *val = div_u64(((p->val - p2->val) * (offset - p2->offset)), (p->offset - p2->offset)) + p2->val;
+            *uS64 = *val << 32;
+
+            if (tsync_get_debug_pts_checkout()) {
+                if (tsync_get_debug_apts() && (type == PTS_TYPE_AUDIO)) {
+                    printk("apts look up offset<0x%x> --> <0x%x> <0x%x:0x%x>-<0x%x:0x%x>\n",
+                           offset, *val, p2->offset, p2->val, p->offset, p->val);
+                }
+            }
+
+#ifdef CALC_CACHED_TIME
+            pTable->last_checkout_pts = *val;
+                pTable->last_checkout_offset = offset;
+ 
+#endif
+            pTable->lookup_cache_pts = *val;
+            pTable->lookup_cache_offset = offset;
+            pTable->lookup_cache_valid = true;
+
+            /* update next look up search start point */
+            pTable->pts_search = p2->list.prev;
+
+            list_move_tail(&p2->list, &pTable->free_list);
+
+            spin_unlock_irqrestore(&lock, flags);
+
+            if (!pTable->first_lookup_ok) {
+                pTable->first_lookup_ok = 1;
+                if (tsync_get_debug_pts_checkout()) {
+                    if (tsync_get_debug_apts() && (type == PTS_TYPE_AUDIO)) {
+                        printk("====first apts look up offset<0x%x> --> <0x%x> <0x%x:0x%x>-<0x%x:0x%x>\n",
+                               offset, *val, p2->offset, p2->val, p->offset, p->val);
+                    }
+                }
+            }
+            return 0;
+        }
+#endif
+        else {
             /* when first pts lookup failed, use first checkin pts instead */
             if (!pTable->first_lookup_ok) {
                 *val = pTable->first_checkin_pts;
