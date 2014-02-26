@@ -191,7 +191,7 @@ static void ionvideo_thread_tick(struct ionvideo_dev *dev) {
         msleep(5);
         return;
     }
-    if (ionvideo_size_changed(dev, vf)) {
+    if (freerun_mode == 0 && ionvideo_size_changed(dev, vf)) {
         msleep(10);
         return;
     }
@@ -477,11 +477,22 @@ static int vidioc_g_fmt_vid_cap(struct file *file, void *priv, struct v4l2_forma
     int ret = 0;
     unsigned long flags;
 
-    if (dev->c_width == 0 || dev->c_height == 0) {
-        return -EINVAL;
+    if (freerun_mode == 0) {
+        if (dev->c_width == 0 || dev->c_height == 0) {
+            return -EINVAL;
+        }
+        f->fmt.pix.width = dev->c_width;
+        f->fmt.pix.height = dev->c_height;
+        spin_lock_irqsave(&q->done_lock, flags);
+        ret = list_empty(&q->done_list);
+        spin_unlock_irqrestore(&q->done_lock, flags);
+        if (!ret) {
+            return -EAGAIN;
+        }
+    } else {
+        f->fmt.pix.width = dev->width;
+        f->fmt.pix.height = dev->height;
     }
-    f->fmt.pix.width = dev->c_width;
-    f->fmt.pix.height = dev->c_height;
     f->fmt.pix.field = V4L2_FIELD_INTERLACED;
     f->fmt.pix.pixelformat = dev->fmt->fourcc;
     f->fmt.pix.bytesperline = (f->fmt.pix.width * dev->fmt->depth) >> 3;
@@ -491,12 +502,6 @@ static int vidioc_g_fmt_vid_cap(struct file *file, void *priv, struct v4l2_forma
     else
         f->fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
 
-    spin_lock_irqsave(&q->done_lock, flags);
-    ret = list_empty(&q->done_list);
-    spin_unlock_irqrestore(&q->done_lock, flags);
-    if (!ret) {
-        return -EAGAIN;
-    }
     return 0;
 }
 
