@@ -478,9 +478,9 @@ void osd_set_scan_mode(int index)
 	const vinfo_t *vinfo;
 
 	osd_hw.scan_mode = SCAN_MODE_PROGRESSIVE;
-
 	vinfo = get_current_vinfo();
 	if (vinfo) {
+		osd_hw.scale_workaround = 0;
 		switch (vinfo->mode) {
 		case VMODE_480I:
 		case VMODE_480CVBS:
@@ -490,7 +490,6 @@ void osd_set_scan_mode(int index)
 		case VMODE_1080I_50HZ:
 			if(osd_hw.free_scale_mode[index]){
 				osd_hw.field_out_en = 1;
-				osd_hw.scale_workaround = 0;
 			}
 			osd_hw.scan_mode = SCAN_MODE_INTERLACE;
 		break;
@@ -501,17 +500,12 @@ void osd_set_scan_mode(int index)
 			if(osd_hw.fb_for_4k2k){
 				if(osd_hw.free_scale_enable[index]){
 					osd_hw.scale_workaround = 1;
-				}else{
-					osd_hw.scale_workaround = 0;
 				}
-			}else{
-				osd_hw.scale_workaround = 0;
 			}
 		break;
 		default:
 			if(osd_hw.free_scale_mode[index]){
 				osd_hw.field_out_en = 0;
-				osd_hw.scale_workaround = 0;
 			}
 		break;
 		}
@@ -1469,6 +1463,8 @@ static  void  osd1_update_disp_freescale_enable(void)
 
 		if(osd_hw.scale_workaround){
 			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 0x1, 21, 1);
+		} else {
+			VSYNCOSD_CLR_MPEG_REG_MASK(VPP_OSD_VSC_CTRL0, 1<<21);
 		}
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 1, 24, 1);
 	}else{
