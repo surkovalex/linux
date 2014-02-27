@@ -227,18 +227,16 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define EnableVideoLayer()  \
     do { \
-         if (video_prot.power_on == 0) { \
-             video_prot.enable_layer = 1; \
-             video_prot.angle_changed |= 0x1; \
-             video_prot.power_on = 1; \
-             PROT_MEM_POWER_ON(); \
-         } \
-         if (!use_prot) { \
-             VD1_MEM_POWER_ON(); \
-             VIDEO_LAYER_ON(); \
-         } else {\
-             VD1_MEM_POWER_ON(); \
-         } \
+        if(get_vpu_mem_pd_vmod(VPU_VIU_VD1) == VPU_MEM_POWER_DOWN || \
+                get_vpu_mem_pd_vmod(VPU_PIC_ROT2) == VPU_MEM_POWER_DOWN || \
+                aml_read_reg32(P_VPU_PROT3_CLK_GATE) == 0) { \
+            PROT_MEM_POWER_ON(); \
+            VD1_MEM_POWER_ON(); \
+            video_prot_gate_on(); \
+            video_prot.video_started = 1; \
+            video_prot.angle_changed = 1; \
+        } \
+        VIDEO_LAYER_ON(); \
     } while (0)
 #else
 #define EnableVideoLayer()  \
@@ -265,9 +263,11 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
     do { \
          CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, \
            VPP_VD1_PREBLEND|VPP_VD2_PREBLEND|VPP_VD2_POSTBLEND|VPP_VD1_POSTBLEND ); \
-         VD1_MEM_POWER_OFF(); \
+         video_prot_gate_off(); \
          VIDEO_LAYER_OFF(); \
-         video_prot.power_down = 1; \
+         VD1_MEM_POWER_OFF(); \
+         PROT_MEM_POWER_OFF(); \
+         video_prot.video_started = 0; \
          if(debug_flag& DEBUG_FLAG_BLACKOUT){  \
             printk("DisableVideoLayer()\n"); \
          } \
@@ -998,11 +998,11 @@ static void vsync_toggle_frame(vframe_t *vf)
 	VSYNC_WR_MPEG_REG(VD2_IF0_CANVAS1, disp_canvas[rdma_canvas_id][1]);
         next_rdma_canvas_id = rdma_canvas_id?0:1;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-        if (use_prot && video_prot.status) {
-             VSYNC_WR_MPEG_REG_BITS(VPU_PROT2_DDR, disp_canvas[rdma_canvas_id][0] & 0xff, 0, 8);
-             if (!(vf->type & VIDTYPE_VIU_444)) {
-                 VSYNC_WR_MPEG_REG_BITS(VPU_PROT3_DDR, (disp_canvas[rdma_canvas_id][0] >> 8) & 0xff, 0, 8);
-             }
+        if (use_prot) {
+            video_prot.prot2_canvas = disp_canvas[rdma_canvas_id][0] & 0xff;
+            video_prot.prot3_canvas = (disp_canvas[rdma_canvas_id][0] >> 8) & 0xff;
+             VSYNC_WR_MPEG_REG_BITS(VPU_PROT2_DDR, video_prot.prot2_canvas, 0, 8);
+             VSYNC_WR_MPEG_REG_BITS(VPU_PROT3_DDR, video_prot.prot3_canvas, 0, 8);
         }
 #endif
 #else
@@ -1018,11 +1018,11 @@ static void vsync_toggle_frame(vframe_t *vf)
         VSYNC_WR_MPEG_REG(VD2_IF0_CANVAS0, disp_canvas[1]);
         VSYNC_WR_MPEG_REG(VD2_IF0_CANVAS1, disp_canvas[1]);
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-        if (use_prot && video_prot.status) {
-             VSYNC_WR_MPEG_REG_BITS(VPU_PROT2_DDR, disp_canvas_index[0], 0, 8);
-             if (!(vf->type & VIDTYPE_VIU_444)) {
-                 VSYNC_WR_MPEG_REG_BITS(VPU_PROT3_DDR, disp_canvas_index[1], 0, 8);
-             }
+        if (use_prot) {
+            video_prot.prot2_canvas = disp_canvas_index[0];
+            video_prot.prot3_canvas = disp_canvas_index[1];
+             VSYNC_WR_MPEG_REG_BITS(VPU_PROT2_DDR, video_prot.prot2_canvas, 0, 8);
+             VSYNC_WR_MPEG_REG_BITS(VPU_PROT3_DDR, video_prot.prot3_canvas, 0, 8);
         }
 #endif
 #endif
@@ -1068,7 +1068,11 @@ static void vsync_toggle_frame(vframe_t *vf)
         (cur_dispbuf->ratio_control != vf->ratio_control) ||
         ((cur_dispbuf->type_backup & VIDTYPE_INTERLACE) !=
          (vf->type_backup & VIDTYPE_INTERLACE)) ||
-         (cur_dispbuf->type != vf->type)) {
+         (cur_dispbuf->type != vf->type)
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+         || video_prot.angle_changed
+#endif
+         ) {
         amlog_mask(LOG_MASK_FRAMEINFO,
                    "%s %dx%d ar=0x%x\n",
                    ((vf->type & VIDTYPE_TYPEMASK) == VIDTYPE_INTERLACE_TOP) ?
@@ -1083,30 +1087,39 @@ static void vsync_toggle_frame(vframe_t *vf)
                          &frame_parms[1] : &frame_parms[0];
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
         if (use_prot) {
-            video_prot_revert_vframe(&video_prot, vf);
+            vframe_t tmp_vf = *vf;
+            if (video_prot.angle_changed || cur_dispbuf->width != vf->width || cur_dispbuf->height != vf->height) {
+                u32 angle_orientation = 0;
+                video_prot_init(&video_prot, &tmp_vf);
+                angle_orientation = (video_angle + video_prot.src_vframe_orientation) % 4;
+                video_prot_set_angle(&video_prot, angle_orientation);
+                video_prot.angle = angle_orientation;
+                video_prot.status = angle_orientation % 2;
+                video_prot.angle_changed = 0;
+            }
+            video_prot_revert_vframe(&video_prot, &tmp_vf);
             if (video_prot.status) {
                 static vpp_frame_par_t prot_parms;
-                prot_get_parameter(wide_setting, vf, &prot_parms, vinfo);
+                prot_get_parameter(wide_setting, &tmp_vf, &prot_parms, vinfo);
                 video_prot_axis(&video_prot, prot_parms.VPP_hd_start_lines_, prot_parms.VPP_hd_end_lines_, prot_parms.VPP_vd_start_lines_, prot_parms.VPP_vd_end_lines_);
-            }
-            vpp_set_filters(wide_setting, vf, next_frame_par, vinfo);
-            if (video_prot.status) {
-                u32 tmp_line_in_length_ = next_frame_par->VPP_hd_end_lines_ - next_frame_par->VPP_hd_start_lines_ + 1;
-                u32 tmp_pic_in_height_ = next_frame_par->VPP_vd_end_lines_ - next_frame_par->VPP_vd_start_lines_ + 1;
-                //video_prot_axis(&video_prot, next_frame_par->VPP_hd_start_lines_, next_frame_par->VPP_hd_end_lines_, next_frame_par->VPP_vd_start_lines_, next_frame_par->VPP_vd_end_lines_);
-                if (tmp_line_in_length_ < vf->width) {
-                    next_frame_par->VPP_line_in_length_ = tmp_line_in_length_ / (next_frame_par->hscale_skip_count + 1);
-                    next_frame_par->VPP_hd_start_lines_ = 0;
-                    next_frame_par->VPP_hf_ini_phase_ = 0;
-                    next_frame_par->VPP_hd_end_lines_ = tmp_line_in_length_ - 1;
-                }
-                if (tmp_pic_in_height_ < vf->height) {
-                    next_frame_par->VPP_pic_in_height_ = tmp_pic_in_height_ / (next_frame_par->vscale_skip_count + 1);
-                    next_frame_par->VPP_vd_start_lines_ = 0;
-                    next_frame_par->VPP_hf_ini_phase_ = 0;
-                    next_frame_par->VPP_vd_end_lines_ = tmp_pic_in_height_ - 1;
+                if (video_prot.status) {
+                    u32 tmp_line_in_length_ = next_frame_par->VPP_hd_end_lines_ - next_frame_par->VPP_hd_start_lines_ + 1;
+                    u32 tmp_pic_in_height_ = next_frame_par->VPP_vd_end_lines_ - next_frame_par->VPP_vd_start_lines_ + 1;
+                    if (tmp_line_in_length_ < tmp_vf.width) {
+                        next_frame_par->VPP_line_in_length_ = tmp_line_in_length_ / (next_frame_par->hscale_skip_count + 1);
+                        next_frame_par->VPP_hd_start_lines_ = 0;
+                        next_frame_par->VPP_hf_ini_phase_ = 0;
+                        next_frame_par->VPP_hd_end_lines_ = tmp_line_in_length_ - 1;
+                    }
+                    if (tmp_pic_in_height_ < tmp_vf.height) {
+                        next_frame_par->VPP_pic_in_height_ = tmp_pic_in_height_ / (next_frame_par->vscale_skip_count + 1);
+                        next_frame_par->VPP_vd_start_lines_ = 0;
+                        next_frame_par->VPP_hf_ini_phase_ = 0;
+                        next_frame_par->VPP_vd_end_lines_ = tmp_pic_in_height_ - 1;
+                    }
                 }
             }
+            vpp_set_filters(wide_setting, &tmp_vf, next_frame_par, vinfo);
         } else {
             vpp_set_filters(wide_setting, vf, next_frame_par, vinfo);
         }
@@ -1746,7 +1759,9 @@ void vsync_rdma_process(void)
 }
 #endif
 
+#ifdef CONFIG_SUPPORT_VIDEO_ON_VPP2
 static vmode_t old_vmode = VMODE_MAX;
+#endif
 #ifdef FIQ_VSYNC
 void vsync_fisr(void)
 #else
@@ -1857,110 +1872,6 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 #endif
     vout_type = detect_vout_type();
     hold_line = calc_hold_line();
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-    static int wait_count = 0;
-    use_prot = get_use_prot();
-#if 0
-    if (use_prot) {
-        if (video_prot.power_down) {
-            video_prot_set_angle(&video_prot, 0);
-            video_prot_gate(0);
-            PROT_MEM_POWER_OFF();
-            video_prot.power_down = 0;
-            video_prot.power_on = 0;
-            video_prot_clear(&video_prot);
-        }
-    } else
-#endif
-    if (!use_prot && video_prot.enable_layer) {
-        video_prot_set_angle(&video_prot, 0);
-        video_prot_gate(0);
-        PROT_MEM_POWER_OFF();
-        video_prot_clear(&video_prot);
-        video_prot.power_down = 0;
-        //video_prot.power_on = 0;
-        video_prot.angle_changed = 0;
-        video_prot.enable_layer = 0;
-        video_property_changed = true;
-    }
-    if (use_prot && video_prot.power_down) {
-        video_prot_set_angle(&video_prot, 0);
-        video_prot_gate(0);
-        PROT_MEM_POWER_OFF();
-        video_prot_clear(&video_prot);
-        video_property_changed = true;
-        video_prot.power_down = 0;
-        video_prot.power_on = 0;
-        video_prot.angle_changed = 0;
-        video_prot.status = 0;
-    }
-    vf = video_vf_peek();
-    if (use_prot && vf) {//video_prot.video_started ||
-        if (video_prot.src_vframe_width != vf->width || video_prot.src_vframe_height != vf->height) {
-            video_prot_init(&video_prot, vf);
-            //video_prot.angle_changed = 1;
-            video_prot.video_started = 0;
-            u32 angle_orientation = (video_angle + video_prot.src_vframe_orientation) % 4;
-            video_prot_set_angle(&video_prot, angle_orientation);
-        }
-        u32 angle_orientation = (video_angle + video_prot.src_vframe_orientation) % 4;
-        u32 last_angle_orientation = video_prot.angle;
-        if (video_prot.enable_layer || get_vpu_mem_pd_vmod(VPU_PIC_ROT2) == VPU_MEM_POWER_DOWN) {
-            if (angle_orientation % 2) {
-                if (video_prot.angle_changed & 0x1) {
-                    video_prot.angle_changed = 0x2;
-                    video_prot_set_angle(&video_prot, 0);
-                    video_prot_gate(0);
-                    video_prot_set_angle(&video_prot, 0);
-                    wait_count = 50;
-                    return IRQ_HANDLED;
-                } else if (video_prot.angle_changed & 0x2) {
-                    if (wait_count-- > 0) {
-                        return IRQ_HANDLED;
-                    }
-                    VIDEO_LAYER_ON();
-                    video_prot.angle = angle_orientation;
-                    video_prot.status = angle_orientation % 2;
-                    video_prot_set_angle(&video_prot, angle_orientation);
-                    video_prot_gate(video_prot.status);
-                    video_property_changed = 1;
-                    video_prot.angle_changed = 0;
-                    video_prot.enable_layer = 0;
-                }
-            } else {
-                if (video_prot.angle_changed & 0x1) {
-                    video_prot.angle = angle_orientation;
-                    video_prot.status = angle_orientation % 2;
-                    video_prot_set_angle(&video_prot, angle_orientation);
-                    video_prot_gate(video_prot.status);
-                    video_property_changed = 1;
-                    video_prot.angle_changed = 0;
-                }
-            }
-        } else if (angle_orientation != last_angle_orientation) {
-            if (video_prot.angle_changed & 0x1) {
-                video_prot.angle = angle_orientation;
-                video_prot.status = angle_orientation % 2;
-                video_prot_set_angle(&video_prot, angle_orientation);
-                video_prot_gate(video_prot.status);
-                video_property_changed = 1;
-                video_prot.angle_changed = 0;
-            }
-        } else {
-            video_prot.angle_changed = 0;
-        }
-        if (video_prot.enable_layer) {
-            wait_count = 20;
-            //VD1_MEM_POWER_ON();
-            VIDEO_LAYER_ON();
-            video_prot.enable_layer = 0;
-            return IRQ_HANDLED;
-        }
-        if (wait_count-- > 0) {
-            return IRQ_HANDLED;
-        }
-    }
-#endif
     if (vsync_pts_inc_upint) {
         if (vsync_pts_inc_adj) {
             //printk("adj %d, org %d\n", vsync_pts_inc_adj, vsync_pts_inc);
@@ -2027,7 +1938,13 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
         dispbuf_to_put_num = 0;
     }
 #endif
-
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    use_prot = get_use_prot();
+    if (video_prot.video_started) {
+        video_prot.video_started = 0;
+        return IRQ_HANDLED;
+    }
+#endif
     if (osd_prov && osd_prov->ops && osd_prov->ops->get){
         vf = osd_prov->ops->get(osd_prov->op_arg);
         if(vf){
@@ -2339,7 +2256,6 @@ SET_FILTER:
 
         vpp_settings_h(cur_frame_par);
         vpp_settings_v(cur_frame_par);
-
         frame_par_ready_to_set = 0;
         frame_par_force_to_set = 0;
     } /* VPP one time settings */
@@ -2684,7 +2600,6 @@ static void video_vf_unreg_provider(void)
     video_prot.video_started = 0;
     spin_unlock_irqrestore(&lock, flags);
     atomic_set(&video_unreg_flag, 0);
-
     enable_video_discontinue_report = 1;
 }
 
@@ -2706,7 +2621,18 @@ static void video_vf_light_unreg_provider(void)
         vf_local = *cur_dispbuf;
         cur_dispbuf = &vf_local;
     }
-    video_prot.video_started = 1;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if(get_vpu_mem_pd_vmod(VPU_VIU_VD1) == VPU_MEM_POWER_DOWN ||
+            get_vpu_mem_pd_vmod(VPU_PIC_ROT2) == VPU_MEM_POWER_DOWN ||
+            aml_read_reg32(P_VPU_PROT3_CLK_GATE) == 0) {
+        PROT_MEM_POWER_ON();
+        VD1_MEM_POWER_ON();
+        video_prot_gate_on();
+        video_prot.video_started = 1;
+        video_prot.angle_changed = 1;
+    }
+#endif
+
     spin_unlock_irqrestore(&lock, flags);
 }
 
@@ -4006,7 +3932,7 @@ static ssize_t frame_rate_show(struct class *cla, struct class_attribute* attr, 
     u32 tmp = time;
     u32 rate = 0;
     u32 vsync_rate;
-    size_t ret;
+    ssize_t ret = 0;
     time -= last_frame_time;
     last_frame_time = tmp;
     last_frame_count = frame_count;
