@@ -24,7 +24,7 @@
 
 #include <linux/io.h>
 #include <plat/io.h>
-#include "ao_regs.h"
+//#include "ao_regs.h"
 #include "audio.h"
 #include "bt656.h"
 #include "vpp.h"

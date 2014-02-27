@@ -157,6 +157,24 @@
 #define P_PREG_MALI_BYTE_CNTL 		CBUS_REG_ADDR(PREG_MALI_BYTE_CNTL) 	///../ucode/register.h
 #define PREG_WIFI_CNTL 0x2045 	///../ucode/register.h
 #define P_PREG_WIFI_CNTL 		CBUS_REG_ADDR(PREG_WIFI_CNTL) 	///../ucode/register.h
+#define PREG_ETHERNET_ADDR1 0x2046 	///../ucode/register.h:468
+#define P_PREG_ETHERNET_ADDR1 		CBUS_REG_ADDR(PREG_ETHERNET_ADDR1)
+#define PREG_ETHERNET_ADDR2 0x2047 	///../ucode/register.h:469
+#define P_PREG_ETHERNET_ADDR2 		CBUS_REG_ADDR(PREG_ETHERNET_ADDR2)
+#define ETH_DEBUG_CFG00 0x2060 	///../ucode/register.h:482
+#define P_ETH_DEBUG_CFG00 		CBUS_REG_ADDR(ETH_DEBUG_CFG00)
+#define ETH_DEBUG_CFG01 0x2061 	///../ucode/register.h:483
+#define P_ETH_DEBUG_CFG01 		CBUS_REG_ADDR(ETH_DEBUG_CFG01)
+#define ETH_DEBUG_CFG02 0x2062 	///../ucode/register.h:484
+#define P_ETH_DEBUG_CFG02 		CBUS_REG_ADDR(ETH_DEBUG_CFG02)
+#define ETH_DEBUG_CFG03 0x2063 	///../ucode/register.h:485
+#define P_ETH_DEBUG_CFG03 		CBUS_REG_ADDR(ETH_DEBUG_CFG03)
+#define ETH_DEBUG_CFG04 0x2064 	///../ucode/register.h:486
+#define P_ETH_DEBUG_CFG04 		CBUS_REG_ADDR(ETH_DEBUG_CFG04)
+#define ETH_DEBUG_CTR 0x2065 	///../ucode/register.h:487
+#define P_ETH_DEBUG_CTR 		CBUS_REG_ADDR(ETH_DEBUG_CTR)
+#define ETH_DEBUG_PRB 0x2066 	///../ucode/register.h:488
+#define P_ETH_DEBUG_PRB 		CBUS_REG_ADDR(ETH_DEBUG_PRB)
 #define PROD_TEST_REG0 0x2068 	///../ucode/register.h
 #define P_PROD_TEST_REG0 		CBUS_REG_ADDR(PROD_TEST_REG0) 	///../ucode/register.h
 #define PROD_TEST_REG1 0x2067 	///../ucode/register.h
@@ -197,6 +215,8 @@
 #define P_SMARTCARD_REG6 		CBUS_REG_ADDR(SMARTCARD_REG6) 	///../ucode/register.h
 #define SMARTCARD_FIFO 0x2117 	///../ucode/register.h
 #define P_SMARTCARD_FIFO 		CBUS_REG_ADDR(SMARTCARD_FIFO) 	///../ucode/register.h
+#define SMARTCARD_REG8 0x2118 	///../ucode/register.h:547
+#define P_SMARTCARD_REG8 		CBUS_REG_ADDR(SMARTCARD_REG8)
 #define IR_DEC_LDR_ACTIVE 0x2120 	///../ucode/register.h
 #define P_IR_DEC_LDR_ACTIVE 		CBUS_REG_ADDR(IR_DEC_LDR_ACTIVE) 	///../ucode/register.h
 #define IR_DEC_LDR_IDLE 0x2121 	///../ucode/register.h
@@ -691,6 +711,8 @@
 #define P_NDMA_AES_IV_2 		CBUS_REG_ADDR(NDMA_AES_IV_2) 	///../ucode/register.h
 #define NDMA_AES_IV_3 0x229b 	///../ucode/register.h
 #define P_NDMA_AES_IV_3 		CBUS_REG_ADDR(NDMA_AES_IV_3) 	///../ucode/register.h
+#define NDMA_AES_REG0 0x229c 	///../ucode/register.h:952
+#define P_NDMA_AES_REG0 		CBUS_REG_ADDR(NDMA_AES_REG0)
 #define STREAM_EVENT_INFO 0x2300 	///../ucode/register.h
 #define P_STREAM_EVENT_INFO 		CBUS_REG_ADDR(STREAM_EVENT_INFO) 	///../ucode/register.h
 #define STREAM_OUTPUT_CONFIG 0x2301 	///../ucode/register.h
@@ -853,12 +875,16 @@
 #define P_SD_REGB_SRST 		CBUS_REG_ADDR(SD_REGB_SRST) 	///../ucode/register.h
 #define SD_REGC_ESTA 0x238c 	///../ucode/register.h
 #define P_SD_REGC_ESTA 		CBUS_REG_ADDR(SD_REGC_ESTA) 	///../ucode/register.h
+#define SD_REGD_ENHC 0x238d 	///../ucode/register.h:1260
+#define P_SD_REGD_ENHC 		CBUS_REG_ADDR(SD_REGD_ENHC)
 #define ISA_DEBUG_REG0 0x2600 	///../ucode/register.h
 #define P_ISA_DEBUG_REG0 		CBUS_REG_ADDR(ISA_DEBUG_REG0) 	///../ucode/register.h
 #define ISA_DEBUG_REG1 0x2601 	///../ucode/register.h
 #define P_ISA_DEBUG_REG1 		CBUS_REG_ADDR(ISA_DEBUG_REG1) 	///../ucode/register.h
 #define ISA_DEBUG_REG2 0x2602 	///../ucode/register.h
 #define P_ISA_DEBUG_REG2 		CBUS_REG_ADDR(ISA_DEBUG_REG2) 	///../ucode/register.h
+#define ISA_DEBUG_REG3 0x2603 	///../ucode/register.h:1276
+#define P_ISA_DEBUG_REG3 		CBUS_REG_ADDR(ISA_DEBUG_REG3)
 #define ISA_PLL_CLK_SIM0 0x2608 	///../ucode/register.h
 #define P_ISA_PLL_CLK_SIM0 		CBUS_REG_ADDR(ISA_PLL_CLK_SIM0) 	///../ucode/register.h
 #define ISA_CNTL_REG0 0x2609 	///../ucode/register.h
@@ -909,22 +935,6 @@
 #define P_ISA_BIST_REG0 		CBUS_REG_ADDR(ISA_BIST_REG0) 	///../ucode/register.h
 #define ISA_BIST_REG1 0x2631 	///../ucode/register.h
 #define P_ISA_BIST_REG1 		CBUS_REG_ADDR(ISA_BIST_REG1) 	///../ucode/register.h
-#define ISA_BIST_REG2 0x2632 	///../ucode/register.h
-#define P_ISA_BIST_REG2 		CBUS_REG_ADDR(ISA_BIST_REG2) 	///../ucode/register.h
-#define ISA_BIST_REG3 0x2633 	///../ucode/register.h
-#define P_ISA_BIST_REG3 		CBUS_REG_ADDR(ISA_BIST_REG3) 	///../ucode/register.h
-#define ISA_BIST_REG4 0x2634 	///../ucode/register.h
-#define P_ISA_BIST_REG4 		CBUS_REG_ADDR(ISA_BIST_REG4) 	///../ucode/register.h
-#define ISA_BIST_REG5 0x2635 	///../ucode/register.h
-#define P_ISA_BIST_REG5 		CBUS_REG_ADDR(ISA_BIST_REG5) 	///../ucode/register.h
-#define ISA_BIST_REG6 0x2636 	///../ucode/register.h
-#define P_ISA_BIST_REG6 		CBUS_REG_ADDR(ISA_BIST_REG6) 	///../ucode/register.h
-#define ISA_BIST_REG7 0x2637 	///../ucode/register.h
-#define P_ISA_BIST_REG7 		CBUS_REG_ADDR(ISA_BIST_REG7) 	///../ucode/register.h
-#define ISA_BIST_REG8 0x2638 	///../ucode/register.h
-#define P_ISA_BIST_REG8 		CBUS_REG_ADDR(ISA_BIST_REG8) 	///../ucode/register.h
-#define ISA_BIST_REGA 0x2639 	///../ucode/register.h
-#define P_ISA_BIST_REGA 		CBUS_REG_ADDR(ISA_BIST_REGA) 	///../ucode/register.h
 #define WATCHDOG_TC 0x2640 	///../ucode/register.h
 #define P_WATCHDOG_TC 		CBUS_REG_ADDR(WATCHDOG_TC) 	///../ucode/register.h
 #define WATCHDOG_RESET 0x2641 	///../ucode/register.h
@@ -1167,8 +1177,26 @@
 #define P_HASB_ARM_MB3 		CBUS_REG_ADDR(HASB_ARM_MB3) 	///../ucode/register.h
 #define HHI_TIMER90K 0x103b 	///../ucode/register.h
 #define P_HHI_TIMER90K 		CBUS_REG_ADDR(HHI_TIMER90K) 	///../ucode/register.h
+#define HHI_ETH_PLL_CTL1 0x103c 	///../ucode/register.h:1543
+#define P_HHI_ETH_PLL_CTL1 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL1)
+#define HHI_ETH_PLL_CTL2 0x103d 	///../ucode/register.h:1544
+#define P_HHI_ETH_PLL_CTL2 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL2)
+#define HHI_ETH_PLL_CTL3 0x103e 	///../ucode/register.h:1545
+#define P_HHI_ETH_PLL_CTL3 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL3)
+#define HHI_ETH_PLL_CTL4 0x103f 	///../ucode/register.h:1546
+#define P_HHI_ETH_PLL_CTL4 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL4)
+#define HHI_ETH_PLL_CTL5 0x1040 	///../ucode/register.h:1547
+#define P_HHI_ETH_PLL_CTL5 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL5)
+#define HHI_ETH_PLL_CTL6 0x1041 	///../ucode/register.h:1548
+#define P_HHI_ETH_PLL_CTL6 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL6)
+#define HHI_ETH_PLL_CTL7 0x1042 	///../ucode/register.h:1549
+#define P_HHI_ETH_PLL_CTL7 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL7)
+#define HHI_ETH_PLL_CTL8 0x1043 	///../ucode/register.h:1550
+#define P_HHI_ETH_PLL_CTL8 		CBUS_REG_ADDR(HHI_ETH_PLL_CTL8)
 #define HHI_AUD_DAC_CTRL 0x1044 	///../ucode/register.h
 #define P_HHI_AUD_DAC_CTRL 		CBUS_REG_ADDR(HHI_AUD_DAC_CTRL) 	///../ucode/register.h
+#define HHI_ETH_TEST_STATUS 0x1045 	///../ucode/register.h:1552
+#define P_HHI_ETH_TEST_STATUS 		CBUS_REG_ADDR(HHI_ETH_TEST_STATUS)
 #define HHI_VIID_PLL_CNTL4 0x1046 	///../ucode/register.h
 #define P_HHI_VIID_PLL_CNTL4 		CBUS_REG_ADDR(HHI_VIID_PLL_CNTL4) 	///../ucode/register.h
 #define HHI_VIID_PLL_CNTL 0x1047 	///../ucode/register.h
@@ -1195,6 +1223,8 @@
 #define P_HHI_GCLK_AO 		CBUS_REG_ADDR(HHI_GCLK_AO) 	///../ucode/register.h
 #define HHI_VID_CLK_DIV 0x1059 	///../ucode/register.h
 #define P_HHI_VID_CLK_DIV 		CBUS_REG_ADDR(HHI_VID_CLK_DIV) 	///../ucode/register.h
+#define HHI_CLK_32K_CNTL 0x105a 	///../ucode/register.h:1568
+#define P_HHI_CLK_32K_CNTL 		CBUS_REG_ADDR(HHI_CLK_32K_CNTL)
 #define HHI_MPEG_CLK_CNTL 0x105d 	///../ucode/register.h
 #define P_HHI_MPEG_CLK_CNTL 		CBUS_REG_ADDR(HHI_MPEG_CLK_CNTL) 	///../ucode/register.h
 #define HHI_AUD_CLK_CNTL 0x105e 	///../ucode/register.h
@@ -1229,6 +1259,8 @@
 #define P_HHI_VDEC_CLK_CNTL 		CBUS_REG_ADDR(HHI_VDEC_CLK_CNTL) 	///../ucode/register.h
 #define HHI_MIPI_PHY_CLK_CNTL 0x106e 	///../ucode/register.h
 #define P_HHI_MIPI_PHY_CLK_CNTL 		CBUS_REG_ADDR(HHI_MIPI_PHY_CLK_CNTL) 	///../ucode/register.h
+#define HHI_VDEC2_CLK_CNTL 0x106f 	///../ucode/register.h:1586
+#define P_HHI_VDEC2_CLK_CNTL 		CBUS_REG_ADDR(HHI_VDEC2_CLK_CNTL)
 #define HHI_OTHER_PLL_CNTL 0x1070 	///../ucode/register.h
 #define P_HHI_OTHER_PLL_CNTL 		CBUS_REG_ADDR(HHI_OTHER_PLL_CNTL) 	///../ucode/register.h
 #define HHI_OTHER_PLL_CNTL2 0x1071 	///../ucode/register.h
@@ -1787,26 +1819,144 @@
 #define P_VDEC_ASSIST_MBOX2_MASK 		DOS_REG_ADDR(VDEC_ASSIST_MBOX2_MASK) 	///../ucode/register.h
 #define VDEC_ASSIST_MBOX2_FIQ_SEL 0x007b 	///../ucode/register.h
 #define P_VDEC_ASSIST_MBOX2_FIQ_SEL 		DOS_REG_ADDR(VDEC_ASSIST_MBOX2_FIQ_SEL) 	///../ucode/register.h
+#define VDEC2_ASSIST_MMC_CTRL0 0x0001 	///../ucode/register.h:2638
+#define P_VDEC2_ASSIST_MMC_CTRL0 		CBUS_REG_ADDR(VDEC2_ASSIST_MMC_CTRL0)
+#define VDEC2_ASSIST_MMC_CTRL1 0x0002 	///../ucode/register.h:2639
+#define P_VDEC2_ASSIST_MMC_CTRL1 		CBUS_REG_ADDR(VDEC2_ASSIST_MMC_CTRL1)
+#define VDEC2_ASSIST_AMR1_INT0 0x0025 	///../ucode/register.h:2640
+#define P_VDEC2_ASSIST_AMR1_INT0 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT0)
+#define VDEC2_ASSIST_AMR1_INT1 0x0026 	///../ucode/register.h:2641
+#define P_VDEC2_ASSIST_AMR1_INT1 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT1)
+#define VDEC2_ASSIST_AMR1_INT2 0x0027 	///../ucode/register.h:2642
+#define P_VDEC2_ASSIST_AMR1_INT2 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT2)
+#define VDEC2_ASSIST_AMR1_INT3 0x0028 	///../ucode/register.h:2643
+#define P_VDEC2_ASSIST_AMR1_INT3 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT3)
+#define VDEC2_ASSIST_AMR1_INT4 0x0029 	///../ucode/register.h:2644
+#define P_VDEC2_ASSIST_AMR1_INT4 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT4)
+#define VDEC2_ASSIST_AMR1_INT5 0x002a 	///../ucode/register.h:2645
+#define P_VDEC2_ASSIST_AMR1_INT5 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT5)
+#define VDEC2_ASSIST_AMR1_INT6 0x002b 	///../ucode/register.h:2646
+#define P_VDEC2_ASSIST_AMR1_INT6 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT6)
+#define VDEC2_ASSIST_AMR1_INT7 0x002c 	///../ucode/register.h:2647
+#define P_VDEC2_ASSIST_AMR1_INT7 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT7)
+#define VDEC2_ASSIST_AMR1_INT8 0x002d 	///../ucode/register.h:2648
+#define P_VDEC2_ASSIST_AMR1_INT8 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT8)
+#define VDEC2_ASSIST_AMR1_INT9 0x002e 	///../ucode/register.h:2649
+#define P_VDEC2_ASSIST_AMR1_INT9 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INT9)
+#define VDEC2_ASSIST_AMR1_INTA 0x002f 	///../ucode/register.h:2650
+#define P_VDEC2_ASSIST_AMR1_INTA 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INTA)
+#define VDEC2_ASSIST_AMR1_INTB 0x0030 	///../ucode/register.h:2651
+#define P_VDEC2_ASSIST_AMR1_INTB 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INTB)
+#define VDEC2_ASSIST_AMR1_INTC 0x0031 	///../ucode/register.h:2652
+#define P_VDEC2_ASSIST_AMR1_INTC 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INTC)
+#define VDEC2_ASSIST_AMR1_INTD 0x0032 	///../ucode/register.h:2653
+#define P_VDEC2_ASSIST_AMR1_INTD 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INTD)
+#define VDEC2_ASSIST_AMR1_INTE 0x0033 	///../ucode/register.h:2654
+#define P_VDEC2_ASSIST_AMR1_INTE 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INTE)
+#define VDEC2_ASSIST_AMR1_INTF 0x0034 	///../ucode/register.h:2655
+#define P_VDEC2_ASSIST_AMR1_INTF 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR1_INTF)
+#define VDEC2_ASSIST_AMR2_INT0 0x0035 	///../ucode/register.h:2656
+#define P_VDEC2_ASSIST_AMR2_INT0 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT0)
+#define VDEC2_ASSIST_AMR2_INT1 0x0036 	///../ucode/register.h:2657
+#define P_VDEC2_ASSIST_AMR2_INT1 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT1)
+#define VDEC2_ASSIST_AMR2_INT2 0x0037 	///../ucode/register.h:2658
+#define P_VDEC2_ASSIST_AMR2_INT2 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT2)
+#define VDEC2_ASSIST_AMR2_INT3 0x0038 	///../ucode/register.h:2659
+#define P_VDEC2_ASSIST_AMR2_INT3 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT3)
+#define VDEC2_ASSIST_AMR2_INT4 0x0039 	///../ucode/register.h:2660
+#define P_VDEC2_ASSIST_AMR2_INT4 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT4)
+#define VDEC2_ASSIST_AMR2_INT5 0x003a 	///../ucode/register.h:2661
+#define P_VDEC2_ASSIST_AMR2_INT5 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT5)
+#define VDEC2_ASSIST_AMR2_INT6 0x003b 	///../ucode/register.h:2662
+#define P_VDEC2_ASSIST_AMR2_INT6 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT6)
+#define VDEC2_ASSIST_AMR2_INT7 0x003c 	///../ucode/register.h:2663
+#define P_VDEC2_ASSIST_AMR2_INT7 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT7)
+#define VDEC2_ASSIST_AMR2_INT8 0x003d 	///../ucode/register.h:2664
+#define P_VDEC2_ASSIST_AMR2_INT8 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT8)
+#define VDEC2_ASSIST_AMR2_INT9 0x003e 	///../ucode/register.h:2665
+#define P_VDEC2_ASSIST_AMR2_INT9 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INT9)
+#define VDEC2_ASSIST_AMR2_INTA 0x003f 	///../ucode/register.h:2666
+#define P_VDEC2_ASSIST_AMR2_INTA 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INTA)
+#define VDEC2_ASSIST_AMR2_INTB 0x0040 	///../ucode/register.h:2667
+#define P_VDEC2_ASSIST_AMR2_INTB 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INTB)
+#define VDEC2_ASSIST_AMR2_INTC 0x0041 	///../ucode/register.h:2668
+#define P_VDEC2_ASSIST_AMR2_INTC 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INTC)
+#define VDEC2_ASSIST_AMR2_INTD 0x0042 	///../ucode/register.h:2669
+#define P_VDEC2_ASSIST_AMR2_INTD 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INTD)
+#define VDEC2_ASSIST_AMR2_INTE 0x0043 	///../ucode/register.h:2670
+#define P_VDEC2_ASSIST_AMR2_INTE 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INTE)
+#define VDEC2_ASSIST_AMR2_INTF 0x0044 	///../ucode/register.h:2671
+#define P_VDEC2_ASSIST_AMR2_INTF 		CBUS_REG_ADDR(VDEC2_ASSIST_AMR2_INTF)
+#define VDEC2_ASSIST_MBX_SSEL 0x0045 	///../ucode/register.h:2672
+#define P_VDEC2_ASSIST_MBX_SSEL 		CBUS_REG_ADDR(VDEC2_ASSIST_MBX_SSEL)
+#define VDEC2_ASSIST_TIMER0_LO 0x0060 	///../ucode/register.h:2673
+#define P_VDEC2_ASSIST_TIMER0_LO 		CBUS_REG_ADDR(VDEC2_ASSIST_TIMER0_LO)
+#define VDEC2_ASSIST_TIMER0_HI 0x0061 	///../ucode/register.h:2674
+#define P_VDEC2_ASSIST_TIMER0_HI 		CBUS_REG_ADDR(VDEC2_ASSIST_TIMER0_HI)
+#define VDEC2_ASSIST_TIMER1_LO 0x0062 	///../ucode/register.h:2675
+#define P_VDEC2_ASSIST_TIMER1_LO 		CBUS_REG_ADDR(VDEC2_ASSIST_TIMER1_LO)
+#define VDEC2_ASSIST_TIMER1_HI 0x0063 	///../ucode/register.h:2676
+#define P_VDEC2_ASSIST_TIMER1_HI 		CBUS_REG_ADDR(VDEC2_ASSIST_TIMER1_HI)
+#define VDEC2_ASSIST_DMA_INT 0x0064 	///../ucode/register.h:2677
+#define P_VDEC2_ASSIST_DMA_INT 		CBUS_REG_ADDR(VDEC2_ASSIST_DMA_INT)
+#define VDEC2_ASSIST_DMA_INT_MSK 0x0065 	///../ucode/register.h:2678
+#define P_VDEC2_ASSIST_DMA_INT_MSK 		CBUS_REG_ADDR(VDEC2_ASSIST_DMA_INT_MSK)
+#define VDEC2_ASSIST_DMA_INT2 0x0066 	///../ucode/register.h:2679
+#define P_VDEC2_ASSIST_DMA_INT2 		CBUS_REG_ADDR(VDEC2_ASSIST_DMA_INT2)
+#define VDEC2_ASSIST_DMA_INT_MSK2 0x0067 	///../ucode/register.h:2680
+#define P_VDEC2_ASSIST_DMA_INT_MSK2 		CBUS_REG_ADDR(VDEC2_ASSIST_DMA_INT_MSK2)
+#define VDEC2_ASSIST_MBOX0_IRQ_REG 0x0070 	///../ucode/register.h:2681
+#define P_VDEC2_ASSIST_MBOX0_IRQ_REG 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX0_IRQ_REG)
+#define VDEC2_ASSIST_MBOX0_CLR_REG 0x0071 	///../ucode/register.h:2682
+#define P_VDEC2_ASSIST_MBOX0_CLR_REG 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX0_CLR_REG)
+#define VDEC2_ASSIST_MBOX0_MASK 0x0072 	///../ucode/register.h:2683
+#define P_VDEC2_ASSIST_MBOX0_MASK 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX0_MASK)
+#define VDEC2_ASSIST_MBOX0_FIQ_SEL 0x0073 	///../ucode/register.h:2684
+#define P_VDEC2_ASSIST_MBOX0_FIQ_SEL 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX0_FIQ_SEL)
+#define VDEC2_ASSIST_MBOX1_IRQ_REG 0x0074 	///../ucode/register.h:2685
+#define P_VDEC2_ASSIST_MBOX1_IRQ_REG 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX1_IRQ_REG)
+#define VDEC2_ASSIST_MBOX1_CLR_REG 0x0075 	///../ucode/register.h:2686
+#define P_VDEC2_ASSIST_MBOX1_CLR_REG 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX1_CLR_REG)
+#define VDEC2_ASSIST_MBOX1_MASK 0x0076 	///../ucode/register.h:2687
+#define P_VDEC2_ASSIST_MBOX1_MASK 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX1_MASK)
+#define VDEC2_ASSIST_MBOX1_FIQ_SEL 0x0077 	///../ucode/register.h:2688
+#define P_VDEC2_ASSIST_MBOX1_FIQ_SEL 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX1_FIQ_SEL)
+#define VDEC2_ASSIST_MBOX2_IRQ_REG 0x0078 	///../ucode/register.h:2689
+#define P_VDEC2_ASSIST_MBOX2_IRQ_REG 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX2_IRQ_REG)
+#define VDEC2_ASSIST_MBOX2_CLR_REG 0x0079 	///../ucode/register.h:2690
+#define P_VDEC2_ASSIST_MBOX2_CLR_REG 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX2_CLR_REG)
+#define VDEC2_ASSIST_MBOX2_MASK 0x007a 	///../ucode/register.h:2691
+#define P_VDEC2_ASSIST_MBOX2_MASK 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX2_MASK)
+#define VDEC2_ASSIST_MBOX2_FIQ_SEL 0x007b 	///../ucode/register.h:2692
+#define P_VDEC2_ASSIST_MBOX2_FIQ_SEL 		CBUS_REG_ADDR(VDEC2_ASSIST_MBOX2_FIQ_SEL)
 #define HCODEC_ASSIST_MMC_CTRL0 0x0001 	///../ucode/register.h
 #define P_HCODEC_ASSIST_MMC_CTRL0 		CBUS_REG_ADDR(HCODEC_ASSIST_MMC_CTRL0) 	///../ucode/register.h
 #define HCODEC_ASSIST_MMC_CTRL1 0x0002 	///../ucode/register.h
 #define P_HCODEC_ASSIST_MMC_CTRL1 		CBUS_REG_ADDR(HCODEC_ASSIST_MMC_CTRL1) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG0_CRST 0x0010 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG0_CRST 		CBUS_REG_ADDR(HCODEC_CUSAD_REG0_CRST) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG1_CTRL 0x0011 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG1_CTRL 		CBUS_REG_ADDR(HCODEC_CUSAD_REG1_CTRL) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG2_STAT 0x0012 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG2_STAT 		CBUS_REG_ADDR(HCODEC_CUSAD_REG2_STAT) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG3_SCMD 0x0013 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG3_SCMD 		CBUS_REG_ADDR(HCODEC_CUSAD_REG3_SCMD) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG4_DCFG 0x0014 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG4_DCFG 		CBUS_REG_ADDR(HCODEC_CUSAD_REG4_DCFG) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG5_ADDR 0x0015 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG5_ADDR 		CBUS_REG_ADDR(HCODEC_CUSAD_REG5_ADDR) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG6_ISAD 0x0016 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG6_ISAD 		CBUS_REG_ADDR(HCODEC_CUSAD_REG6_ISAD) 	///../ucode/register.h
-#define HCODEC_CUSAD_REG7_MSAD 0x0017 	///../ucode/register.h
-#define P_HCODEC_CUSAD_REG7_MSAD 		CBUS_REG_ADDR(HCODEC_CUSAD_REG7_MSAD) 	///../ucode/register.h
+#define HCODEC_MFDIN_REG0_CRST 0x0010 	///../ucode/register.h:2701
+#define P_HCODEC_MFDIN_REG0_CRST 		CBUS_REG_ADDR(HCODEC_MFDIN_REG0_CRST)
+#define HCODEC_MFDIN_REG1_CTRL 0x0011 	///../ucode/register.h:2702
+#define P_HCODEC_MFDIN_REG1_CTRL 		CBUS_REG_ADDR(HCODEC_MFDIN_REG1_CTRL)
+#define HCODEC_MFDIN_REG2_STAT 0x0012 	///../ucode/register.h:2703
+#define P_HCODEC_MFDIN_REG2_STAT 		CBUS_REG_ADDR(HCODEC_MFDIN_REG2_STAT)
+#define HCODEC_MFDIN_REG3_CANV 0x0013 	///../ucode/register.h:2704
+#define P_HCODEC_MFDIN_REG3_CANV 		CBUS_REG_ADDR(HCODEC_MFDIN_REG3_CANV)
+#define HCODEC_MFDIN_REG4_LNR0 0x0014 	///../ucode/register.h:2705
+#define P_HCODEC_MFDIN_REG4_LNR0 		CBUS_REG_ADDR(HCODEC_MFDIN_REG4_LNR0)
+#define HCODEC_MFDIN_REG5_LNR1 0x0015 	///../ucode/register.h:2706
+#define P_HCODEC_MFDIN_REG5_LNR1 		CBUS_REG_ADDR(HCODEC_MFDIN_REG5_LNR1)
+#define HCODEC_MFDIN_REG6_DCFG 0x0016 	///../ucode/register.h:2707
+#define P_HCODEC_MFDIN_REG6_DCFG 		CBUS_REG_ADDR(HCODEC_MFDIN_REG6_DCFG)
+#define HCODEC_MFDIN_REG7_SCMD 0x0017 	///../ucode/register.h:2708
+#define P_HCODEC_MFDIN_REG7_SCMD 		CBUS_REG_ADDR(HCODEC_MFDIN_REG7_SCMD)
+#define HCODEC_MFDIN_REG8_DMBL 0x0018 	///../ucode/register.h:2709
+#define P_HCODEC_MFDIN_REG8_DMBL 		CBUS_REG_ADDR(HCODEC_MFDIN_REG8_DMBL)
+#define HCODEC_MFDIN_REG9_ENDN 0x0019 	///../ucode/register.h:2710
+#define P_HCODEC_MFDIN_REG9_ENDN 		CBUS_REG_ADDR(HCODEC_MFDIN_REG9_ENDN)
+#define HCODEC_MFDIN_REGA_CAV1 0x001a 	///../ucode/register.h:2711
+#define P_HCODEC_MFDIN_REGA_CAV1 		CBUS_REG_ADDR(HCODEC_MFDIN_REGA_CAV1)
+#define HCODEC_MFDIN_REGB_AMPC 0x001b 	///../ucode/register.h:2712
+#define P_HCODEC_MFDIN_REGB_AMPC 		CBUS_REG_ADDR(HCODEC_MFDIN_REGB_AMPC)
 #define HCODEC_ASSIST_AMR1_INT0 0x0025 	///../ucode/register.h
 #define P_HCODEC_ASSIST_AMR1_INT0 		CBUS_REG_ADDR(HCODEC_ASSIST_AMR1_INT0) 	///../ucode/register.h
 #define HCODEC_ASSIST_AMR1_INT1 0x0026 	///../ucode/register.h
@@ -2179,6 +2329,26 @@
 #define P_WRRSP_CO_MB 		DOS_REG_ADDR(WRRSP_CO_MB) 	///../ucode/register.h
 #define WRRSP_DCAC 0x09d9 	///../ucode/register.h
 #define P_WRRSP_DCAC 		DOS_REG_ADDR(WRRSP_DCAC) 	///../ucode/register.h
+#define WRRSP_VLD 0x09da 	///../ucode/register.h:2949
+#define P_WRRSP_VLD 		DOS_REG_ADDR(WRRSP_VLD)
+#define MDEC_DOUBLEW_CFG0 0x09db 	///../ucode/register.h:2965
+#define P_MDEC_DOUBLEW_CFG0 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG0)
+#define MDEC_DOUBLEW_CFG1 0x09dc 	///../ucode/register.h:2971
+#define P_MDEC_DOUBLEW_CFG1 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG1)
+#define MDEC_DOUBLEW_CFG2 0x09dd 	///../ucode/register.h:2976
+#define P_MDEC_DOUBLEW_CFG2 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG2)
+#define MDEC_DOUBLEW_CFG3 0x09de 	///../ucode/register.h:2978
+#define P_MDEC_DOUBLEW_CFG3 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG3)
+#define MDEC_DOUBLEW_CFG4 0x09df 	///../ucode/register.h:2980
+#define P_MDEC_DOUBLEW_CFG4 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG4)
+#define MDEC_DOUBLEW_CFG5 0x09e0 	///../ucode/register.h:2983
+#define P_MDEC_DOUBLEW_CFG5 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG5)
+#define MDEC_DOUBLEW_CFG6 0x09e1 	///../ucode/register.h:2985
+#define P_MDEC_DOUBLEW_CFG6 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG6)
+#define MDEC_DOUBLEW_CFG7 0x09e2 	///../ucode/register.h:2987
+#define P_MDEC_DOUBLEW_CFG7 		DOS_REG_ADDR(MDEC_DOUBLEW_CFG7)
+#define MDEC_DOUBLEW_STATUS 0x09e3 	///../ucode/register.h:2991
+#define P_MDEC_DOUBLEW_STATUS 		DOS_REG_ADDR(MDEC_DOUBLEW_STATUS)
 #define DBLK_RST 0x0950 	///../ucode/register.h
 #define P_DBLK_RST 		DOS_REG_ADDR(DBLK_RST) 	///../ucode/register.h
 #define DBLK_CTRL 0x0951 	///../ucode/register.h
@@ -2273,6 +2443,16 @@
 #define P_DBLK_OST_CBCRDIFF 		DOS_REG_ADDR(DBLK_OST_CBCRDIFF) 	///../ucode/register.h
 #define DBLK_CTRL1 0x097f 	///../ucode/register.h
 #define P_DBLK_CTRL1 		DOS_REG_ADDR(DBLK_CTRL1) 	///../ucode/register.h
+#define MCRCC_CTL1 0x0980 	///../ucode/register.h:3114
+#define P_MCRCC_CTL1 		DOS_REG_ADDR(MCRCC_CTL1)
+#define MCRCC_CTL2 0x0981 	///../ucode/register.h:3120
+#define P_MCRCC_CTL2 		DOS_REG_ADDR(MCRCC_CTL2)
+#define MCRCC_CTL3 0x0982 	///../ucode/register.h:3126
+#define P_MCRCC_CTL3 		DOS_REG_ADDR(MCRCC_CTL3)
+#define GCLK_EN 0x0983 	///../ucode/register.h:3139
+#define P_GCLK_EN 		DOS_REG_ADDR(GCLK_EN)
+#define MDEC_SW_RESET 0x0984 	///../ucode/register.h:3154
+#define P_MDEC_SW_RESET 		DOS_REG_ADDR(MDEC_SW_RESET)
 #define VLD_STATUS_CTRL 0x0c00 	///../ucode/register.h
 #define P_VLD_STATUS_CTRL 		DOS_REG_ADDR(VLD_STATUS_CTRL) 	///../ucode/register.h
 #define MPEG1_2_REG 0x0c01 	///../ucode/register.h
@@ -2691,6 +2871,8 @@
 #define P_HENC_SCRATCH_M 		CBUS_REG_ADDR(HENC_SCRATCH_M) 	///../ucode/register.h
 #define HENC_SCRATCH_N 0x0ad7 	///../ucode/register.h
 #define P_HENC_SCRATCH_N 		CBUS_REG_ADDR(HENC_SCRATCH_N) 	///../ucode/register.h
+#define IE_DATA_FEED_BUFF_INFO 0x0ad8 	///../ucode/register.h:3766
+#define P_IE_DATA_FEED_BUFF_INFO 		CBUS_REG_ADDR(IE_DATA_FEED_BUFF_INFO)
 #define VLC_STATUS_CTRL 0x0d00 	///../ucode/register.h
 #define P_VLC_STATUS_CTRL 		CBUS_REG_ADDR(VLC_STATUS_CTRL) 	///../ucode/register.h
 #define VLC_CONFIG 0x0d01 	///../ucode/register.h
@@ -2811,6 +2993,18 @@
 #define P_VLC_DBG_IDX 		CBUS_REG_ADDR(VLC_DBG_IDX) 	///../ucode/register.h
 #define VLC_DBG_READ 0x0d57 	///../ucode/register.h
 #define P_VLC_DBG_READ 		CBUS_REG_ADDR(VLC_DBG_READ) 	///../ucode/register.h
+#define VLC_JPEG_CTRL 0x0d58 	///../ucode/register.h:4094
+#define P_VLC_JPEG_CTRL 		CBUS_REG_ADDR(VLC_JPEG_CTRL)
+#define VLC_JPEG_COEFF_BUF_STAT 0x0d59 	///../ucode/register.h:4095
+#define P_VLC_JPEG_COEFF_BUF_STAT 		CBUS_REG_ADDR(VLC_JPEG_COEFF_BUF_STAT)
+#define VLC_HUFFMAN_ADDR 0x0d5a 	///../ucode/register.h:4096
+#define P_VLC_HUFFMAN_ADDR 		CBUS_REG_ADDR(VLC_HUFFMAN_ADDR)
+#define VLC_HUFFMAN_DATA 0x0d5b 	///../ucode/register.h:4097
+#define P_VLC_HUFFMAN_DATA 		CBUS_REG_ADDR(VLC_HUFFMAN_DATA)
+#define VLC_ENC_MV_BITS 0x0d5c 	///../ucode/register.h:4099
+#define P_VLC_ENC_MV_BITS 		CBUS_REG_ADDR(VLC_ENC_MV_BITS)
+#define VLC_ENC_COEFF_BITS 0x0d5d 	///../ucode/register.h:4101
+#define P_VLC_ENC_COEFF_BITS 		CBUS_REG_ADDR(VLC_ENC_COEFF_BITS)
 #define QDCT_STATUS_CTRL 0x0f00 	///../ucode/register.h
 #define P_QDCT_STATUS_CTRL 		CBUS_REG_ADDR(QDCT_STATUS_CTRL) 	///../ucode/register.h
 #define QDCT_CONFIG 0x0f01 	///../ucode/register.h
@@ -2861,6 +3055,96 @@
 #define P_QDCT_DBG_IDX 		CBUS_REG_ADDR(QDCT_DBG_IDX) 	///../ucode/register.h
 #define QDCT_DBG_READ 0x0f24 	///../ucode/register.h
 #define P_QDCT_DBG_READ 		CBUS_REG_ADDR(QDCT_DBG_READ) 	///../ucode/register.h
+#define QDCT_JPEG_CTRL 0x0f25 	///../ucode/register.h:4276
+#define P_QDCT_JPEG_CTRL 		CBUS_REG_ADDR(QDCT_JPEG_CTRL)
+#define QDCT_JPEG_X_START_END 0x0f26 	///../ucode/register.h:4277
+#define P_QDCT_JPEG_X_START_END 		CBUS_REG_ADDR(QDCT_JPEG_X_START_END)
+#define QDCT_JPEG_Y_START_END 0x0f27 	///../ucode/register.h:4278
+#define P_QDCT_JPEG_Y_START_END 		CBUS_REG_ADDR(QDCT_JPEG_Y_START_END)
+#define QDCT_JPEG_QUANT_ADDR 0x0f28 	///../ucode/register.h:4279
+#define P_QDCT_JPEG_QUANT_ADDR 		CBUS_REG_ADDR(QDCT_JPEG_QUANT_ADDR)
+#define QDCT_JPEG_QUANT_DATA 0x0f29 	///../ucode/register.h:4280
+#define P_QDCT_JPEG_QUANT_DATA 		CBUS_REG_ADDR(QDCT_JPEG_QUANT_DATA)
+#define QDCT_JPEG_SOF_RESUME 0x0f2a 	///../ucode/register.h:4281
+#define P_QDCT_JPEG_SOF_RESUME 		CBUS_REG_ADDR(QDCT_JPEG_SOF_RESUME)
+#define QDCT_JPEG_DCT_STATUS0 0x0f2b 	///../ucode/register.h:4282
+#define P_QDCT_JPEG_DCT_STATUS0 		CBUS_REG_ADDR(QDCT_JPEG_DCT_STATUS0)
+#define QDCT_JPEG_DCT_STATUS1 0x0f2c 	///../ucode/register.h:4283
+#define P_QDCT_JPEG_DCT_STATUS1 		CBUS_REG_ADDR(QDCT_JPEG_DCT_STATUS1)
+#define QDCT_JPEG_DCT_COEFF01 0x0f2d 	///../ucode/register.h:4284
+#define P_QDCT_JPEG_DCT_COEFF01 		CBUS_REG_ADDR(QDCT_JPEG_DCT_COEFF01)
+#define QDCT_JPEG_DCT_COEFF23 0x0f2e 	///../ucode/register.h:4285
+#define P_QDCT_JPEG_DCT_COEFF23 		CBUS_REG_ADDR(QDCT_JPEG_DCT_COEFF23)
+#define QDCT_JPEG_DCT_COEFF45 0x0f2f 	///../ucode/register.h:4286
+#define P_QDCT_JPEG_DCT_COEFF45 		CBUS_REG_ADDR(QDCT_JPEG_DCT_COEFF45)
+#define QDCT_JPEG_DCT_COEFF67 0x0f30 	///../ucode/register.h:4287
+#define P_QDCT_JPEG_DCT_COEFF67 		CBUS_REG_ADDR(QDCT_JPEG_DCT_COEFF67)
+#define QDCT_JPEG_DCT_COEFF89 0x0f31 	///../ucode/register.h:4288
+#define P_QDCT_JPEG_DCT_COEFF89 		CBUS_REG_ADDR(QDCT_JPEG_DCT_COEFF89)
+#define IE_CONTROL 0x0f40 	///../ucode/register.h:4299
+#define P_IE_CONTROL 		CBUS_REG_ADDR(IE_CONTROL)
+#define IE_MB_POSITION 0x0f41 	///../ucode/register.h:4302
+#define P_IE_MB_POSITION 		CBUS_REG_ADDR(IE_MB_POSITION)
+#define IE_ME_MB_INFO 0x0f42 	///../ucode/register.h:4307
+#define P_IE_ME_MB_INFO 		CBUS_REG_ADDR(IE_ME_MB_INFO)
+#define SAD_CONTROL 0x0f43 	///../ucode/register.h:4312
+#define P_SAD_CONTROL 		CBUS_REG_ADDR(SAD_CONTROL)
+#define IE_RESULT_BUFFER 0x0f44 	///../ucode/register.h:4319
+#define P_IE_RESULT_BUFFER 		CBUS_REG_ADDR(IE_RESULT_BUFFER)
+#define IE_I4_PRED_MODE_HI 0x0f45 	///../ucode/register.h:4321
+#define P_IE_I4_PRED_MODE_HI 		CBUS_REG_ADDR(IE_I4_PRED_MODE_HI)
+#define IE_I4_PRED_MODE_LO 0x0f46 	///../ucode/register.h:4322
+#define P_IE_I4_PRED_MODE_LO 		CBUS_REG_ADDR(IE_I4_PRED_MODE_LO)
+#define IE_C_PRED_MODE 0x0f47 	///../ucode/register.h:4326
+#define P_IE_C_PRED_MODE 		CBUS_REG_ADDR(IE_C_PRED_MODE)
+#define IE_CUR_REF_SEL 0x0f48 	///../ucode/register.h:4329
+#define P_IE_CUR_REF_SEL 		CBUS_REG_ADDR(IE_CUR_REF_SEL)
+#define ME_CONTROL 0x0f49 	///../ucode/register.h:4350
+#define P_ME_CONTROL 		CBUS_REG_ADDR(ME_CONTROL)
+#define ME_START_POSITION 0x0f4a 	///../ucode/register.h:4355
+#define P_ME_START_POSITION 		CBUS_REG_ADDR(ME_START_POSITION)
+#define ME_STATUS 0x0f4b 	///../ucode/register.h:4364
+#define P_ME_STATUS 		CBUS_REG_ADDR(ME_STATUS)
+#define ME_DEBUG 0x0f4c 	///../ucode/register.h:4371
+#define P_ME_DEBUG 		CBUS_REG_ADDR(ME_DEBUG)
+#define ME_SKIP_LINE 0x0f4d 	///../ucode/register.h:4377
+#define P_ME_SKIP_LINE 		CBUS_REG_ADDR(ME_SKIP_LINE)
+#define ME_AB_MEM_CTL 0x0f4e 	///../ucode/register.h:4382
+#define P_ME_AB_MEM_CTL 		CBUS_REG_ADDR(ME_AB_MEM_CTL)
+#define ME_PIC_INFO 0x0f4f 	///../ucode/register.h:4386
+#define P_ME_PIC_INFO 		CBUS_REG_ADDR(ME_PIC_INFO)
+#define ME_SAD_ENOUGH_01 0x0f50 	///../ucode/register.h:4389
+#define P_ME_SAD_ENOUGH_01 		CBUS_REG_ADDR(ME_SAD_ENOUGH_01)
+#define ME_SAD_ENOUGH_23 0x0f51 	///../ucode/register.h:4392
+#define P_ME_SAD_ENOUGH_23 		CBUS_REG_ADDR(ME_SAD_ENOUGH_23)
+#define ME_STEP0_CLOSE_MV 0x0f52 	///../ucode/register.h:4396
+#define P_ME_STEP0_CLOSE_MV 		CBUS_REG_ADDR(ME_STEP0_CLOSE_MV)
+#define ME_F_SKIP_SAD 0x0f53 	///../ucode/register.h:4401
+#define P_ME_F_SKIP_SAD 		CBUS_REG_ADDR(ME_F_SKIP_SAD)
+#define ME_F_SKIP_WEIGHT 0x0f54 	///../ucode/register.h:4406
+#define P_ME_F_SKIP_WEIGHT 		CBUS_REG_ADDR(ME_F_SKIP_WEIGHT)
+#define ME_MV_MERGE_CTL 0x0f55 	///../ucode/register.h:4425
+#define P_ME_MV_MERGE_CTL 		CBUS_REG_ADDR(ME_MV_MERGE_CTL)
+#define ME_MV_WEIGHT_01 0x0f56 	///../ucode/register.h:4430
+#define P_ME_MV_WEIGHT_01 		CBUS_REG_ADDR(ME_MV_WEIGHT_01)
+#define ME_MV_WEIGHT_23 0x0f57 	///../ucode/register.h:4435
+#define P_ME_MV_WEIGHT_23 		CBUS_REG_ADDR(ME_MV_WEIGHT_23)
+#define ME_SAD_RANGE_INC 0x0f58 	///../ucode/register.h:4440
+#define P_ME_SAD_RANGE_INC 		CBUS_REG_ADDR(ME_SAD_RANGE_INC)
+#define ME_SUB_MERGE_CTL 0x0f59 	///../ucode/register.h:4454
+#define P_ME_SUB_MERGE_CTL 		CBUS_REG_ADDR(ME_SUB_MERGE_CTL)
+#define ME_SUB_REF_MV_CTL 0x0f5a 	///../ucode/register.h:4461
+#define P_ME_SUB_REF_MV_CTL 		CBUS_REG_ADDR(ME_SUB_REF_MV_CTL)
+#define ME_SUB_ANY_WEIGHT_SAD 0x0f5b 	///../ucode/register.h:4466
+#define P_ME_SUB_ANY_WEIGHT_SAD 		CBUS_REG_ADDR(ME_SUB_ANY_WEIGHT_SAD)
+#define ME_SUB_FIX_SAD 0x0f5c 	///../ucode/register.h:4471
+#define P_ME_SUB_FIX_SAD 		CBUS_REG_ADDR(ME_SUB_FIX_SAD)
+#define ME_SUB_FIX_MIN_SAD 0x0f5d 	///../ucode/register.h:4476
+#define P_ME_SUB_FIX_MIN_SAD 		CBUS_REG_ADDR(ME_SUB_FIX_MIN_SAD)
+#define ME_SUB_SNAP_GLITCH 0x0f5e 	///../ucode/register.h:4482
+#define P_ME_SUB_SNAP_GLITCH 		CBUS_REG_ADDR(ME_SUB_SNAP_GLITCH)
+#define ME_SUB_ACT_CTL 0x0f5f 	///../ucode/register.h:4492
+#define P_ME_SUB_ACT_CTL 		CBUS_REG_ADDR(ME_SUB_ACT_CTL)
 #define DOS_SW_RESET0 0x3f00 	///../ucode/register.h
 #define P_DOS_SW_RESET0 		DOS_REG_ADDR(DOS_SW_RESET0) 	///../ucode/register.h
 #define DOS_GCLK_EN0 0x3f01 	///../ucode/register.h
@@ -2877,6 +3161,18 @@
 #define P_DOS_HCODEC_INT_EN 		DOS_REG_ADDR(DOS_HCODEC_INT_EN) 	///../ucode/register.h
 #define DOS_SW_RESET1 0x3f07 	///../ucode/register.h
 #define P_DOS_SW_RESET1 		DOS_REG_ADDR(DOS_SW_RESET1) 	///../ucode/register.h
+#define DOS_SW_RESET2 0x3f08 	///../ucode/register.h:5401
+#define P_DOS_SW_RESET2 		DOS_REG_ADDR(DOS_SW_RESET2)
+#define DOS_GCLK_EN1 0x3f09 	///../ucode/register.h:5402
+#define P_DOS_GCLK_EN1 		DOS_REG_ADDR(DOS_GCLK_EN1)
+#define DOS_VDEC2_INT_EN 0x3f0a 	///../ucode/register.h:5403
+#define P_DOS_VDEC2_INT_EN 		DOS_REG_ADDR(DOS_VDEC2_INT_EN)
+#define DOS_VDIN_LCNT 0x3f0b 	///../ucode/register.h:5404
+#define P_DOS_VDIN_LCNT 		DOS_REG_ADDR(DOS_VDIN_LCNT)
+#define DOS_VDIN_FCNT 0x3f0c 	///../ucode/register.h:5405
+#define P_DOS_VDIN_FCNT 		DOS_REG_ADDR(DOS_VDIN_FCNT)
+#define DOS_VDIN_CCTL 0x3f0d 	///../ucode/register.h:5406
+#define P_DOS_VDIN_CCTL 		DOS_REG_ADDR(DOS_VDIN_CCTL)
 #define DOS_SCRATCH0 0x3f10 	///../ucode/register.h
 #define P_DOS_SCRATCH0 		DOS_REG_ADDR(DOS_SCRATCH0) 	///../ucode/register.h
 #define DOS_SCRATCH1 0x3f11 	///../ucode/register.h
@@ -2941,6 +3237,14 @@
 #define P_DOS_SCRATCH30 		DOS_REG_ADDR(DOS_SCRATCH30) 	///../ucode/register.h
 #define DOS_SCRATCH31 0x3f2f 	///../ucode/register.h
 #define P_DOS_SCRATCH31 		DOS_REG_ADDR(DOS_SCRATCH31) 	///../ucode/register.h
+#define DOS_VDEC_MCRCC_STALL_CTRL 0x3f40 	///../ucode/register.h:5444
+#define P_DOS_VDEC_MCRCC_STALL_CTRL 		DOS_REG_ADDR(DOS_VDEC_MCRCC_STALL_CTRL)
+#define DOS_VDEC_MCRCC_STALL2_CTRL 0x3f42 	///../ucode/register.h:5445
+#define P_DOS_VDEC_MCRCC_STALL2_CTRL 		DOS_REG_ADDR(DOS_VDEC_MCRCC_STALL2_CTRL)
+#define DOS_VDEC2_MCRCC_STALL_CTRL 0x3f41 	///../ucode/register.h:5446
+#define P_DOS_VDEC2_MCRCC_STALL_CTRL 		DOS_REG_ADDR(DOS_VDEC2_MCRCC_STALL_CTRL)
+#define DOS_VDEC2_MCRCC_STALL2_CTRL 0x3f43 	///../ucode/register.h:5447
+#define P_DOS_VDEC2_MCRCC_STALL2_CTRL 		DOS_REG_ADDR(DOS_VDEC2_MCRCC_STALL2_CTRL)
 #define AIU_958_BPF 0x1500 	///../ucode/register.h
 #define P_AIU_958_BPF 		CBUS_REG_ADDR(AIU_958_BPF) 	///../ucode/register.h
 #define AIU_958_BRST 0x1501 	///../ucode/register.h
@@ -3377,20 +3681,6 @@
 #define P_VPP_VADJ2_MA_MB 		CBUS_REG_ADDR(VPP_VADJ2_MA_MB) 	///../ucode/register.h
 #define VPP_VADJ2_MC_MD 0x1d46 	///../ucode/register.h
 #define P_VPP_VADJ2_MC_MD 		CBUS_REG_ADDR(VPP_VADJ2_MC_MD) 	///../ucode/register.h
-#define VPP_HSHARP_CTRL 0x1d50 	///../ucode/register.h
-#define P_VPP_HSHARP_CTRL 		CBUS_REG_ADDR(VPP_HSHARP_CTRL) 	///../ucode/register.h
-#define VPP_HSHARP_LUMA_THRESH01 0x1d51 	///../ucode/register.h
-#define P_VPP_HSHARP_LUMA_THRESH01 		CBUS_REG_ADDR(VPP_HSHARP_LUMA_THRESH01) 	///../ucode/register.h
-#define VPP_HSHARP_LUMA_THRESH23 0x1d52 	///../ucode/register.h
-#define P_VPP_HSHARP_LUMA_THRESH23 		CBUS_REG_ADDR(VPP_HSHARP_LUMA_THRESH23) 	///../ucode/register.h
-#define VPP_HSHARP_CHROMA_THRESH01 0x1d53 	///../ucode/register.h
-#define P_VPP_HSHARP_CHROMA_THRESH01 		CBUS_REG_ADDR(VPP_HSHARP_CHROMA_THRESH01) 	///../ucode/register.h
-#define VPP_HSHARP_CHROMA_THRESH23 0x1d54 	///../ucode/register.h
-#define P_VPP_HSHARP_CHROMA_THRESH23 		CBUS_REG_ADDR(VPP_HSHARP_CHROMA_THRESH23) 	///../ucode/register.h
-#define VPP_HSHARP_LUMA_GAIN 0x1d55 	///../ucode/register.h
-#define P_VPP_HSHARP_LUMA_GAIN 		CBUS_REG_ADDR(VPP_HSHARP_LUMA_GAIN) 	///../ucode/register.h
-#define VPP_HSHARP_CHROMA_GAIN 0x1d56 	///../ucode/register.h
-#define P_VPP_HSHARP_CHROMA_GAIN 		CBUS_REG_ADDR(VPP_HSHARP_CHROMA_GAIN) 	///../ucode/register.h
 #define VPP_MATRIX_PROBE_COLOR 0x1d5c 	///../ucode/register.h
 #define P_VPP_MATRIX_PROBE_COLOR 		CBUS_REG_ADDR(VPP_MATRIX_PROBE_COLOR) 	///../ucode/register.h
 #define VPP_MATRIX_HL_COLOR 0x1d5d 	///../ucode/register.h
@@ -3439,6 +3729,8 @@
 #define P_VPP_GCLK_CTRL1 		CBUS_REG_ADDR(VPP_GCLK_CTRL1) 	///../ucode/register.h
 #define VPP_SC_GCLK_CTRL 0x1d74 	///../ucode/register.h
 #define P_VPP_SC_GCLK_CTRL 		CBUS_REG_ADDR(VPP_SC_GCLK_CTRL) 	///../ucode/register.h
+#define VPP_MISC1 0x1d76 	///../ucode/register.h:7315
+#define P_VPP_MISC1 		CBUS_REG_ADDR(VPP_MISC1)
 #define VPP_BLACKEXT_CTRL 0x1d80 	///../ucode/register.h
 #define P_VPP_BLACKEXT_CTRL 		CBUS_REG_ADDR(VPP_BLACKEXT_CTRL) 	///../ucode/register.h
 #define VPP_DNLP_CTRL_00 0x1d81 	///../ucode/register.h
@@ -3509,6 +3801,10 @@
 #define P_VPP_VE_DEMO_LEFT_TOP_SCREEN_WIDTH 		CBUS_REG_ADDR(VPP_VE_DEMO_LEFT_TOP_SCREEN_WIDTH) 	///../ucode/register.h
 #define VPP_VE_DEMO_CENTER_BAR 0x1da3 	///../ucode/register.h
 #define P_VPP_VE_DEMO_CENTER_BAR 		CBUS_REG_ADDR(VPP_VE_DEMO_CENTER_BAR) 	///../ucode/register.h
+
+#define VPP_VE_H_V_SIZE 0x1da4 	///../ucode/register.h:7519
+#define P_VPP_VE_H_V_SIZE 		CBUS_REG_ADDR(VPP_VE_H_V_SIZE)
+
 #define VPP_VDO_MEAS_CTRL 0x1da8 	///../ucode/register.h
 #define P_VPP_VDO_MEAS_CTRL 		CBUS_REG_ADDR(VPP_VDO_MEAS_CTRL) 	///../ucode/register.h
 #define VPP_VDO_MEAS_VS_COUNT_HI 0x1da9 	///../ucode/register.h
@@ -3583,6 +3879,20 @@
 #define P_VPP_OSD_SCALE_COEF 		CBUS_REG_ADDR(VPP_OSD_SCALE_COEF) 	///../ucode/register.h
 #define VPP_INT_LINE_NUM 0x1dce 	///../ucode/register.h
 #define P_VPP_INT_LINE_NUM 		CBUS_REG_ADDR(VPP_INT_LINE_NUM) 	///../ucode/register.h
+#define VPP_HLTI_DN_FLT 0x1dd0 	///../ucode/register.h:7663
+#define P_VPP_HLTI_DN_FLT 		CBUS_REG_ADDR(VPP_HLTI_DN_FLT)
+#define VPP_HLTI_GAIN 0x1dd1 	///../ucode/register.h:7664
+#define P_VPP_HLTI_GAIN 		CBUS_REG_ADDR(VPP_HLTI_GAIN)
+#define VPP_HLTI_PARA 0x1dd2 	///../ucode/register.h:7665
+#define P_VPP_HLTI_PARA 		CBUS_REG_ADDR(VPP_HLTI_PARA)
+#define VPP_HCTI_DN_FLT 0x1dd3 	///../ucode/register.h:7666
+#define P_VPP_HCTI_DN_FLT 		CBUS_REG_ADDR(VPP_HCTI_DN_FLT)
+#define VPP_HCTI_GAIN 0x1dd4 	///../ucode/register.h:7667
+#define P_VPP_HCTI_GAIN 		CBUS_REG_ADDR(VPP_HCTI_GAIN)
+#define VPP_HCTI_PARA 0x1dd5 	///../ucode/register.h:7668
+#define P_VPP_HCTI_PARA 		CBUS_REG_ADDR(VPP_HCTI_PARA)
+#define VPP_VCTI_PARA 0x1dd6 	///../ucode/register.h:7669
+#define P_VPP_VCTI_PARA 		CBUS_REG_ADDR(VPP_VCTI_PARA)
 #define VPP2_DUMMY_DATA 0x1900 	///../ucode/register.h
 #define P_VPP2_DUMMY_DATA 		CBUS_REG_ADDR(VPP2_DUMMY_DATA) 	///../ucode/register.h
 #define VPP2_LINE_IN_LENGTH 0x1901 	///../ucode/register.h
@@ -4001,6 +4311,8 @@
 #define P_GE2D_GEN_CTRL3 		CBUS_REG_ADDR(GE2D_GEN_CTRL3) 	///../ucode/register.h
 #define GE2D_STATUS2 0x18e9 	///../ucode/register.h
 #define P_GE2D_STATUS2 		CBUS_REG_ADDR(GE2D_STATUS2) 	///../ucode/register.h
+#define GE2D_GEN_CTRL4 0x18ea 	///../ucode/register.h:8918
+#define P_GE2D_GEN_CTRL4 		CBUS_REG_ADDR(GE2D_GEN_CTRL4)
 #define CSI2_CLK_RESET 0x2a00 	///../ucode/register.h
 #define P_CSI2_CLK_RESET 		CBUS_REG_ADDR(CSI2_CLK_RESET) 	///../ucode/register.h
 #define CSI2_GEN_CTRL0 0x2a01 	///../ucode/register.h
@@ -4387,6 +4699,14 @@
 #define P_DI_EI_CTRL8 		CBUS_REG_ADDR(DI_EI_CTRL8) 	///../ucode/register.h
 #define DI_EI_CTRL9 0x171f 	///../ucode/register.h
 #define P_DI_EI_CTRL9 		CBUS_REG_ADDR(DI_EI_CTRL9) 	///../ucode/register.h
+#define DI_EI_CTRL10 0x1793 	///../ucode/register.h:9752
+#define P_DI_EI_CTRL10 		CBUS_REG_ADDR(DI_EI_CTRL10)
+#define DI_EI_CTRL11 0x179e 	///../ucode/register.h:9766
+#define P_DI_EI_CTRL11 		CBUS_REG_ADDR(DI_EI_CTRL11)
+#define DI_EI_CTRL12 0x179f 	///../ucode/register.h:9781
+#define P_DI_EI_CTRL12 		CBUS_REG_ADDR(DI_EI_CTRL12)
+#define DI_EI_CTRL13 0x17a8 	///../ucode/register.h:9794
+#define P_DI_EI_CTRL13 		CBUS_REG_ADDR(DI_EI_CTRL13)
 #define DI_EI_XWIN0 0x1798 	///../ucode/register.h
 #define P_DI_EI_XWIN0 		CBUS_REG_ADDR(DI_EI_XWIN0) 	///../ucode/register.h
 #define DI_EI_XWIN1 0x1799 	///../ucode/register.h
@@ -4441,6 +4761,20 @@
 #define P_DI_MTN_1_CTRL4 		CBUS_REG_ADDR(DI_MTN_1_CTRL4) 	///../ucode/register.h
 #define DI_MTN_1_CTRL5 0x1744 	///../ucode/register.h
 #define P_DI_MTN_1_CTRL5 		CBUS_REG_ADDR(DI_MTN_1_CTRL5) 	///../ucode/register.h
+#define DI_MTN_1_CTRL6 0x17a9 	///../ucode/register.h:9875
+#define P_DI_MTN_1_CTRL6 		CBUS_REG_ADDR(DI_MTN_1_CTRL6)
+#define DI_MTN_1_CTRL7 0x17aa 	///../ucode/register.h:9880
+#define P_DI_MTN_1_CTRL7 		CBUS_REG_ADDR(DI_MTN_1_CTRL7)
+#define DI_MTN_1_CTRL8 0x17ab 	///../ucode/register.h:9885
+#define P_DI_MTN_1_CTRL8 		CBUS_REG_ADDR(DI_MTN_1_CTRL8)
+#define DI_MTN_1_CTRL9 0x17ac 	///../ucode/register.h:9890
+#define P_DI_MTN_1_CTRL9 		CBUS_REG_ADDR(DI_MTN_1_CTRL9)
+#define DI_MTN_1_CTRL10 0x17ad 	///../ucode/register.h:9895
+#define P_DI_MTN_1_CTRL10 		CBUS_REG_ADDR(DI_MTN_1_CTRL10)
+#define DI_MTN_1_CTRL11 0x17ae 	///../ucode/register.h:9900
+#define P_DI_MTN_1_CTRL11 		CBUS_REG_ADDR(DI_MTN_1_CTRL11)
+#define DI_MTN_1_CTRL12 0x17af 	///../ucode/register.h:9905
+#define P_DI_MTN_1_CTRL12 		CBUS_REG_ADDR(DI_MTN_1_CTRL12)
 #define DET3D_MOTN_CFG 0x1734 	///../ucode/register.h
 #define P_DET3D_MOTN_CFG 		CBUS_REG_ADDR(DET3D_MOTN_CFG) 	///../ucode/register.h
 #define DET3D_CB_CFG 0x1735 	///../ucode/register.h
@@ -6397,6 +6731,8 @@
 #define P_VPU_D2D3_MMC_CTRL 		CBUS_REG_ADDR(VPU_D2D3_MMC_CTRL) 	///../ucode/register.h
 #define VPU_CONT_MMC_CTRL 0x2722 	///../ucode/register.h
 #define P_VPU_CONT_MMC_CTRL 		CBUS_REG_ADDR(VPU_CONT_MMC_CTRL) 	///../ucode/register.h
+#define VPU_HDMI_DATA_OVR 0x2727 	///../ucode/register.h:11680
+#define P_VPU_HDMI_DATA_OVR 		CBUS_REG_ADDR(VPU_HDMI_DATA_OVR)
 #define VPU_VPU_PWM_V0 0x2730 	///../ucode/register.h
 #define P_VPU_VPU_PWM_V0 		CBUS_REG_ADDR(VPU_VPU_PWM_V0) 	///../ucode/register.h
 #define VPU_VPU_PWM_V1 0x2731 	///../ucode/register.h
@@ -6787,76 +7123,166 @@
 #define P_AUDIN_HDMIRX_AFIFO_STAT 		CBUS_REG_ADDR(AUDIN_HDMIRX_AFIFO_STAT) 	///../ucode/register.h
 #define AUDIN_ADDR_END 0x287f 	///../ucode/register.h
 #define P_AUDIN_ADDR_END 		CBUS_REG_ADDR(AUDIN_ADDR_END) 	///../ucode/register.h
-#define P_AO_RTI_STATUS_REG0 		AOBUS_REG_ADDR((0x00 << 10) | (0x00 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_STATUS_REG1 		AOBUS_REG_ADDR((0x00 << 10) | (0x01 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_STATUS_REG2 		AOBUS_REG_ADDR((0x00 << 10) | (0x02 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_PWR_CNTL_REG0 		AOBUS_REG_ADDR((0x00 << 10) | (0x04 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_PIN_MUX_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x05 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_WD_GPIO_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x06 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_REMAP_REG0 		AOBUS_REG_ADDR((0x00 << 10) | (0x07 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_REMAP_REG1 		AOBUS_REG_ADDR((0x00 << 10) | (0x08 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_GPIO_O_EN_N 		AOBUS_REG_ADDR((0x00 << 10) | (0x09 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_GPIO_I 		AOBUS_REG_ADDR((0x00 << 10) | (0x0A << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_PULL_UP_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x0B << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_WD_MARK 		AOBUS_REG_ADDR((0x00 << 10) | (0x0D << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_RTI_GEN_CNTL_REG0 		AOBUS_REG_ADDR((0x00 << 10) | (0x10 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_WATCHDOG_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x11 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_WATCHDOG_RESET 		AOBUS_REG_ADDR((0x00 << 10) | (0x12 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_TIMER_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x13 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_TIMERA_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x14 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_TIMERE_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x15 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_AHB2DDR_CNTL 		AOBUS_REG_ADDR((0x00 << 10) | (0x18 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IRQ_MASK_FIQ_SEL 		AOBUS_REG_ADDR((0x00 << 10) | (0x20 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IRQ_GPIO_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x21 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IRQ_STAT 		AOBUS_REG_ADDR((0x00 << 10) | (0x22 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IRQ_STAT_CLR 		AOBUS_REG_ADDR((0x00 << 10) | (0x23 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_DEBUG_REG0 		AOBUS_REG_ADDR((0x00 << 10) | (0x28 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_DEBUG_REG1 		AOBUS_REG_ADDR((0x00 << 10) | (0x29 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_DEBUG_REG2 		AOBUS_REG_ADDR((0x00 << 10) | (0x2a << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_DEBUG_REG3 		AOBUS_REG_ADDR((0x00 << 10) | (0x2b << 2)) 	///../ucode/c_always_on_pointer.h
-#define AO_IR_BLASTER_ADDR0 0x30 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_BLASTER_ADDR0 		CBUS_REG_ADDR(AO_IR_BLASTER_ADDR0) 	///../ucode/c_always_on_pointer.h
-#define AO_IR_BLASTER_ADDR1 0x31 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_BLASTER_ADDR1 		CBUS_REG_ADDR(AO_IR_BLASTER_ADDR1) 	///../ucode/c_always_on_pointer.h
-#define AO_IR_BLASTER_ADDR2 0x32 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_BLASTER_ADDR2 		CBUS_REG_ADDR(AO_IR_BLASTER_ADDR2) 	///../ucode/c_always_on_pointer.h
-#define P_AO_CEC_GEN_CNTL 		AOBUS_REG_ADDR((0x00 << 10) | (0x40 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_CEC_RW_REG 		AOBUS_REG_ADDR((0x00 << 10) | (0x41 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_CEC_INTR_MASKN 		AOBUS_REG_ADDR((0x00 << 10) | (0x42 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_CEC_INTR_CLR 		AOBUS_REG_ADDR((0x00 << 10) | (0x43 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_CEC_INTR_STAT 		AOBUS_REG_ADDR((0x00 << 10) | (0x44 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_LDR_ACTIVE 		AOBUS_REG_ADDR((0x01 << 10) | (0x20 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_LDR_IDLE 		AOBUS_REG_ADDR((0x01 << 10) | (0x21 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_LDR_REPEAT 		AOBUS_REG_ADDR((0x01 << 10) | (0x22 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_BIT_0 		AOBUS_REG_ADDR((0x01 << 10) | (0x23 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_REG0 		AOBUS_REG_ADDR((0x01 << 10) | (0x24 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_FRAME 		AOBUS_REG_ADDR((0x01 << 10) | (0x25 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_STATUS 		AOBUS_REG_ADDR((0x01 << 10) | (0x26 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_IR_DEC_REG1 		AOBUS_REG_ADDR((0x01 << 10) | (0x27 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART_WFIFO 		AOBUS_REG_ADDR((0x01 << 10) | (0x30 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART_RFIFO 		AOBUS_REG_ADDR((0x01 << 10) | (0x31 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART_CONTROL 		AOBUS_REG_ADDR((0x01 << 10) | (0x32 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART_STATUS 		AOBUS_REG_ADDR((0x01 << 10) | (0x33 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART_MISC 		AOBUS_REG_ADDR((0x01 << 10) | (0x34 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART_REG5 		AOBUS_REG_ADDR((0x01 << 10) | (0x35 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART2_WFIFO 		AOBUS_REG_ADDR((0x01 << 10) | (0x38 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART2_RFIFO 		AOBUS_REG_ADDR((0x01 << 10) | (0x39 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART2_CONTROL 		AOBUS_REG_ADDR((0x01 << 10) | (0x3a << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART2_STATUS 		AOBUS_REG_ADDR((0x01 << 10) | (0x3b << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART2_MISC 		AOBUS_REG_ADDR((0x01 << 10) | (0x3c << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_UART2_REG5 		AOBUS_REG_ADDR((0x01 << 10) | (0x3d << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_CONTROL_REG 		AOBUS_REG_ADDR((0x01 << 10) | (0x40 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_SLAVE_ADDR 		AOBUS_REG_ADDR((0x01 << 10) | (0x41 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_TOKEN_LIST0 		AOBUS_REG_ADDR((0x01 << 10) | (0x42 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_TOKEN_LIST1 		AOBUS_REG_ADDR((0x01 << 10) | (0x43 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_WDATA_REG0 		AOBUS_REG_ADDR((0x01 << 10) | (0x44 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_WDATA_REG1 		AOBUS_REG_ADDR((0x01 << 10) | (0x45 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_RDATA_REG0 		AOBUS_REG_ADDR((0x01 << 10) | (0x46 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_M_0_RDATA_REG1 		AOBUS_REG_ADDR((0x01 << 10) | (0x47 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_S_CONTROL_REG 		AOBUS_REG_ADDR((0x01 << 10) | (0x50 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_S_SEND_REG 		AOBUS_REG_ADDR((0x01 << 10) | (0x51 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_S_RECV_REG 		AOBUS_REG_ADDR((0x01 << 10) | (0x52 << 2)) 	///../ucode/c_always_on_pointer.h
-#define P_AO_I2C_S_CNTL1_REG 		AOBUS_REG_ADDR((0x01 << 10) | (0x53 << 2)) 	///../ucode/c_always_on_pointer.h
+
+#define AO_RTI_STATUS_REG0 ((0x00 << 10) | (0x00 << 2)) 	///../ucode/c_always_on_pointer.h:13
+#define P_AO_RTI_STATUS_REG0 		AOBUS_REG_ADDR(AO_RTI_STATUS_REG0)
+#define AO_RTI_STATUS_REG1 ((0x00 << 10) | (0x01 << 2)) 	///../ucode/c_always_on_pointer.h:14
+#define P_AO_RTI_STATUS_REG1 		AOBUS_REG_ADDR(AO_RTI_STATUS_REG1)
+#define AO_RTI_STATUS_REG2 ((0x00 << 10) | (0x02 << 2)) 	///../ucode/c_always_on_pointer.h:15
+#define P_AO_RTI_STATUS_REG2 		AOBUS_REG_ADDR(AO_RTI_STATUS_REG2)
+#define AO_RTI_PWR_CNTL_REG0 ((0x00 << 10) | (0x04 << 2)) 	///../ucode/c_always_on_pointer.h:17
+#define P_AO_RTI_PWR_CNTL_REG0 		AOBUS_REG_ADDR(AO_RTI_PWR_CNTL_REG0)
+#define AO_RTI_PIN_MUX_REG ((0x00 << 10) | (0x05 << 2)) 	///../ucode/c_always_on_pointer.h:18
+#define P_AO_RTI_PIN_MUX_REG 		AOBUS_REG_ADDR(AO_RTI_PIN_MUX_REG)
+#define AO_WD_GPIO_REG ((0x00 << 10) | (0x06 << 2)) 	///../ucode/c_always_on_pointer.h:20
+#define P_AO_WD_GPIO_REG 		AOBUS_REG_ADDR(AO_WD_GPIO_REG)
+#define AO_REMAP_REG0 ((0x00 << 10) | (0x07 << 2)) 	///../ucode/c_always_on_pointer.h:22
+#define P_AO_REMAP_REG0 		AOBUS_REG_ADDR(AO_REMAP_REG0)
+#define AO_REMAP_REG1 ((0x00 << 10) | (0x08 << 2)) 	///../ucode/c_always_on_pointer.h:23
+#define P_AO_REMAP_REG1 		AOBUS_REG_ADDR(AO_REMAP_REG1)
+#define AO_GPIO_O_EN_N ((0x00 << 10) | (0x09 << 2)) 	///../ucode/c_always_on_pointer.h:24
+#define P_AO_GPIO_O_EN_N 		AOBUS_REG_ADDR(AO_GPIO_O_EN_N)
+#define AO_GPIO_I ((0x00 << 10) | (0x0A << 2)) 	///../ucode/c_always_on_pointer.h:25
+#define P_AO_GPIO_I 		AOBUS_REG_ADDR(AO_GPIO_I)
+#define AO_RTI_PULL_UP_REG ((0x00 << 10) | (0x0B << 2)) 	///../ucode/c_always_on_pointer.h:27
+#define P_AO_RTI_PULL_UP_REG 		AOBUS_REG_ADDR(AO_RTI_PULL_UP_REG)
+#define AO_RTI_WD_MARK ((0x00 << 10) | (0x0D << 2)) 	///../ucode/c_always_on_pointer.h:30
+#define P_AO_RTI_WD_MARK 		AOBUS_REG_ADDR(AO_RTI_WD_MARK)
+#define AO_RTI_GEN_CNTL_REG0 ((0x00 << 10) | (0x10 << 2)) 	///../ucode/c_always_on_pointer.h:32
+#define P_AO_RTI_GEN_CNTL_REG0 		AOBUS_REG_ADDR(AO_RTI_GEN_CNTL_REG0)
+#define AO_WATCHDOG_REG ((0x00 << 10) | (0x11 << 2)) 	///../ucode/c_always_on_pointer.h:33
+#define P_AO_WATCHDOG_REG 		AOBUS_REG_ADDR(AO_WATCHDOG_REG)
+#define AO_WATCHDOG_RESET ((0x00 << 10) | (0x12 << 2)) 	///../ucode/c_always_on_pointer.h:34
+#define P_AO_WATCHDOG_RESET 		AOBUS_REG_ADDR(AO_WATCHDOG_RESET)
+#define AO_TIMER_REG ((0x00 << 10) | (0x13 << 2)) 	///../ucode/c_always_on_pointer.h:36
+#define P_AO_TIMER_REG 		AOBUS_REG_ADDR(AO_TIMER_REG)
+#define AO_TIMERA_REG ((0x00 << 10) | (0x14 << 2)) 	///../ucode/c_always_on_pointer.h:37
+#define P_AO_TIMERA_REG 		AOBUS_REG_ADDR(AO_TIMERA_REG)
+#define AO_TIMERE_REG ((0x00 << 10) | (0x15 << 2)) 	///../ucode/c_always_on_pointer.h:38
+#define P_AO_TIMERE_REG 		AOBUS_REG_ADDR(AO_TIMERE_REG)
+#define AO_AHB2DDR_CNTL ((0x00 << 10) | (0x18 << 2)) 	///../ucode/c_always_on_pointer.h:40
+#define P_AO_AHB2DDR_CNTL 		AOBUS_REG_ADDR(AO_AHB2DDR_CNTL)
+#define AO_IRQ_MASK_FIQ_SEL ((0x00 << 10) | (0x20 << 2)) 	///../ucode/c_always_on_pointer.h:42
+#define P_AO_IRQ_MASK_FIQ_SEL 		AOBUS_REG_ADDR(AO_IRQ_MASK_FIQ_SEL)
+#define AO_IRQ_GPIO_REG ((0x00 << 10) | (0x21 << 2)) 	///../ucode/c_always_on_pointer.h:43
+#define P_AO_IRQ_GPIO_REG 		AOBUS_REG_ADDR(AO_IRQ_GPIO_REG)
+#define AO_IRQ_STAT ((0x00 << 10) | (0x22 << 2)) 	///../ucode/c_always_on_pointer.h:44
+#define P_AO_IRQ_STAT 		AOBUS_REG_ADDR(AO_IRQ_STAT)
+#define AO_IRQ_STAT_CLR ((0x00 << 10) | (0x23 << 2)) 	///../ucode/c_always_on_pointer.h:45
+#define P_AO_IRQ_STAT_CLR 		AOBUS_REG_ADDR(AO_IRQ_STAT_CLR)
+#define AO_DEBUG_REG0 ((0x00 << 10) | (0x28 << 2)) 	///../ucode/c_always_on_pointer.h:47
+#define P_AO_DEBUG_REG0 		AOBUS_REG_ADDR(AO_DEBUG_REG0)
+#define AO_DEBUG_REG1 ((0x00 << 10) | (0x29 << 2)) 	///../ucode/c_always_on_pointer.h:48
+#define P_AO_DEBUG_REG1 		AOBUS_REG_ADDR(AO_DEBUG_REG1)
+#define AO_DEBUG_REG2 ((0x00 << 10) | (0x2a << 2)) 	///../ucode/c_always_on_pointer.h:49
+#define P_AO_DEBUG_REG2 		AOBUS_REG_ADDR(AO_DEBUG_REG2)
+#define AO_DEBUG_REG3 ((0x00 << 10) | (0x2b << 2)) 	///../ucode/c_always_on_pointer.h:50
+#define P_AO_DEBUG_REG3 		AOBUS_REG_ADDR(AO_DEBUG_REG3)
+#define AO_IR_BLASTER_ADDR0 0x30 	///../ucode/c_always_on_pointer.h:52
+#define P_AO_IR_BLASTER_ADDR0 		CBUS_REG_ADDR(AO_IR_BLASTER_ADDR0)
+#define AO_IR_BLASTER_ADDR1 0x31 	///../ucode/c_always_on_pointer.h:53
+#define P_AO_IR_BLASTER_ADDR1 		CBUS_REG_ADDR(AO_IR_BLASTER_ADDR1)
+#define AO_IR_BLASTER_ADDR2 0x32 	///../ucode/c_always_on_pointer.h:54
+#define P_AO_IR_BLASTER_ADDR2 		CBUS_REG_ADDR(AO_IR_BLASTER_ADDR2)
+#define AO_CEC_GEN_CNTL ((0x00 << 10) | (0x40 << 2)) 	///../ucode/c_always_on_pointer.h:56
+#define P_AO_CEC_GEN_CNTL 		AOBUS_REG_ADDR(AO_CEC_GEN_CNTL)
+#define AO_CEC_RW_REG ((0x00 << 10) | (0x41 << 2)) 	///../ucode/c_always_on_pointer.h:57
+#define P_AO_CEC_RW_REG 		AOBUS_REG_ADDR(AO_CEC_RW_REG)
+#define AO_CEC_INTR_MASKN ((0x00 << 10) | (0x42 << 2)) 	///../ucode/c_always_on_pointer.h:58
+#define P_AO_CEC_INTR_MASKN 		AOBUS_REG_ADDR(AO_CEC_INTR_MASKN)
+#define AO_CEC_INTR_CLR ((0x00 << 10) | (0x43 << 2)) 	///../ucode/c_always_on_pointer.h:59
+#define P_AO_CEC_INTR_CLR 		AOBUS_REG_ADDR(AO_CEC_INTR_CLR)
+#define AO_CEC_INTR_STAT ((0x00 << 10) | (0x44 << 2)) 	///../ucode/c_always_on_pointer.h:60
+#define P_AO_CEC_INTR_STAT 		AOBUS_REG_ADDR(AO_CEC_INTR_STAT)
+#define AO_IR_DEC_LDR_ACTIVE ((0x01 << 10) | (0x20 << 2)) 	///../ucode/c_always_on_pointer.h:65
+#define P_AO_IR_DEC_LDR_ACTIVE 		AOBUS_REG_ADDR(AO_IR_DEC_LDR_ACTIVE)
+#define AO_IR_DEC_LDR_IDLE ((0x01 << 10) | (0x21 << 2)) 	///../ucode/c_always_on_pointer.h:66
+#define P_AO_IR_DEC_LDR_IDLE 		AOBUS_REG_ADDR(AO_IR_DEC_LDR_IDLE)
+#define AO_IR_DEC_LDR_REPEAT ((0x01 << 10) | (0x22 << 2)) 	///../ucode/c_always_on_pointer.h:67
+#define P_AO_IR_DEC_LDR_REPEAT 		AOBUS_REG_ADDR(AO_IR_DEC_LDR_REPEAT)
+#define AO_IR_DEC_BIT_0 ((0x01 << 10) | (0x23 << 2)) 	///../ucode/c_always_on_pointer.h:68
+#define P_AO_IR_DEC_BIT_0 		AOBUS_REG_ADDR(AO_IR_DEC_BIT_0)
+#define AO_IR_DEC_REG0 ((0x01 << 10) | (0x24 << 2)) 	///../ucode/c_always_on_pointer.h:69
+#define P_AO_IR_DEC_REG0 		AOBUS_REG_ADDR(AO_IR_DEC_REG0)
+#define AO_IR_DEC_FRAME ((0x01 << 10) | (0x25 << 2)) 	///../ucode/c_always_on_pointer.h:70
+#define P_AO_IR_DEC_FRAME 		AOBUS_REG_ADDR(AO_IR_DEC_FRAME)
+#define AO_IR_DEC_STATUS ((0x01 << 10) | (0x26 << 2)) 	///../ucode/c_always_on_pointer.h:71
+#define P_AO_IR_DEC_STATUS 		AOBUS_REG_ADDR(AO_IR_DEC_STATUS)
+#define AO_IR_DEC_REG1 ((0x01 << 10) | (0x27 << 2)) 	///../ucode/c_always_on_pointer.h:72
+#define P_AO_IR_DEC_REG1 		AOBUS_REG_ADDR(AO_IR_DEC_REG1)
+#define AO_UART_WFIFO ((0x01 << 10) | (0x30 << 2)) 	///../ucode/c_always_on_pointer.h:77
+#define P_AO_UART_WFIFO 		AOBUS_REG_ADDR(AO_UART_WFIFO)
+#define AO_UART_RFIFO ((0x01 << 10) | (0x31 << 2)) 	///../ucode/c_always_on_pointer.h:78
+#define P_AO_UART_RFIFO 		AOBUS_REG_ADDR(AO_UART_RFIFO)
+#define AO_UART_CONTROL ((0x01 << 10) | (0x32 << 2)) 	///../ucode/c_always_on_pointer.h:79
+#define P_AO_UART_CONTROL 		AOBUS_REG_ADDR(AO_UART_CONTROL)
+#define AO_UART_STATUS ((0x01 << 10) | (0x33 << 2)) 	///../ucode/c_always_on_pointer.h:80
+#define P_AO_UART_STATUS 		AOBUS_REG_ADDR(AO_UART_STATUS)
+#define AO_UART_MISC ((0x01 << 10) | (0x34 << 2)) 	///../ucode/c_always_on_pointer.h:81
+#define P_AO_UART_MISC 		AOBUS_REG_ADDR(AO_UART_MISC)
+#define AO_UART_REG5 ((0x01 << 10) | (0x35 << 2)) 	///../ucode/c_always_on_pointer.h:82
+#define P_AO_UART_REG5 		AOBUS_REG_ADDR(AO_UART_REG5)
+#define AO_UART2_WFIFO ((0x01 << 10) | (0x38 << 2)) 	///../ucode/c_always_on_pointer.h:87
+#define P_AO_UART2_WFIFO 		AOBUS_REG_ADDR(AO_UART2_WFIFO)
+#define AO_UART2_RFIFO ((0x01 << 10) | (0x39 << 2)) 	///../ucode/c_always_on_pointer.h:88
+#define P_AO_UART2_RFIFO 		AOBUS_REG_ADDR(AO_UART2_RFIFO)
+#define AO_UART2_CONTROL ((0x01 << 10) | (0x3a << 2)) 	///../ucode/c_always_on_pointer.h:89
+#define P_AO_UART2_CONTROL 		AOBUS_REG_ADDR(AO_UART2_CONTROL)
+#define AO_UART2_STATUS ((0x01 << 10) | (0x3b << 2)) 	///../ucode/c_always_on_pointer.h:90
+#define P_AO_UART2_STATUS 		AOBUS_REG_ADDR(AO_UART2_STATUS)
+#define AO_UART2_MISC ((0x01 << 10) | (0x3c << 2)) 	///../ucode/c_always_on_pointer.h:91
+#define P_AO_UART2_MISC 		AOBUS_REG_ADDR(AO_UART2_MISC)
+#define AO_UART2_REG5 ((0x01 << 10) | (0x3d << 2)) 	///../ucode/c_always_on_pointer.h:92
+#define P_AO_UART2_REG5 		AOBUS_REG_ADDR(AO_UART2_REG5)
+#define AO_I2C_M_0_CONTROL_REG ((0x01 << 10) | (0x40 << 2)) 	///../ucode/c_always_on_pointer.h:97
+#define P_AO_I2C_M_0_CONTROL_REG 		AOBUS_REG_ADDR(AO_I2C_M_0_CONTROL_REG)
+#define AO_I2C_M_0_SLAVE_ADDR ((0x01 << 10) | (0x41 << 2)) 	///../ucode/c_always_on_pointer.h:98
+#define P_AO_I2C_M_0_SLAVE_ADDR 		AOBUS_REG_ADDR(AO_I2C_M_0_SLAVE_ADDR)
+#define AO_I2C_M_0_TOKEN_LIST0 ((0x01 << 10) | (0x42 << 2)) 	///../ucode/c_always_on_pointer.h:99
+#define P_AO_I2C_M_0_TOKEN_LIST0 		AOBUS_REG_ADDR(AO_I2C_M_0_TOKEN_LIST0)
+#define AO_I2C_M_0_TOKEN_LIST1 ((0x01 << 10) | (0x43 << 2)) 	///../ucode/c_always_on_pointer.h:100
+#define P_AO_I2C_M_0_TOKEN_LIST1 		AOBUS_REG_ADDR(AO_I2C_M_0_TOKEN_LIST1)
+#define AO_I2C_M_0_WDATA_REG0 ((0x01 << 10) | (0x44 << 2)) 	///../ucode/c_always_on_pointer.h:101
+#define P_AO_I2C_M_0_WDATA_REG0 		AOBUS_REG_ADDR(AO_I2C_M_0_WDATA_REG0)
+#define AO_I2C_M_0_WDATA_REG1 ((0x01 << 10) | (0x45 << 2)) 	///../ucode/c_always_on_pointer.h:102
+#define P_AO_I2C_M_0_WDATA_REG1 		AOBUS_REG_ADDR(AO_I2C_M_0_WDATA_REG1)
+#define AO_I2C_M_0_RDATA_REG0 ((0x01 << 10) | (0x46 << 2)) 	///../ucode/c_always_on_pointer.h:103
+#define P_AO_I2C_M_0_RDATA_REG0 		AOBUS_REG_ADDR(AO_I2C_M_0_RDATA_REG0)
+#define AO_I2C_M_0_RDATA_REG1 ((0x01 << 10) | (0x47 << 2)) 	///../ucode/c_always_on_pointer.h:104
+#define P_AO_I2C_M_0_RDATA_REG1 		AOBUS_REG_ADDR(AO_I2C_M_0_RDATA_REG1)
+#define AO_I2C_S_CONTROL_REG ((0x01 << 10) | (0x50 << 2)) 	///../ucode/c_always_on_pointer.h:108
+#define P_AO_I2C_S_CONTROL_REG 		AOBUS_REG_ADDR(AO_I2C_S_CONTROL_REG)
+#define AO_I2C_S_SEND_REG ((0x01 << 10) | (0x51 << 2)) 	///../ucode/c_always_on_pointer.h:109
+#define P_AO_I2C_S_SEND_REG 		AOBUS_REG_ADDR(AO_I2C_S_SEND_REG)
+#define AO_I2C_S_RECV_REG ((0x01 << 10) | (0x52 << 2)) 	///../ucode/c_always_on_pointer.h:110
+#define P_AO_I2C_S_RECV_REG 		AOBUS_REG_ADDR(AO_I2C_S_RECV_REG)
+#define AO_I2C_S_CNTL1_REG ((0x01 << 10) | (0x53 << 2)) 	///../ucode/c_always_on_pointer.h:111
+#define P_AO_I2C_S_CNTL1_REG 		AOBUS_REG_ADDR(AO_I2C_S_CNTL1_REG)
+#define AO_MF_IR_DEC_LDR_ACTIVE ((0x01 << 10) | (0x60 << 2)) 	///../ucode/c_always_on_pointer.h:124
+#define P_AO_MF_IR_DEC_LDR_ACTIVE 		AOBUS_REG_ADDR(AO_MF_IR_DEC_LDR_ACTIVE)
+#define AO_MF_IR_DEC_LDR_IDLE ((0x01 << 10) | (0x61 << 2)) 	///../ucode/c_always_on_pointer.h:125
+#define P_AO_MF_IR_DEC_LDR_IDLE 		AOBUS_REG_ADDR(AO_MF_IR_DEC_LDR_IDLE)
+#define AO_MF_IR_DEC_LDR_REPEAT ((0x01 << 10) | (0x62 << 2)) 	///../ucode/c_always_on_pointer.h:126
+#define P_AO_MF_IR_DEC_LDR_REPEAT 		AOBUS_REG_ADDR(AO_MF_IR_DEC_LDR_REPEAT)
+#define AO_MF_IR_DEC_BIT_0 ((0x01 << 10) | (0x63 << 2)) 	///../ucode/c_always_on_pointer.h:127
+#define P_AO_MF_IR_DEC_BIT_0 		AOBUS_REG_ADDR(AO_MF_IR_DEC_BIT_0)
+#define AO_MF_IR_DEC_REG0 ((0x01 << 10) | (0x64 << 2)) 	///../ucode/c_always_on_pointer.h:128
+#define P_AO_MF_IR_DEC_REG0 		AOBUS_REG_ADDR(AO_MF_IR_DEC_REG0)
+#define AO_MF_IR_DEC_FRAME ((0x01 << 10) | (0x65 << 2)) 	///../ucode/c_always_on_pointer.h:129
+#define P_AO_MF_IR_DEC_FRAME 		AOBUS_REG_ADDR(AO_MF_IR_DEC_FRAME)
+#define AO_MF_IR_DEC_STATUS ((0x01 << 10) | (0x66 << 2)) 	///../ucode/c_always_on_pointer.h:130
+#define P_AO_MF_IR_DEC_STATUS 		AOBUS_REG_ADDR(AO_MF_IR_DEC_STATUS)
+#define AO_MF_IR_DEC_REG1 ((0x01 << 10) | (0x67 << 2)) 	///../ucode/c_always_on_pointer.h:131
+#define P_AO_MF_IR_DEC_REG1 		AOBUS_REG_ADDR(AO_MF_IR_DEC_REG1)
+#define AO_MF_IR_DEC_REG2 ((0x01 << 10) | (0x68 << 2)) 	///../ucode/c_always_on_pointer.h:132
+#define P_AO_MF_IR_DEC_REG2 		AOBUS_REG_ADDR(AO_MF_IR_DEC_REG2)
+#define AO_MF_IR_DEC_DURATN2 ((0x01 << 10) | (0x69 << 2)) 	///../ucode/c_always_on_pointer.h:133
+#define P_AO_MF_IR_DEC_DURATN2 		AOBUS_REG_ADDR(AO_MF_IR_DEC_DURATN2)
+#define AO_MF_IR_DEC_DURATN3 ((0x01 << 10) | (0x6a << 2)) 	///../ucode/c_always_on_pointer.h:134
+#define P_AO_MF_IR_DEC_DURATN3 		AOBUS_REG_ADDR(AO_MF_IR_DEC_DURATN3)
+#define AO_MF_IR_DEC_FRAME1 ((0x01 << 10) | (0x6b << 2)) 	///../ucode/c_always_on_pointer.h:135
+#define P_AO_MF_IR_DEC_FRAME1 		AOBUS_REG_ADDR(AO_MF_IR_DEC_FRAME1)
+
 #define UPCTL_STAT_ADDR 0x0008 	///../ucode/pctl.h
 #define P_UPCTL_STAT_ADDR 		APB_REG_ADDR(UPCTL_STAT_ADDR) 	///../ucode/pctl.h
 #define UPCTL_INTRSTAT_ADDR 0x000c 	///../ucode/pctl.h
