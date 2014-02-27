@@ -1671,6 +1671,74 @@ static const struct net_device_ops am_netdev_ops = {
 	.ndo_validate_addr      = eth_validate_addr,
 };
 
+static int aml_ethtool_get_settings(struct net_device *dev,
+					 struct ethtool_cmd *cmd)
+{
+	struct am_net_private *np = netdev_priv(dev);
+
+	if (!np->phydev)
+		return -ENODEV;
+
+	cmd->maxtxpkt = 1;
+	cmd->maxrxpkt = 1;
+	return phy_ethtool_gset(np->phydev, cmd);
+}
+
+static int aml_ethtool_set_settings(struct net_device *dev,
+					 struct ethtool_cmd *cmd)
+{
+	struct am_net_private *np = netdev_priv(dev);
+
+	if (!np->phydev)
+		return -ENODEV;
+
+	return phy_ethtool_sset(np->phydev, cmd);
+}
+
+static int aml_ethtool_nway_reset(struct net_device *netdev)
+{
+	struct am_net_private *np = netdev_priv(netdev);
+
+	if (!np->phydev)
+		return -ENODEV;
+
+	return phy_start_aneg(np->phydev);
+}
+static void aml_eth_get_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
+{
+	struct am_net_private *np = netdev_priv(dev);
+	wol->supported = 0;
+	wol->wolopts = 0;
+	if (np->phydev)
+		phy_ethtool_get_wol(np->phydev, wol);
+}
+
+static int aml_eth_set_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
+{
+	struct am_net_private *np = netdev_priv(dev);
+	int err;
+
+	if (np->phydev == NULL)
+		return -EOPNOTSUPP;
+
+	err = phy_ethtool_set_wol(np->phydev, wol);
+	/* Given that amlogic mac works without the micrel PHY driver,
+	 * this debugging hint is useful to have.
+	 */
+	if (err == -EOPNOTSUPP)
+		printk( "The PHY does not support set_wol, was CONFIG_MICREL_PHY enabled?\n");
+	return err;
+}
+
+static const struct ethtool_ops aml_ethtool_ops = {
+	.get_settings = aml_ethtool_get_settings,
+	.set_settings = aml_ethtool_set_settings,
+	.nway_reset = aml_ethtool_nway_reset,
+	.get_link = ethtool_op_get_link,
+	.get_wol  = aml_eth_get_wol,
+	.set_wol  = aml_eth_set_wol,
+
+};
 /* --------------------------------------------------------------------------*/
 /**
  * @brief  setup_net_device
@@ -1687,7 +1755,7 @@ static int setup_net_device(struct net_device *dev)
 	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
 	dev->features = NETIF_F_GEN_CSUM;
 	dev->netdev_ops = &am_netdev_ops;
-	dev->ethtool_ops = NULL;	// &netdev_ethtool_ops;
+	dev->ethtool_ops = &aml_ethtool_ops;	// &netdev_ethtool_ops;
 	dev->watchdog_timeo = TX_TIMEOUT;
 	np->irq_mask = (1 << 16) |          //NIE: Normal Interrupt Summary Enable
 	               (1 << 15) |          //abnormal int summary
