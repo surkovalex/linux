@@ -6,7 +6,6 @@
 #ifndef __MACH_MESON6TVD_REG_ADDR_H_
 #define __MACH_MESON6TVD_REG_ADDR_H_
 
-#include "io.h"
 
 #define SECOND_DEMUX_OFFSET_0 0x50 	///../ucode/register.h
 #define P_SECOND_DEMUX_OFFSET_0 		CBUS_REG_ADDR(SECOND_DEMUX_OFFSET_0) 	///../ucode/register.h

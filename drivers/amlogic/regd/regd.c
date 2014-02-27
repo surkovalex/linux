@@ -20,6 +20,7 @@
 #include <linux/delay.h>
 
 #include <plat/io.h>
+#include <mach/io.h>
 #include <mach/register.h>
 #include <mach/clock.h>
 
