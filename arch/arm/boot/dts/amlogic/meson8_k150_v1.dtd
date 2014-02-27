@@ -80,6 +80,14 @@ void root_func(){
 		aml_reserved_end = <0x05000000>;/**reserved memory end */
 		phys_offset = <0x00000000>;
 		linux,total-memory = <0x40000000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        cma_0:region@0 {
+           region_name = "cma_0";
+           reg = <0 0x02700000>;
+           linux,contiguous-region;
+        };
 	};
 /// ***************************************************************************************
 ///	-	GIC
@@ -136,7 +144,7 @@ void root_func(){
 		compatible = "amlogic,mesonfb-ext";
 		dev_name = "mesonfb-ext";
 		status = "ok";
-	   	reserve-memory = <0x01000000  0x00100000>;
+		need-memory = <0>; /*0:no need,1:need*/
 	   	reserve-iomap = "true";
         display_size_default = <768 1024 768 3072 32>;//1024x768x4x3==0x0900000 < 0x01000000
 	 
@@ -182,6 +190,7 @@ void root_func(){
 		dev_name = "ppmgr";
 		status = "okay";
 		reserve-memory = <0x01000000>;
+		reserve-iomap = "true";
 	};
 
 /// ***************************************************************************************
@@ -194,8 +203,7 @@ void root_func(){
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
-		reserve-memory = <0x00f00000>;
-		reserve-iomap = "true";
+        linux,contiguous-region = <&cma_0>;
 	};
 
 /// ***************************************************************************************
@@ -256,8 +264,7 @@ void root_func(){
 		compatible = "amlogic,vm";
 		dev_name = "vm.0";
 		status = "okay";
-		reserve-memory = <0x01800000>;
-		reserve-iomap = "true";
+        linux,contiguous-region = <&cma_0>;
 	};
 
 /// ***************************************************************************************
