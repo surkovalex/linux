@@ -2296,8 +2296,11 @@ exit:
                 printk("VsyncEnableVideoLayer\n");
             }
         } else if (video_onoff_state == VIDEO_ENABLE_STATE_OFF_REQ) {
+        #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
             CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, VPP_VD1_PREBLEND|VPP_VD2_PREBLEND|VPP_VD2_POSTBLEND|VPP_VD1_POSTBLEND);
-
+        #else
+            CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, VPP_VD1_PREBLEND|VPP_VD2_PREBLEND|VPP_VD2_POSTBLEND);
+        #endif
             video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
             if(debug_flag& DEBUG_FLAG_BLACKOUT){
