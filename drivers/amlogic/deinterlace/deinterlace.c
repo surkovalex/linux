@@ -50,7 +50,7 @@
 #include "deinterlace.h"
 #include "deinterlace_module.h"
 
-#if defined(CONFIG_ARCH_MESON2)||defined(NEW_DI_V1)
+#if defined(CONFIG_ARCH_MESON2)||defined(NEW_DI_TV)
 #define FORCE_BOB_SUPPORT
 #else
 #define ENABLE_SPIN_LOCK_ALWAYS
@@ -64,7 +64,7 @@
     #undef RUN_REG_IN_IRQ
 #elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     #define RUN_DI_PROCESS_IN_IRQ
-    #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD)
+    #ifdef NEW_DI_TV
         #undef RUN_REG_IN_IRQ
     #else
         #define RUN_REG_IN_IRQ
@@ -3769,7 +3769,7 @@ static unsigned char pre_de_buf_config(void)
             di_pre_stru.cur_sig_fmt = di_buf->vframe->sig_fmt;
             di_pre_stru.source_change_flag = 1;
             di_pre_stru.same_field_source_flag = 0;
-#if defined(CONFIG_ARCH_MESON2)||defined (NEW_DI_V1)
+#if defined(CONFIG_ARCH_MESON2)||defined (NEW_DI_TV)
             di_set_para_by_tvinfo(vframe);
 #endif
 #ifdef NEW_DI_V1
@@ -5151,7 +5151,7 @@ static int pulldown_process(di_buf_t* di_buf, int buffer_count)
         if(di_buf->pulldown_mode != -1){
             pulldown_count++;
         }
-#if defined(CONFIG_ARCH_MESON2)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+#if defined(CONFIG_ARCH_MESON2)||defined(NEW_DI_TV)
        if(di_buf->vframe->source_type == VFRAME_SOURCE_TYPE_TUNER)                      {
                  di_buf->pulldown_mode = -1;
                  //printk("2:2 ignore\n");
@@ -5794,7 +5794,7 @@ static void di_reg_process(void)
 
             set_output_mode_info();
 /* add for di Reg re-init */
-#if defined(CONFIG_ARCH_MESON2)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+#if defined(CONFIG_ARCH_MESON2)|| defined(NEW_DI_TV)
 di_set_para_by_tvinfo(vframe);
 #endif
             if(di_printk_flag&2){
