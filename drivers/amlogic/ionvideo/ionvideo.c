@@ -167,7 +167,7 @@ static int ionvideo_size_changed(struct ionvideo_dev *dev, struct vframe_s* vf) 
     int aw = vf->width;
     int ah = vf->height;
 
-    v4l_bound_align_image(&aw, 48, MAX_WIDTH, 4, &ah, 32, MAX_HEIGHT, 0, 0);
+    v4l_bound_align_image(&aw, 48, MAX_WIDTH, 5, &ah, 32, MAX_HEIGHT, 0, 0);
     dev->c_width = aw;
     dev->c_height = ah;
     if (aw != dev->width || ah != dev->height) {
