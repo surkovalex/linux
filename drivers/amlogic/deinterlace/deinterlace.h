@@ -26,6 +26,7 @@
 
 #if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)
 #define NEW_DI_V1 //from m6tvc
+#define NEW_DI_TV
 #elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8)
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
