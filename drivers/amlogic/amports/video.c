@@ -195,6 +195,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 #define PROT_MEM_POWER_OFF() \
     do { \
         unsigned long flags; \
+        video_prot_gate_off(); \
         spin_lock_irqsave(&delay_work_lock, flags); \
         vpu_delay_work_flag |= VPU_DELAYWORK_MEM_POWER_OFF_PROT; \
         vpu_mem_power_off_count = VPU_MEM_POWEROFF_DELAY; \
@@ -263,7 +264,6 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
     do { \
          CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, \
            VPP_VD1_PREBLEND|VPP_VD2_PREBLEND|VPP_VD2_POSTBLEND|VPP_VD1_POSTBLEND ); \
-         video_prot_gate_off(); \
          VIDEO_LAYER_OFF(); \
          VD1_MEM_POWER_OFF(); \
          PROT_MEM_POWER_OFF(); \
