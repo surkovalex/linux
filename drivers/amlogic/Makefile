@@ -33,18 +33,11 @@ obj-y += cpufreq/
 obj-$(CONFIG_GPIO_AMLOGIC) += gpio/
 obj-y += pinctrl/
 
-#ifeq ($(CONFIG_AML_NEXT_GEN_NAND),y)
-#ifeq  ($(CONFIG_ARCH_MESON8),y)
-#obj-$(CONFIG_AML_NEXT_GEN_NAND) += amlnf/
-#else
-#obj-$(CONFIG_AM_NAND) += nand/
-#endif
-#ifeq ($(CONFIG_AML_NEXT_GEN_NAND),y)
-obj-$(CONFIG_AML_NEXT_GEN_NAND) += ../../../hardware/amlogic/nand/amlnf/
-#obj-$(CONFIG_AML_NEXT_NAND) += ../../../hardware/amlogic/nand/nand/aml_nftl_new/
-#else
-obj-$(CONFIG_AM_NAND) += ../../../hardware/amlogic/nand/nand/
-#endif
+ifneq ($(wildcard $(srctree)/../hardware/amlogic/nand),)
+	obj-$(CONFIG_AML_NEXT_GEN_NAND) += ../../../hardware/amlogic/nand/amlnf/
+	obj-$(CONFIG_AM_NAND) += ../../../hardware/amlogic/nand/nand/
+endif
+
 obj-y += ethernet/
 
 obj-$(CONFIG_AM_CANVAS) += canvas/
@@ -72,14 +65,12 @@ obj-$(CONFIG_AML_AUDIO_DSP) += audiodsp/
 
 obj-$(CONFIG_AML_RTC)+= rtc/
 
-#obj-$(CONFIG_GPS_POWERCTRL) += gps/
-
 obj-y += power/
 
-#obj-$(CONFIG_AM_GPIO) +=gpio/
-
 obj-y += tvin_v4l2/
-obj-$(CONFIG_TVIN) += ../../../hardware/tvin/
+ifneq ($(wildcard $(srctree)/../hardware/tvin),)
+	obj-$(CONFIG_TVIN) += ../../../hardware/tvin/
+endif
 
 obj-y += thermal/
 
@@ -96,36 +87,27 @@ obj-$(CONFIG_AM_DVB) += dvb_tv/
 obj-$(CONFIG_AM_SMARTCARD) += smartcard/
 
 obj-$(CONFIG_AM_WIFI) += wifi/
-obj-$(CONFIG_SDIO_DHD_CDC_WIFI_40181_MODULE) += ../../../hardware/wifi/broadcom/drivers/ap6xxx/broadcm_40181/
-obj-$(CONFIG_RTL8188EU) += ../../../hardware/wifi/realtek/drivers/8188eu/rtl8xxx_EU/
-obj-$(CONFIG_RTL8188EU_MP) += ../../../hardware/wifi/realtek/drivers/8188eu/rtl8xxx_EU_MP/
-obj-$(CONFIG_RTL8192CU) += ../../../hardware/wifi/realtek/drivers/8192cu/rtl8xxx_CU/
-obj-$(CONFIG_RTL8192DU) += ../../../hardware/wifi/realtek/drivers/8192du/rtl8xxx_DU/
-obj-$(CONFIG_RTL8192EU) += ../../../hardware/wifi/realtek/drivers/8192eu/rtl8192EU/
+ifneq ($(wildcard $(srctree)/../hardware/amlogic/wifi),)
+	obj-$(CONFIG_SDIO_DHD_CDC_WIFI_40181_MODULE) += ../../../hardware/wifi/broadcom/drivers/ap6xxx/broadcm_40181/
+	obj-$(CONFIG_RTL8188EU) += ../../../hardware/wifi/realtek/drivers/8188eu/rtl8xxx_EU/
+	obj-$(CONFIG_RTL8188EU_MP) += ../../../hardware/wifi/realtek/drivers/8188eu/rtl8xxx_EU_MP/
+	obj-$(CONFIG_RTL8192CU) += ../../../hardware/wifi/realtek/drivers/8192cu/rtl8xxx_CU/
+	obj-$(CONFIG_RTL8192DU) += ../../../hardware/wifi/realtek/drivers/8192du/rtl8xxx_DU/
+	obj-$(CONFIG_RTL8192EU) += ../../../hardware/wifi/realtek/drivers/8192eu/rtl8192EU/
+endif
 obj-y += bluetooth/
 obj-$(CONFIG_MESON_NFC) += nfc/
-#obj-y += camera/
-#obj-$(CONFIG_AMLOGIC_MODEM) += modem/
-#obj-$(CONFIG_AM_DEBUG) += debug/
 
-obj-$(CONFIG_VIDEO_AMLOGIC_CAPTURE)	+= camera/
-
-#obj-$(CONFIG_AM_SENSORS) += sensors/
+obj-$(CONFIG_VIDEO_AMLOGIC_CAPTURE) += camera/
 
 obj-$(CONFIG_AMLOGIC_MIPI) += mipi/
 
-#obj-$(CONFIG_FREE_SCALE) += freescale/
-
-#obj-$(CONFIG_D2D3_PROCESS) += d2d3/
-
 obj-$(CONFIG_AML_REG_DEBUG) += regd/
 
-#obj-$(CONFIG_AMLOGIC_SPI_HW_MASTER) += spi/
-
-#obj-$(CONFIG_DEFERRED_DRIVERINIT) +=  load_deferred_module/
-
-obj-$(CONFIG_UMP) += ../../../hardware/arm/gpu/ump/
-obj-$(CONFIG_MALI400) += ../../../hardware/arm/gpu/mali/
+ifneq ($(wildcard $(srctree)/../hardware/arm/gpu),)
+	obj-$(CONFIG_UMP) += ../../../hardware/arm/gpu/ump/
+	obj-$(CONFIG_MALI400) += ../../../hardware/arm/gpu/mali/
+endif
 
 obj-$(CONFIG_AMLOGIC_ION) += ion_dev/
 
