@@ -219,7 +219,7 @@ static int meson_cpufreq_target(struct cpufreq_policy *policy,
     return ret;
 }
 
-unsigned int meson_cpufreq_get(unsigned int cpu)
+static unsigned int meson_cpufreq_get(unsigned int cpu)
 {
     unsigned long rate;
     if(cpu > (NR_CPUS-1))
@@ -460,27 +460,5 @@ static void adjust_jiffies(unsigned int freqOld, unsigned int freqNew)
         per_cpu(cpu_data, i).loops_per_jiffy = loops_per_jiffy;
     }
 #endif
-}
-
-int meson_cpufreq_boost(unsigned int freq)
-{
-    int ret = 0;
-    if (!early_suspend_flag) {
-        // only allow freq boost when not in early suspend
-        //check last_cpu_rate. inaccurate but no lock
-        //printk("%u %u\n", last_cpu_rate, freq);
-        //if (last_cpu_rate < freq) {
-            if ((clk_get_rate(cpufreq.armclk) / 1000) < freq) {
-                mutex_lock(&meson_cpufreq_mutex);
-                if ((clk_get_rate(cpufreq.armclk) / 1000) < freq) {
-                    ret = meson_cpufreq_target_locked(NULL,
-                                                      freq,
-                                                      CPUFREQ_RELATION_H);
-                }
-                mutex_unlock(&meson_cpufreq_mutex);
-            }
-        //}
-    }
-    return ret;
 }
 
