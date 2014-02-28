@@ -1,5 +1,5 @@
-#ifndef _GSLX680_H_
-#define _GSLX680_H_
+#ifndef _GSLX680_COMPATIBLE_H_
+#define _GSLX680_COMPATIBLE_H_
 
 #include "linux/amlogic/input/common.h"
 #include "linux/amlogic/input/aml_gsl_common.h"
