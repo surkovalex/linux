@@ -228,16 +228,17 @@ EXPORT_SYMBOL_GPL(aml1216_power_off);
 int aml1216_set_usb_current_limit(int limit)
 {
     int val;
-    if ((limit < 0 || limit > 2000) && (limit != -1)) {
+    if ((limit < 100 || limit > 1600) && (limit != -1)) {
        AML_DBG("%s, wrong usb current limit:%d\n", __func__, limit); 
        return -1;
     }
     if (limit == -1) {                                       // -1 means not limit, so set limit to max
-        limit = 2000;    
+        limit = 1600;    
     }
-    val = (limit-500)/ 100;
+    val = (limit-100)/ 100;
+    val ^= 0x04;                                            // bit 2 is reverse bit
     
-    AML_DBG("%s, set usb current limit to %d\n", __func__, limit);
+    AML_DBG("%s, set usb current limit to %d, bit:%02x\n", __func__, limit, val);
     return aml1216_set_bits(0x002D, val, 0x0f);
     
 }
