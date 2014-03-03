@@ -13,10 +13,27 @@
 #include <linux/amlogic/aml_dvfs.h>
 #endif
 
+#ifdef CONFIG_AMLOGIC_USB
+static struct notifier_block aml1212_otg_nb;                            // notifier_block for OTG issue
+static struct notifier_block aml1212_usb_nb;                            // notifier_block for USB charger issue
+extern int dwc_otg_power_register_notifier(struct notifier_block *nb);
+extern int dwc_otg_power_unregister_notifier(struct notifier_block *nb);
+extern int dwc_otg_charger_detect_register_notifier(struct notifier_block *nb);
+extern int dwc_otg_charger_detect_unregister_notifier(struct notifier_block *nb);
+#endif
+
+#ifdef CONFIG_AML1216
 struct i2c_client *g_aml1216_client = NULL; 
+#endif
+#ifdef CONFIG_AML1212
+struct i2c_client *g_aml1212_client = NULL; 
+#endif
 static const struct i2c_device_id aml_pmu_id_table[] = {
 #ifdef CONFIG_AML1216
 	{ AML1216_DRIVER_NAME, 0},
+#endif
+#ifdef CONFIG_AML1212
+	{ "aml1212", 1},
 #endif
 	{},
 };
@@ -252,6 +269,18 @@ static int aml_pmu_probe(struct i2c_client *client,
         aml_pmu_register_driver(&aml1216_pmu_driver);
     }
 #endif
+#ifdef CONFIG_AML1212
+    if (type->driver_data == 1) {
+        g_aml1212_client = client;     
+        aml_pmu_register_driver(&aml1212_driver);
+    #ifdef CONFIG_AMLOGIC_USB
+        aml1212_otg_nb.notifier_call = aml1212_otg_change;
+        aml1212_usb_nb.notifier_call = aml1212_usb_charger;
+        dwc_otg_power_register_notifier(&aml1212_otg_nb);
+        dwc_otg_charger_detect_register_notifier(&aml1212_usb_nb);
+    #endif
+    }
+#endif
     pdev = platform_device_alloc(sub_type, 0);
     if (pdev == NULL) {
         printk(">> %s, allocate platform device failed\n", __func__);
@@ -282,6 +311,12 @@ static int aml_pmu_remove(struct i2c_client *client)
     aml_dvfs_unregister_driver(&aml1216_dvfs_driver);
 #endif
     aml_pmu_clear_driver();
+#endif
+#ifdef CONFIG_AML1212
+    g_aml1212_client = NULL;
+    aml_pmu_clear_driver();
+    dwc_otg_power_unregister_notifier(&aml1212_otg_nb);
+    dwc_otg_charger_detect_unregister_notifier(&aml1212_usb_nb);
 #endif
     platform_device_del(pdev);
 

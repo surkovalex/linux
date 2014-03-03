@@ -40,17 +40,20 @@
 #endif
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/wakelock_android.h>
 #include <linux/earlysuspend.h>
 #endif
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct early_suspend aml_pmu_early_suspend;
-int early_suspend_flag = 0;
+static int    in_early_suspend = 0; 
+static int    early_power_status = 0;
+static struct wake_lock aml1212_lock;
 #endif
 
 #define MAX_BUF         100
 #define CHECK_DRIVER()      \
-    if (!g1212_supply) {    \
+    if (!g_aml1212_client) {    \
         AML_PMU_DBG("driver is not ready right now, wait...\n");   \
         dump_stack();       \
         return -ENODEV;     \
@@ -59,6 +62,14 @@ int early_suspend_flag = 0;
 #define CHECK_REGISTER_TEST     1
 #if CHECK_REGISTER_TEST
 int register_wrong_flag = 0;
+#endif
+
+#ifdef CONFIG_AMLOGIC_USB
+struct later_job {
+    int flag;
+    int value;
+};
+static struct later_job aml1212_late_job = {};
 #endif
 
 static struct amlogic_pmu_init  *aml1212_init      = NULL;
@@ -70,7 +81,6 @@ int      power_flag     = 0;
 int      pmu_version    = 0;
 
 struct aml1212_supply *g1212_supply  = NULL;
-EXPORT_SYMBOL_GPL(g1212_supply);
 
 int aml_pmu_write(int add, uint8_t val)
 {
@@ -87,7 +97,7 @@ int aml_pmu_write(int add, uint8_t val)
     };
 
     CHECK_DRIVER();
-    pdev = to_i2c_client(g1212_supply->master);
+    pdev = g_aml1212_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -116,7 +126,7 @@ int aml_pmu_write16(int add, uint16_t val)
     };
 
     CHECK_DRIVER();
-    pdev = to_i2c_client(g1212_supply->master);
+    pdev = g_aml1212_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -146,7 +156,7 @@ int aml_pmu_writes(int add, uint8_t *buff, int len)
     };
 
     CHECK_DRIVER();
-    pdev = to_i2c_client(g1212_supply->master);
+    pdev = g_aml1212_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -181,7 +191,7 @@ int aml_pmu_read(int add, uint8_t *val)
     };
 
     CHECK_DRIVER();
-    pdev = to_i2c_client(g1212_supply->master);
+    pdev = g_aml1212_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -215,7 +225,7 @@ int aml_pmu_read16(int add, uint16_t *val)
     };
 
     CHECK_DRIVER();
-    pdev = to_i2c_client(g1212_supply->master);
+    pdev = g_aml1212_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -249,7 +259,7 @@ int aml_pmu_reads(int add, uint8_t *buff, int len)
     };
 
     CHECK_DRIVER();
-    pdev = to_i2c_client(g1212_supply->master);
+    pdev = g_aml1212_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -1271,6 +1281,64 @@ succeed:
     return ret;
 }
 
+#ifdef CONFIG_AMLOGIC_USB
+int aml1212_otg_change(struct notifier_block *nb, unsigned long value, void *pdata)
+{
+    AML_PMU_DBG("%s, val:%d\n", __func__, value);
+    if (value) {        // open OTG
+        if (aml1212_init->vbus_dcin_short_connect) {
+            aml_pmu_set_dcin(0);                                            // Disable DCIN
+        }    
+        aml_pmu_set_bits(0x0027, 0x02, 0x02);                               // close uv fault of boost
+        udelay(100);
+        aml_pmu_write(0x0019, 0xD0);                                        // Enable boost output
+    } else {
+        aml_pmu_write(0x0019, 0x10);                                        // Disable boost output
+        aml_pmu_set_bits(0x0027, 0x00, 0x02);                               // open uv fault of boost
+    }
+    return 0;
+}
+
+int aml1212_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata)
+{
+    if (!g1212_supply) {
+        AML_PMU_DBG("%s, driver is not ready, do it later\n", __func__);
+        aml1212_late_job.flag  = 1;
+        aml1212_late_job.value = value;
+        return 0;
+    }
+    switch (value) {
+    case USB_BC_MODE_SDP:                                               // pc
+        if (aml1212_init->vbus_dcin_short_connect) {
+            aml_pmu_set_dcin(0);
+        }    
+        if (aml_pmu_battery && aml_pmu_battery->pmu_usbcur_limit) {
+            aml_pmu_set_usb_current_limit(aml_pmu_battery->pmu_usbcur, value);
+        }
+        break;
+
+    case USB_BC_MODE_DCP:                                               // charger
+    case USB_BC_MODE_CDP:                                               // PC + charger
+    case USB_BC_MODE_DISCONNECT:                                        // disconnect
+        if (aml1212_init->vbus_dcin_short_connect) {
+            if (value != USB_BC_MODE_DISCONNECT) {
+                aml_pmu_set_dcin(1);        /* only open DCIN when detect charger       */
+            } else {
+                aml_pmu_set_dcin(0);        /* dcin should close when usb disconnect    */    
+            }    
+        }    
+        if (aml_pmu_battery) {
+            aml_pmu_set_usb_current_limit(900, value);
+        }
+        break;
+
+    default:
+        break;
+    }
+    return 0;
+}
+#endif
+
 static int aml_cal_ocv(int ibat, int vbat, int dir)
 {
     int result;
@@ -1521,6 +1589,14 @@ static void aml_pmu_charging_monitor(struct work_struct *work)
             charger->resume = 0;
         }
         power_supply_changed(&supply->batt);
+    #ifdef CONFIG_HAS_EARLYSUSPEND
+        if (in_early_suspend) {
+            wake_lock(&aml1212_lock);
+            AML_PMU_DBG("%s, usb power status changed in early suspend, wake up now\n", __func__);
+            input_report_key(aml_pmu_power_key, KEY_POWER, 1);                        // assume power key pressed 
+            input_sync(aml_pmu_power_key);
+        }
+    #endif
     }
 
     /* reschedule for the next time */
@@ -1530,7 +1606,12 @@ static void aml_pmu_charging_monitor(struct work_struct *work)
 #if defined CONFIG_HAS_EARLYSUSPEND
 static void aml_pmu_earlysuspend(struct early_suspend *h)
 {
-    // add charge current limit code here
+    struct  aml1212_supply *supply = (struct aml1212_supply *)h->param;
+
+    if (aml_pmu_battery) {
+        early_power_status = supply->aml_charger.ext_valid;
+    }
+    in_early_suspend = 1;
 }
 
 static void aml_pmu_lateresume(struct early_suspend *h)
@@ -1538,7 +1619,8 @@ static void aml_pmu_lateresume(struct early_suspend *h)
     struct  aml1212_supply *supply = (struct aml1212_supply *)h->param;
 
     schedule_work(&supply->work.work);                                      // update for upper layer 
-    // add charge current limit code here
+    in_early_suspend = 0;
+    wake_unlock(&aml1212_lock);
 }
 #endif
 
@@ -1793,8 +1875,15 @@ static int aml_pmu_battery_probe(struct platform_device *pdev)
     aml_pmu_early_suspend.level   = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 2;
     aml_pmu_early_suspend.param   = supply;
     register_early_suspend(&aml_pmu_early_suspend);
+    wake_lock_init(&aml1212_lock, WAKE_LOCK_SUSPEND, "aml1212");
 #endif
 
+#ifdef CONFIG_AMLOGIC_USB
+    if (aml1212_late_job.flag) {     // do later job for usb charger detect
+        aml1212_usb_charger(NULL, aml1212_late_job.value, NULL);
+        aml1212_late_job.flag = 0;
+    }
+#endif
     power_supply_changed(&supply->batt);                   // update battery status
     
     aml_pmu_set_gpio(1, 0);                                 // open LCD backlight, test
@@ -1864,6 +1953,16 @@ static int aml_pmu_suspend(struct platform_device *dev, pm_message_t state)
     if (api && api->pmu_suspend_process) {
         api->pmu_suspend_process(charger);
     }
+#ifdef CONFIG_HAS_EARLYSUSPEND
+    if (early_power_status != supply->aml_charger.ext_valid) {
+        AML_PMU_DBG("%s, power status changed, prev:%x, now:%x, exit suspend process\n",
+                    __func__, early_power_status, supply->aml_charger.ext_valid);
+        input_report_key(aml_pmu_power_key, KEY_POWER, 1);              // assume power key pressed 
+        input_sync(aml_pmu_power_key);
+        return -1;
+    }
+    in_early_suspend = 0;
+#endif
 
     return 0;
 }

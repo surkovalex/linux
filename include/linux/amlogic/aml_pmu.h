@@ -37,7 +37,7 @@ struct amlogic_pmu_init {
 
 #ifdef CONFIG_AML1212
 #define AML1212_ADDR                    0x35
-#define AML1212_SUPPLY_NAME             "aml1212-supplyer"
+#define AML1212_SUPPLY_NAME             "aml1212"
 #define AML1212_IRQ_NAME                "aml1212-irq"
 #define AML_PMU_IRQ_NUM                 INT_GPIO_2
 #define AML1212_SUPPLY_ID               0
@@ -145,7 +145,10 @@ void aml_pmu_set_voltage(int dcdc, int voltage);                        // set d
 void aml_pmu_poweroff(void);                                            // power off PMU
 
 void aml_pmu_clear_coulomb(void);                                       // clear coulomb register
-extern struct aml1212_supply *g1212_supply;                             // export global charger struct
+extern struct i2c_client *g_aml1212_client;                              // i2c client for register RW
+extern struct aml_pmu_driver aml1212_driver;
+extern int aml1212_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata);
+extern int aml1212_otg_change(struct notifier_block *nb, unsigned long value, void *pdata);
 #endif  /* CONFIG_AML1212 */
 
 #ifdef CONFIG_AML1216
