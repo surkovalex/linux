@@ -79,6 +79,7 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_LEVEL_DESC, LOG_DEFAULT_MASK_DESC);
 #define PICINFO_PROG        0x8000
 #define PICINFO_RPT_FIRST   0x4000
 #define PICINFO_TOP_FIRST   0x2000
+#define PICINFO_FRAME       0x1000
 
 #define SEQINFO_EXT_AVAILABLE   0x80000000
 #define SEQINFO_PROG            0x00010000
@@ -101,12 +102,20 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_LEVEL_DESC, LOG_DEFAULT_MASK_DESC);
 #define DEC_CONTROL_FLAG_FORCE_2500_544_576_INTERLACE  0x0010
 #define DEC_CONTROL_FLAG_FORCE_2500_480_576_INTERLACE  0x0020
 #define DEC_CONTROL_INTERNAL_MASK                      0x0fff
-#define DEC_CONTROL_FLAG_FORCE_3_TO_2_PULLDOWN_FORCE_PROG	0x1000
+#define DEC_CONTROL_FLAG_FORCE_SEQ_INTERLACE           0x1000
+
+#define INTERLACE_SEQ_ALWAYS
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6  
 #define NV21
 #endif
 #define CCBUF_SIZE		5*1024
+
+enum {
+    FRAME_REPEAT_TOP,
+    FRAME_REPEAT_BOT,
+    FRAME_REPEAT_NONE
+};
 
 static vframe_t *vmpeg_vf_peek(void*);
 static vframe_t *vmpeg_vf_get(void*);
@@ -151,6 +160,8 @@ static struct timer_list recycle_timer;
 static u32 stat;
 static u32 buf_start, buf_size, ccbuf_phyAddress;
 static DEFINE_SPINLOCK(lock);
+
+static u32 frame_rpt_state;
 
 /* for error handling */
 static s32 frame_force_skip_flag = 0;
@@ -290,8 +301,8 @@ static irqreturn_t vmpeg12_isr(int irq, void *dev_id)
             (frame_dur == 3840)) {
             frame_prog = 0;
         }
-        else if (dec_control & DEC_CONTROL_FLAG_FORCE_3_TO_2_PULLDOWN_FORCE_PROG) {
-            frame_prog |= PICINFO_PROG;
+        else if (dec_control & DEC_CONTROL_FLAG_FORCE_SEQ_INTERLACE) {
+            frame_prog = 0;
         }
 
         if (frame_prog & PICINFO_PROG) {
@@ -320,13 +331,6 @@ static irqreturn_t vmpeg12_isr(int irq, void *dev_id)
                 vf->duration_pulldown = 0; // no pull down
 
             } else {
-                if ((seqinfo & SEQINFO_EXT_AVAILABLE) && 
-                    ((seqinfo & SEQINFO_PROG) == 0) &&
-                    (info & PICINFO_RPT_FIRST)) {
-                    // avoid interlace/progressive mixing and post all progressive frames in this case
-                    dec_control |= DEC_CONTROL_FLAG_FORCE_3_TO_2_PULLDOWN_FORCE_PROG;
-                }
-
                 vf->duration_pulldown = (info & PICINFO_RPT_FIRST) ?
                                         vf->duration >> 1 : 0;
             }
@@ -349,13 +353,34 @@ static irqreturn_t vmpeg12_isr(int irq, void *dev_id)
 
         } else {
             u32 index = ((reg & 7) - 1) & 3;
+            int first_field_type = (info & PICINFO_TOP_FIRST) ?
+                    VIDTYPE_INTERLACE_TOP : VIDTYPE_INTERLACE_BOTTOM;
+
+#ifdef INTERLACE_SEQ_ALWAYS
+            // once an interlaced sequence exist, always force interlaced type
+            // to make DI easy.
+            dec_control |= DEC_CONTROL_FLAG_FORCE_SEQ_INTERLACE;
+#endif
+
+            if (info & PICINFO_FRAME) {
+                frame_rpt_state = (info & PICINFO_TOP_FIRST) ? FRAME_REPEAT_TOP : FRAME_REPEAT_BOT;
+            } else {
+                if (frame_rpt_state == FRAME_REPEAT_TOP) {
+                    first_field_type = VIDTYPE_INTERLACE_TOP;
+                } else if (frame_rpt_state == FRAME_REPEAT_BOT) {
+                    first_field_type = VIDTYPE_INTERLACE_BOTTOM;
+                }
+                frame_rpt_state = FRAME_REPEAT_NONE;
+            }
+
             vf = vfq_pop(&newframe_q);
 
             vfbuf_use[index] = 2;
 
             set_frame_info(vf);
+
             vf->index = index;
-            vf->type = (info & PICINFO_TOP_FIRST) ?
+            vf->type = (first_field_type == VIDTYPE_INTERLACE_TOP) ?
                        VIDTYPE_INTERLACE_TOP : VIDTYPE_INTERLACE_BOTTOM;
 #ifdef NV21
             vf->type |= VIDTYPE_VIU_NV21;
@@ -381,7 +406,7 @@ static irqreturn_t vmpeg12_isr(int irq, void *dev_id)
 
             vf->index = index;
 
-            vf->type = (info & PICINFO_TOP_FIRST) ?
+            vf->type = (first_field_type == VIDTYPE_INTERLACE_TOP) ?
                        VIDTYPE_INTERLACE_BOTTOM : VIDTYPE_INTERLACE_TOP;
 #ifdef NV21
             vf->type |= VIDTYPE_VIU_NV21;
