@@ -79,7 +79,7 @@ void root_func(){
 		#address-cells = <1>;
 		#size-cells = <1>;
 		device_type = "memory";
-		aml_reserved_start = <0x06000000>; /**reserved memory start */
+		aml_reserved_start = <0x06000000>; /**reserved memory start */ //reverved 96M
 		aml_reserved_end = <0x05000000>;/**reserved memory end */
 		phys_offset = <0x00000000>;
 		linux,total-memory = <0x40000000>;
@@ -145,7 +145,7 @@ void root_func(){
                 vmode = <3>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
 		scale_mode = <1>; /*0:default 1:new*/
 		4k2k_fb = <0>;
- 		display_size_default = <1920 1080 1920 3240 32>;
+ 		display_size_default = <1920 1080 1920 3240 32>; //1920*1080*4*3 = 0x17BB000
 	};
 	
 //$$ DEVICE="deinterlace"
@@ -155,7 +155,7 @@ void root_func(){
 		compatible = "amlogic,deinterlace";
 		dev_name = "deinterlace";
 		status = "ok";
-		reserve-memory = <0x02300000>; 	 
+		reserve-memory = <0x02300000>; 	 // 35M
 	};
 
 /// ***************************************************************************************
@@ -168,7 +168,7 @@ void root_func(){
 		compatible = "amlogic,mesonstream";
 		dev_name = "mesonstream.0";
 		status = "okay";
-		reserve-memory = <0x02000000>;
+		reserve-memory = <0x02000000>; // 32M
 		reserve-iomap = "true";
 	};
 
@@ -182,7 +182,7 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-                reserve-memory = <0x04000000>;
+                reserve-memory = <0x04000000>; // 64M
 //		reserve-iomap = "true";
 		linux,contiguous-region = <&mem_4k2k_decoder>;
         };
@@ -197,7 +197,7 @@ void root_func(){
 		compatible = "amlogic,ppmgr";
 		dev_name = "ppmgr";
 		status = "okay";
-		reserve-memory = <0x03000000>;
+		reserve-memory = <0x01000000>; // 16M
 	};
 
 /// ***************************************************************************************
@@ -270,7 +270,7 @@ void root_func(){
         status = "ok";
         share-memory-name = "ppmgr0";
         share-memory-offset = <0>;
-        share-memory-size = <0x03000000>;
+        share-memory-size = <0x01000000>; //16M
     };
 /// ***************************************************************************************
 ///	-	DISP&MM-Vout
