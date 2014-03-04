@@ -72,6 +72,8 @@ ifneq ($(wildcard $(srctree)/../hardware/tvin),)
 	obj-$(CONFIG_TVIN) += ../../../hardware/tvin/
 endif
 
+obj-$(CONFIG_AML_EXT_HDMIIN) += ext_hdmiin/
+
 obj-y += thermal/
 
 
