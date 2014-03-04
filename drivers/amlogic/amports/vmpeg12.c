@@ -498,6 +498,7 @@ static void vmpeg12_ppmgr_reset(void)
 static void vmpeg_put_timer_func(unsigned long arg)
 {
     struct timer_list *timer = (struct timer_list *)arg;
+    int fatal_reset = 0;
 
     receviver_start_e state = RECEIVER_INACTIVE ;
     if (vf_get_receiver(PROVIDER_NAME)){
@@ -510,27 +511,36 @@ static void vmpeg_put_timer_func(unsigned long arg)
          state  = RECEIVER_INACTIVE ;
     }
 
-    if (((READ_VREG(MREG_WAIT_BUFFER) != 0) &&
+    if (READ_VREG(MREG_FATAL_ERROR) == 1) {
+        fatal_reset = 1;
+    }
+
+    if ((READ_VREG(MREG_WAIT_BUFFER) != 0) &&
          (vfq_empty(&recycle_q)) &&
          (vfq_empty(&display_q)) &&
-         (state == RECEIVER_INACTIVE)) ||
-        (READ_VREG(MREG_FATAL_ERROR) == 1)) {
-        printk("$$$$$$decoder is waiting for buffer or fatal reset.\n");
+         (state == RECEIVER_INACTIVE)) {
         if (++wait_buffer_counter > 4) {
-            amvdec_stop();
-
-#ifdef CONFIG_POST_PROCESS_MANAGER
-            vmpeg12_ppmgr_reset();
-#else
-            vf_light_unreg_provider(&vmpeg_vf_prov);
-            vmpeg12_local_init();
-            vf_reg_provider(&vmpeg_vf_prov);
-#endif
-            vmpeg12_prot_init();
-            amvdec_start();
+            fatal_reset = 1;
         }
+
     } else {
         wait_buffer_counter = 0;
+    }
+
+    if (fatal_reset && vfq_empty(&display_q)) {
+        printk("$$$$$$decoder is waiting for buffer or fatal reset.\n");
+
+        amvdec_stop();
+
+#ifdef CONFIG_POST_PROCESS_MANAGER
+        vmpeg12_ppmgr_reset();
+#else
+        vf_light_unreg_provider(&vmpeg_vf_prov);
+        vmpeg12_local_init();
+        vf_reg_provider(&vmpeg_vf_prov);
+#endif
+        vmpeg12_prot_init();
+        amvdec_start();
     }
 
     while (!vfq_empty(&recycle_q) && (READ_VREG(MREG_BUFFERIN) == 0)) {
@@ -653,7 +663,7 @@ static void vmpeg12_canvas_init(void)
 
 static void vmpeg12_prot_init(void)
 {
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD)
     int save_reg = READ_VREG(POWER_CTL_VLD);
 
     WRITE_VREG(DOS_SW_RESET0, (1<<7) | (1<<6) | (1<<4));
@@ -664,8 +674,8 @@ static void vmpeg12_prot_init(void)
 
     WRITE_VREG(POWER_CTL_VLD, save_reg);
 
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD)
-    WRITE_VREG(DOS_SW_RESET0, (1<<7) | (1<<6));
+#elif (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6)
+    WRITE_VREG(DOS_SW_RESET0, (1<<7) | (1<<6) | (1<<4));
     WRITE_VREG(DOS_SW_RESET0, 0);
 #else
     WRITE_MPEG_REG(RESET0_REGISTER, RESET_IQIDCT | RESET_MC);

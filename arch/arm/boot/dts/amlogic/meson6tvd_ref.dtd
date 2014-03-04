@@ -59,6 +59,12 @@
 		aml_reserved_end = <0x84000000>;
 		phys_offset = <0x80000000>;
 		linux,total-memory = <0x40000000>;
+
+                mem_4k2k_decoder: region@1 {
+                        region_name = "cma_4k2k";
+                        linux,contiguous-region;
+                        reg = <0x00000000 0x0c000000>;
+                };
 	};
 
 	gic:interrupt-controller {
@@ -151,23 +157,23 @@
 		compatible = "amlogic,mesonstream";
 		dev_name = "mesonstream.0";
 		status = "okay";
-		reserve-memory = <0x04000000 0x00a00000>;
+		reserve-memory = <0x00a00000>;
 		reserve-iomap = "true";
 	};
 
 /// ***************************************************************************************
 ///     -       DISP&MM-A/V stream
 //$$ MODULE = "DISP&MM-A/V video dec"
-//$$ DEVICE = "vdec"
+//$$ DEVICE="vdec"
 //$$ L2 PROP_STR = "status"
-//$$ L3 PROP_U32 4 = "reg"
-	vdec {
-		compatible = "amlogic,vdec";
-		dev_name = "vdec.0";
-		status = "okay";
-		reserve-memory = <0x04000000>; // 64M
-//		reserve-iomap = "true";
-	};
+//$$ L3 PROP_U32 4 ="reg"
+        vdec{
+                compatible = "amlogic,vdec";
+                dev_name = "vdec.0";
+                status = "okay";
+                reserve-memory = <0x04000000>; // 64M
+		linux,contiguous-region = <&mem_4k2k_decoder>;
+        };
 
 /// ***************************************************************************************
 ///	-	DISP&MM-PostProcess
