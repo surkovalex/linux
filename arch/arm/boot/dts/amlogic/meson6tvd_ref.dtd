@@ -138,6 +138,20 @@
 	};
 
 /// ***************************************************************************************
+///     -       DISP&MM-A/V stream
+//$$ MODULE = "DISP&MM-A/V video dec"
+//$$ DEVICE = "vdec"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 4 = "reg"
+	vdec {
+		compatible = "amlogic,vdec";
+		dev_name = "vdec.0";
+		status = "okay";
+		reserve-memory = <0x04000000>; // 64M
+//		reserve-iomap = "true";
+	};
+
+/// ***************************************************************************************
 ///	-	DISP&MM-PostProcess
 //$$ MODULE="DISP&MM-PostProcess"
 //$$ DEVICE="ppmgr"
