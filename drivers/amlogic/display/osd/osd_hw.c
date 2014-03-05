@@ -806,8 +806,7 @@ void osd_free_scale_enable_hw(u32 index,u32 enable)
 				osd_set_scan_mode(index);
 				add_to_update_list(index,OSD_COLOR_MODE);
 				add_to_update_list(index,DISP_GEOMETRY);
-				add_to_update_list(index,DISP_FREESCALE_ENABLE);	
-				add_to_update_list(OSD2,DISP_FREESCALE_ENABLE);
+				add_to_update_list(index,DISP_FREESCALE_ENABLE);
 			}
 		}else{
 			add_to_update_list(OSD2,DISP_GEOMETRY);
@@ -1755,7 +1754,7 @@ static   void  osd1_update_enable(void)
 static   void  osd2_update_enable(void)
 {
 	if (osd_hw.free_scale_mode[OSD2]){
-		if (osd_hw.enable[OSD1] == ENABLE){
+		if (osd_hw.enable[OSD2] == ENABLE){
 			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
 			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_POSTBLEND_EN);
 		}else{
