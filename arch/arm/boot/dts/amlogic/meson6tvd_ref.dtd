@@ -34,6 +34,24 @@
 		};
 	};
 
+/// ***************************************************************************************
+///	-	Cache
+//$$ MODULE="Cache"
+//$$ DEVICE="cache"
+	cache-controller {
+		compatible = "arm,meson-pl310-cache";
+		reg = <0xc4200000 0x1000>;
+		cache-unified;
+		cache-level = <2>;
+		aux-instruction_prefetch;
+		aux-data_prefetch;
+		aux-ns_lockdown;
+		aux-ns_int_ctrl;
+		aux-share_override;
+		aux-cache_replace_policy_round_robin;
+		prefetch-prefetch_offset = <6>;
+	};
+
 	/*start memory config*/
 	memory {
 		device_type = "memory";
