@@ -497,11 +497,28 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
         }
 
         if (use_alloc) {
-            buffer_spec[i].alloc_count = PAGE_ALIGN((mb_total << 8) + (mb_total << 7)) / PAGE_SIZE;
-            buffer_spec[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, buffer_spec[i].alloc_count, 0);
+            int page_count = PAGE_ALIGN((mb_total << 8) + (mb_total << 7)) / PAGE_SIZE;
+
+            if (buffer_spec[i].alloc_pages) {
+                if (page_count != buffer_spec[i].alloc_count) {
+                    printk("Delay released CMA buffer %d\n", i);
+
+                    dma_release_from_contiguous(cma_dev, buffer_spec[i].alloc_pages, buffer_spec[i].alloc_count);
+                    buffer_spec[i].alloc_pages = NULL;
+                    buffer_spec[i].alloc_count = 0;
+                } else {
+                    printk("Re-use CMA buffer %d\n", i);
+                }
+            }
+
+            if (!buffer_spec[i].alloc_pages) {
+                buffer_spec[i].alloc_count = page_count;
+                buffer_spec[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, page_count, 0);
+            } 
             alloc_count++;
 
             if (!buffer_spec[i].alloc_pages) {
+                buffer_spec[i].alloc_count = 0;
                 printk("264 4K2K decoder memory allocation failed %d.\n", i);
                 mutex_unlock(&vh264_4k2k_mutex);
                 return -1;
@@ -510,6 +527,12 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
             addr = page_to_phys(buffer_spec[i].alloc_pages);
             dpb_addr = addr;
         } else {
+            if (buffer_spec[i].alloc_pages) {
+                dma_release_from_contiguous(cma_dev, buffer_spec[i].alloc_pages, buffer_spec[i].alloc_count);
+                buffer_spec[i].alloc_pages = NULL;
+                buffer_spec[i].alloc_count = 0;
+            }
+
             addr = dpb_addr;
             dpb_addr += dpb_size;
         }
@@ -922,7 +945,9 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
     if (((READ_VREG(VLD_MEM_VIFIFO_CONTROL) & 0x100) == 0) && // decoder has input
         (state == RECEIVER_INACTIVE) &&                       // receiver has no buffer to recycle
         (kfifo_is_empty(&display_q)) &&                       // no buffer in display queue
-        (kfifo_is_empty(&recycle_q))) {                       // no buffer to recycle
+        (kfifo_is_empty(&recycle_q)) &&                       // no buffer to recycle
+        (READ_VREG(MS_ID) & 0x100) &&
+        (READ_VREG(VDEC2_MS_ID) & 0x100)) {                   // with both decoder have started decoding
         if (++error_watchdog_count == ERROR_RESET_COUNT) {    // and it lasts for a while
             printk("H264 4k2k decoder fatal error watchdog.\n");
             fatal_error = 0x10;
@@ -934,7 +959,6 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
         vframe_t *vf;
         if (kfifo_get(&recycle_q, &vf)) {
             if ((vf->index >= 0) && (--vfbuf_use[vf->index] == 0)) {
-//printk("recycle %d\n", vf->index);
                 WRITE_VREG(BUFFER_RECYCLE, vf->index + 1);
                 vf->index = -1;
             }
@@ -1244,11 +1268,6 @@ static s32 vh264_4k2k_init(void)
 
     stat |= STAT_TIMER_INIT;
 
-    for (i=0; i<ARRAY_SIZE(buffer_spec); i++) {
-        buffer_spec[i].alloc_pages = NULL;
-        buffer_spec[i].alloc_count = 0;
-    }
-
     vh264_4k2k_local_init();
 
     amvdec_enable();
@@ -1331,6 +1350,14 @@ static s32 vh264_4k2k_init(void)
 static int vh264_4k2k_stop(void)
 {
     int i;
+    u32 disp_addr = 0xffffffff;
+
+    if (is_vpp_postblend()) {
+        canvas_t cur_canvas;
+
+        canvas_read((READ_VCBUS_REG(VD1_IF0_CANVAS0) & 0xff), &cur_canvas);
+        disp_addr = cur_canvas.addr;
+    }
 
     if (stat & STAT_VDEC_RUN) {
         amvdec_stop();
@@ -1361,9 +1388,17 @@ static int vh264_4k2k_stop(void)
 
     for (i=0; i<ARRAY_SIZE(buffer_spec); i++) {
         if (buffer_spec[i].alloc_pages) {
-            dma_release_from_contiguous(cma_dev, buffer_spec[i].alloc_pages, buffer_spec[i].alloc_count);
-            buffer_spec[i].alloc_pages = NULL;
-            buffer_spec[i].alloc_count = 0;
+            if (disp_addr == page_to_phys(buffer_spec[i].alloc_pages)) {
+                printk("Skip releasing CMA buffer %d\n", i);
+            } else {
+                dma_release_from_contiguous(cma_dev, buffer_spec[i].alloc_pages, buffer_spec[i].alloc_count);
+                buffer_spec[i].alloc_pages = NULL;
+                buffer_spec[i].alloc_count = 0;
+            }
+        }
+
+        if (buffer_spec[i].y_addr == disp_addr) {
+            printk("4K2K decoder stop, keeping buffer index = %d\n", i);
         }
     }
 
@@ -1389,12 +1424,13 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
     work_space_adr = mem->start;
     decoder_buffer_start = mem->start + DECODER_WORK_SPACE_SIZE;
     decoder_buffer_end = mem->end + 1;
+
     printk("H.264 4k2k decoder mem resource 0x%x -- 0x%x\n", decoder_buffer_start, decoder_buffer_end);
 
     memcpy(&vh264_4k2k_amstream_dec_info, (void *)mem[1].start, sizeof(vh264_4k2k_amstream_dec_info));
 
     cma_dev = (struct device *)mem[2].start;
-printk("cma_dev = %p\n", cma_dev);
+
     vdec_poweron(VDEC_2);
 
     vdec_power_mode(1);
