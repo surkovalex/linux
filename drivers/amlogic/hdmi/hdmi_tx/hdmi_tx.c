@@ -81,6 +81,8 @@ static void hdmitx_early_suspend(struct early_suspend *h)
     phdmi->output_blank_flag = 0;
     phdmi->HWOp.CntlDDC(phdmi, DDC_HDCP_OP, HDCP_OFF);
     phdmi->HWOp.CntlDDC(phdmi, DDC_HDCP_OP, DDC_RESET_HDCP);
+    phdmi->HWOp.CntlConfig(&hdmitx_device, CONF_CLR_AVI_PACKET, 0);
+    phdmi->HWOp.CntlConfig(&hdmitx_device, CONF_CLR_VSDB_PACKET, 0);
     hdmi_print(IMP, SYS "HDMITX: early suspend\n");
 }
 
