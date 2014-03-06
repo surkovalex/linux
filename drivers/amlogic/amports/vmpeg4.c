@@ -773,7 +773,6 @@ static void vmpeg4_local_init(void)
 static s32 vmpeg4_init(void)
 {
     int trickmode_fffb = 0;
-    dma_addr_t buf_start_map;
 
     query_video_status(0, &trickmode_fffb);
 

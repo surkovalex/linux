@@ -641,7 +641,7 @@ static int limited_delay_check(struct file *file,
 			return 0;
 	}
     write_size = min(stbuf_space(vbuf), stbuf_space(abuf));
-    write_size = min(count, write_size);
+    write_size = min((int)count, write_size);
 	return write_size;
 }
 

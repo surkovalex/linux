@@ -170,6 +170,7 @@ static int outmixer_ev(struct snd_soc_dapm_widget *w,
     snd_soc_update_bits(codec, WM8960_POWER3, mask, mask);
     return 0;
 }
+#if 0
 static int classD_ev(struct snd_soc_dapm_widget *w,
     struct snd_kcontrol *kcontrol, int event)
 {
@@ -179,12 +180,13 @@ static int classD_ev(struct snd_soc_dapm_widget *w,
     snd_soc_update_bits(codec, WM8960_CLASSD1, mask, mask);
     return 0;
 }
+#endif
 
 static int dac_ev(struct snd_soc_dapm_widget *w,
     struct snd_kcontrol *kcontrol, int event)
 {
     struct snd_soc_codec *codec = w->codec;
-    static unsigned int lout1,rout1;
+    //static unsigned int lout1,rout1;
     unsigned int mask = 1<<w->shift;
     //printk(KERN_ERR "Amlogic <> %s(%d):name %s , event(%d)\n",__func__, __LINE__, w->name, event);
     snd_soc_update_bits(codec, WM8960_POWER2, mask, mask);
@@ -1020,7 +1022,7 @@ static struct snd_soc_dai_driver wm8960_dai = {
     .symmetric_rates = 1,
 };
 
-static int wm8960_suspend(struct snd_soc_codec *codec, pm_message_t state)
+static int wm8960_suspend(struct snd_soc_codec *codec)
 {
     struct wm8960_priv *wm8960 = snd_soc_codec_get_drvdata(codec);
 
@@ -1030,7 +1032,8 @@ static int wm8960_suspend(struct snd_soc_codec *codec, pm_message_t state)
 
 static int wm8960_resume(struct snd_soc_codec *codec)
 {
-    struct wm8960_priv *wm8960 = snd_soc_codec_get_drvdata(codec);
+    struct wm8960_priv *wm8960 = NULL;
+    wm8960 = snd_soc_codec_get_drvdata(codec);
 
     //wm8960->set_bias_level(codec, SND_SOC_BIAS_STANDBY);
     return 0;
@@ -1152,7 +1155,7 @@ static struct snd_soc_codec_driver soc_codec_dev_wm8960 = {
 static int wm8960_i2c_probe(struct i2c_client *i2c,
                       const struct i2c_device_id *id)
 {
-    struct wm8960_data *pdata = dev_get_platdata(&i2c->dev);
+   // struct wm8960_data *pdata = dev_get_platdata(&i2c->dev);
     struct wm8960_priv *wm8960;
     int ret;
 

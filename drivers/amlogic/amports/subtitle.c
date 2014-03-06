@@ -437,12 +437,12 @@ static struct class_attribute subtitle_class_attrs[] = {
 	__ATTR(reset, 	S_IRUGO | S_IWUSR, show_reset,  store_reset),
     __ATTR_NULL
 };
-
+/*
 static struct class subtitle_class = {
         .name = "subtitle",
         .class_attrs = subtitle_class_attrs,
     };
-
+*/
 /*********************************************************
  * /dev/amvideo APIs
  *********************************************************/
@@ -526,7 +526,7 @@ static long amsubtitle_ioctl(struct file *file,
                 break;
             case SUB_DATA_T_DATA: {
                     if (states->subtitle_info > 0) {
-						states->subtitle_info = subtitle_data[subtitle_write_pos].data;
+                        states->subtitle_info = (int)subtitle_data[subtitle_write_pos].data;
                     }
 				}
                 break;

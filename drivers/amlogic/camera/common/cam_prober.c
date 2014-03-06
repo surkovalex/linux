@@ -923,8 +923,8 @@ static int fill_csi_dev(struct device_node* p_node, aml_cam_info_t* cam_dev)
 {
 	const char* str;
 	int ret = 0;
-	aml_cam_dev_info_t* cam_info = NULL;
-	struct i2c_adapter *adapter;
+	//aml_cam_dev_info_t* cam_info = NULL;
+	//struct i2c_adapter *adapter;
 
 	ret = of_property_read_string(p_node, "clk_channel", &str);
 	if (ret) {

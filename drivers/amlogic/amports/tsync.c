@@ -1391,7 +1391,7 @@ static ssize_t show_last_checkin_apts(struct class *class,
                            struct class_attribute *attr,
                            char *buf)
 {
-  unsigned long last_apts;
+  unsigned int last_apts;
   last_apts = get_last_checkin_pts(PTS_TYPE_AUDIO);
   return sprintf(buf, "0x%x\n",last_apts);
 }

@@ -483,10 +483,10 @@ struct sp0838_fh {
 	unsigned int		f_flags;
 };
 
-static inline struct sp0838_fh *to_fh(struct sp0838_device *dev)
+/*static inline struct sp0838_fh *to_fh(struct sp0838_device *dev)
 {
 	return container_of(dev, struct sp0838_fh, dev);
-}
+}*/
 
 static struct v4l2_frmsize_discrete sp0838_prev_resolution[3]= //should include 320x240 and 640x480, those two size are used for recording
 {
@@ -870,7 +870,7 @@ void set_SP0838_param_wb(struct sp0838_device *dev,enum  camera_wb_flip_e para)
 		//temp_reg=sp0a19_read_byte(0x22);
 		//buf[0]=0x22; //SP0A19 enable auto wb
 		buf[0]=0x32;
-		temp_reg=i2c_get_byte_add8(client,buf);
+		temp_reg=i2c_get_byte_add8(client,buf[0]);
 	
 		printk(" camera set_SP0A19_param_wb=%d. \n ",para);
 		switch (para)
@@ -1183,8 +1183,8 @@ unsigned char v4l_2_sp0838(int val)
 static int sp0838_setting(struct sp0838_device *dev,int PROP_ID,int value )
 {
 	int ret=0;
-	unsigned char cur_val;
-	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+	//unsigned char cur_val;
+	//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	switch(PROP_ID)  {
 	case V4L2_CID_DO_WHITE_BALANCE:
 		if(sp0838_qctrl[0].default_value!=value){
@@ -1250,11 +1250,11 @@ static int sp0838_setting(struct sp0838_device *dev,int PROP_ID,int value )
 
 }
 
-static void power_down_sp0838(struct sp0838_device *dev)
+/*static void power_down_sp0838(struct sp0838_device *dev)
 {
 
 
-}
+}*/
 
 /* ------------------------------------------------------------------
 	DMA and thread functions
@@ -1823,7 +1823,7 @@ static int vidioc_enum_framesizes(struct file *file, void *fh,struct v4l2_frmsiz
 	return ret;
 }
 
-static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id *i)
+static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id i)
 {
 	return 0;
 }

@@ -335,7 +335,7 @@ static unsigned int _ser_access_read_locked(unsigned long addr)
 	int s_nrdy_cnt = 0;
 	int rst_times = 0;
 	if (get_rtc_status())
-		return;
+		return 0;
 	while(rtc_comm_init()<0){
 		RTC_DBG(RTC_DBG_VAL, "aml_rtc -- rtc_common_init fail\n");
 		if(s_nrdy_cnt>RESET_RETRY_TIMES) {
@@ -385,7 +385,7 @@ static void _ser_access_write_locked(unsigned long addr, unsigned long data)
 	rtc_send_addr_data(1,addr);
 	rtc_set_mode(1); //Write
 out:
-	return 0;
+	return;
 }
 
 static unsigned int ser_access_read(unsigned long addr)

@@ -1652,7 +1652,10 @@ static long jpegenc_ioctl(struct file *file,
                 void  __user* argp =(void __user*)arg;
                 gExternalQuantTablePtr = kmalloc(sizeof(unsigned short)*DCTSIZE2*2, GFP_KERNEL);
                 if(gExternalQuantTablePtr){
-                    copy_from_user(gExternalQuantTablePtr,argp,sizeof(unsigned short)*DCTSIZE2*2);
+                    if(copy_from_user(gExternalQuantTablePtr,argp,sizeof(unsigned short)*DCTSIZE2*2)){
+                        r=-1;
+                        break;
+                    }
                     external_quant_table_available = true;
                     r = 0;
                 }else{

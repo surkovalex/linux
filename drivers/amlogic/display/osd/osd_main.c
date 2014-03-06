@@ -1515,6 +1515,9 @@ static struct resource memobj;
 static int 
 osd_probe(struct platform_device *pdev)
 {
+#ifdef CONFIG_AM_HDMI_ONLY
+	extern int read_hpd_gpio(void);
+#endif
 	int r;
 	int ret;
     struct fb_info *fbi=NULL;
@@ -1574,7 +1577,6 @@ osd_probe(struct platform_device *pdev)
 				}else{
 					DisableVideoLayer();
 					#ifdef CONFIG_AM_HDMI_ONLY
-						extern int read_hpd_gpio(void);
 						hpd_state = read_hpd_gpio();
 
 						cvbs_mode = get_current_cvbs_vmode();

@@ -1280,4 +1280,7 @@ unsigned audio_aiu_pg_enable(unsigned char enable)
         AUDIO_CLK_GATE_OFF(AIU_ICE958_AMCLK);   
         AUDIO_CLK_GATE_OFF(AIU_TOP_LEVEL);
 	}
+    return 0;
 }
+
+

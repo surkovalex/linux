@@ -9,6 +9,12 @@
 #include <linux/amlogic/vout/vinfo.h>
 #include <linux/amlogic/vout/vout_notify.h>
 
+static int osd0_init(logo_object_t *plogo);
+static int osd1_init(logo_object_t *plogo);
+static int osd_enable_set(int  enable);
+static int osd_deinit(void);
+static int osd_transfer(logo_object_t *plogo);
+
 static  logo_output_dev_t   output_osd0={
 	.idx=LOGO_DEV_OSD0,
 	.hw_initialized=0,	
@@ -424,6 +430,7 @@ static int __init get_cvbs_mode(char *str)
 	cvbsmode_hdmionly = VMODE_480CVBS;
     }
     printk("kernel get cvbsmode form uboot is %s\n", str);
+    return 1;
 }
 __setup("cvbsmode=", get_cvbs_mode);
 
@@ -442,6 +449,7 @@ static int __init get_hdmi_mode(char *str)
 	hdmimode_hdmionly = VMODE_1080P;
    }
    printk("kernel get hdmimode form uboot is %s\n", str);
+   return 1;
 }
 __setup("hdmimode=", get_hdmi_mode);
 #endif

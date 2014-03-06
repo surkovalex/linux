@@ -1376,7 +1376,7 @@ static void osd1_update_enable(void)
 			aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
 		}
 	}else{
-		u32 video_enable;
+		u32 video_enable = 0;
 
 		video_enable |= aml_read_reg32(P_VPP2_MISC) & VPP_VD1_PREBLEND;
 		if (osd_ext_hw.enable[OSD1] == ENABLE) {
@@ -1414,7 +1414,7 @@ static void osd2_update_enable(void)
 			aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
 		}
 	}else{
-		u32 video_enable;
+		u32 video_enable = 0;
 
 		video_enable |= aml_read_reg32(P_VPP2_MISC) & VPP_VD1_PREBLEND;
 		if (osd_ext_hw.enable[OSD2] == ENABLE) {

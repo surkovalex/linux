@@ -417,7 +417,7 @@ static ssize_t store_##file_name					\
 	if (ret)							\
 		return -EINVAL;						\
 									\
-	ret = sscanf(buf, "%u", &freq);			\
+	ret = sscanf(buf, "%lu", &freq);			\
 	if (ret != 1)							\
 		return -EINVAL;						\
 		\

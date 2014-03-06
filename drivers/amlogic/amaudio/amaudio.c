@@ -1855,6 +1855,8 @@ static ssize_t show_resample_type(struct class* class, struct class_attribute* a
          return sprintf(buf, "DW\n");
      }else if(resample_type_flag==2){//2-->up resample processing
          return sprintf(buf, "UP\n");
+     }else{                          //other-->invalid resample type flag
+         return sprintf(buf, "IR\n");
      }
 }
 
@@ -1942,6 +1944,8 @@ static ssize_t record_type_show(struct class* class, struct class_attribute* att
          return sprintf(buf, "spdif in mode \n");
      }else if(audioin_mode&I2SIN_SLAVE_MODE){//i2s in slave
          return sprintf(buf, "i2s in slave mode \n");
+     }else{
+         return sprintf(buf, "audioin_mode can't match mode\n");
      }
 }
 static struct class_attribute amaudio_attrs[]={

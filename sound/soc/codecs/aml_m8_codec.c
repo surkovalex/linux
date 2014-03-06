@@ -809,9 +809,8 @@ static int aml_m8_codec_remove(struct platform_device *pdev)
 
 static void aml_m8_codec_shutdown(struct platform_device *pdev)
 {
-    printk(KERN_DEBUG "aml_m8_platform_shutdown\n");
     struct snd_soc_codec *codec = m8_codec;
-    
+    printk(KERN_DEBUG "aml_m8_platform_shutdown\n");
     if(codec){
         u16 mute_reg = snd_soc_read(codec, AMLM8_MUTE_2) & 0xfc;
 

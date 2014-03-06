@@ -21,6 +21,8 @@
 
 #ifndef VDEC_H
 #define VDEC_H
+#include <mach/am_regs.h>
+#include <linux/platform_device.h>
 
 
 extern void vdec_set_decinfo(void *p);

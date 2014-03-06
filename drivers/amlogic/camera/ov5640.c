@@ -2310,7 +2310,7 @@ static struct aml_camera_i2c_fig_s OV5640_preview_SVGA_script[] = { //SVGA: 800*
 };
 #endif
 
-static struct aml_camera_i2c_fig_s OV5640_preview_QVGA_script[] = {
+/*static struct aml_camera_i2c_fig_s OV5640_preview_QVGA_script[] = {
 	{0x3503, 0x00},
 	{0x3035, 0x11},
 	{0x3036, 0x46},
@@ -2356,7 +2356,7 @@ static struct aml_camera_i2c_fig_s OV5640_preview_QVGA_script[] = {
 	{0x3821, 0x07}, // #3 ck. origin: 0x01, 
 	{0x3031, 0x08},  
 	{0xffff, 0xff}
-};
+};*/
 
 static struct aml_camera_i2c_fig_s OV5640_capture_5M_script[] = {
 	#if 1
@@ -2408,7 +2408,7 @@ static struct aml_camera_i2c_fig_s OV5640_capture_5M_script[] = {
 	{0xffff, 0xff}
 };
 
-static struct aml_camera_i2c_fig_s OV5640_capture_3M_script[] = {
+/*static struct aml_camera_i2c_fig_s OV5640_capture_3M_script[] = {
 	{0x3035, 0x31},
 	{0x3036, 0x69},
 	{0x3c07, 0x07},
@@ -2460,9 +2460,9 @@ static struct aml_camera_i2c_fig_s OV5640_capture_3M_script[] = {
 	{0x5584, 0x10}, 
 	{0x5586, 0x15},
 	{0xffff, 0xff}
-};
+};*/
 
-static struct aml_camera_i2c_fig_s OV5640_capture_2M_script[] = {
+/*static struct aml_camera_i2c_fig_s OV5640_capture_2M_script[] = {
 	{0x3035, 0x31},
 	{0x3036, 0x69},
 	{0x3c07, 0x07},
@@ -2514,7 +2514,7 @@ static struct aml_camera_i2c_fig_s OV5640_capture_2M_script[] = {
 	{0x5584, 0x10}, 
 	{0x5586, 0x15},
 	{0xffff, 0xff}
-};
+};*/
 
 static resolution_param_t  prev_resolution_array[] = {
 	{
@@ -3987,6 +3987,7 @@ static int vidioc_s_fmt_vid_cap(struct file *file, void *priv,
 	struct videobuf_queue *q = &fh->vb_vidq;
 	struct ov5640_device *dev = fh->dev;
 	resolution_param_t* res_param = NULL;
+	int ret;
 	//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	//unsigned char gain = 0, exposurelow = 0, exposuremid = 0, exposurehigh = 0;
 	int cap_fps, pre_fps;
@@ -3996,7 +3997,7 @@ static int vidioc_s_fmt_vid_cap(struct file *file, void *priv,
             (f->fmt.pix.pixelformat==V4L2_PIX_FMT_YUV420)){
                 f->fmt.pix.width = (f->fmt.pix.width + (CANVAS_WIDTH_ALIGN*2-1) ) & (~(CANVAS_WIDTH_ALIGN*2-1));
         }
-	int ret = vidioc_try_fmt_vid_cap(file, fh, f);
+	ret = vidioc_try_fmt_vid_cap(file, fh, f);
 	if (ret < 0)
     	return ret;
 
@@ -4237,7 +4238,7 @@ static int vidioc_enum_framesizes(struct file *file, void *fh,struct v4l2_frmsiz
         return ret;
 }
 
-static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id *i)
+static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id i)
 {
 	return 0;
 }

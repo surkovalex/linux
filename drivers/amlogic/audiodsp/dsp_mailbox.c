@@ -107,7 +107,7 @@ int get_mailbox_data(struct audiodsp_priv *priv,int num,struct mail_msg *msg)
 static irqreturn_t audiodsp_mailbox_irq(int irq, void *data)
 {
 	struct audiodsp_priv *priv=(struct audiodsp_priv *)data;
-	unsigned long status,fiq_mask;
+	unsigned long status/*,fiq_mask*/;
 	struct mail_msg msg;
 	int i = 0;
 	status=READ_VREG(MB1_REG);

@@ -152,9 +152,9 @@ typedef struct{
 }lens_struct;
 
 typedef struct{
-	unsigned short gamma_r[GAMMA_MAX];
-	unsigned short gamma_g[GAMMA_MAX];
-	unsigned short gamma_b[GAMMA_MAX];
+	unsigned int gamma_r[GAMMA_MAX];
+	unsigned int gamma_g[GAMMA_MAX];
+	unsigned int gamma_b[GAMMA_MAX];
 }gamma_struct;
 
 typedef struct{
@@ -245,10 +245,10 @@ typedef struct{
 }effect_pair_t;
 
 typedef struct sensor_dg_s {
-    unsigned short r;
-    unsigned short g;
-    unsigned short b;
-    unsigned short dg_default;
+    unsigned int r;
+    unsigned int g;
+    unsigned int b;
+    unsigned int dg_default;
 }sensor_dg_t;
 
 typedef struct{
@@ -258,7 +258,7 @@ typedef struct{
 	configure_t *configure;
 }camera_priv_data_t;
 
-int parse_config(char *path,configure_t *cf);
+int parse_config(const char *path,configure_t *cf);
 int generate_para(cam_parameter_t *para,para_index_t pindex,configure_t *cf);
 void free_para(cam_parameter_t *para);
 int update_fmt_para(int width,int height,cam_parameter_t *para,para_index_t *pindex,configure_t *cf);
