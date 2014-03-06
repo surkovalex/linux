@@ -96,8 +96,9 @@ module_param(frame_dynamic_level, int, 0664);
 MODULE_PARM_DESC(cue_enable, "\n cue_enable\n");
 module_param(cue_enable, bool, 0664);
 
+#ifdef DET3D
 static unsigned int det3d_cfg = 0;
-
+#endif
 static void init_pd_para(void)
 {
     int i;
@@ -148,10 +149,10 @@ void reset_di_para(void)
   	int nr_zone_0 = 4, nr_zone_1 = 8, nr_zone_2 = 12;
     //int nr_hfilt_en = 0;
     int nr_hfilt_mb_en = 0;
-    int mtn_modify_en = 1;
-    int post_mb_en = 0;
-    int blend_mtn_filt_en = 1;
-    int blend_data_filt_en = 1;
+    //int mtn_modify_en = 1;
+    //int post_mb_en = 0;
+    //int blend_mtn_filt_en = 1;
+    //int blend_data_filt_en = 1;
     unsigned int nr_strength = 0, nr_gain2 = 0, nr_gain1 = 0, nr_gain0 = 0;
 
     nr_strength = noise_reduction_level;
@@ -2112,7 +2113,7 @@ void di_post_read_reverse_irq(bool reverse)
 }
 
 static unsigned char pre_power_on = 0;
-static unsigned char post_power_on = 0;
+//static unsigned char post_power_on = 0;
 void di_set_power_control(unsigned char type, unsigned char enable)
 {
 		if(di_debug_flag&0x20){
