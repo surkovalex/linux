@@ -502,6 +502,7 @@ void osd_set_scan_mode(int index)
 					osd_hw.scale_workaround = 1;
 				}
 			}
+			osd_hw.field_out_en = 0;
 		break;
 		default:
 			if(osd_hw.free_scale_mode[index]){
