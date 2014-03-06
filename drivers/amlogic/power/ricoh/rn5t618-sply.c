@@ -835,14 +835,6 @@ int rn5t618_usb_charger(struct notifier_block *nb, unsigned long value, void *pd
         rn5t618_charger_job.value = value;
         return 0;
     }
-#ifdef CONFIG_HAS_EARLYSUSPEND
-    if (in_early_suspend) {
-        wake_lock(&rn5t618_lock);
-        RICOH_DBG("%s, usb power status changed in early suspend, wake up now\n", __func__);
-        input_report_key(rn5t618_power_key, KEY_POWER, 1);              // assume power key pressed 
-        input_sync(rn5t618_power_key);
-    }
-#endif
     switch (value) {
     case USB_BC_MODE_DISCONNECT:                                        // disconnect
     case USB_BC_MODE_SDP:                                               // pc
@@ -1375,6 +1367,14 @@ static void rn5t618_charging_monitor(struct work_struct *work)
             charger->resume = 0;
         }
         power_supply_changed(&supply->batt);
+    #ifdef CONFIG_HAS_EARLYSUSPEND
+        if (in_early_suspend && (pre_pwr_status != charger->ext_valid)) {
+            wake_lock(&rn5t618_lock);
+            RICOH_DBG("%s, usb power status changed in early suspend, wake up now\n", __func__);
+            input_report_key(rn5t618_power_key, KEY_POWER, 1);              // assume power key pressed 
+            input_sync(rn5t618_power_key);
+        }
+    #endif
     } 
     /* reschedule for the next time */
     schedule_delayed_work(&supply->work, supply->interval);
@@ -1667,7 +1667,6 @@ static int rn5t618_suspend(struct platform_device *dev, pm_message_t state)
 
     cancel_delayed_work_sync(&supply->work);
     if (rn5t618_battery) {
-        rn5t618_set_charge_current(rn5t618_battery->pmu_suspend_chgcur);
         api = aml_pmu_get_api();
         if (api && api->pmu_suspend_process) {
             api->pmu_suspend_process(&supply->aml_charger);
@@ -1697,7 +1696,6 @@ static int rn5t618_resume(struct platform_device *dev)
         if (api && api->pmu_resume_process) {
             api->pmu_resume_process(&supply->aml_charger, rn5t618_battery);
         }
-        rn5t618_set_charge_current(rn5t618_battery->pmu_resume_chgcur);
     }
     schedule_work(&supply->work.work);
 

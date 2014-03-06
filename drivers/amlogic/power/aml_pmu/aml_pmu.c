@@ -14,8 +14,14 @@
 #endif
 
 #ifdef CONFIG_AMLOGIC_USB
+#ifdef CONFIG_AML1212
 static struct notifier_block aml1212_otg_nb;                            // notifier_block for OTG issue
 static struct notifier_block aml1212_usb_nb;                            // notifier_block for USB charger issue
+#endif
+#ifdef CONFIG_AML1216
+static struct notifier_block aml1216_otg_nb;                            // notifier_block for OTG issue
+static struct notifier_block aml1216_usb_nb;                            // notifier_block for USB charger issue
+#endif
 extern int dwc_otg_power_register_notifier(struct notifier_block *nb);
 extern int dwc_otg_power_unregister_notifier(struct notifier_block *nb);
 extern int dwc_otg_charger_detect_register_notifier(struct notifier_block *nb);
@@ -266,6 +272,12 @@ static int aml_pmu_probe(struct i2c_client *client,
     #if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1216)
         aml_dvfs_register_driver(&aml1216_dvfs_driver);
     #endif
+    #ifdef CONFIG_AMLOGIC_USB
+        aml1216_otg_nb.notifier_call = aml1216_otg_change;
+        aml1216_usb_nb.notifier_call = aml1216_usb_charger;
+        dwc_otg_power_register_notifier(&aml1216_otg_nb);
+        dwc_otg_charger_detect_register_notifier(&aml1216_usb_nb);
+    #endif
         aml_pmu_register_driver(&aml1216_pmu_driver);
     }
 #endif
@@ -311,6 +323,8 @@ static int aml_pmu_remove(struct i2c_client *client)
     aml_dvfs_unregister_driver(&aml1216_dvfs_driver);
 #endif
     aml_pmu_clear_driver();
+    dwc_otg_power_unregister_notifier(&aml1216_otg_nb);
+    dwc_otg_charger_detect_unregister_notifier(&aml1216_usb_nb);
 #endif
 #ifdef CONFIG_AML1212
     g_aml1212_client = NULL;

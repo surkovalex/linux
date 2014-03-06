@@ -245,10 +245,6 @@ struct aml1216_supply {
     struct delayed_work work;                                           // work struct
     struct work_struct  irq_work;                                       // work for IRQ 
     struct notifier_block nb;
-
-    struct notifier_block otg_nb;                                       // notifier_block for OTG issue
-    struct notifier_block usb_nb;                                       // notifier_block for USB charger issue
-
     struct device *master;
 };
 
@@ -283,6 +279,8 @@ extern void aml1216_power_off(void);                                     // powe
  */
 extern struct aml1216_supply *g_aml1216_supply;                           // export global charger struct
 extern struct i2c_client *g_aml1216_client;                              // i2c client for register RW
+extern int aml1216_otg_change(struct notifier_block *nb, unsigned long value, void *pdata);
+extern int aml1216_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata);
 #endif      /* CONFIG_AML1216 */
 
 #endif /* __AML_PMU_H__ */

@@ -60,8 +60,8 @@
 
 #ifdef CONFIG_AMLOGIC_USB
 struct later_job {
-        int flag;
-            int value;
+    int flag;
+    int value;
 };
 static struct later_job axp202_charger_job = {};
 #endif
@@ -1674,7 +1674,7 @@ static void axp_charging_monitor(struct work_struct *work)
         }
         power_supply_changed(&supply->batt);
     #ifdef CONFIG_HAS_EARLYSUSPEND
-        if (in_early_suspend) {
+        if (in_early_suspend && (pre_chg_status != charger->ext_valid)) {
             wake_lock(&axp202_lock);
             AXP_PMU_DBG("%s, usb power status changed in early suspend, wake up now\n", __func__);
             input_report_key(powerkeydev, KEY_POWER, 1);                        // assume power key pressed 
@@ -1692,14 +1692,10 @@ static void axp_charging_monitor(struct work_struct *work)
 static int early_power_status = 0;
 static void axp_earlysuspend(struct early_suspend *h)
 {
-    uint8_t tmp;
     struct axp20_supply *supply = (struct axp20_supply *)h->param;
 
 #if defined (CONFIG_AXP_CHGCHANGE)
-    if (axp_pmu_battery->pmu_suspend_chgcur >= 300000 && axp_pmu_battery->pmu_suspend_chgcur <= 1800000) {
-        tmp = (axp_pmu_battery->pmu_suspend_chgcur - 200001) / 100000;
-        axp_update(g_axp20_supply->master, AXP20_CHARGE_CONTROL1, tmp, 0x0F);
-    }
+    axp_set_charge_current(axp_pmu_battery->pmu_suspend_chgcur);    //set charging current
 #endif
     if (axp_pmu_battery) {
         early_power_status = supply->aml_charger.ext_valid;    
@@ -1710,15 +1706,11 @@ static void axp_earlysuspend(struct early_suspend *h)
 static void axp_lateresume(struct early_suspend *h)
 {
     struct axp20_supply *supply = (struct axp20_supply*)h->param;
-    uint8_t tmp;
 
     schedule_work(&supply->work.work); 
 
 #if defined (CONFIG_AXP_CHGCHANGE)
-    if(axp_pmu_battery->pmu_resume_chgcur >= 300000 && axp_pmu_battery->pmu_resume_chgcur <= 1800000){
-        tmp = (axp_pmu_battery->pmu_resume_chgcur -200001)/100000;
-        axp_update(supply->master, AXP20_CHARGE_CONTROL1, tmp,0x0F);
-    }
+    axp_set_charge_current(axp_pmu_battery->pmu_resume_chgcur);     //set charging current
 #endif
     if (axp_pmu_battery) {
         early_power_status = supply->aml_charger.ext_valid;
@@ -1991,7 +1983,6 @@ static int axp20_suspend(struct platform_device *dev, pm_message_t state)
     irq_w[8] = 0xff;
     axp_writes(supply->master, POWER20_INTSTS1, 9, irq_w);
     
-    axp_set_charge_current(axp_pmu_battery->pmu_suspend_chgcur);	//set charging current
     /* close all irqs*/
     axp_read(supply->master, POWER20_OFF_CTL, &tmp);
     extern_led_ctrl = tmp & 0x08;
@@ -2027,8 +2018,6 @@ static int axp20_resume(struct platform_device *dev)
     if (api && api->pmu_resume_process) {
         api->pmu_resume_process(charger, axp_pmu_battery);
     }
-
-	axp_set_charge_current(axp_pmu_battery->pmu_resume_chgcur);	//set charging current
 
     if (extern_led_ctrl) {
         axp_set_bits(supply->master, POWER20_OFF_CTL, 0x08);

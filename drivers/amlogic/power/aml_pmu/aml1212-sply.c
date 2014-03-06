@@ -1284,7 +1284,7 @@ succeed:
 #ifdef CONFIG_AMLOGIC_USB
 int aml1212_otg_change(struct notifier_block *nb, unsigned long value, void *pdata)
 {
-    AML_PMU_DBG("%s, val:%d\n", __func__, value);
+    AML_PMU_DBG("%s, val:%ld\n", __func__, value);
     if (value) {        // open OTG
         if (aml1212_init->vbus_dcin_short_connect) {
             aml_pmu_set_dcin(0);                                            // Disable DCIN
@@ -1590,7 +1590,7 @@ static void aml_pmu_charging_monitor(struct work_struct *work)
         }
         power_supply_changed(&supply->batt);
     #ifdef CONFIG_HAS_EARLYSUSPEND
-        if (in_early_suspend) {
+        if (in_early_suspend && (pre_chg_status != charger->ext_valid)) {
             wake_lock(&aml1212_lock);
             AML_PMU_DBG("%s, usb power status changed in early suspend, wake up now\n", __func__);
             input_report_key(aml_pmu_power_key, KEY_POWER, 1);                        // assume power key pressed 
@@ -1610,6 +1610,7 @@ static void aml_pmu_earlysuspend(struct early_suspend *h)
 
     if (aml_pmu_battery) {
         early_power_status = supply->aml_charger.ext_valid;
+        aml_pmu_set_charge_current(aml_pmu_battery->pmu_suspend_chgcur);
     }
     in_early_suspend = 1;
 }
@@ -1619,6 +1620,12 @@ static void aml_pmu_lateresume(struct early_suspend *h)
     struct  aml1212_supply *supply = (struct aml1212_supply *)h->param;
 
     schedule_work(&supply->work.work);                                      // update for upper layer 
+    if (aml_pmu_battery) {
+        aml_pmu_set_charge_current(aml_pmu_battery->pmu_resume_chgcur);
+        early_power_status = supply->aml_charger.ext_valid; 
+        input_report_key(aml_pmu_power_key, KEY_POWER, 0);                  // cancel power key 
+        input_sync(aml_pmu_power_key);
+    }
     in_early_suspend = 0;
     wake_unlock(&aml1212_lock);
 }
@@ -1942,7 +1949,6 @@ static int aml_pmu_suspend(struct platform_device *dev, pm_message_t state)
     struct aml_pmu_api    *api;
 
     cancel_delayed_work_sync(&supply->work);
-    aml_pmu_set_charge_current(aml_pmu_battery->pmu_suspend_chgcur);
     if (supply->usb_connect_type != USB_BC_MODE_SDP) {
         aml_pmu_set_usb_current_limit(900, supply->usb_connect_type);  // not pc, set to 900mA when suspend
     } else {
@@ -1978,7 +1984,6 @@ static int aml_pmu_resume(struct platform_device *dev)
         api->pmu_resume_process(charger, aml_pmu_battery);
     }
     schedule_work(&supply->work.work);
-    aml_pmu_set_charge_current(aml_pmu_battery->pmu_resume_chgcur);
 #ifdef CONFIG_RESET_TO_SYSTEM
 	aml_pmu_write(0x00ff, 0x01); // cann't reset after resume
 #endif
@@ -1992,6 +1997,9 @@ static void aml_pmu_shutdown(struct platform_device *dev)
     struct aml1212_supply *supply= platform_get_drvdata(dev);
     
     // add code here
+#endif
+#ifdef CONFIG_HAS_EARLYSUSPEND
+    wake_lock_destroy(&aml1212_lock);
 #endif
 }
 

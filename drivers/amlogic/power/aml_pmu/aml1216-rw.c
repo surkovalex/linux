@@ -242,15 +242,15 @@ static int find_idx(uint32_t start, uint32_t target, uint32_t step, int size)
 {
     int i = 0; 
 
-    if (start >= target) {
+    if (start < target) {
         AML_DBG("%s, invalid input of voltage:%u\n", __func__, target);    
         return -1;
     }
     do { 
-        if (start >= target) {
+        if ((start - step) < target) {
             break;    
         }    
-        start += step;
+        start -= step;
         i++; 
     } while (i < size);
     if (i >= size) {
@@ -266,8 +266,8 @@ int aml1216_set_dcdc_voltage(int dcdc, uint32_t voltage)
     int addr;
     int idx_to;
     int range    = 64; 
-    int step     = 19 * 1000; 
-    int start    = 700 * 1000;
+    int step     = 1875 * 10; 
+    int start    = 1881 * 1000;
     int bit_mask = 0x3f;
     int idx_cur;
     uint8_t val = 0;
@@ -279,8 +279,8 @@ int aml1216_set_dcdc_voltage(int dcdc, uint32_t voltage)
     addr = 0x34+(dcdc-1)*9;
     if (dcdc == 3) {
         step     = 50 * 1000; 
-        range    = 64; 
-        start    = 2050 * 1000;
+        range    = 32; 
+        start    = 3600 * 1000;
         bit_mask = 0x1f;
     }   
     if (dcdc_val[dcdc] == 0) {
@@ -289,7 +289,6 @@ int aml1216_set_dcdc_voltage(int dcdc, uint32_t voltage)
         val = dcdc_val[dcdc];
     }
     idx_to   = find_idx(start, voltage, step, range);
-    idx_to  ^= bit_mask;
     idx_cur  = val >> 2;
     while (idx_cur != idx_to) {
         if (idx_cur < idx_to) {                                 // adjust to target voltage step by step
