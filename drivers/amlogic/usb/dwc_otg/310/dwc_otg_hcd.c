@@ -546,6 +546,12 @@ int dwc_otg_hcd_urb_enqueue(dwc_otg_hcd_t * hcd,
 		return -DWC_E_NO_DEVICE;
 	}
 
+	if(hcd->flags.b.port_connect_status_change){
+		/* Connect status change processing. */
+		DWC_ERROR("USB Connect status change processing\n");
+		return -DWC_E_NO_DEVICE;
+	}
+
 	if((dwc_otg_urb->pipe_info.pipe_type == UE_BULK)
 		&& !(dwc_otg_urb->flags & URB_GIVEBACK_ASAP))
 		bulk_not_asap = 1;
