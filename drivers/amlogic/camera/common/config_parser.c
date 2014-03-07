@@ -864,7 +864,7 @@ int parse_gamma(configure_t *cf,buffer_para_t *buf_para,int *remained,int *offse
     iter = strstr(iter,"export");
     iter += 7;
     for(i = 0; i < GAMMA_MAX && iter != NULL;){
-        sscanf(iter,"%x",&(cf->gamma.gamma_r[i]));
+        sscanf(iter,"%x",(unsigned int *)&(cf->gamma.gamma_r[i]));
         i++;
         iter = strstr(iter,",");
         if(iter == NULL)
@@ -874,7 +874,7 @@ int parse_gamma(configure_t *cf,buffer_para_t *buf_para,int *remained,int *offse
     if(i != GAMMA_MAX)
     	return -CHECK_LEN_FAILED;
     for(i = 0; i < GAMMA_MAX && iter != NULL;){
-        sscanf(iter,"%x",&(cf->gamma.gamma_g[i]));
+        sscanf(iter,"%x",(unsigned int *)&(cf->gamma.gamma_g[i]));
         i++;
         iter = strstr(iter,",");
         if(iter == NULL)
@@ -884,7 +884,7 @@ int parse_gamma(configure_t *cf,buffer_para_t *buf_para,int *remained,int *offse
     if(i != GAMMA_MAX)
     	return -CHECK_LEN_FAILED;
     for(i = 0; i < GAMMA_MAX && iter != NULL;){
-        sscanf(iter,"%x",&(cf->gamma.gamma_b[i]));
+        sscanf(iter,"%x",(unsigned int *)&(cf->gamma.gamma_b[i]));
         i++;
         iter = strstr(iter,",");
         if(iter == NULL)

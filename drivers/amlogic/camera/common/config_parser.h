@@ -152,9 +152,9 @@ typedef struct{
 }lens_struct;
 
 typedef struct{
-	unsigned int gamma_r[GAMMA_MAX];
-	unsigned int gamma_g[GAMMA_MAX];
-	unsigned int gamma_b[GAMMA_MAX];
+	unsigned short gamma_r[GAMMA_MAX];
+	unsigned short gamma_g[GAMMA_MAX];
+	unsigned short gamma_b[GAMMA_MAX];
 }gamma_struct;
 
 typedef struct{
@@ -245,10 +245,10 @@ typedef struct{
 }effect_pair_t;
 
 typedef struct sensor_dg_s {
-    unsigned int r;
-    unsigned int g;
-    unsigned int b;
-    unsigned int dg_default;
+    unsigned short r;
+    unsigned short g;
+    unsigned short b;
+    unsigned short dg_default;
 }sensor_dg_t;
 
 typedef struct{
