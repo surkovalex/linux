@@ -127,8 +127,8 @@ static int aml_audio_hp_detect(struct aml_audio_private_data *p_aml_audio)
 {
    int loop_num = 0;
    int ret;
-
-    mutex_lock(&p_aml_audio->lock);
+   p_aml_audio->hp_det_status = false;
+   // mutex_lock(&p_aml_audio->lock);
 
     while(loop_num < 3){
         ret = hp_det_adc_value(p_aml_audio);
@@ -146,7 +146,7 @@ static int aml_audio_hp_detect(struct aml_audio_private_data *p_aml_audio)
         }
     }
  
-    mutex_unlock(&p_aml_audio->lock);
+   // mutex_unlock(&p_aml_audio->lock);
 
     return ret; 
 }
@@ -210,15 +210,18 @@ static void aml_asoc_work_func(struct work_struct *work)
         }
         
     }
+    p_aml_audio->hp_det_status = true;
 }
 
 
 static void aml_asoc_timer_func(unsigned long data)
 {
     struct aml_audio_private_data *p_aml_audio = (struct aml_audio_private_data *)data;
-    unsigned long delay = msecs_to_jiffies(200);
+    unsigned long delay = msecs_to_jiffies(150);
 
-    schedule_work(&p_aml_audio->work);
+    if(p_aml_audio->hp_det_status){
+        schedule_work(&p_aml_audio->work);
+    }
     mod_timer(&p_aml_audio->timer, jiffies + delay);
 }
 #endif
@@ -450,6 +453,7 @@ static int speaker_events(struct snd_soc_dapm_widget *w,
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
 		amlogic_set_value(p_audio->gpio_mute, 1, "mute_spk");
+        msleep(50);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		amlogic_set_value(p_audio->gpio_mute, 0, "mute_spk");
@@ -506,6 +510,21 @@ static int aml_asoc_init(struct snd_soc_pcm_runtime *rtd)
                 ARRAY_SIZE(aml_m8_controls));
     if (ret)
        return ret;
+#if HP_DET
+
+    p_aml_audio->sdev.name = "h2w";//for report headphone to android
+    ret = switch_dev_register(&p_aml_audio->sdev);
+    if (ret < 0){
+        printk(KERN_ERR "ASoC: register hp switch dev failed\n");
+        return ret;
+    }
+
+    p_aml_audio->mic_sdev.name = "mic_dev";//for micphone detect
+    ret = switch_dev_register(&p_aml_audio->mic_sdev);
+    if (ret < 0){
+        printk(KERN_ERR "ASoC: register mic switch dev failed\n");
+        return ret;
+    }
 
     /* Add specific widgets */
     snd_soc_dapm_new_controls(dapm, aml_asoc_dapm_widgets,
@@ -520,7 +539,7 @@ static int aml_asoc_init(struct snd_soc_pcm_runtime *rtd)
         }
     }
 
-#if HP_DET
+    p_aml_audio->hp_det_status = true;
     p_aml_audio->mic_det = of_property_read_bool(card->dev->of_node,"mic_det");
 
     printk("entern %s : mic_det=%d \n",__func__,p_aml_audio->mic_det);
@@ -705,19 +724,6 @@ static int aml_m8_audio_probe(struct platform_device *pdev)
 
     aml_m8_pinmux_init(card);
 
-    p_aml_audio->sdev.name = "h2w";//for report headphone to android
-    ret = switch_dev_register(&p_aml_audio->sdev);
-    if (ret < 0){
-        printk(KERN_ERR "ASoC: register hp switch dev failed\n");
-        goto err;
-    }
-
-    p_aml_audio->mic_sdev.name = "mic_dev";//for micphone detect
-    ret = switch_dev_register(&p_aml_audio->mic_sdev);
-    if (ret < 0){
-        printk(KERN_ERR "ASoC: register mic switch dev failed\n");
-        goto err;
-    }
 
     return 0;
 #endif

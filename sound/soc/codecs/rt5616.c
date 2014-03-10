@@ -1158,6 +1158,46 @@ static const struct snd_soc_dapm_route rt5616_dapm_routes[] = {
 
 };
 
+static int rt5616_codec_mute_stream(struct snd_soc_dai *dai, int mute, int stream)
+{
+    int ret;
+    unsigned int reg_value;
+    struct snd_soc_codec *codec = dai->codec;
+    
+    printk(KERN_DEBUG "enter:%s, stream=%d, mute=%d \n",__func__,stream,mute);
+    if(stream == SNDRV_PCM_STREAM_PLAYBACK){
+        if(mute){
+            msleep(20);
+            snd_soc_update_bits(codec, RT5616_LOUT_CTRL1,
+                RT5616_L_MUTE | RT5616_R_MUTE,
+                RT5616_L_MUTE | RT5616_R_MUTE);
+            snd_soc_update_bits(codec, RT5616_HP_VOL,
+                RT5616_L_MUTE | RT5616_R_MUTE,
+                RT5616_L_MUTE | RT5616_R_MUTE);
+        }else{
+            msleep(50);
+            snd_soc_update_bits(codec, RT5616_LOUT_CTRL1,
+                RT5616_L_MUTE | RT5616_R_MUTE, 0);
+            snd_soc_update_bits(codec, RT5616_HP_VOL,
+                RT5616_L_MUTE | RT5616_R_MUTE, 0);
+        }
+    }
+
+    if(stream == SNDRV_PCM_STREAM_CAPTURE){
+        if (mute){
+            snd_soc_update_bits(codec,RT5616_ADC_DIG_VOL, 
+                RT5616_L_MUTE | RT5616_R_MUTE,
+                RT5616_L_MUTE | RT5616_R_MUTE);       
+        }else{
+            msleep(200);
+            snd_soc_update_bits(codec,RT5616_ADC_DIG_VOL, 
+                RT5616_L_MUTE | RT5616_R_MUTE,0);
+        }
+            
+    }
+    
+    return 0;
+}
 static int rt5616_codec_digital_mute(struct snd_soc_dai *dai, int mute)
 {
    // int ret;
@@ -1650,6 +1690,7 @@ struct snd_soc_dai_ops rt5616_aif_dai_ops = {
     .set_sysclk = rt5616_set_dai_sysclk,
     .set_pll = rt5616_set_dai_pll,
     .digital_mute = rt5616_codec_digital_mute,
+    .mute_stream = rt5616_codec_mute_stream,
 };
 
 struct snd_soc_dai_driver rt5616_dai[] = {
