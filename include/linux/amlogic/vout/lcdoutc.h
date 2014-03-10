@@ -1,5 +1,5 @@
 /*
- * AMLOGIC TCON controller driver.
+ * AMLOGIC lcd controller driver.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA
  *
  * Author:  Tim Yao <timyao@amlogic.com>
+ *
+ * Modify:  Evoke Zhang <evoke.zhang@amlogic.com>
  *
  */
 
@@ -131,66 +133,72 @@
 // for clk parameter auto generation
 //********************************************//
 /**** clk parameters bit ***/
-	#define  PLL_CTRL_LOCK			31
-	#define  PLL_CTRL_RST			29
+	#define PLL_CTRL_LOCK			31
+	#define PLL_CTRL_RST			29
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
-	#define	PLL_CTRL_OD				16
-	#define	PLL_CTRL_N				9
+	#define PLL_CTRL_PD				30
+	#define PLL_CTRL_OD				16	//[17:16]
+	#define PLL_CTRL_N				9	//[13:9]
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
-	#define  PLL_CTRL_EN			30
-	#define	PLL_CTRL_OD				9	//[10:9]
-	#define	PLL_CTRL_N				24	//[28:24]
+	#define PLL_CTRL_EN				30
+	#define PLL_CTRL_OD				9	//[10:9]
+	#define PLL_CTRL_N				24	//[28:24]
 #endif
-	#define	PLL_CTRL_M				0	//[8:0]
-	#define	DIV_CTRL_EDP_DIV1		24	//[26:24]
-	#define	DIV_CTRL_EDP_DIV0		20	//[23:20]
-	#define DIV_CTRL_DIV_POST		12	//[14:12]
-	#define DIV_CTRL_PHY_CLK_DIV2	10	
-	#define	DIV_CTRL_DIV_PRE		4	//[6:4]
+	#define PLL_CTRL_M				0	//[8:0]
 
-	#define	CLK_TEST_FLAG			31
-	#define	CLK_CTRL_AUTO			30
-	#define	CLK_CTRL_FRAC			16	//[27:16]
-	#define	CLK_CTRL_LEVEL			12	//[13:12]
-	//#define	CLK_CTRL_PLL_SEL		10
-	//#define	CLK_CTRL_DIV_SEL		9
-	#define	CLK_CTRL_VCLK_SEL		8
-	#define	CLK_CTRL_SS				4	//[7:4]
-	#define	CLK_CTRL_XD				0	//[3:0]
+	#define DIV_CTRL_EDP_DIV1		24	//[26:24]
+	#define DIV_CTRL_EDP_DIV0		20	//[23:20]
+	#define DIV_CTRL_DIV_POST		12	//[14:12]
+	#define DIV_CTRL_LVDS_CLK_EN	11
+	#define DIV_CTRL_PHY_CLK_DIV2	10
+	#define DIV_CTRL_POST_SEL		8	//[9:8]
+	#define DIV_CTRL_DIV_PRE		4	//[6:4]
+
+	#define CLK_TEST_FLAG			31
+	#define CLK_CTRL_AUTO			30
+	#define CLK_CTRL_FRAC			16	//[27:16]
+	#define CLK_CTRL_LEVEL			12	//[13:12]
+	//#define CLK_CTRL_PLL_SEL		10
+	//#define CLK_CTRL_DIV_SEL		9
+	#define CLK_CTRL_VCLK_SEL		8
+	#define CLK_CTRL_SS				4	//[7:4]
+	#define CLK_CTRL_XD				0	//[3:0]
 	
 	#define PLL_WAIT_LOCK_CNT		100
-//**** clk frequency limit ***/
-	/* PLL */
+
+/**** clk frequency limit ***/
 	#define FIN_FREQ				(24 * 1000)
-	#define PLL_M_MIN				2
-	#define PLL_M_MAX				511
-	#define PLL_N_MIN				1
-	#define PLL_N_MAX				2
+	/* PLL */
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
+	#define PLL_M_MIN				2
+	#define PLL_M_MAX				100
+	#define PLL_N_MIN				1
+	#define PLL_N_MAX				1
 	#define PLL_FREF_MIN			(5 * 1000)
 	#define PLL_FREF_MAX			(30 * 1000)
 	#define PLL_VCO_MIN				(750 * 1000)
 	#define PLL_VCO_MAX				(1500 * 1000)
-	/* VID_DIV */
-	#define DIV_PRE_MAX_CLK_IN		(1300 * 1000)
-	#define DIV_POST_MAX_CLK_IN		(800 * 1000)
-	/* CRT_VIDEO */
-	#define CRT_VID_MAX_CLK_IN		(600 * 1000)
-	/* LCD_VENC */
-	#define LCD_VENC_MAX_CLK_IN		(208 * 1000)
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+	#define PLL_M_MIN				2
+	#define PLL_M_MAX				511
+	#define PLL_N_MIN				1
+	#define PLL_N_MAX				2
 	#define PLL_FREF_MIN			(5 * 1000)
 	#define PLL_FREF_MAX			(25 * 1000)
 	#define PLL_VCO_MIN				(1200 * 1000)
 	#define PLL_VCO_MAX				(3000 * 1000)
-	/* MIPI-DSI PHY */
+#endif
+	/* VIDEO */
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
+	#define DIV_PRE_MAX_CLK_IN		(1300 * 1000)
+	#define DIV_POST_MAX_CLK_IN		(800 * 1000)
+	#define CRT_VID_MAX_CLK_IN		(600 * 1000)
+	#define LCD_VENC_MAX_CLK_IN		(208 * 1000)
+#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	#define MIPI_PHY_MAX_CLK_IN		(1000 * 1000)
-	/* VID_DIV */
 	#define DIV_PRE_MAX_CLK_IN		(1500 * 1000)
 	#define DIV_POST_MAX_CLK_IN		(1000 * 1000)
-	/* CRT_VIDEO */
 	#define CRT_VID_MAX_CLK_IN		(600 * 1000)
-	/* LCD_VENC */
 	#define LCD_VENC_MAX_CLK_IN		(333 * 1000)
 #endif
 	/* lcd interface video clk */
@@ -204,7 +212,11 @@
 	#define MAX_ERROR				(2 * 1000)
 
 #define CRT_VID_DIV_MAX				15
-#define OD_SEL_MAX				4
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
+#define OD_SEL_MAX					2
+#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#define OD_SEL_MAX					4
+#endif
 #define DIV_PRE_SEL_MAX				6
 #define EDP_DIV0_SEL_MAX			15
 #define EDP_DIV1_SEL_MAX			8
