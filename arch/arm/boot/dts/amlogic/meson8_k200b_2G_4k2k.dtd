@@ -504,6 +504,8 @@ sdio{
 		device_id = <0>;
 		pinctrl-names="default";
 		pinctrl-0=<&ao_i2c_master>;
+		use_pio = <0>;
+		master_i2c_speed = <100000>;
 	};
 
 //$$ DEVICE = "I2C_A"
@@ -520,6 +522,8 @@ sdio{
 //		pinctrl-0=<&a_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		use_pio = <0>;
+		master_i2c_speed = <300000>;
 	};
 	
 //$$ DEVICE="I2C_B"
@@ -537,6 +541,8 @@ sdio{
 		pinctrl-0=<&b_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		use_pio = <0>;
+		master_i2c_speed = <300000>;
  	};
 
 //$$ DEVICE="I2C_C"
@@ -553,6 +559,8 @@ sdio{
 //		pinctrl-0=<&c_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		use_pio = <0>;
+		master_i2c_speed = <300000>;
 	};
 
 //$$ DEVICE="I2C_D"
@@ -570,6 +578,8 @@ sdio{
 		pinctrl-0=<&d_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		use_pio = <0>;
+		master_i2c_speed = <300000>;
 	};
 
 /// ***************************************************************************************

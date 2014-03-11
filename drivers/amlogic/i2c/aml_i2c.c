@@ -56,20 +56,10 @@ static irqreturn_t aml_i2c_complete_isr(int irq, void *dev_id)
 #include <linux/pinctrl/consumer.h>
 #include <linux/of_i2c.h>
 #include <linux/of_address.h>
-struct aml_i2c_property{
-	char name[24];
-	int id;
-	int index;
-	kernel_ulong_t drv_data;
-};
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-#define AML_I2C_DEVICE_NUM		5
-#else
-#define AML_I2C_DEVICE_NUM		3
-#endif
-static struct aml_i2c_property aml_i2c_properties_config[];
 
-
+int aml_i2c_device_num = 0;
+static struct aml_i2c_platform *aml_i2c_properties_list;
+#define AML_I2C_PRINT(fmt,args...)	printk(KERN_DEBUG "[aml_i2c]" fmt,##args)
 
 static void aml_i2c_set_clk(struct aml_i2c *i2c, unsigned int speed)
 {
@@ -783,9 +773,17 @@ static ssize_t show_i2c_mode(struct class *class, struct class_attribute *attr, 
     struct i2c_adapter *i2c_adap;
     struct aml_i2c *i2c;
     int i;
-    for (i=0; i<AML_I2C_DEVICE_NUM; i++) {
-      i2c_adap = i2c_get_adapter(i);
+    int device_id;
+    struct aml_i2c_platform * aml_i2c_property;
+    aml_i2c_property = aml_i2c_properties_list;
+
+    for (i=0; i<aml_i2c_device_num; i++) {
+		AML_I2C_PRINT("%s %s %d: i= %d\n",__FILE__,__func__,__LINE__,i);
+			device_id = aml_i2c_property->master_no;
+			aml_i2c_property =container_of((aml_i2c_property->list.next), struct aml_i2c_platform, list.next);
+      i2c_adap = i2c_get_adapter(device_id);
 	    i2c = i2c_get_adapdata(i2c_adap);
+
       printk("i2c(%d) work in mode %d\n", i, i2c->mode);
 	  }
     return 1;
@@ -817,7 +815,13 @@ static ssize_t store_i2c_mode(struct class *class, struct class_attribute *attr,
         i2c->aml_i2c_hrtimer.function = aml_i2c_hrtimer_notify;
       }
       else if (mode == I2C_INTERRUPT_MODE) {
-        plat = (struct aml_i2c_platform *)aml_i2c_properties_config[bus_num].drv_data;
+				struct list_head *p;
+				list_for_each(p, &aml_i2c_properties_list->list){
+					plat = list_entry(p,struct aml_i2c_platform, list);
+					if(plat->master_no == bus_num)
+						break;
+				}
+//        plat = (struct aml_i2c_platform *)aml_i2c_properties_config[bus_num].drv_data;
 			  i2c->irq = plat->use_pio >> 2;
         ret = request_irq(i2c->irq, aml_i2c_complete_isr, IRQF_DISABLED, "aml_i2c", i2c);
         printk("i2c master(%d) request irq(%d) %s\n", bus_num, i2c->irq, 
@@ -877,15 +881,53 @@ static int aml_i2c_probe(struct platform_device *pdev)
 			dev_err(&pdev->dev, "no platform data\n");
 			return -EINVAL;
 	}
-	
+
 	ret = of_property_read_u32(pdev->dev.of_node,"device_id",&device_id);
 	if(ret){
 			printk("don't find to match device_id\n");
 			return -1;
 	}
-		
+
 	pdev->id = device_id;
-	plat = (struct aml_i2c_platform*)aml_i2c_properties_config[device_id].drv_data;
+
+		struct aml_i2c_platform *aml_i2c_property = kzalloc(sizeof(struct aml_i2c_platform), GFP_KERNEL);
+
+		if(!aml_i2c_property)
+			printk("can't alloc mem for i2c_property\n");
+		else{
+			ret = of_property_read_u32(pdev->dev.of_node, "use_pio", &(aml_i2c_property->use_pio));
+			if(ret){
+				printk("not find match use_pio, use default\n"); //(INT_I2C_MASTER2<<2)|I2C_INTERRUPT_MODE,
+				aml_i2c_property->use_pio = 0;
+			}
+
+			ret = of_property_read_u32(pdev->dev.of_node, "master_i2c_speed", &(aml_i2c_property->master_i2c_speed));
+			if(ret){
+				printk("not find match master_i2c_speed, use default\n");
+				if(aml_i2c_device_num == 0)
+					aml_i2c_property->master_i2c_speed = 100000;
+				else
+					aml_i2c_property->master_i2c_speed = 300000;
+			}
+
+			aml_i2c_property->wait_count         	= 50000;
+			aml_i2c_property->wait_ack_interval 	= 5;
+			aml_i2c_property->wait_read_interval = 5;
+			aml_i2c_property->wait_xfer_interval = 5;
+			aml_i2c_property->master_no          = device_id;
+			aml_i2c_property->master_state_name  = NULL;
+		}
+
+		if(aml_i2c_device_num == 0){
+			aml_i2c_properties_list = aml_i2c_property;
+			INIT_LIST_HEAD(&aml_i2c_properties_list->list);
+		}
+		else{
+			list_add_tail(&aml_i2c_property->list ,&aml_i2c_properties_list->list);
+		}
+		aml_i2c_device_num++;
+
+	plat = (struct aml_i2c_platform*)aml_i2c_property;
 
 	ret=of_property_read_string(pdev->dev.of_node,"pinctrl-names",&plat->master_state_name);
 	printk("plat->state_name:%s\n",plat->master_state_name);
@@ -1026,96 +1068,6 @@ static int aml_i2c_remove(struct platform_device *pdev)
     return 0;
 }
 
-#ifdef CONFIG_OF
-
-//static bool pinmux_dummy_share(bool select)
-//{
-//    return select;
-//}
-
-static struct aml_i2c_platform aml_i2c_driver_data_ao = {
-    .wait_count         = 50000,
-    .wait_ack_interval  = 5,
-    .wait_read_interval = 5,
-    .wait_xfer_interval = 5,
-    .master_no          = AML_I2C_MASTER_AO,
-    .use_pio            = 0, //(INT_I2C_MASTER_AO<<2)|I2C_INTERRUPT_MODE,
-    .master_i2c_speed   = AML_I2C_SPPED_100K,
-    .master_state_name	= NULL,
-};
-
-static struct aml_i2c_platform aml_i2c_driver_data_a = {
-    .wait_count             = 50000,
-    .wait_ack_interval   = 5,
-    .wait_read_interval  = 5,
-    .wait_xfer_interval   = 5,
-    .master_no          = AML_I2C_MASTER_A,
-    .use_pio            = 0,//(INT_I2C_MASTER0<<2)|I2C_INTERRUPT_MODE,
-    .master_i2c_speed   = AML_I2C_SPPED_300K,
-    .master_state_name  = NULL,
-};
-
-static struct aml_i2c_platform aml_i2c_driver_data_b = {
-    .wait_count         = 50000,
-    .wait_ack_interval = 5,
-    .wait_read_interval = 5,
-    .wait_xfer_interval = 5,
-    .master_no          = AML_I2C_MASTER_B,
-    .use_pio            = 0,//(INT_I2C_MASTER1<<2)|I2C_INTERRUPT_MODE,
-    .master_i2c_speed   = AML_I2C_SPPED_300K,
-    .master_state_name  = NULL,
-};
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-static struct aml_i2c_platform aml_i2c_driver_data_c = {
-    .wait_count         = 50000,
-    .wait_ack_interval = 5,
-    .wait_read_interval = 5,
-    .wait_xfer_interval = 5,
-    .master_no          = AML_I2C_MASTER_C,
-    .use_pio            = 0,//(INT_I2C_MASTER2<<2)|I2C_INTERRUPT_MODE,
-    .master_i2c_speed   = AML_I2C_SPPED_300K,
-    .master_state_name  = NULL,
-};
-
-static struct aml_i2c_platform aml_i2c_driver_data_d = {
-    .wait_count         = 50000,
-    .wait_ack_interval = 5,
-    .wait_read_interval = 5,
-    .wait_xfer_interval = 5,
-    .master_no          = AML_I2C_MASTER_D,
-    .use_pio            = 0,//(INT_I2C_MASTER3<<2)|I2C_INTERRUPT_MODE,
-    .master_i2c_speed   = AML_I2C_SPPED_300K,
-    .master_state_name  = NULL,
-};
-#endif
-
-static struct aml_i2c_property aml_i2c_properties_config[AML_I2C_DEVICE_NUM]={
-	{
-		.name = "device_id",
-		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_ao),
-	},
-	{
-		.name = "device_id",
-		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_a),
-	},
-	{
-		.name = "device_id",
-		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_b),
-	},
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-	{
-		.name = "device_id",
-		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_c),
-	},
-	{
-		.name = "device_id",
-		.drv_data = ((kernel_ulong_t)&aml_i2c_driver_data_d),
-	},
-#endif
-};
-
-#endif
 
 #ifdef CONFIG_OF
 static const struct of_device_id meson6_i2c_dt_match[]={
