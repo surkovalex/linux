@@ -532,6 +532,7 @@ void root_func(){
         pinctrl-names = "default";
         pinctrl-0 = <&aml_pwm_pins>;
         use_pwm = <1>; 
+        pmw_controller = "PWM_C";
         table_count = <16>;
         cs_voltage_table = <
         /*   
