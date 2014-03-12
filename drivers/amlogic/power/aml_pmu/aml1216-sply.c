@@ -213,6 +213,9 @@ void aml1216_power_off()
 {
     uint8_t buf = (1 << 5);                                     // software goto OFF state
 
+    aml1216_write(0x0019, 0x10);
+    aml1216_write16(0x0084, 0x0001);
+    udelay(1000);
     aml1216_set_gpio(1, 1);
     aml1216_set_gpio(2, 1);
     aml1216_set_gpio(3, 1);
