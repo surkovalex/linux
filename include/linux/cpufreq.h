@@ -100,7 +100,6 @@ struct cpufreq_policy {
 	unsigned int		last_cpu; /* cpu nr of previous CPU that managed
 					   * this policy */
 	struct cpufreq_cpuinfo	cpuinfo;/* see above */
-
 	unsigned int		min;    /* in kHz */
 	unsigned int		max;    /* in kHz */
 	unsigned int		dflt;    /* in kHz */

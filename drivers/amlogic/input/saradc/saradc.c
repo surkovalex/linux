@@ -417,7 +417,7 @@ static struct class saradc_class = {
     .class_attrs = saradc_class_attrs,
 };
 
-int get_cpu_temp()
+int get_cpu_temp(void)
 {
 #ifdef CONFIG_ARCH_MESON8
 	int ret=-1,tempa;

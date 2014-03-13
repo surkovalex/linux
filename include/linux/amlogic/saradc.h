@@ -36,5 +36,5 @@ enum {
 
 extern int get_adc_sample(int chan);
 extern int saradc_ts_service(int cmd);
-extern int  get_cpu_temp();
+extern int  get_cpu_temp(void);
 #endif

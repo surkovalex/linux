@@ -5,6 +5,7 @@ config AMLOGIC_THERMAL
     bool "amlogic thermal support"
     select THERMAL
     select CPU_THERMAL
+    select GPU_THERMAL
     default n
     help
       This is the Amlogic Thermal interface driver
