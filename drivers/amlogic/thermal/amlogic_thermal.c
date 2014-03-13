@@ -55,10 +55,10 @@ struct temp_trip{
 	int gpu_upper_level;
 	int gpu_lower_level;	
 };
-#define TMP_TRIP_COUNT 4
+
 struct amlogic_thermal_platform_data {
 	const char *name;
-	struct temp_trip tmp_trip[TMP_TRIP_COUNT];
+	struct temp_trip *tmp_trip;
 	unsigned int temp_trip_count;
 	unsigned int critical_temp;
 	unsigned int idle_interval;
@@ -198,7 +198,7 @@ static int amlogic_bind(struct thermal_zone_device *thermal,
 	if(!strcmp(type,"cpufreq")){
 		/* Bind the thermal zone to the cpufreq cooling device */
 		for (i = 0; i < pdata->temp_trip_count; i++) {
-			if(pdata->tmp_trip[i].cpu_upper_level==THERMAL_CSTATE_INVALID)
+			if(pdata->tmp_trip[0].cpu_upper_level==THERMAL_CSTATE_INVALID)
 			{
 				printk("disable cpu cooling device by dtd\n");
 				ret = -EINVAL;
@@ -229,7 +229,7 @@ static int amlogic_bind(struct thermal_zone_device *thermal,
 			pdata->tmp_trip[i].gpu_upper_level=gpufreq_dev->get_gpu_freq_level(pdata->tmp_trip[i].gpu_lower_freq);
 			printk("pdata->tmp_trip[%d].gpu_lower_level=%d\n",i,pdata->tmp_trip[i].gpu_lower_level);
 			printk("pdata->tmp_trip[%d].gpu_upper_level=%d\n",i,pdata->tmp_trip[i].gpu_upper_level);
-			if(pdata->tmp_trip[i].gpu_lower_level==THERMAL_CSTATE_INVALID)
+			if(pdata->tmp_trip[0].gpu_lower_level==THERMAL_CSTATE_INVALID)
 			{
 				printk("disable gpu cooling device by dtd\n");
 				ret = -EINVAL;
@@ -364,26 +364,9 @@ static void amlogic_unregister_thermal(struct amlogic_thermal_platform_data *pda
 
 	pr_info("amlogic: Kernel Thermal management unregistered\n");
 }
-
+/*
 struct amlogic_thermal_platform_data Pdata={
 	.name="amlogic, theraml",
-	.tmp_trip[0]={
-		.temperature=50,
-		.cpu_upper_freq=1296000,
-		.cpu_lower_freq=912000,
-		.gpu_upper_freq=5000,
-		.gpu_lower_freq=5000,
-	},
-	.tmp_trip[1]={
-		.temperature=100,
-		.cpu_upper_freq=816000,
-		.cpu_lower_freq=312000,
-		.gpu_upper_freq=4000,
-		.gpu_lower_freq=4000,
-	},
-	.tmp_trip[2]={
-		.temperature=110,
-	},
 	.temp_trip_count=3,
 	.idle_interval=1000,
 	.therm_dev=NULL,
@@ -396,6 +379,7 @@ static  struct  amlogic_thermal_platform_data *amlogic_get_driver_data(
 	struct amlogic_thermal_platform_data *pdata=&Pdata;
 	return pdata;
 }
+*/
 int get_desend(void)
 {
 	int i;
@@ -484,6 +468,7 @@ static struct amlogic_thermal_platform_data * amlogic_thermal_init_from_dts(stru
 		pdata->temp_trip_count=val/cells/sizeof(u32);
 		printk("pdata->temp_trip_count=%d\n",pdata->temp_trip_count);
 		tmp_level=kzalloc(sizeof(*tmp_level)*pdata->temp_trip_count,GFP_KERNEL);
+		pdata->tmp_trip=kzalloc(sizeof(struct temp_trip)*pdata->temp_trip_count,GFP_KERNEL);
 		if(!tmp_level){
 			goto err;
 		}
@@ -538,20 +523,8 @@ err:
 }
 static struct amlogic_thermal_platform_data * amlogic_thermal_initialize(struct platform_device *pdev)
 {
-	int i=0;
 	struct amlogic_thermal_platform_data *pdata=NULL;
 	pdata=amlogic_thermal_init_from_dts(pdev);
-	if(!pdata){
-		pdata=amlogic_get_driver_data(pdev);
-		// Get level
-		for (i = 0; i < pdata->temp_trip_count; i++) {
-			pdata->tmp_trip[i].cpu_upper_level=cpufreq_cooling_get_level(0,pdata->tmp_trip[i].cpu_lower_freq);
-			pdata->tmp_trip[i].cpu_lower_level=cpufreq_cooling_get_level(0,pdata->tmp_trip[i].cpu_upper_freq);
-			printk("pdata->tmp_trip[%d].cpu_upper_level=%d\n",i,pdata->tmp_trip[i].cpu_upper_level);
-			printk("pdata->tmp_trip[%d].cpu_lower_level=%d\n",i,pdata->tmp_trip[i].cpu_lower_level);
-		}
-	}
-	
 	return pdata;
 }
 

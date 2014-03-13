@@ -89,7 +89,8 @@ static int gpufreq_get_max_state(struct thermal_cooling_device *cdev,
 				 unsigned long *state)
 {
 	struct gpufreq_cooling_device *gpufreq_device = cdev->devdata;
-	*state = (unsigned long)(gpufreq_device->get_gpu_max_level());
+	if(gpufreq_device->get_gpu_max_level)
+		*state = (unsigned long)(gpufreq_device->get_gpu_max_level());
 	printk(KERN_DEBUG "default max state=%ld\n",*state);
 	return 0;
 }
@@ -109,7 +110,8 @@ static int gpufreq_get_cur_state(struct thermal_cooling_device *cdev,
 {
 	struct gpufreq_cooling_device *gpufreq_device = cdev->devdata;
 	//*state = gpufreq_device->gpufreq_state;
-	*state = gpufreq_device->get_gpu_current_max_level();
+	if(gpufreq_device->get_gpu_current_max_level)
+		*state = gpufreq_device->get_gpu_current_max_level();
 	printk(KERN_DEBUG "current max state=%ld\n",*state);
 	return 0;
 }
