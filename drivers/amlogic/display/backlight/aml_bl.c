@@ -149,25 +149,25 @@ static void power_on_bl(void)
 	else if ((bl_config.method == BL_CTL_PWM_NEGATIVE) || (bl_config.method == BL_CTL_PWM_POSITIVE)) {
 		switch (bl_config.pwm_port) {
 			case BL_PWM_A:
-				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.combo_high_pre_div, 8, 7);  //pwm_a_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.pwm_pre_div, 8, 7);  //pwm_a_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 0, 4, 2);  //pwm_a_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 15, 1);  //pwm_a_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 0, 1);  //enable pwm_a
 				break;
 			case BL_PWM_B:
-				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.combo_high_pre_div, 16, 7);  //pwm_b_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.pwm_pre_div, 16, 7);  //pwm_b_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 0, 6, 2);  //pwm_b_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 23, 1);  //pwm_b_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 1, 1);  //enable pwm_b
 				break;
 			case BL_PWM_C:
-				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.combo_high_pre_div, 8, 7);  //pwm_c_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.pwm_pre_div, 8, 7);  //pwm_c_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 4, 2);  //pwm_c_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 15, 1);  //pwm_c_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 0, 1);  //enable pwm_c
 				break;
 			case BL_PWM_D:
-				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.combo_high_pre_div, 16, 7);  //pwm_d_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.pwm_pre_div, 16, 7);  //pwm_d_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 6, 2);  //pwm_d_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 23, 1);  //pwm_d_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 1, 1);  //enable pwm_d
@@ -230,25 +230,25 @@ static void power_on_bl(void)
 		}
 		switch (bl_config.combo_low_port) {
 			case BL_PWM_A:
-				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.combo_high_pre_div, 8, 7);  //pwm_a_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.combo_low_pre_div, 8, 7);  //pwm_a_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 0, 4, 2);  //pwm_a_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 15, 1);  //pwm_a_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 0, 1);  //enable pwm_a
 				break;
 			case BL_PWM_B:
-				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.combo_high_pre_div, 16, 7);  //pwm_b_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_AB, bl_config.combo_low_pre_div, 16, 7);  //pwm_b_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 0, 6, 2);  //pwm_b_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 23, 1);  //pwm_b_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_AB, 1, 1, 1);  //enable pwm_b
 				break;
 			case BL_PWM_C:
-				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.combo_high_pre_div, 8, 7);  //pwm_c_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.combo_low_pre_div, 8, 7);  //pwm_c_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 4, 2);  //pwm_c_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 15, 1);  //pwm_c_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 0, 1);  //enable pwm_c
 				break;
 			case BL_PWM_D:
-				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.combo_high_pre_div, 16, 7);  //pwm_d_clk_div
+				aml_set_reg32_bits(P_PWM_MISC_REG_CD, bl_config.combo_low_pre_div, 16, 7);  //pwm_d_clk_div
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 6, 2);  //pwm_d_clk_sel
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 23, 1);  //pwm_d_clk_en
 				aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 1, 1);  //enable pwm_d
