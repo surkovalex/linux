@@ -1,12 +1,12 @@
 /*******************************************************************************
  *
  * FILE NAME          : MxL101SF_OEM_Drv.h
- *
+ * 
  * AUTHOR             : Brenndon Lee
  *
  * DATE CREATED       : Jan/22/2008
  *
- * DESCRIPTION        : This file contains I2C-related constants
+ * DESCRIPTION        : This file contains I2C-related constants 
  *
  *******************************************************************************
  *                Copyright (c) 2006, MaxLinear, Inc.
@@ -45,8 +45,6 @@
 ******************************************************************************/
 MXL_STATUS Ctrl_Sleep(UINT16 TimeinMilliseconds);
 MXL_STATUS Ctrl_GetTime(UINT32 *TimeinMilliseconds);
-int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe);
-int I2CRead(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe);
 
 #endif /* __MXL_CTRL_HWD_H__*/
 

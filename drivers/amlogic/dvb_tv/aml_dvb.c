@@ -90,6 +90,23 @@ static struct tsdemux_ops aml_tsdemux_ops = {
 .set_demux      = aml_tsdemux_set_demux
 };
 
+static int control_ts_on_csi_port(int tsin, int enable)
+{
+	unsigned int temp_data;
+	if(tsin==2 && enable) {
+		//TS2 is on CSI port.
+		//power on mipi csi phy
+		pr_error("power on mipi csi phy for TSIN2\n");
+		WRITE_CBUS_REG(HHI_CSI_PHY_CNTL0,0xfdc1ff81);
+		WRITE_CBUS_REG(HHI_CSI_PHY_CNTL1,0x3fffff);
+		temp_data = READ_CBUS_REG(HHI_CSI_PHY_CNTL2);
+		temp_data &= 0x7ff00000;
+		temp_data |= 0x80000fc0;
+		WRITE_CBUS_REG(HHI_CSI_PHY_CNTL2,temp_data);
+	}
+	return 0;
+}
+
 static void aml_dvb_dmx_release(struct aml_dvb *advb, struct aml_dmx *dmx)
 {
 	int i;
@@ -144,7 +161,6 @@ static int aml_dvb_dmx_init(struct aml_dvb *advb, struct aml_dmx *dmx, int id)
 	dmx->demux.start_feed = aml_dmx_hw_start_feed;
 	dmx->demux.stop_feed = aml_dmx_hw_stop_feed;
 	dmx->demux.write_to_decoder = NULL;
-	spin_lock_init(&dmx->slock);
 
 	if ((ret = dvb_dmx_init(&dmx->demux)) < 0) {
 		pr_error("dvb_dmx failed: error %d\n",ret);
@@ -335,7 +351,6 @@ static int aml_dvb_asyncfifo_init(struct aml_dvb *advb, struct aml_asyncfifo *as
 	}
 #endif
 
-	spin_lock_init(&asyncfifo->slock);
 	asyncfifo->dvb = advb;
 	asyncfifo->id = id;
 	asyncfifo->init = 0;
@@ -985,6 +1000,8 @@ static ssize_t stb_store_hw_setting(struct class *class, struct class_attribute 
 		}
 
 		ts->pinctrl  = devm_pinctrl_get_select(&dvb->pdev->dev, pname);
+		if(IS_ERR_VALUE(ts->pinctrl))
+			ts->pinctrl = NULL;
 		ts->mode     = mode;
 		ts->control  = ctrl;
 
@@ -1150,6 +1167,11 @@ static int aml_dvb_probe(struct platform_device *pdev)
 					advb->ts[i].mode    = AM_TS_DISABLE;
 					advb->ts[i].pinctrl = NULL;
 				}
+
+				if(IS_ERR_VALUE(advb->ts[i].pinctrl))
+					advb->ts[i].pinctrl = NULL;
+
+				control_ts_on_csi_port(i, (advb->ts[i].mode == AM_TS_DISABLE)? 0 : 1);
 			}
 
 			snprintf(buf, sizeof(buf), "ts%d_control", i);
@@ -1402,13 +1424,15 @@ static int aml_tsdemux_set_vid(int vpid)
 	int ret = 0;
 
 	spin_lock_irqsave(&dvb->slock, flags);
+
 	dmx = get_stb_dmx();
+
 	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	if(dmx) {
 		mutex_lock(&dmx->dmxdev.mutex);
 
-		spin_lock_irqsave(&dmx->slock, flags);
+		spin_lock_irqsave(&dvb->slock, flags);
 
 		if(dmx->vid_chan!=-1) {
 			dmx_free_chan(dmx, dmx->vid_chan);
@@ -1422,7 +1446,7 @@ static int aml_tsdemux_set_vid(int vpid)
 			}
 		}
 
-		spin_unlock_irqrestore(&dmx->slock, flags);
+		spin_unlock_irqrestore(&dvb->slock, flags);
 
 		mutex_unlock(&dmx->dmxdev.mutex);
 	}
@@ -1439,13 +1463,15 @@ static int aml_tsdemux_set_aid(int apid)
 	int ret = 0;
 
 	spin_lock_irqsave(&dvb->slock, flags);
+
 	dmx = get_stb_dmx();
+
 	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	if(dmx) {
 		mutex_lock(&dmx->dmxdev.mutex);
 
-		spin_lock_irqsave(&dmx->slock, flags);
+		spin_lock_irqsave(&dvb->slock, flags);
 
 		if(dmx->aud_chan!=-1) {
 			dmx_free_chan(dmx, dmx->aud_chan);
@@ -1459,7 +1485,7 @@ static int aml_tsdemux_set_aid(int apid)
 			}
 		}
 
-		spin_unlock_irqrestore(&dmx->slock, flags);
+		spin_unlock_irqrestore(&dvb->slock, flags);
 
 		mutex_unlock(&dmx->dmxdev.mutex);
 	}
@@ -1476,13 +1502,15 @@ static int aml_tsdemux_set_sid(int spid)
 	int ret = 0;
 
 	spin_lock_irqsave(&dvb->slock, flags);
+
 	dmx = get_stb_dmx();
+
 	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	if(dmx) {
 		mutex_lock(&dmx->dmxdev.mutex);
 
-		spin_lock_irqsave(&dmx->slock, flags);
+		spin_lock_irqsave(&dvb->slock, flags);
 
 		if(dmx->sub_chan!=-1) {
 			dmx_free_chan(dmx, dmx->sub_chan);
@@ -1496,7 +1524,7 @@ static int aml_tsdemux_set_sid(int spid)
 			}
 		}
 
-		spin_unlock_irqrestore(&dmx->slock, flags);
+		spin_unlock_irqrestore(&dvb->slock, flags);
 
 		mutex_unlock(&dmx->dmxdev.mutex);
 	}

@@ -1,7 +1,7 @@
 /*******************************************************************************
  *
  * FILE NAME          : MaxLinearDataTypes.h
- *
+ * 
  * AUTHOR             : Brenndon Lee
  * DATE CREATED       : Jul/31, 2006
  *
@@ -32,7 +32,7 @@
 // Macro for contitional compilation of code in driver
 // This macro will be defined if there is a need to control Demod from driver
 // for eg. running GraphEdit.
-// if there is no need to allow control of demod from driver this macro will be
+// if there is no need to allow control of demod from driver this macro will be 
 // disabled
 //#define MXL_LIB_CTRL
 
@@ -67,24 +67,24 @@ typedef MS_S32            SINT32;
 
 #ifdef __WINDOWS_PLATFORM__
 
-typedef enum
+typedef enum 
 {
   MXL_TRUE = 0,
-  MXL_FALSE = 1,
+  MXL_FALSE = 1,  
 
 } MXL_STATUS;
 
-typedef enum
+typedef enum 
 {
   MXL_DISABLE = 0,
   MXL_ENABLE,
-
+        
   MXL_NO_FREEZE = 0,
   MXL_FREEZE,
 
   MXL_UNLOCKED = 0,
   MXL_LOCKED,
-
+  
   MXL_OFF = 0,
   MXL_ON
 
@@ -109,17 +109,17 @@ typedef enum
 #undef BOOL
 #endif
 
-typedef enum
+typedef enum 
 {
   TRUE = 1,
   FALSE = 0,
-
+        
   PASSED = 1,
   FAILED = 0,
 
   GOOD = 1,
   BAD = 0,
-
+  
   YES = 1,
   NO = 0,
 
@@ -134,11 +134,11 @@ typedef enum
 
   VALID = 1,
   INVALID = 0,
-
+  
   BUSY = 1,
   IDLE = 0,
 
-} BOOL;
+} BOOL;  
 #endif  //  __WINDOWS_PLATFORM__
 
 // The macro for memory-mapped register access

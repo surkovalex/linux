@@ -30,7 +30,7 @@
 #include <linux/errno.h>
 #include <linux/list.h>
 #include <linux/time.h>
-#include <uapi/linux/dvb/dmx.h>
+#include <linux/dvb/dmx.h>
 
 /*--------------------------------------------------------------------------*/
 /* Common definitions */

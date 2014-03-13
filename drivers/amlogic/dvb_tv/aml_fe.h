@@ -6,12 +6,12 @@
 #include <linux/netdevice.h>
 #include <linux/i2c.h>
 
-#include <uapi/linux/dvb/video.h>
-#include <uapi/linux/dvb/audio.h>
-#include <uapi/linux/dvb/dmx.h>
-#include <uapi/linux/dvb/ca.h>
-#include <uapi/linux/dvb/osd.h>
-#include <uapi/linux/dvb/net.h>
+#include <linux/dvb/video.h>
+#include <linux/dvb/audio.h>
+#include <linux/dvb/dmx.h>
+#include <linux/dvb/ca.h>
+#include <linux/dvb/osd.h>
+#include <linux/dvb/net.h>
 #include <linux/mutex.h>
 #include <linux/spinlock.h>
 #include <linux/interrupt.h>
@@ -20,16 +20,17 @@
 #include <linux/earlysuspend.h>
 #endif
 
-#include "../../media/dvb-core/dvbdev.h"
-#include "../../media/dvb-core/demux.h"
-#include "../../media/dvb-core/dvb_demux.h"
-#include "../../media/dvb-core/dmxdev.h"
-#include "../../media/dvb-core/dvb_filter.h"
-#include "../../media/dvb-core/dvb_net.h"
-#include "../../media/dvb-core/dvb_ringbuffer.h"
-#include "../../media/dvb-core/dvb_frontend.h"
+#include "drivers/media/dvb-core/dvbdev.h"
+#include "drivers/media/dvb-core/demux.h"
+#include "drivers/media/dvb-core/dvb_demux.h"
+#include "drivers/media/dvb-core/dmxdev.h"
+#include "drivers/media/dvb-core/dvb_filter.h"
+#include "drivers/media/dvb-core/dvb_net.h"
+#include "drivers/media/dvb-core/dvb_ringbuffer.h"
+#include "drivers/media/dvb-core/dvb_frontend.h"
 #include "aml_dvb.h"
-#include "../../../include/uapi/linux/videodev2.h"
+#include "linux/videodev2.h"
+
 #include <linux/amlogic/aml_gpio_consumer.h>
 
 
@@ -78,7 +79,8 @@ typedef enum{
 	AM_DTV_DEMOD_AVL6211 = 4,
 	AM_DTV_DEMOD_SI2168 = 5,
 	AM_DTV_DEMOD_ITE9133 = 6,
-	AM_DTV_DEMOD_ITE9173 = 7
+	AM_DTV_DEMOD_ITE9173 = 7,
+	AM_DTV_DEMOD_DIB8096 = 8
 }aml_dtv_demod_type_t;
 
 typedef enum{

@@ -1,11 +1,11 @@
 /*******************************************************************************
  *
  * FILE NAME          : MxL101SF_PhyDefs.h
- *
+ * 
  * AUTHOR             : Brenndon Lee
  * DATE CREATED       : 5/18/2009
  *
- * DESCRIPTION        : This file contains MxL101SF common control register
+ * DESCRIPTION        : This file contains MxL101SF common control register 
  *                      definitions
  *
  *******************************************************************************
@@ -27,15 +27,15 @@
     Macros
 ******************************************************************************/
 
-#define CHIP_ID_REG                  0xFC
-#define TOP_CHIP_REV_ID_REG          0xFA
+#define CHIP_ID_REG                  0xFC     
+#define TOP_CHIP_REV_ID_REG          0xFA     
 
 #define V6_SNR_RB_LSB_REG            0x27
 #define V6_SNR_RB_MSB_REG            0x28
 
-#define V6_N_ACCUMULATE_REG          0x11
-#define V6_RS_AVG_ERRORS_LSB_REG     0x2C
-#define V6_RS_AVG_ERRORS_MSB_REG     0x2D
+#define V6_N_ACCUMULATE_REG          0x11    
+#define V6_RS_AVG_ERRORS_LSB_REG     0x2C    
+#define V6_RS_AVG_ERRORS_MSB_REG     0x2D    
 
 #define V6_IRQ_STATUS_REG            0x24
 #define  IRQ_MASK_FEC_LOCK       0x10
@@ -46,7 +46,7 @@
 #define V6_RS_LOCK_DET_REG           0x28
 #define  RS_LOCK_DET_MASK        0x08
 
-#define V6_INITACQ_NODETECT_REG    0x20
+#define V6_INITACQ_NODETECT_REG    0x20 
 #define V6_FORCE_NFFT_CPSIZE_REG   0x20
 
 #define V6_CODE_RATE_TPS_REG       0x29
@@ -83,11 +83,11 @@
 #define V6_FEC_PER_SCALE_REG      0x2B
 #define V6_FEC_PER_SCALE_MASK        0x03
 
-#define V6_PIN_MUX_MODE_REG       0x1B
+#define V6_PIN_MUX_MODE_REG       0x1B    
 #define V6_ENABLE_PIN_MUX            0x1E
 
-#define V6_MPEG_OUT_CLK_INV_REG    0x17
-#define V6_MPEG_OUT_CTRL_REG       0x18
+#define V6_MPEG_OUT_CLK_INV_REG    0x17    
+#define V6_MPEG_OUT_CTRL_REG       0x18    
 
 #define V6_INVERTED_CLK_PHASE       0x20
 #define V6_MPEG_DATA_PARALLEL    0x01
@@ -160,11 +160,11 @@ typedef struct
     Global Variable Declarations
 ******************************************************************************/
 
-extern REG_CTRL_INFO_T MxL_101OverwriteDefault[];
+extern REG_CTRL_INFO_T MxL_101OverwriteDefault[]; 
 extern REG_CTRL_INFO_T MxL_101SuspendMode[];
 extern REG_CTRL_INFO_T MxL_101WakeUp[];
 extern REG_CTRL_INFO_T MxL_MpegDataOutToTSIF[];
-extern REG_CTRL_INFO_T MxL_PhySoftReset[];
+extern REG_CTRL_INFO_T MxL_PhySoftReset[];     
 extern REG_CTRL_INFO_T MxL_TunerDemodMode[];
 extern REG_CTRL_INFO_T MxL_TunerMode[];
 extern REG_CTRL_INFO_T MxL_TopMasterEnable[];

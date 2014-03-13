@@ -1,12 +1,12 @@
 /*******************************************************************************
  *
  * FILE NAME          : MxL101SF_OEM_Drv.cpp
- *
+ * 
  * AUTHOR             : Brenndon Lee
  * DATE CREATED       : 1/24/2008
  *
  * DESCRIPTION        : This file contains I2C emulation routine
- *
+ *                      
  *******************************************************************************
  *                Copyright (c) 2006, MaxLinear, Inc.
  ******************************************************************************/
@@ -15,9 +15,12 @@
 //#include "MsTypes.h"
 //#include "drvIIC.h"
 
+static int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe);
+static int  I2CRead(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe);
+
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : Ctrl_ReadRegister
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
@@ -35,8 +38,8 @@ MXL_STATUS Ctrl_ReadRegister(UINT8 regAddr, UINT8 *dataPtr, struct aml_fe_dev *f
 
   // User should implememnt his own I2C read register routine corresponding to
   // his hardaware.
-
-  //printf("MxL Reg Read : Addr - 0x%x, data - 0x%x\n", regAddr, *dataPtr);
+  
+  //printf("MxL Reg Read : Addr - 0x%x, data - 0x%x\n", regAddr, *dataPtr);   
   //i2cSlaveAddr<<1;
   //i2cSlaveAddr|=0x1;
   //UINT8 i2cSlaveAddr = 0xC1;
@@ -58,7 +61,7 @@ MXL_STATUS Ctrl_ReadRegister(UINT8 regAddr, UINT8 *dataPtr, struct aml_fe_dev *f
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : Ctrl_WriteRegister
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
@@ -76,10 +79,10 @@ MXL_STATUS Ctrl_WriteRegister(UINT8 regAddr, UINT8 regData, struct aml_fe_dev *f
 
   // User should implememnt his own I2C write register routine corresponding to
   // his hardaware.
-
- // printf("MxL Reg Write : Addr - 0x%x, data - 0x%x\n", regAddr, regData);
+  
+ // printf("MxL Reg Write : Addr - 0x%x, data - 0x%x\n", regAddr, regData);    
   //i2cSlaveAddr<<1;
-  //i2cSlaveAddr &= 0xFE;
+  //i2cSlaveAddr &= 0xFE; 
 //  UINT8 i2cSlaveAddr = 0xC0;
   UINT8 i2cSlaveAddr = fe->i2c_addr;
   UINT8 u8Reg[2];
@@ -94,20 +97,20 @@ MXL_STATUS Ctrl_WriteRegister(UINT8 regAddr, UINT8 regData, struct aml_fe_dev *f
   {
 	  	status = MXL_FALSE;
   }*/
-
+ 
   return status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : Ctrl_Sleep
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 8/31/2009
 --|
---| DESCRIPTION   : This function will cause the calling thread to be suspended
---|                 from execution until the number of milliseconds specified by
---|                 the argument time has elapsed
+--| DESCRIPTION   : This function will cause the calling thread to be suspended 
+--|                 from execution until the number of milliseconds specified by 
+--|                 the argument time has elapsed 
 --|
 --| RETURN VALUE  : True or False
 --|
@@ -120,20 +123,20 @@ MXL_STATUS Ctrl_Sleep(UINT16 TimeinMilliseconds)
   // User should implememnt his own sleep routine corresponding to
   // his Operating System platform.
 	udelay(TimeinMilliseconds);
-  //printf("Ctrl_Sleep : %d msec's\n", Time);
+  //printf("Ctrl_Sleep : %d msec's\n", Time);    
  // SysDelay(TimeinMilliseconds);
   return status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : Ctrl_GetTime
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 10/05/2009
 --|
---| DESCRIPTION   : This function will return current system's timestamp in
---|                 milliseconds resolution.
+--| DESCRIPTION   : This function will return current system's timestamp in 
+--|                 milliseconds resolution. 
 --|
 --| RETURN VALUE  : True or False
 --|
@@ -152,7 +155,7 @@ MXL_STATUS Ctrl_GetTime(UINT32 *TimeinMilliseconds)
   return MXL_TRUE;
 }
 
-int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
+static int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
  {
 //	printk("\n[I2CWrite] enter I2CSlaveAddr is %x,length is %d,data[0] is %x,data[1] is %x\n",I2CSlaveAddr,length,data[0],data[1]);
    /* I2C write, please port this function*/
@@ -165,7 +168,7 @@ int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
 	memset(&msg, 0, sizeof(msg));
 
 	/*write reg address*/
-/*	msg[0].addr = (state->config.demod_addr);
+/*	msg[0].addr = (state->config.demod_addr);					
 	msg[0].flags = 0;
 	msg[0].buf = regbuf;
 	msg[0].len = 1;*/
@@ -180,7 +183,7 @@ int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
 #if 0
 
 	/*write reg address*/
-	msg[0].addr = 0x80;
+	msg[0].addr = 0x80;					
 	msg[0].flags = 0;
 	msg[0].buf = 0x7;
 	msg[0].len = 1;
@@ -213,23 +216,23 @@ int I2CWrite(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
 		return 1;
       return 1;
  }
-
-int  I2CRead(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
+ 
+static int  I2CRead(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
  {
      /* I2C read, please port this function*/
 	// 	printk("\n[I2CRead] enter ");
 		 UINT32 nRetCode = 0;
 		 struct i2c_msg msg[1];
-
+		 
 		 if(data == 0 || length == 0)
 		 {
 			 printk("mxl101 read register parameter error !!\n");
 			 return 0;
 		 }
-
+	 
 	//	 gx1001_set_addr(state, regaddr) ; //set reg address first
-
-		 //read real data
+	 
+		 //read real data 
 		 memset(msg, 0, sizeof(msg));
 		 msg[0].addr = I2CSlaveAddr;
 		 msg[0].flags |=  I2C_M_RD;  //write  I2C_M_RD=0x01
@@ -247,10 +250,10 @@ int  I2CRead(UINT8 I2CSlaveAddr, UINT8 *data, int length, struct aml_fe_dev *fe)
 		if (!i2c_handle) {
 			printk("cannot get i2c adaptor\n");
 		}*/
-
-
+	
+		 
 		 nRetCode = i2c_transfer(fe->i2c_adap, msg, 1);
-
+	 
 		 if(nRetCode != 1)
 		 {
 			 printk("mxl101_readregister reg failure!\n");

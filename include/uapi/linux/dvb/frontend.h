@@ -410,7 +410,9 @@ struct dvb_frontend_event {
 #define DTV_STAT_ERROR_BLOCK_COUNT	68
 #define DTV_STAT_TOTAL_BLOCK_COUNT	69
 
-#define DTV_MAX_COMMAND		DTV_STAT_TOTAL_BLOCK_COUNT
+#define DTV_DVBT2_DATA_PLPS	70
+
+#define DTV_MAX_COMMAND			DTV_DVBT2_DATA_PLPS	
 
 typedef enum fe_pilot {
 	PILOT_ON,

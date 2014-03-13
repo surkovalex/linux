@@ -31,6 +31,9 @@
 #endif
 #include <linux/i2c.h>
 #include <linux/gpio.h>
+
+#include <linux/amlogic/aml_gpio_consumer.h>
+
 #include "demod_MxL101SF.h"
 #include "../aml_fe.h"
 
@@ -41,6 +44,8 @@
 #endif
 
 #define pr_error(args...) printk("MXL: " args)
+
+static char *device_name = "Mxl101";
 
 static int mxl101_read_status(struct dvb_frontend *fe, fe_status_t * status)
 {
@@ -62,7 +67,7 @@ static int mxl101_read_status(struct dvb_frontend *fe, fe_status_t * status)
 	{
 		*status = FE_TIMEDOUT;
 	}
-
+	
 	return  0;
 }
 
@@ -89,7 +94,7 @@ static int mxl101_read_snr(struct dvb_frontend *fe, u16 * snr)
 	struct aml_fe *afe = fe->demodulator_priv;
 	struct aml_fe_dev *dev = afe->dtv_demod;
 
-	*snr=MxL101SF_GetSNR(dev) ;
+	*snr=MxL101SF_GetSNR(dev) ;		
 	return 0;
 }
 
@@ -99,35 +104,30 @@ static int mxl101_read_ucblocks(struct dvb_frontend *fe, u32 * ucblocks)
 	return 0;
 }
 
-static int mxl101_set_frontend(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
+static int mxl101_set_frontend(struct dvb_frontend *fe)
 {
 	struct aml_fe *afe = fe->demodulator_priv;
 	struct aml_fe_dev *dev = afe->dtv_demod;
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 
-	UINT8 bandwidth=8;
-	bandwidth=p->u.ofdm.bandwidth;
-	if(bandwidth==0)
+	UINT32 bandwidth=8;
+	bandwidth=c->bandwidth_hz/1000000;
+	if((bandwidth!=8)&&(bandwidth!=7)&&(bandwidth!=6))
 		bandwidth=8;
-	else if(bandwidth==1)
-		bandwidth=7;
-	else if(bandwidth==2)
-		bandwidth=6;
-	else
-		bandwidth=8;
-	MxL101SF_Tune(p->frequency,bandwidth, dev);
+	MxL101SF_Tune(c->frequency,bandwidth, dev);
 //	demod_connect(state, p->frequency,p->u.qam.modulation,p->u.qam.symbol_rate);
-	afe->params = *p;
+	afe->params = *c;
 //	Mxl101SF_Debug();
-	pr_dbg("mxl101=>frequency=%d,symbol_rate=%d\r\n",p->frequency,p->u.qam.symbol_rate);
+	pr_dbg("mxl101=>frequency=%d,bandwidth_hz=%d\r\n",c->frequency,c->bandwidth_hz);
 	return  0;
 }
 
-static int mxl101_get_frontend(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
+static int mxl101_get_frontend(struct dvb_frontend *fe)
 {//these content will be writed into eeprom .
-
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 	struct aml_fe *afe = fe->demodulator_priv;
 
-	*p = afe->params;
+	*c = afe->params;
 	return 0;
 }
 
@@ -137,7 +137,7 @@ static int mxl101_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 
 	fe_ops->info.frequency_min = 51000000;
 	fe_ops->info.frequency_max = 858000000;
-	fe_ops->info.frequency_stepsize = 166667;
+	fe_ops->info.frequency_stepsize = 0;
 	fe_ops->info.frequency_tolerance = 0;
 	fe_ops->info.caps = FE_CAN_FEC_1_2 | FE_CAN_FEC_2_3 | FE_CAN_FEC_3_4 |
 			FE_CAN_FEC_5_6 | FE_CAN_FEC_7_8 | FE_CAN_FEC_AUTO |
@@ -150,13 +150,15 @@ static int mxl101_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 			FE_CAN_MUTE_TS;
 
 	fe_ops->set_frontend = mxl101_set_frontend;
-	fe_ops->get_frontend = mxl101_get_frontend;
+	fe_ops->get_frontend = mxl101_get_frontend;	
 	fe_ops->read_status = mxl101_read_status;
 	fe_ops->read_ber = mxl101_read_ber;
 	fe_ops->read_signal_strength = mxl101_read_signal_strength;
 	fe_ops->read_snr = mxl101_read_snr;
 	fe_ops->read_ucblocks = mxl101_read_ucblocks;
 
+	fe_ops->asyncinfo.set_frontend_asyncenable = 1;
+	
 	return 0;
 }
 
@@ -165,9 +167,10 @@ static int mxl101_fe_enter_mode(struct aml_fe *fe, int mode)
 	struct aml_fe_dev *dev = fe->dtv_demod;
 
 	pr_dbg("=========================demod init\r\n");
-	gpio_direction_output(dev->reset_gpio, dev->reset_value);
+	amlogic_gpio_request(dev->reset_gpio, "Mxl101_reset");
+	amlogic_gpio_direction_output(dev->reset_gpio, dev->reset_value, "Mxl101_reset");
 	msleep(300);
-	gpio_direction_output(dev->reset_gpio, !dev->reset_value); //enable tuner power
+	amlogic_gpio_direction_output(dev->reset_gpio, !dev->reset_value, "Mxl101_reset"); //enable tuner power
 	msleep(200);
 	MxL101SF_Init(dev);
 
@@ -177,9 +180,10 @@ static int mxl101_fe_enter_mode(struct aml_fe *fe, int mode)
 static int mxl101_fe_resume(struct aml_fe_dev *dev)
 {
 	printk("mxl101_fe_resume\n");
-	gpio_direction_output(dev->reset_gpio, dev->reset_value);
+	amlogic_gpio_request(dev->reset_gpio, "Mxl101_reset");
+	amlogic_gpio_direction_output(dev->reset_gpio, dev->reset_value, "Mxl101_reset");
 	msleep(300);
-	gpio_direction_output(dev->reset_gpio, !dev->reset_value); //enable tuner power
+	amlogic_gpio_direction_output(dev->reset_gpio, !dev->reset_value, "Mxl101_reset"); //enable tuner power
 	msleep(200);
 	MxL101SF_Init(dev);
 	return 0;

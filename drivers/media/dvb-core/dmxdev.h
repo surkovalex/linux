@@ -34,7 +34,7 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 
-#include <uapi/linux/dvb/dmx.h>
+#include <linux/dvb/dmx.h>
 
 #include "dvbdev.h"
 #include "demux.h"

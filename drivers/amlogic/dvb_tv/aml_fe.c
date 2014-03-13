@@ -169,7 +169,7 @@ int aml_fe_analog_set_frontend(struct dvb_frontend* fe)
 
 	/*set tuner&ademod such as philipse tuner*/
 	if(fe->ops.analog_ops.set_params){
-		fe->ops.analog_ops.set_params(fe);
+		fe->ops.analog_ops.set_params(fe, &p);
 		ret = 0;
 	}
 	if(fe->ops.tuner_ops.set_params){
@@ -217,7 +217,7 @@ static int aml_fe_analog_read_signal_strength(struct dvb_frontend* fe, u16 *stre
 	s=0;
 	if(fe->ops.analog_ops.has_signal){
 
-		fe->ops.analog_ops.has_signal(fe);
+		fe->ops.analog_ops.has_signal(fe, &s);
 		*strength = s;
 		ret = 0;
 	}else if(fe->ops.tuner_ops.get_rf_strength){
@@ -305,7 +305,7 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe, struct dv
 //1.if the afc_range>1Mhz,set the freq  more than once
 //2. if the afc_range<=1MHz,set the freq only once ,on the mid freq
 
-static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
+static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 {
 	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 	fe_status_t tuner_state;
@@ -413,7 +413,7 @@ static int aml_fe_afc_closer(struct dvb_frontend *fe,int minafcfreq,int maxafcfq
 
 		while(afc > AFC_BEST_LOCK){
 
-			fe->ops.analog_ops.get_afc(fe);
+			fe->ops.analog_ops.get_afc(fe, &afc);
 			c->frequency += afc*1000;
 
 			if(unlikely(c->frequency>maxafcfqreq) ){
@@ -641,7 +641,6 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 	int ret;
 	u32 value;
 	const char *str;
-	aml_tuner_type_t tunerid;
 
 	switch(type){
 		case AM_DEV_TUNER:
@@ -659,26 +658,18 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 
 	snprintf(buf, sizeof(buf), "%s%d", name, id);
 #ifdef CONFIG_OF
-	printk("---------------CONFIG_OF-------------\n");
-	ret = of_property_read_u32(pdev->dev.of_node, buf, &value);
+	ret = of_property_read_string(pdev->dev.of_node, buf, &str);
 	if(ret){
 		return 0;
 	}else{
 		struct aml_fe_drv **list = aml_get_fe_drv_list(type);
 		struct aml_fe_drv *drv;
 		unsigned long flags;
-		tunerid = value;
 
 		spin_lock_irqsave(&lock, flags);
 
-	/*	for(drv = *list; drv; drv = drv->next){
-			if(!strcmp(drv->name, str)){
-				drv->ref++;
-				break;
-			}
-		}*/
 		for(drv = *list; drv; drv = drv->next){
-			if(drv->id == tunerid){
+			if(!strcmp(drv->name, str)){
 				drv->ref++;
 				break;
 			}
@@ -687,9 +678,10 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		spin_unlock_irqrestore(&lock, flags);
 
 		if(drv){
+				pr_dbg("found %s%d driver: %s\n", name, id, str);
 				dev->drv = drv;
 			}else{
-				pr_err("cannot find %s%d driver: %d\n", name, id, tunerid);
+				pr_err("cannot find %s%d driver: %s\n", name, id, str);
 				return -1;
 			}
 	}
@@ -1097,25 +1089,6 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		fe->ts = ts;
 	}
 #endif /*CONFIG_OF*/
-	{
-		int memend;
-		int memsize;
-		snprintf(buf, sizeof(buf), "fe%d_mem", id);
-		ret = find_reserve_block(pdev->dev.of_node->name,0);
-		if(ret < 0){
-		    pr_err("aml_fe memory resource undefined.\n");
-		}else{
-			memstart = (phys_addr_t)get_reserve_block_addr(ret);
-			memsize = (phys_addr_t)get_reserve_block_size(ret);
-			memend = memstart+memsize;
-			mem_buf=(long*)phys_to_virt(memstart/*+0x40000000*/);
-		//	mem_buf = (long*)(memstart+0x40000000);
-			printk("memend is %x,memstart is %x,memsize is %x\n",memend,memstart,memsize);
-			printk("mem reset g\n");
-			memset(mem_buf,0,memsize-1);
-			printk("mem reset o\n");
-	}
-	}
 
 	snprintf(buf, sizeof(buf), "fe%d_dev", id);
 #ifdef CONFIG_OF

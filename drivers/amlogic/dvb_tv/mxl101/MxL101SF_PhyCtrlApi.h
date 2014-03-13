@@ -1,12 +1,12 @@
 /*******************************************************************************
  *
  * FILE NAME          : MxL101SF_PhyCtrlApi.h
- *
+ * 
  * AUTHOR             : Brenndon Lee
  *                      Mahendra Kondur - code seperation
  *
  * DATE CREATED       : 5/18/2009
- *                      10/22/2009
+ *                      10/22/2009 
  *
  * DESCRIPTION        : This file is header file for MxL101SF_PhyCtrlApi.cpp
  *
@@ -49,12 +49,12 @@ typedef enum
   MXL_DEV_OPERATIONAL_MODE_CFG,
   MXL_DEV_GPO_PINS_CFG,
   MXL_DEV_CABLE_CFG,
-
+  
   // MxL101SF Config specific commands
   MXL_DEV_101SF_OVERWRITE_DEFAULTS_CFG,
   MXL_DEV_101SF_POWER_MODE_CFG,
   MXL_DEV_MPEG_OUT_CFG,
-
+  
   // Reset/Clear Demod status
   MXL_DEMOD_RESET_IRQ_CFG,
   MXL_DEMOD_RESET_PEC_CFG,
@@ -62,7 +62,7 @@ typedef enum
 
   // Demod Config commands
   MXL_DEMOD_SPECTRUM_CFG,
-
+  
   // Demod Status and Info command
   MXL_DEMOD_SNR_REQ,
   MXL_DEMOD_BER_REQ,
@@ -78,21 +78,21 @@ typedef enum
   MXL_DEMOD_SYNC_LOCK_REQ,
   MXL_DEMOD_RS_LOCK_REQ,
   MXL_DEMOD_CP_LOCK_REQ,
-
+  
   // Tuner Config commands
   MXL_TUNER_TOP_MASTER_CFG,
   MXL_TUNER_CHAN_TUNE_CFG,
-  MXL_TUNER_IF_OUTPUT_FREQ_CFG,
+  MXL_TUNER_IF_OUTPUT_FREQ_CFG, 
 
   // Tuner Status and Info command
   MXL_TUNER_LOCK_STATUS_REQ,
   MXL_TUNER_SIGNAL_STRENGTH_REQ,
-
+  
   // Channel Scan commands
   MXL_TUNER_CHAN_SCAN_CFG,
   MXL_TUNER_CHECK_CHAN_STATUS_REQ,
   MXL_TUNER_CHAN_OFFSET_REQ,
-
+    
   MAX_NUM_CMD
 } MXL_CMD_TYPE_E;
 
@@ -103,14 +103,14 @@ typedef struct
   UINT8 DevVer;                   /* OUT, Device Version of MxL101SF Device */
 } MXL_DEV_INFO_T, *PMXL_DEV_INFO_T;
 
-// MXL_DEV_POWER_MODE_CFG
+// MXL_DEV_POWER_MODE_CFG 
 typedef enum
 {
   STANDBY_ON = 0,
   SLEEP_ON,
   STANDBY_OFF,
   SLEEP_OFF,
-} MXL_PWR_MODE_E;
+} MXL_PWR_MODE_E; 
 
 typedef struct
 {
@@ -167,7 +167,7 @@ typedef struct
 // MXL_DEMOD_TPS_FFT_MODE_REQ
 // MXL_DEMOD_TPS_GUARD_INTERVAL_REQ
 // MXL_DEMOD_TPS_HIERARCHY_REQ
-typedef struct
+typedef struct 
 {
   UINT8 TpsInfo;                      /* OUT, TPS data for respective TPS command */
 }MXL_DEMOD_TPS_INFO_T, *PMXL_DEMOD_TPS_INFO_T;
@@ -178,7 +178,7 @@ typedef struct
 // MXL_DEMOD_RS_LOCK_REQ
 typedef struct
 {
-  MXL_BOOL Status;                  /* OUT, Lock status of MxL101SF */
+  MXL_BOOL Status;                  /* OUT, Lock status of MxL101SF */ 
 } MXL_DEMOD_LOCK_STATUS_T, *PMXL_DEMOD_LOCK_STATUS_T;
 
 // MXL_DEMOD_TS_PRIORITY_CFG
@@ -190,7 +190,7 @@ typedef enum
 
 typedef struct
 {
-  MXL_HPORLP_E StreamPriority;         /* IN,  Value to select transport stream priority*/
+  MXL_HPORLP_E StreamPriority;         /* IN,  Value to select transport stream priority*/ 
 } MXL_DEMOD_TS_PRIORITY_CFG_T, *PMXL_DEMOD_TS_PRIORITY_CFG_T;
 
 // MXL_TUNER_IF_OUTPUT_FREQ_CFG
@@ -210,7 +210,7 @@ typedef enum
   IF_36_15MHZ,
   IF_44_0MHZ,
   IF_OTHER_35MHZ_45MHZ = 0x0F,
-} MXL_IF_FREQ_E;
+} MXL_IF_FREQ_E; 
 
 typedef struct
 {
@@ -297,7 +297,7 @@ typedef enum
   MPEG_CLK_IN_PHASE = 0,
   MPEG_CLK_INVERTED,
 
-  MPEG_CLK_EXTERNAL = 0,
+  MPEG_CLK_EXTERNAL = 0, 
   MPEG_CLK_INTERNAL
 } MPEG_CLK_FMT_E;
 
@@ -305,7 +305,7 @@ typedef enum
 {
   MPEG_SERIAL_LSB_1ST = 0,
   MPEG_SERIAL_MSB_1ST,
-
+  
   MPEG_DATA_SERIAL  = 0,
   MPEG_DATA_PARALLEL,
 
@@ -314,10 +314,10 @@ typedef enum
 } MPEG_DATA_FMT_E;
 
 typedef struct
-{
+{ 
   MPEG_DATA_FMT_E   SerialOrPar;             /* IN, Serial or Parallel mode */
   MPEG_DATA_FMT_E   LsbOrMsbFirst;           /* IN, Serial mode MSB or LSB first */
-  MPEG_CLOCK_FREQ_E MpegClkFreq;             /* IN, MPEG Clock frequency */
+  MPEG_CLOCK_FREQ_E MpegClkFreq;             /* IN, MPEG Clock frequency */ 
   MPEG_CLK_FMT_E    MpegValidPol;            /* IN, MPEG Valid polarity */
   MPEG_CLK_FMT_E    MpegClkPhase;            /* IN, MPEG Clock phase */
   MPEG_CLK_FMT_E    MpegSyncPol;             /* IN, MPEG SYNC Polarity */
@@ -344,7 +344,7 @@ typedef struct
 } MXL_SIGNAL_STATS_T, *PMXL_SIGNAL_STATS_T;
 
 // MXL_DEMOD_TPS_CELL_ID_REQ
-typedef struct
+typedef struct 
 {
   UINT16 TpsCellId;                      /* OUT, TPS Cell ID Info */
 }MXL_DEMOD_CELL_ID_INFO_T, *PMXL_DEMOD_CELL_ID_INFO_T;
@@ -360,7 +360,7 @@ typedef enum
 
 typedef struct
 {
-  MXL_CHAN_SCAN_CTRL_E ChanScanCtrl;   /* IN, value of Highest lock level check for a frequency */
+  MXL_CHAN_SCAN_CTRL_E ChanScanCtrl;   /* IN, value of Highest lock level check for a frequency */   
   UINT32 Frequency;                    /* IN, Frequency in MHz */
   UINT8 Bandwidth;                     /* IN, Channel Bandwidth in MHz */
   MXL_BOOL TpsCellIdRbCtrl;            /* IN, Enable TPS Cell ID Read Back feature */
@@ -368,19 +368,19 @@ typedef struct
 } MXL_TUNER_CHECK_CHAN_REQ_T, *PMXL_TUNER_CHECK_CHAN_REQ_T;
 
 // MXL_TUNER_CHAN_OFFSET_REQ
-typedef struct
+typedef struct 
 {
   SINT32 ChanOffset;                      /* OUT, Frequency Offset for a Channel in Hz*/
 }MXL_TUNER_CHAN_OFFSET_T, *PMXL_TUNER_CHAN_OFFSET_T;
 
 // MXL_TUNER_CHAN_SCAN_CFG
-typedef struct
+typedef struct 
 {
   MXL_BOOL ChanScanCfg;                      /* IN, Enable or Disable Channel Scan */
 }MXL_TUNER_CHAN_SCAN_CFG_T, *PMXL_TUNER_CHAN_SCAN_CFG_T;
 
 /* MXL_DEMOD_SPECTRUM_CFG */
-typedef struct
+typedef struct 
 {
   MXL_BOOL SpectrumCfg;                      /* IN, Enable or Disable inverted signal processing */
 }MXL_DEMOD_SPECTRUM_CFG_T, *PMXL_DEMOD_SPECTRUM_CFG_T;

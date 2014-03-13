@@ -1,13 +1,13 @@
 /*******************************************************************************
  *
  * FILE NAME          : MxL101SF_PhyCtrlApi.cpp
- *
+ * 
  * AUTHOR             : Brenndon Lee
  * DATE CREATED       : 1/22/2008
  *
- * DESCRIPTION        : This file contains control APIs that configure MxL101SF
+ * DESCRIPTION        : This file contains control APIs that configure MxL101SF 
  *                      and read back the statistics through I2C interface.
- *
+ *                             
  *******************************************************************************
  *                Copyright (c) 2006, MaxLinear, Inc.
  ******************************************************************************/
@@ -16,6 +16,7 @@
 #include "MxL101SF_PhyDefs.h"
 #include "MxL101SF_OEM_Drv.h"
 
+#include "demod_MxL101SF.h"
 
 #if 0
 #define printdebug printf
@@ -26,16 +27,16 @@
 const UINT8 MxLCtrlVersion[] = {6, 3, 8, 1};
 
 // Variable to store tuned frequency for RSSI calculation
-UINT32 MxLTunedFreq = 0;
+UINT32 MxLTunedFreq = 0; 
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_SoftResetDevice
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 9/8/2008
 --|
---| DESCRIPTION   : By writing any value into address 0xFF (AIC), all control
+--| DESCRIPTION   : By writing any value into address 0xFF (AIC), all control 
 --|                 registers are initialized to the default value.
 --|                 AIC - Address Initiated Command
 --|
@@ -50,7 +51,7 @@ MXL_STATUS MxL101SF_API_SoftResetDevice(struct aml_fe_dev *fe)
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_GetChipInfo
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 2/7/2008
@@ -72,13 +73,13 @@ MXL_STATUS MxL101SF_API_GetChipInfo(PMXL_DEV_INFO_T DevInfoPtr, struct aml_fe_de
 
   status |= Ctrl_ReadRegister(TOP_CHIP_REV_ID_REG, &readBack, fe);
   DevInfoPtr->DevVer = (readBack & 0x0F);
-
+  
   return (MXL_STATUS)status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_SetMxLDeviceMode
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/15/2008
@@ -100,13 +101,13 @@ MXL_STATUS MxL101SF_API_SetMxLDeviceMode(PMXL_DEV_MODE_CFG_T DevModePtr, struct 
     status = Ctrl_ProgramRegisters(MxL_TunerDemodMode, fe);
   else if (DevModePtr->DeviceMode == MXL_TUNER_MODE)
     status = Ctrl_ProgramRegisters(MxL_TunerMode, fe);
-
+  
   return (MXL_STATUS)status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_TopMasterControl
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 4/17/2009
@@ -125,13 +126,13 @@ MXL_STATUS MxL101SF_API_TopMasterControl(PMXL_TOP_MASTER_CFG_T TopMasterCtrlPtr,
     status = Ctrl_ProgramRegisters(MxL_TopMasterDisable, fe);
   else
     status = Ctrl_ProgramRegisters(MxL_TopMasterEnable, fe);
-
+  
   return (MXL_STATUS)status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_InitTunerDemod
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 7/30/2009
@@ -150,7 +151,7 @@ MXL_STATUS MxL101SF_API_InitTunerDemod(struct aml_fe_dev *fe)
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_EnableMpegOutput
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 12/19/2008
@@ -168,7 +169,7 @@ MXL_STATUS MxL101SF_API_EnableMpegOutput(struct aml_fe_dev *fe)
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigMpegOut
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/15/2008
@@ -202,14 +203,14 @@ MXL_STATUS MxL101SF_API_ConfigMpegOut(PMXL_MPEG_CFG_T MpegOutCfgPtr, struct aml_
   mode = 0xC0; // MPEG Out
 
   // Configure MPEG Clock phase
-  if (MpegOutCfgPtr->MpegClkPhase == MPEG_CLK_IN_PHASE)
+  if (MpegOutCfgPtr->MpegClkPhase == MPEG_CLK_IN_PHASE) 
     mode &= ~V6_INVERTED_CLK_PHASE;
-  else
+  else 
     mode |= V6_INVERTED_CLK_PHASE;;
 
-  if (MpegOutCfgPtr->MpegClkFreq > MPEG_CLOCK_27_428571MHz)
+  if (MpegOutCfgPtr->MpegClkFreq > MPEG_CLOCK_27_428571MHz) 
     MpegOutCfgPtr->MpegClkFreq = MPEG_CLOCK_27_428571MHz;
-
+  
   mode |= (((UINT8)MpegOutCfgPtr->MpegClkFreq) << 2);
 
   status = Ctrl_WriteRegister(V6_MPEG_OUT_CLK_INV_REG, mode, fe);
@@ -220,35 +221,35 @@ MXL_STATUS MxL101SF_API_ConfigMpegOut(PMXL_MPEG_CFG_T MpegOutCfgPtr, struct aml_
   mode &= 0xF0;
 
   // Data Input mode
-  if (MpegOutCfgPtr->SerialOrPar == MPEG_DATA_PARALLEL)
+  if (MpegOutCfgPtr->SerialOrPar == MPEG_DATA_PARALLEL) 
   {
     mode |= V6_MPEG_DATA_PARALLEL;
   }
-  else
+  else 
   {
     mode |= V6_MPEG_DATA_SERIAL;
 
     // If serial interface is selected, configure MSB or LSB order in transmission
     status |= Ctrl_ReadRegister(V6_MPEG_INOUT_BIT_ORDER_CTRL_REG, &tmp, fe);
 
-    if (MpegOutCfgPtr->LsbOrMsbFirst == MPEG_SERIAL_MSB_1ST)
-      tmp |= V6_MPEG_SER_MSB_FIRST;
-    else
+    if (MpegOutCfgPtr->LsbOrMsbFirst == MPEG_SERIAL_MSB_1ST) 
+      tmp |= V6_MPEG_SER_MSB_FIRST;  
+    else 
       tmp &= ~V6_MPEG_SER_MSB_FIRST; // LSB First
 
     status |= Ctrl_WriteRegister(V6_MPEG_INOUT_BIT_ORDER_CTRL_REG, tmp, fe);
   }
-
+  
   // MPEG Sync polarity
-  if (MpegOutCfgPtr->MpegSyncPol == MPEG_CLK_IN_PHASE)
+  if (MpegOutCfgPtr->MpegSyncPol == MPEG_CLK_IN_PHASE) 
     mode &= ~V6_INVERTED_MPEG_SYNC;
-  else
+  else 
     mode |= V6_INVERTED_MPEG_SYNC;
 
   // MPEG Valid polarity
-  if (MpegOutCfgPtr->MpegValidPol == MPEG_CLK_IN_PHASE)
-    mode &= ~V6_INVERTED_MPEG_VALID;
-  else
+  if (MpegOutCfgPtr->MpegValidPol == MPEG_CLK_IN_PHASE) 
+    mode &= ~V6_INVERTED_MPEG_VALID; 
+  else 
     mode |= V6_INVERTED_MPEG_VALID;
 
   status |= Ctrl_WriteRegister(V6_MPEG_OUT_CTRL_REG, mode, fe);
@@ -258,7 +259,7 @@ MXL_STATUS MxL101SF_API_ConfigMpegOut(PMXL_MPEG_CFG_T MpegOutCfgPtr, struct aml_
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigDevPowerSavingMode
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 10/20/2009
@@ -273,7 +274,7 @@ MXL_STATUS MxL101SF_API_ConfigMpegOut(PMXL_MPEG_CFG_T MpegOutCfgPtr, struct aml_
 MXL_STATUS MxL101SF_API_ConfigDevPowerSavingMode(PMXL_PWR_MODE_CFG_T PwrModePtr, struct aml_fe_dev *fe)
 {
   UINT8 status = MXL_FALSE;
-
+  
   switch (PwrModePtr->PowerMode)
   {
     case STANDBY_ON:
@@ -297,16 +298,16 @@ MXL_STATUS MxL101SF_API_ConfigDevPowerSavingMode(PMXL_PWR_MODE_CFG_T PwrModePtr,
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_TuneRF
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur - updated new topmastercontrol function name
---|
+--|                                   
 --|
 --| DATE CREATED  : 1/15/2008
 --|                 10/23/2009
 --|                 11/20/2009 - Settings for TPS Cell ID
 --|
---| DESCRIPTION   : After power-on initialization, when channel frequency has
+--| DESCRIPTION   : After power-on initialization, when channel frequency has 
 --|                 changed, this function shall be called
 --|
 --| RETURN VALUE  : MXL_STATUS
@@ -326,6 +327,9 @@ MXL_STATUS MxL101SF_API_TuneRF(PMXL_RF_TUNE_CFG_T TuneParamPtr, struct aml_fe_de
   UINT32 cellIdEndTime;
   UINT16 TimeOut;
   UINT8 agcLockStatus;
+	int count = 0;
+	struct dvb_frontend *mxl_fe_use = fe->fe->fe;
+	int async_ret = 0;
   printdebug("MxL101SF_API_TuneRF] in\n");
   // Stop Tune
   status = Ctrl_WriteRegister(START_TUNE_REG, 0, fe);
@@ -335,16 +339,16 @@ MXL_STATUS MxL101SF_API_TuneRF(PMXL_RF_TUNE_CFG_T TuneParamPtr, struct aml_fe_de
 printdebug("mxl_mode is %d,\n",mxl_mode);
   // Fill out registers for channel tune
   ctrlArrayPtr = Ctrl_PhyTune(TuneParamPtr->Frequency, TuneParamPtr->Bandwidth);
-
+  
   if (!ctrlArrayPtr) return MXL_FALSE;
-
-  // Program registers
+  
+  // Program registers 
   status |= Ctrl_ProgramRegisters(ctrlArrayPtr, fe);
 
   // Enable TPS Cell ID feature
   printf("TuneParamPtr->TpsCellIdRbCtrl is %d\n",TuneParamPtr->TpsCellIdRbCtrl);
   if (TuneParamPtr->TpsCellIdRbCtrl == MXL_ENABLE)
-    status |= Ctrl_ProgramRegisters(MxL_EnableCellId, fe);
+    status |= Ctrl_ProgramRegisters(MxL_EnableCellId, fe); 
 
   // Start tune
   status |= Ctrl_ProgramRegisters(MxL_StartTune, fe);
@@ -353,15 +357,16 @@ printdebug("mxl_mode is %d,\n",mxl_mode);
   {
     Ctrl_GetTime(&cellIdStartTime);
     Ctrl_GetTime(&StartTime);
-    cellIdEndTime = cellIdStartTime;
+    cellIdEndTime = cellIdStartTime;   
     TimeOut = 300;
-
-    while ((cellIdEndTime - cellIdStartTime) < TimeOut)
+  
+#if  0
+    while ((cellIdEndTime - cellIdStartTime) < TimeOut)  
     {
       // Check for CP Lock
       status |= MxLWare_API_GetDemodStatus(MXL_DEMOD_CP_LOCK_REQ, &cpLock, fe);
 
-      if (cpLock.Status == MXL_LOCKED)
+      if (cpLock.Status == MXL_LOCKED) 
       {
         cpLockStatus = MXL_ON;
         break;
@@ -369,8 +374,26 @@ printdebug("mxl_mode is %d,\n",mxl_mode);
 
       Ctrl_GetTime(&cellIdEndTime);
     }
+#endif
+	mxl_fe_use->ops.asyncinfo.set_frontend_asyncpreproc(mxl_fe_use);
+	for(count = 0; count < 6; count++){
+		// Check for CP Lock
+		status |= MxLWare_API_GetDemodStatus(MXL_DEMOD_CP_LOCK_REQ, &cpLock, fe);
 
-    if (cpLockStatus == MXL_OFF)
+		if (cpLock.Status == MXL_LOCKED) 
+		{
+			cpLockStatus = MXL_ON;
+			break;
+		}
+
+		async_ret = mxl_fe_use->ops.asyncinfo.set_frontend_asyncwait(mxl_fe_use, 50);
+		if(async_ret > 0){
+			mxl_fe_use->ops.asyncinfo.set_frontend_asyncpostproc(mxl_fe_use, async_ret);
+			return MXL_FALSE;
+		}		
+	}
+	mxl_fe_use->ops.asyncinfo.set_frontend_asyncpostproc(mxl_fe_use, async_ret);
+    if (cpLockStatus == MXL_OFF) 
     {
       if (TuneParamPtr->TpsCellIdRbCtrl != MXL_ENABLE)
         status |= Ctrl_WriteRegister(START_TUNE_REG, 0, fe);
@@ -383,14 +406,14 @@ printdebug("mxl_mode is %d,\n",mxl_mode);
 
       if (TuneParamPtr->TpsCellIdRbCtrl != MXL_ENABLE)
         status |= Ctrl_WriteRegister(START_TUNE_REG, 1, fe);
-    }
-
+    }  
+  
     // Prep Demod to extract TPS cell ID
     if (TuneParamPtr->TpsCellIdRbCtrl == MXL_ENABLE)
     {
       Ctrl_GetTime(&cellIdStartTime);
       Ctrl_GetTime(&StartTime);
-      cellIdEndTime = cellIdStartTime;
+      cellIdEndTime = cellIdStartTime;   
       TimeOut = 1024;
 
       // Check for AGC Lock
@@ -399,13 +422,13 @@ printdebug("mxl_mode is %d,\n",mxl_mode);
 
       if (agcLockStatus)
         TimeOut = 2048;
-
-      while ((cellIdEndTime - cellIdStartTime) < 350)
+#if 0
+      while ((cellIdEndTime - cellIdStartTime) < 350)  
       {
         // Check for CP Lock
         status |= MxLWare_API_GetDemodStatus(MXL_DEMOD_CP_LOCK_REQ, &cpLock, fe);
-
-        if (cpLock.Status == MXL_UNLOCKED)
+        
+        if (cpLock.Status == MXL_UNLOCKED) 
         {
           if ((cellIdEndTime - StartTime) < TimeOut)
             Ctrl_GetTime(&cellIdStartTime);
@@ -414,9 +437,31 @@ printdebug("mxl_mode is %d,\n",mxl_mode);
         }
         Ctrl_GetTime(&cellIdEndTime);
       }
+#endif
 
-      status |= Ctrl_ProgramRegisters(MxL_DisableCellId, fe);
+      status |= Ctrl_ProgramRegisters(MxL_DisableCellId, fe); 
 
+	MXL_DEMOD_LOCK_STATUS_T rsLockStatus;
+
+	mxl_fe_use->ops.asyncinfo.set_frontend_asyncpreproc(mxl_fe_use);
+	  for(count=0;count<10;count++){
+	  	MxLWare_API_GetDemodStatus(MXL_DEMOD_RS_LOCK_REQ, &rsLockStatus, fe);
+		if(rsLockStatus.Status == 1){
+			printf("__tune4,lock success\n");
+			//msleep(200);
+			async_ret = mxl_fe_use->ops.asyncinfo.set_frontend_asyncwait(mxl_fe_use, 200);
+			break;
+		}
+
+		//msleep(50);
+		async_ret = mxl_fe_use->ops.asyncinfo.set_frontend_asyncwait(mxl_fe_use, 50);
+		if(async_ret > 0){
+			break;
+		}
+			
+	  }
+	mxl_fe_use->ops.asyncinfo.set_frontend_asyncpostproc(mxl_fe_use, async_ret);
+	  
     }
   }
 printdebug("MxL101SF_API_TuneRF] out\n");
@@ -426,7 +471,7 @@ printdebug("MxL101SF_API_TuneRF] out\n");
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetSNR
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur - Support for Interger calculation of SNR
 --|
@@ -437,8 +482,8 @@ printdebug("MxL101SF_API_TuneRF] out\n");
 --|                 SNR is calculated as follows after reading 10bit register
 --|                 Folting-point calculation:
 --|                  SNR = 10 * SNR_REG_VALUE / 64 - 2.5  dB
---|                 Integer calculation:
---|                  10000 x SNR = 1563 x SNR_REG_VALUE - 25000  dB
+--|                 Integer calculation: 
+--|                  10000 x SNR = 1563 x SNR_REG_VALUE - 25000  dB 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -462,13 +507,13 @@ MXL_STATUS MxL101SF_API_DemodGetSNR(PMXL_DEMOD_SNR_INFO_T SnrPtr, struct aml_fe_
     snrCalc =  CALCULATE_SNR(snrData);
     SnrPtr->SNR = snrCalc;
   }
-
-  return (MXL_STATUS)status;
+  
+  return (MXL_STATUS)status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetBER
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur - Support for Interger calculation of BER
 --|
@@ -492,7 +537,7 @@ MXL_STATUS MxL101SF_API_DemodGetBER(PMXL_DEMOD_BER_INFO_T BerInfoPtr, struct aml
   UINT32 n_accumulate;
   UINT16 avg_errors;
   UINT8 rawData;
-
+  
   avg_errors = 0;
   status = Ctrl_ReadRegister(V6_RS_AVG_ERRORS_LSB_REG, &rawData, fe);
   avg_errors = rawData;
@@ -510,17 +555,17 @@ MXL_STATUS MxL101SF_API_DemodGetBER(PMXL_DEMOD_BER_INFO_T BerInfoPtr, struct aml
     BerInfoPtr->BER = berCalc;
   }
 
-  return (MXL_STATUS)status;
+  return (MXL_STATUS)status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetSyncLockStatus
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 5/6/2009
 --|
---| DESCRIPTION   : This function return SYNC_LOCK Status
+--| DESCRIPTION   : This function return SYNC_LOCK Status 
 --|                 if 1, Locked
 --|
 --| RETURN VALUE  : MXL_STATUS
@@ -531,11 +576,11 @@ MXL_STATUS MxL101SF_API_DemodGetSyncLockStatus(PMXL_DEMOD_LOCK_STATUS_T SyncLock
 {
   MXL_STATUS status;
   UINT8 rawData;
-
+  
   status = Ctrl_ReadRegister(V6_SYNC_LOCK_REG, &rawData, fe);
 printdebug("[MxL101SF_API_DemodGetSyncLockStatus] rawData  is %x\n",rawData);
   if (status == MXL_TRUE)
-  {
+  { 
     if ((rawData & SYNC_LOCK_MASK) >> 4)
       SyncLockPtr->Status = MXL_LOCKED;
     else
@@ -547,7 +592,7 @@ printdebug("[MxL101SF_API_DemodGetSyncLockStatus] rawData  is %x\n",rawData);
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetRsLockStatus
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 4/30/2008
@@ -572,13 +617,13 @@ MXL_STATUS MxL101SF_API_DemodGetRsLockStatus(PMXL_DEMOD_LOCK_STATUS_T RsLockPtr,
     else
       RsLockPtr->Status = MXL_UNLOCKED;
   }
-
-  return status;
+ 
+  return status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetCpLockStatus
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 4/30/2008
@@ -603,13 +648,13 @@ printdebug("[MxL101SF_API_DemodGetCpLockStatus] rawData  is %x\n",rawData);
     else
       CpLockPtr->Status = MXL_UNLOCKED;
   }
-
-  return status;
+ 
+  return status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodResetIrqStatus
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
@@ -630,7 +675,7 @@ MXL_STATUS MxL101SF_API_DemodResetIrqStatus(struct aml_fe_dev *fe)
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetTpsCodeRate
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
@@ -646,18 +691,18 @@ MXL_STATUS MxL101SF_API_DemodGetTpsCodeRate(PMXL_DEMOD_TPS_INFO_T TpsCodeRatePtr
 {
   MXL_STATUS status;
   UINT8 rawData;
-
+  
   status = Ctrl_ReadRegister(V6_CODE_RATE_TPS_REG, &rawData, fe);
 printdebug("[MxL101SF_API_DemodGetTpsCodeRate] rawData  is %x\n",rawData);
   if (status == MXL_TRUE)
     TpsCodeRatePtr->TpsInfo = rawData & V6_CODE_RATE_TPS_MASK;
-
-  return status;
+  
+  return status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetTpsHierarchy
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
@@ -678,13 +723,13 @@ MXL_STATUS MxL101SF_API_DemodGetTpsHierarchy(PMXL_DEMOD_TPS_INFO_T TpsHierarchyP
 printdebug("[MxL101SF_API_DemodGetTpsHierarchy] rawData  is %x\n",rawData);
   if (status == MXL_TRUE)
     TpsHierarchyPtr->TpsInfo = (rawData & V6_TPS_HIERARCHY_INFO_MASK) >> 6;
-
-  return status;
+  
+  return status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigStreamPriority
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 1/14/2010
@@ -711,13 +756,13 @@ MXL_STATUS MxL101SF_API_ConfigStreamPriority(PMXL_DEMOD_TS_PRIORITY_CFG_T TsPrio
 
     status |= Ctrl_WriteRegister(V6_TPS_HPORLP_REG, rawData, fe);
   }
-
-  return (MXL_STATUS)status;
+    
+  return (MXL_STATUS)status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetHierarchicalAlphaValue
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 1/14/2010
@@ -737,19 +782,19 @@ MXL_STATUS MxL101SF_API_DemodGetHierarchicalAlphaValue(PMXL_DEMOD_TPS_INFO_T Tps
 printdebug("[MxL101SF_API_DemodGetHierarchicalAlphaValue] rawData  is %x\n",rawData);
   if (status == MXL_TRUE)
     TpsAlphaPtr->TpsInfo = (rawData & V6_TPS_ALPHA_MASK);
-
-  return status;
+  
+  return status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetTpsConstellation
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
 --|
 --| DESCRIPTION   : This function return Constellation status bit information
---|                 Constellation, 00 : QPSK, 01 : 16QAM, 10:64QAM
+--|                 Constellation, 00 : QPSK, 01 : 16QAM, 10:64QAM   
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -759,25 +804,25 @@ MXL_STATUS MxL101SF_API_DemodGetTpsConstellation(PMXL_DEMOD_TPS_INFO_T TpsConste
 {
   MXL_STATUS status;
   UINT8 tpsParams;
-
+  
   status = Ctrl_ReadRegister(V6_MODORDER_TPS_REG, &tpsParams, fe);
  printdebug("[MxL101SF_API_DemodGetTpsConstellation] tpsParams  is %x\n",tpsParams);
   if (status == MXL_TRUE)
     TpsConstellationPtr->TpsInfo = (tpsParams & V6_PARAM_CONSTELLATION_MASK) >> 4 ;
-
+  
   return status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetTpsFftMode
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
 --|
 --| DESCRIPTION   : This function return FFT Mode status bit information
 --|                 FFT Mode, 00:2K, 01:8K, 10:4K
---|
+--| 
 --| RETURN VALUE  : MXL_STATUS
 --|
 --|---------------------------------------------------------------------------*/
@@ -786,18 +831,18 @@ MXL_STATUS MxL101SF_API_DemodGetTpsFftMode(PMXL_DEMOD_TPS_INFO_T TpsFftModePtr, 
 {
   MXL_STATUS status;
   UINT8 tpsParams;
-
+  
   status = Ctrl_ReadRegister(V6_MODE_TPS_REG, &tpsParams, fe);
   printdebug("[MxL101SF_API_DemodGetTpsFftMode] tpsParams  is %x\n",tpsParams);
   if (status == MXL_TRUE)
     TpsFftModePtr->TpsInfo = (tpsParams & V6_PARAM_FFT_MODE_MASK) >> 2 ;
-
+  
   return status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetTpsGuardInterval
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/24/2008
@@ -813,18 +858,18 @@ MXL_STATUS MxL101SF_API_DemodGetTpsGuardInterval(PMXL_DEMOD_TPS_INFO_T TpsGIPtr,
 {
   MXL_STATUS status;
   UINT8 tpsParams;
-
+  
   status = Ctrl_ReadRegister(V6_CP_TPS_REG, &tpsParams, fe);
  printdebug("[MxL101SF_API_DemodGetTpsGuardInterval] tpsParams  is %x\n",tpsParams);
   if (status == MXL_TRUE)
     TpsGIPtr->TpsInfo = (tpsParams & V6_PARAM_GI_MASK) >> 4 ;
-
+  
   return status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetTpsLock
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 7/29/2008
@@ -839,7 +884,7 @@ MXL_STATUS MxL101SF_API_DemodGetTpsLock(PMXL_DEMOD_LOCK_STATUS_T TpsLockPtr, str
 {
   MXL_STATUS status;
   UINT8 tpsParams;
-
+  
   status = Ctrl_ReadRegister(V6_TPS_LOCK_REG, &tpsParams, fe);
   printf("[MxL101SF_API_DemodGetTpsLock] tpsParams is %x\n",tpsParams);
   if (status == MXL_TRUE)
@@ -855,13 +900,13 @@ MXL_STATUS MxL101SF_API_DemodGetTpsLock(PMXL_DEMOD_LOCK_STATUS_T TpsLockPtr, str
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetPacketErrorCount
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 3/13/2008
 --|
 --| DESCRIPTION   : This function returns TS Packet error count.
---|
+--|                 
 --|                  PER Count = FEC_PER_COUNT * (2 ** (FEC_PER_SCALE * 4))
 --|
 --| RETURN VALUE  : MXL_STATUS
@@ -873,35 +918,35 @@ MXL_STATUS MxL101SF_API_DemodGetPacketErrorCount(PMXL_DEMOD_PEC_INFO_T PecInfoPt
   UINT8 status;
   UINT32 fec_per_count, fec_per_scale;
   UINT8 rawData;
-
+  
   // FEC_PER_COUNT Register
   status = Ctrl_ReadRegister(V6_FEC_PER_COUNT_REG, &rawData, fe);
   fec_per_count = rawData;
-
+ 
   // FEC_PER_SCALE Register
   status |= Ctrl_ReadRegister(V6_FEC_PER_SCALE_REG, &rawData, fe);
-
+  
   rawData &= V6_FEC_PER_SCALE_MASK;
   rawData *= 4;
-
+  
   fec_per_scale = 1 << rawData;
-
+  
   fec_per_count *= fec_per_scale;
-
+  
   PecInfoPtr->PEC = fec_per_count;
   printdebug("[MxL101SF_API_DemodGetPacketErrorCount] fec_per_count  is %x\n",fec_per_count);
-  return (MXL_STATUS)status;
+  return (MXL_STATUS)status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodResetPacketErrorCount
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 3/13/2008
 --|
 --| DESCRIPTION   : This function resets TS Packet error count.
---|
+--|                 
 --|                 After setting 7th bit of V5_PER_COUNT_RESET_REG,
 --|                 it should be reset to 0.
 --|
@@ -916,7 +961,7 @@ MXL_STATUS MxL101SF_API_DemodResetPacketErrorCount(struct aml_fe_dev *fe)
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_TunerGetLockStatus
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 7/3/2008
@@ -935,7 +980,7 @@ MXL_STATUS MxL101SF_API_TunerGetLockStatus(PMXL_TUNER_LOCK_STATUS_T TunerLockSta
   // Initialize
   TunerLockStatusPtr->RefSynthLock = MXL_UNLOCKED;
   TunerLockStatusPtr->RfSynthLock = MXL_UNLOCKED;
-
+  
   status = Ctrl_ReadRegister(V6_RF_LOCK_STATUS_REG, &data, fe);
 
   if (status == MXL_TRUE)
@@ -947,12 +992,12 @@ MXL_STATUS MxL101SF_API_TunerGetLockStatus(PMXL_TUNER_LOCK_STATUS_T TunerLockSta
       TunerLockStatusPtr->RfSynthLock = MXL_LOCKED;;  // Locked
   }
 
-  return status;
+  return status;       
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_TunerSetIFOutputFreq
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 7/7/2008
@@ -972,10 +1017,10 @@ MXL_STATUS MxL101SF_API_TunerSetIFOutputFreq(PMXL_TUNER_IF_FREQ_T IfFreqParamPtr
   UINT8 control;
   UINT16 IFFCW;
 
-  // Set IF polarity
-  if (IfFreqParamPtr->IF_Polarity == TUNER_NORMAL_IF_SPECTRUM)
+  // Set IF polarity  
+  if (IfFreqParamPtr->IF_Polarity == TUNER_NORMAL_IF_SPECTRUM) 
     control = TUNER_NORMAL_IF_SPECTRUM;
-  else
+  else 
     control = TUNER_INVERT_IF_SPECTRUM;
 
   if (IfFreqParamPtr->IF_Index < IF_OTHER_35MHZ_45MHZ)
@@ -986,8 +1031,8 @@ MXL_STATUS MxL101SF_API_TunerSetIFOutputFreq(PMXL_TUNER_IF_FREQ_T IfFreqParamPtr
   status = Ctrl_WriteRegister(V6_TUNER_IF_SEL_REG, control, fe);
 
   IfFreqParamPtr->IF_Freq /= 1000000;
-
-  if (IfFreqParamPtr->IF_Index == 0)
+    
+  if (IfFreqParamPtr->IF_Index == 0) 
   {
     control = 0x08;
 
@@ -1016,7 +1061,7 @@ MXL_STATUS MxL101SF_API_TunerSetIFOutputFreq(PMXL_TUNER_IF_FREQ_T IfFreqParamPtr
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_TunerLoopThruControl
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra
 --|
@@ -1025,8 +1070,8 @@ MXL_STATUS MxL101SF_API_TunerSetIFOutputFreq(PMXL_TUNER_IF_FREQ_T IfFreqParamPtr
 --|
 --| DESCRIPTION   : If loop through mode is enabled, RF signal from the antenna
 --|                 is looped through to an external demodulator.
---|                  0 : Disable, 1: Enable,
---|                 API is reorganised according to the MxL101SF control structure
+--|                  0 : Disable, 1: Enable, 
+--|                 API is reorganised according to the MxL101SF control structure 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -1047,16 +1092,16 @@ MXL_STATUS MxL101SF_API_TunerLoopThruControl(MXL_BOOL EnableDisable, struct aml_
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_XtalSelect
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur
 --|
 --| DATE CREATED  : 7/7/2008
 --|                 8/4/2009
 --|
---| DESCRIPTION   : Select XTAL frequency of CLK out
+--| DESCRIPTION   : Select XTAL frequency of CLK out 
 --|                 4 : 24MHz, 8 : 28.8MHz, 7 : 27 MHz, 12 : 48 MHz
---|                 API is reorganised according to the MxL1x1SF control structure
+--|                 API is reorganised according to the MxL1x1SF control structure 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -1065,7 +1110,7 @@ MXL_STATUS MxL101SF_API_TunerLoopThruControl(MXL_BOOL EnableDisable, struct aml_
 MXL_STATUS MxL101SF_API_XtalSelect(MXL_XTAL_FREQ_E XtalFreq, struct aml_fe_dev *fe)
 {
   UINT8 status = MXL_TRUE;
-
+  
   status = Ctrl_WriteRegister(V6_DIG_CLK_FREQ_SEL_REG, (UINT8)XtalFreq, fe);
   status |= Ctrl_WriteRegister(V6_DIG_RFREFSELECT_REG, ((UINT8)XtalFreq)|0xA0, fe);
 
@@ -1074,7 +1119,7 @@ MXL_STATUS MxL101SF_API_XtalSelect(MXL_XTAL_FREQ_E XtalFreq, struct aml_fe_dev *
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_XtalClkOutGain
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur
 --|
@@ -1083,7 +1128,7 @@ MXL_STATUS MxL101SF_API_XtalSelect(MXL_XTAL_FREQ_E XtalFreq, struct aml_fe_dev *
 --|
 --| DESCRIPTION   : If Xtal Clock out is enabled, then a valid clk out gain value
 --|                 should be programmed to the chip.
---|                 API is reorganised according to the MxL1x1SF control structure
+--|                 API is reorganised according to the MxL1x1SF control structure 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -1098,7 +1143,7 @@ MXL_STATUS MxL101SF_API_XtalClkOutGain(MXL_XTAL_CLK_OUT_GAIN_E ClkOutGain, struc
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_XtalClkOutControl
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur
 --|
@@ -1107,7 +1152,7 @@ MXL_STATUS MxL101SF_API_XtalClkOutGain(MXL_XTAL_CLK_OUT_GAIN_E ClkOutGain, struc
 --|
 --| DESCRIPTION   : XTAL Clock out control
 --|                  0 : Disable, 1: Enable,
---|                 API is reorganised according to the MxL1x1SF control structure
+--|                 API is reorganised according to the MxL1x1SF control structure 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -1130,7 +1175,7 @@ MXL_STATUS MxL101SF_API_XtalClkOutControl(MXL_BOOL EnableDisable, struct aml_fe_
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_XtalBiasControl
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur
 --|
@@ -1138,7 +1183,7 @@ MXL_STATUS MxL101SF_API_XtalClkOutControl(MXL_BOOL EnableDisable, struct aml_fe_
 --|                 8/4/2009
 --|
 --| DESCRIPTION   : 0 : 200uA, 1 : 575 uA, ...
---|                 API is reorganised according to the MxL1x1SF control structure
+--|                 API is reorganised according to the MxL1x1SF control structure 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -1162,7 +1207,7 @@ MXL_STATUS MxL101SF_API_XtalBiasControl(MXL_XTAL_BIAS_E XtalBias, struct aml_fe_
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_XtalCapControl
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|                 Mahendra Kondur
 --|
@@ -1171,7 +1216,7 @@ MXL_STATUS MxL101SF_API_XtalBiasControl(MXL_XTAL_BIAS_E XtalBias, struct aml_fe_
 --|
 --| DESCRIPTION   : XTAL Clock Cap control
 --|                 0 : 10pF, 1 : 1 pF, ...
---|                 API is reorganised according to the MxL1x1SF control structure
+--|                 API is reorganised according to the MxL1x1SF control structure 
 --|
 --| RETURN VALUE  : MXL_STATUS
 --|
@@ -1181,7 +1226,7 @@ MXL_STATUS MxL101SF_API_XtalCapControl(UINT8 XtalCapacitor, struct aml_fe_dev *f
 {
   MXL_STATUS status = MXL_TRUE;
 
-  if ((XtalCapacitor < 26) || (XtalCapacitor == 0x3F))
+  if ((XtalCapacitor < 26) || (XtalCapacitor == 0x3F)) 
     status = Ctrl_WriteRegister(V6_XTAL_CAP_REG, XtalCapacitor, fe);
 
   return status;
@@ -1189,7 +1234,7 @@ MXL_STATUS MxL101SF_API_XtalCapControl(UINT8 XtalCapacitor, struct aml_fe_dev *f
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigXtalSettings
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 8/4/2009
@@ -1203,7 +1248,7 @@ MXL_STATUS MxL101SF_API_XtalCapControl(UINT8 XtalCapacitor, struct aml_fe_dev *f
 MXL_STATUS MxL101SF_API_ConfigXtalSettings(PMXL_XTAL_CFG_T XtalCfgPtr, struct aml_fe_dev *fe)
 {
   UINT8 status;
-
+  
   status = MxL101SF_API_TunerLoopThruControl(XtalCfgPtr->LoopThruEnable, fe);
   status |= MxL101SF_API_XtalSelect(XtalCfgPtr->XtalFreq, fe);
   status |= MxL101SF_API_XtalClkOutGain(XtalCfgPtr->XtalClkOutGain, fe);
@@ -1216,7 +1261,7 @@ MXL_STATUS MxL101SF_API_ConfigXtalSettings(PMXL_XTAL_CFG_T XtalCfgPtr, struct am
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_GetTunerSignalStrength
---|
+--| 
 --| AUTHOR        : Mahendra
 --|
 --| DATE CREATED  : 10/20/2009
@@ -1235,26 +1280,26 @@ MXL_STATUS MxL101SF_API_GetTunerSignalStrength(PMXL_SIGNAL_STATS_T SigQualityPtr
   SINT16 rfPwrAdj = 0;
 
   status = Ctrl_WriteRegister(0x00, 0x02, fe);
-
+  
   status |= Ctrl_ReadRegister(V6_DIG_RF_PWR_LSB_REG, &regData, fe);
   rxPwr = regData;
 
   status |= Ctrl_ReadRegister(V6_DIG_RF_PWR_MSB_REG, &regData, fe);
   rxPwr |= (regData & 0x07) << 8;
   MxLTunedFreq = MxLTunedFreq/1000000;
-
+  
   if (MxLTunedFreq <= 131) rfPwrAdj = - 4;
   else if (MxLTunedFreq <= 143) rfPwrAdj = 40;
   else if (MxLTunedFreq <= 296) rfPwrAdj = 36;
   else if (MxLTunedFreq <= 308) rfPwrAdj = 41;
   else if (MxLTunedFreq <= 320) rfPwrAdj = 44;
   else if (MxLTunedFreq <= 332) rfPwrAdj = 52;
-  else if (MxLTunedFreq <= 422) rfPwrAdj = 39;
+  else if (MxLTunedFreq <= 422) rfPwrAdj = 39;       
   else if (MxLTunedFreq <= 506) rfPwrAdj = 33;
   else if (MxLTunedFreq <= 566) rfPwrAdj = 25;
-  else if (MxLTunedFreq <= 650) rfPwrAdj = 20;
+  else if (MxLTunedFreq <= 650) rfPwrAdj = 20;        
   else if (MxLTunedFreq <= 800) rfPwrAdj = 14;
-  else if (MxLTunedFreq <= 860) rfPwrAdj = 21;
+  else if (MxLTunedFreq <= 860) rfPwrAdj = 21;            
   else if (MxLTunedFreq > 860) rfPwrAdj = 29;
 
   SigQualityPtr->SignalStrength = ((rxPwr + rfPwrAdj) / 8) - 119;
@@ -1266,7 +1311,7 @@ MXL_STATUS MxL101SF_API_GetTunerSignalStrength(PMXL_SIGNAL_STATS_T SigQualityPtr
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigCableSettings
---|
+--| 
 --| AUTHOR        : Mahendra
 --|
 --| DATE CREATED  : 11/05/2009
@@ -1284,7 +1329,7 @@ MXL_STATUS MxL101SF_API_ConfigCableSettings(struct aml_fe_dev *fe)
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigGPOPins
---|
+--| 
 --| AUTHOR        : Mahendra
 --|
 --| DATE CREATED  : 10/02/2009
@@ -1301,7 +1346,7 @@ MXL_STATUS MxL101SF_API_ConfigGPOPins(PMXL_DEV_GPO_CFG_T GpoPinCfgPtr, struct am
   UINT8 regData = 0;
   UINT8 gpoMask = 0;
 
-  status = Ctrl_ReadRegister(V6_GPO_CTRL_REG, &regData, fe);
+  status = Ctrl_ReadRegister(V6_GPO_CTRL_REG, &regData, fe); 
 
   switch(GpoPinCfgPtr->GpoPinId)
   {
@@ -1312,7 +1357,7 @@ MXL_STATUS MxL101SF_API_ConfigGPOPins(PMXL_DEV_GPO_CFG_T GpoPinCfgPtr, struct am
     case MXL_GPO_1:
       gpoMask = V6_GPO_1_MASK;
       break;
-
+    
     default:
       break;
   }
@@ -1322,14 +1367,14 @@ MXL_STATUS MxL101SF_API_ConfigGPOPins(PMXL_DEV_GPO_CFG_T GpoPinCfgPtr, struct am
   else
     regData &= ~gpoMask;
 
-  status |= Ctrl_WriteRegister(V6_GPO_CTRL_REG, regData, fe);
-
+  status |= Ctrl_WriteRegister(V6_GPO_CTRL_REG, regData, fe);  
+  
   return (MXL_STATUS)status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_DemodGetCellId
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 11/19/2009
@@ -1347,7 +1392,7 @@ MXL_STATUS MxL101SF_API_DemodGetCellId(PMXL_DEMOD_CELL_ID_INFO_T tpsCellId, stru
   UINT16 CellId;
 
   status = Ctrl_WriteRegister(0x00, 0x02, fe);
-
+  
   status |= Ctrl_ReadRegister(0x98, &regData, fe);
   CellId = regData;
 
@@ -1363,7 +1408,7 @@ printdebug("[MxL101SF_API_DemodGetCellId] CellId  is %x\n",CellId);
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_GetAGCLock
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/15/2010
@@ -1378,7 +1423,7 @@ MXL_STATUS MxL101SF_API_GetAGCLock(PMXL_DEMOD_LOCK_STATUS_T AgcLockPtr, struct a
 {
   MXL_STATUS status;
   UINT8 rawData;
-
+  
   status = Ctrl_ReadRegister(V6_AGC_LOCK_REG, &rawData, fe);
 
   if (status == MXL_TRUE)
@@ -1393,7 +1438,7 @@ MXL_STATUS MxL101SF_API_GetAGCLock(PMXL_DEMOD_LOCK_STATUS_T AgcLockPtr, struct a
 }
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_GetFECLock
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 1/15/2010
@@ -1409,7 +1454,7 @@ MXL_STATUS MxL101SF_API_GetFECLock(PMXL_DEMOD_LOCK_STATUS_T FecLockPtr, struct a
 {
   MXL_STATUS status;
   UINT8 rawData;
-
+  
   status = Ctrl_ReadRegister(V6_IRQ_STATUS_REG, &rawData, fe);
 
   if (status == MXL_TRUE)
@@ -1425,7 +1470,7 @@ MXL_STATUS MxL101SF_API_GetFECLock(PMXL_DEMOD_LOCK_STATUS_T FecLockPtr, struct a
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigSpectrum
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 4/19/2010
@@ -1441,7 +1486,7 @@ MXL_STATUS MxL101SF_API_ConfigSpectrum(PMXL_DEMOD_SPECTRUM_CFG_T SpectrumCfgPtr,
 {
   UINT8 status;
   UINT8 rawData;
-
+  
   status = Ctrl_ReadRegister(V6_SPECTRUM_CTRL_REG, &rawData, fe);
 
   if (status == MXL_TRUE)
@@ -1459,7 +1504,7 @@ MXL_STATUS MxL101SF_API_ConfigSpectrum(PMXL_DEMOD_SPECTRUM_CFG_T SpectrumCfgPtr,
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_ConfigChannelScan
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 2/22/2010
@@ -1484,12 +1529,12 @@ MXL_STATUS MxL101SF_API_ConfigChannelScan(PMXL_TUNER_CHAN_SCAN_CFG_T ChanScanCfg
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_GetChannelOffset
---|
+--| 
 --| AUTHOR        : Brenndon Lee
 --|
 --| DATE CREATED  : 2/22/2010
 --|
---| DESCRIPTION   : This function returns offset for a channel
+--| DESCRIPTION   : This function returns offset for a channel 
 --|                 Frequency offset will be valid only if FEC lock has been achieved
 --|
 --| RETURN VALUE  : MXL_STATUS
@@ -1502,20 +1547,20 @@ MXL_STATUS MxL101SF_API_GetChannelOffset(PMXL_TUNER_CHAN_OFFSET_T ChanOffsetPtr,
   UINT8 rawData;
   SINT16 freqOffset;
 
-  status = Ctrl_WriteRegister(0, 2, fe);
+  status = Ctrl_WriteRegister(0, 2, fe); 
 
   // Read 0x9B registe first, otherwise V6_FREQ_OFFSET_LSB_REG/V6_FREQ_OFFSET_LSB_REG will return 0
-  status |= Ctrl_ReadRegister(0x9B, &rawData, fe);
+  status |= Ctrl_ReadRegister(0x9B, &rawData, fe); 
   status |= Ctrl_ReadRegister(V6_FREQ_OFFSET_LSB_REG, &rawData, fe);
   freqOffset = rawData;
   status |= Ctrl_ReadRegister(V6_FREQ_OFFSET_MSB_REG, &rawData, fe);
-  status |= Ctrl_WriteRegister(0, 0, fe);
+  status |= Ctrl_WriteRegister(0, 0, fe); 
 
   freqOffset |= (rawData << 8);
   freqOffset &= 0x3FF;
 
   // Check the sign bit
-  if (freqOffset & 0x0200)
+  if (freqOffset & 0x0200) 
   {
     // Negative number, extend sign bit
     freqOffset |= 0xFC00;
@@ -1528,7 +1573,7 @@ MXL_STATUS MxL101SF_API_GetChannelOffset(PMXL_TUNER_CHAN_OFFSET_T ChanOffsetPtr,
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxL101SF_API_CheckChannel
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 02/22/2010
@@ -1552,7 +1597,7 @@ MXL_STATUS MxL101SF_API_CheckChannel(PMXL_TUNER_CHECK_CHAN_REQ_T ChanScanCtrlPtr
   MXL_BOOL agcLockStatus = MXL_OFF;
   MXL_RF_TUNE_CFG_T mxlChanCfg;
 
-
+ 
 
   mxlChanCfg.Frequency = ChanScanCtrlPtr->Frequency;
   mxlChanCfg.Bandwidth = ChanScanCtrlPtr->Bandwidth;
@@ -1569,7 +1614,7 @@ MXL_STATUS MxL101SF_API_CheckChannel(PMXL_TUNER_CHECK_CHAN_REQ_T ChanScanCtrlPtr
   while ((EndTime - StartTime) < TimeOut)
   {
     status |= MxL101SF_API_GetAGCLock(&demodLockStatus, fe);
-    if (demodLockStatus.Status == MXL_LOCKED)
+    if (demodLockStatus.Status == MXL_LOCKED) 
     {
       agcLockStatus = MXL_ON;
       TimeOut = 2048;
@@ -1585,8 +1630,8 @@ MXL_STATUS MxL101SF_API_CheckChannel(PMXL_TUNER_CHECK_CHAN_REQ_T ChanScanCtrlPtr
 
     // Check if channel is available. Start with CP Lock
     status |= MxL101SF_API_DemodGetCpLockStatus(&demodLockStatus, fe);
-
-    if (demodLockStatus.Status == MXL_LOCKED)
+    
+    if (demodLockStatus.Status == MXL_LOCKED) 
     {
       TimeOut = TimeOut - (EndTime - StartTime);
       break;
@@ -1598,22 +1643,22 @@ MXL_STATUS MxL101SF_API_CheckChannel(PMXL_TUNER_CHECK_CHAN_REQ_T ChanScanCtrlPtr
   if (ChanScanCtrlPtr->ChanScanCtrl == MXL_BREAK_AT_CP_LOCK)
   {
     // Break if interested to check channel status only till CP Lock
-    if (demodLockStatus.Status == MXL_LOCKED)
+    if (demodLockStatus.Status == MXL_LOCKED) 
       ChanScanCtrlPtr->ChanPresent = MXL_TRUE;
-
+    
     goto EXIT;
   }
 
-  if (demodLockStatus.Status == MXL_LOCKED)
+  if (demodLockStatus.Status == MXL_LOCKED) 
   {
-    // CP is locked, check TPS Lock
+    // CP is locked, check TPS Lock 
     TimeOut = TimeOut + 512;
     EndTime = StartTime;
     while ((EndTime - StartTime) < TimeOut)  // < 1536ms (1024+512)
     {
       status |= MxL101SF_API_DemodGetTpsLock(&demodLockStatus, fe);
 
-      if (demodLockStatus.Status == MXL_LOCKED)
+      if (demodLockStatus.Status == MXL_LOCKED) 
       {
         break;
       }
@@ -1624,23 +1669,23 @@ MXL_STATUS MxL101SF_API_CheckChannel(PMXL_TUNER_CHECK_CHAN_REQ_T ChanScanCtrlPtr
     if (ChanScanCtrlPtr->ChanScanCtrl == MXL_BREAK_AT_TPS_LOCK)
     {
       // Break if interested to check channel status only till TPS Lock
-      if (demodLockStatus.Status == MXL_LOCKED)
+      if (demodLockStatus.Status == MXL_LOCKED) 
         ChanScanCtrlPtr->ChanPresent = MXL_TRUE;
-
+      
       goto EXIT;
     }
-
-    if (demodLockStatus.Status == MXL_LOCKED)
+  
+    if (demodLockStatus.Status == MXL_LOCKED) 
     {
-      // TPS is locked, check RS Lock
+      // TPS is locked, check RS Lock 
       TimeOut = TimeOut + 3464;
       EndTime = StartTime;
-
+  
       while ((EndTime - StartTime) < TimeOut) // < 5 secs (1024+512+3464)
       {
         status |= MxL101SF_API_DemodGetRsLockStatus(&demodLockStatus, fe);
 
-        if (demodLockStatus.Status == MXL_LOCKED)
+        if (demodLockStatus.Status == MXL_LOCKED) 
         {
           break;
         }
@@ -1651,30 +1696,30 @@ MXL_STATUS MxL101SF_API_CheckChannel(PMXL_TUNER_CHECK_CHAN_REQ_T ChanScanCtrlPtr
       if (ChanScanCtrlPtr->ChanScanCtrl == MXL_BREAK_AT_RS_LOCK)
       {
         // Break if interested to check channel status only till RS Lock
-        if (demodLockStatus.Status == MXL_LOCKED)
+        if (demodLockStatus.Status == MXL_LOCKED) 
           ChanScanCtrlPtr->ChanPresent = MXL_TRUE;
-
+        
         goto EXIT;
       }
-      if (demodLockStatus.Status == MXL_LOCKED)
+      if (demodLockStatus.Status == MXL_LOCKED) 
       {
         ChanScanCtrlPtr->ChanPresent = MXL_TRUE;
       } // RS Lock
     } // TPS Lock
   } // CP Lock
-
+  
 EXIT:
   return (MXL_STATUS)status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxLWare_API_ConfigDevice
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 08/08/2009
 --|
---| DESCRIPTION   : The general device configuration shall be handled
+--| DESCRIPTION   : The general device configuration shall be handled 
 --|                 through this API
 --|
 --| RETURN VALUE  : MXL_STATUS
@@ -1728,12 +1773,12 @@ MXL_STATUS MxLWare_API_ConfigDevice(MXL_CMD_TYPE_E CmdType, void *ParamPtr, stru
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxLWare_API_GetDeviceStatus
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 08/08/2009
 --|
---| DESCRIPTION   : The general device inquiries shall be handled
+--| DESCRIPTION   : The general device inquiries shall be handled 
 --|                 through this API
 --|
 --| RETURN VALUE  : MXL_STATUS
@@ -1759,12 +1804,12 @@ MXL_STATUS MxLWare_API_GetDeviceStatus(MXL_CMD_TYPE_E CmdType, void *ParamPtr, s
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxLWare_API_GetDemodStatus
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
---|
+--| 
 --| DATE CREATED  : 08/08/2009
 --|
---| DESCRIPTION   : The demod specific inquiries shall be handled
+--| DESCRIPTION   : The demod specific inquiries shall be handled 
 --|                 through this API
 --|                 - Support for MXL_DEMOD_TPS_HIERARCHICAL_ALPHA_REQ
 --|
@@ -1793,7 +1838,7 @@ MXL_STATUS MxLWare_API_GetDemodStatus(MXL_CMD_TYPE_E CmdType, void *ParamPtr, st
     case MXL_DEMOD_TPS_HIERARCHY_REQ:
       status = MxL101SF_API_DemodGetTpsHierarchy((PMXL_DEMOD_TPS_INFO_T)ParamPtr, fe);
       break;
-
+      
     case MXL_DEMOD_TPS_CONSTELLATION_REQ:
       status = MxL101SF_API_DemodGetTpsConstellation((PMXL_DEMOD_TPS_INFO_T)ParamPtr, fe);
       break;
@@ -1801,7 +1846,7 @@ MXL_STATUS MxLWare_API_GetDemodStatus(MXL_CMD_TYPE_E CmdType, void *ParamPtr, st
     case MXL_DEMOD_TPS_FFT_MODE_REQ:
       status = MxL101SF_API_DemodGetTpsFftMode((PMXL_DEMOD_TPS_INFO_T)ParamPtr, fe);
       break;
-
+  
     case MXL_DEMOD_TPS_HIERARCHICAL_ALPHA_REQ:
       status = MxL101SF_API_DemodGetHierarchicalAlphaValue((PMXL_DEMOD_TPS_INFO_T)ParamPtr, fe);
       break;
@@ -1825,7 +1870,7 @@ MXL_STATUS MxLWare_API_GetDemodStatus(MXL_CMD_TYPE_E CmdType, void *ParamPtr, st
     case MXL_DEMOD_SYNC_LOCK_REQ:
       status = MxL101SF_API_DemodGetSyncLockStatus((PMXL_DEMOD_LOCK_STATUS_T)ParamPtr, fe);
       break;
-
+      
     case MXL_DEMOD_RS_LOCK_REQ:
       status = MxL101SF_API_DemodGetRsLockStatus((PMXL_DEMOD_LOCK_STATUS_T)ParamPtr, fe);
       break;
@@ -1843,14 +1888,14 @@ MXL_STATUS MxLWare_API_GetDemodStatus(MXL_CMD_TYPE_E CmdType, void *ParamPtr, st
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxLWare_API_ConfigDemod
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 08/08/2009
 --|                 03/12/2010
 --|                 04/20/2010
 --|
---| DESCRIPTION   : The demod block specific configuration shall be handled
+--| DESCRIPTION   : The demod block specific configuration shall be handled 
 --|                 through this API
 --|                 - Support for MXL_DEMOD_STREAM_PRIORITY_CFG
 --|                 - Support for MXL_DEMOD_SPECTRUM_CFG
@@ -1869,7 +1914,7 @@ MXL_STATUS MxLWare_API_ConfigDemod(MXL_CMD_TYPE_E CmdType, void *ParamPtr, struc
       status = MxL101SF_API_DemodResetIrqStatus(fe);
       break;
 
-    case MXL_DEMOD_RESET_PEC_CFG:
+    case MXL_DEMOD_RESET_PEC_CFG:  
       status = MxL101SF_API_DemodResetPacketErrorCount(fe);
       break;
 
@@ -1890,13 +1935,13 @@ MXL_STATUS MxLWare_API_ConfigDemod(MXL_CMD_TYPE_E CmdType, void *ParamPtr, struc
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxLWare_API_ConfigTuner
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 08/08/2009
 --|                 02/22/2010
 --|
---| DESCRIPTION   : The tuner block specific configuration shall be handled
+--| DESCRIPTION   : The tuner block specific configuration shall be handled 
 --|                 through this API
 --|                 Support for MXL_TUNER_CHAN_SCAN_CFG
 --|
@@ -1907,7 +1952,7 @@ MXL_STATUS MxLWare_API_ConfigDemod(MXL_CMD_TYPE_E CmdType, void *ParamPtr, struc
 MXL_STATUS MxLWare_API_ConfigTuner(MXL_CMD_TYPE_E CmdType, void *ParamPtr, struct aml_fe_dev *fe)
 {
   MXL_STATUS status = MXL_TRUE;
-
+  
   switch (CmdType)
   {
     case MXL_TUNER_TOP_MASTER_CFG:
@@ -1918,7 +1963,7 @@ MXL_STATUS MxLWare_API_ConfigTuner(MXL_CMD_TYPE_E CmdType, void *ParamPtr, struc
       status = MxL101SF_API_TuneRF((PMXL_RF_TUNE_CFG_T)ParamPtr, fe);
       break;
 
-    case MXL_TUNER_IF_OUTPUT_FREQ_CFG:
+    case MXL_TUNER_IF_OUTPUT_FREQ_CFG: 
       status = MxL101SF_API_TunerSetIFOutputFreq((PMXL_TUNER_IF_FREQ_T)ParamPtr, fe);
       break;
 
@@ -1929,19 +1974,19 @@ MXL_STATUS MxLWare_API_ConfigTuner(MXL_CMD_TYPE_E CmdType, void *ParamPtr, struc
     default:
       break;
   }
-
+    
   return status;
 }
 
 /*------------------------------------------------------------------------------
 --| FUNCTION NAME : MxLWare_API_GetTunerStatus
---|
+--| 
 --| AUTHOR        : Mahendra Kondur
 --|
 --| DATE CREATED  : 08/08/2009
 --|                 02/22/2010
 --|
---| DESCRIPTION   : The tuner specific inquiries shall be handled
+--| DESCRIPTION   : The tuner specific inquiries shall be handled 
 --|                 through this API
 --|                 Support for MXL_TUNER_CHAN_OFFSET_REQ &
 --|                 MXL_TUNER_CHECK_CHAN_REQ
@@ -1966,7 +2011,7 @@ MXL_STATUS MxLWare_API_GetTunerStatus(MXL_CMD_TYPE_E CmdType, void *ParamPtr, st
 
     case MXL_TUNER_CHAN_OFFSET_REQ:
       status = MxL101SF_API_GetChannelOffset((PMXL_TUNER_CHAN_OFFSET_T)ParamPtr, fe);
-      break;
+      break;      
 
    case MXL_TUNER_CHECK_CHAN_STATUS_REQ:
       status = MxL101SF_API_CheckChannel((PMXL_TUNER_CHECK_CHAN_REQ_T)ParamPtr, fe);

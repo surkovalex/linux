@@ -44,7 +44,7 @@
 
 #include "dvb_frontend.h"
 #include "dvbdev.h"
-#include <uapi/linux/dvb/version.h>
+#include <linux/dvb/version.h>
 
 static int dvb_frontend_debug;
 static int dvb_shutdown_timeout;
@@ -883,7 +883,7 @@ static int dvb_frontend_thread(void *data)
 	fe_status_t s;
 	enum dvbfe_algo algo;
 
-	struct dvb_frontend_parameters *params;
+	struct dvb_frontend_parameters *params=NULL;
 
 	dev_dbg(fe->dvb->device, "%s:\n", __func__);
 
@@ -966,7 +966,7 @@ restart:
 				 */
 				if (fepriv->algo_status & DVBFE_ALGO_SEARCH_AGAIN) {
 					if (fe->ops.search) {
-						fepriv->algo_status = fe->ops.search(fe,params);
+						fepriv->algo_status = fe->ops.search(fe);
 						/* We did do a search as was requested, the flags are
 						 * now unset as well and has the flags wrt to search.
 						 */
@@ -1917,7 +1917,7 @@ static bool is_dvbv3_delsys(u32 delsys)
 
 	status = (delsys == SYS_DVBT) || (delsys == SYS_DVBC_ANNEX_A) ||
 		 (delsys == SYS_DVBS) || (delsys == SYS_ATSC) || (delsys == SYS_DTMB) ||
-		 (delsys == SYS_ISDBT)|| (delsys == SYS_ANALOG);
+		 (delsys == SYS_ISDBT)|| (delsys == SYS_ANALOG) || (delsys == SYS_DVBS2);
 
 	return status;
 }

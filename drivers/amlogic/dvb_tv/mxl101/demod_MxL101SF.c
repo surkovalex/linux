@@ -48,13 +48,13 @@ void MxL101SF_Init(struct aml_fe_dev *fe)
   //MXL_DEMOD_BER_INFO_T ber;
  // MXL_SIGNAL_STATS_T sigStrength;
   //MXL_DEMOD_CELL_ID_INFO_T tpsCellIdInfo;
-
+  
   // Open LPT driver for I2C communcation
   //Ctrl_I2cConnect(99);
 
   // 1. Do SW Reset
   MxLWare_API_ConfigDevice(MXL_DEV_SOFT_RESET_CFG, NULL, fe);
-
+  
   // 2. Read Back chip id and version
   //    Expecting CHIP ID = 0x61, Version = 0x6
 
@@ -70,7 +70,7 @@ void MxL101SF_Init(struct aml_fe_dev *fe)
   // Configure MxL101SF XTAL frequency
   // Configure XTAL Bias value if needed
 
-  // Xtal Capacitance value must be configured in accordance
+  // Xtal Capacitance value must be configured in accordance 
   // with XTAL datasheet’s requirement.
   mxlXtalCfg.XtalFreq = XTAL_24MHz;
   mxlXtalCfg.LoopThruEnable = MXL_ENABLE;//MXL_DISABLE;
@@ -79,13 +79,13 @@ void MxL101SF_Init(struct aml_fe_dev *fe)
   mxlXtalCfg.XtalClkOutEnable = MXL_DISABLE;
   mxlXtalCfg.XtalClkOutGain = CLK_OUT_NA;
   MxLWare_API_ConfigDevice(MXL_DEV_XTAL_SETTINGS_CFG, &mxlXtalCfg, fe);
-
+   
   // 5. Set Baseband mode, SOC or Tuner only mode
   mxlDevMode.DeviceMode = MXL_SOC_MODE;
   MxLWare_API_ConfigDevice(MXL_DEV_OPERATIONAL_MODE_CFG, &mxlDevMode, fe);
+  
 
-
-  // 6. Configure MPEG Out
+  // 6. Configure MPEG Out 
   // CLK, MPEG_CLK_INV, Polarity of MPEG Valid/MPEG Sync
   mxlMpegOutCfg.MpegClkFreq = MPEG_CLOCK_36_571429MHz;//MPEG_CLOCK_9_142857MHz;//MPEG_CLOCK_36_571429MHz;
   mxlMpegOutCfg.LsbOrMsbFirst = MPEG_SERIAL_MSB_1ST;
@@ -93,20 +93,31 @@ void MxL101SF_Init(struct aml_fe_dev *fe)
   mxlMpegOutCfg.MpegSyncPol = MPEG_CLK_IN_PHASE;
   mxlMpegOutCfg.MpegValidPol = MPEG_CLK_IN_PHASE;
 
+#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG) 
+	if(dmx_get_ts_serial(fe->fe->ts))
+		mxlMpegOutCfg.SerialOrPar = MPEG_DATA_SERIAL;
+	else
+		mxlMpegOutCfg.SerialOrPar = MPEG_DATA_PARALLEL;
+
+	printf("MxL101SF SerialOrPar: %d\n", mxlMpegOutCfg.SerialOrPar);
+#else
+
 #ifdef CONFIG_AMLOGIC_S_TS2
   mxlMpegOutCfg.SerialOrPar = MPEG_DATA_SERIAL;
 #else
-  mxlMpegOutCfg.SerialOrPar = MPEG_DATA_PARALLEL;
+  mxlMpegOutCfg.SerialOrPar = MPEG_DATA_SERIAL;
+#endif
+
 #endif
 
   MxLWare_API_ConfigDevice(MXL_DEV_MPEG_OUT_CFG, &mxlMpegOutCfg, fe);
 
   // 7. Enable Top Master Control
   mxlTopMasterCfg.TopMasterEnable = MXL_ENABLE;
-  MxLWare_API_ConfigTuner(MXL_TUNER_TOP_MASTER_CFG, &mxlTopMasterCfg, fe);
+  MxLWare_API_ConfigTuner(MXL_TUNER_TOP_MASTER_CFG, &mxlTopMasterCfg, fe);	
 
 
-
+  
 
 }
 
@@ -130,7 +141,7 @@ void MxL101SF_Tune(UINT32 u32TunerFreq, UINT8 u8BandWidth, struct aml_fe_dev *fe
  	 mxlChanCfg.Bandwidth = u8BandWidth;
  	 mxlChanCfg.Frequency = u32TunerFreq;//u32TunerFreq*1000;
  	 mxlChanCfg.TpsCellIdRbCtrl = MXL_ENABLE;  // Enable TPS Cell ID feature
- 	 MxLWare_API_ConfigTuner(MXL_TUNER_CHAN_TUNE_CFG, &mxlChanCfg, fe);
+ 	 MxLWare_API_ConfigTuner(MXL_TUNER_CHAN_TUNE_CFG, &mxlChanCfg, fe);	 
 }
 
 UINT32 MxL101SF_GetSNR(struct aml_fe_dev *fe)
@@ -174,7 +185,7 @@ UINT16 MxL101SF_GetTPSCellID(struct aml_fe_dev *fe)
 	MXL_DEMOD_CELL_ID_INFO_T tpsCellIdInfo;
     // Read back TPS Cell ID
     MxLWare_API_GetDemodStatus(MXL_DEMOD_TPS_CELL_ID_REQ, &tpsCellIdInfo, fe);
-    MXL_MSB(printf("MxL101SF : TPS Cell ID = %04X\n", tpsCellIdInfo.TpsCellId));
+    MXL_MSB(printf("MxL101SF : TPS Cell ID = %04X\n", tpsCellIdInfo.TpsCellId));	
 	return tpsCellIdInfo.TpsCellId;
 }
 
@@ -213,7 +224,7 @@ void Mxl101SF_Debug(struct aml_fe_dev *fe)
 	MxLWare_API_GetDemodStatus(MXL_DEMOD_SYNC_LOCK_REQ, &tpsCellIdInfo, fe);
 	MxLWare_API_GetDemodStatus(MXL_DEMOD_RS_LOCK_REQ, &tpsCellIdInfo, fe);
 	MxLWare_API_GetDemodStatus(MXL_DEMOD_CP_LOCK_REQ, &tpsCellIdInfo, fe);
-
+	
 
 }
 

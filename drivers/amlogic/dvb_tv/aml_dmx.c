@@ -653,7 +653,7 @@ static irqreturn_t dmx_irq_handler(int irq_number, void *para)
 
 	DMX_WRITE_REG(dmx->id, STB_INT_STATUS, status);
 
-	tasklet_schedule(&dmx->dmx_tasklet);
+	//tasklet_schedule(&dmx->dmx_tasklet);
 
 	{
 		if(!dmx->int_check_time){
@@ -1092,7 +1092,6 @@ static int asyncfifo_alloc_buffer(struct aml_asyncfifo *afifo)
 		pr_error("cannot allocate async fifo buffer\n");
 		return -1;
 	}
-	afifo->pages_map = dma_map_single(NULL, (void*)afifo->pages, afifo->buf_len, DMA_FROM_DEVICE);
 
 	afifo->pages_map = dma_map_single(NULL, (void*)afifo->pages, afifo->buf_len, DMA_FROM_DEVICE);
 
@@ -1136,10 +1135,8 @@ int async_fifo_deinit(struct aml_asyncfifo *afifo)
 	if (afifo->pages) {
 		dma_unmap_single(NULL, afifo->pages_map, afifo->buf_len, DMA_FROM_DEVICE);
 		free_pages(afifo->pages, get_order(afifo->buf_len));
-		afifo->pages = 0;
-
-        dma_unmap_single(NULL,  afifo->pages_map, afifo->buf_len, DMA_FROM_DEVICE);
 		afifo->pages_map = 0;
+		afifo->pages = 0;
 	}
 	afifo->source  = AM_DMX_MAX;
 	afifo->buf_toggle = 0;
@@ -1173,15 +1170,6 @@ static int dmx_init(struct aml_dmx *dmx)
 		irq = request_irq(dmx->dmx_irq, dmx_irq_handler, IRQF_SHARED, "dmx irq", dmx);
 	}
 
-/*	if(dmx->dvr_irq!=-1) {
-		tasklet_init(&dmx->dvr_tasklet, dvr_irq_bh_handler, (unsigned long)dmx);
-		irq = request_irq(dmx->dvr_irq, dvr_irq_handler, IRQF_SHARED, "dvr irq", dmx);
-
-
-	}
-	if (dmx_alloc_asyncfifo_buffer(dmx) < 0)
-			return -1;
-*/
 	/*Allocate buffer*/
 	if(dmx_alloc_sec_buffer(dmx)<0)
 		return -1;
@@ -1259,11 +1247,7 @@ static int dmx_deinit(struct aml_dmx *dmx)
 		free_irq(dmx->dmx_irq, dmx);
 		tasklet_kill(&dmx->dmx_tasklet);
 	}
-/*	if(dmx->dvr_irq!=-1) {
-		free_irq(dmx->dvr_irq, dmx);
-		tasklet_kill(&dmx->dvr_tasklet);
-	}
-*/
+
 	dmx->init = 0;
 
 	return 0;
@@ -1401,6 +1385,11 @@ static int dmx_enable(struct aml_dmx *dmx)
 
 			invert0 = dvb->s2p[0].invert;
 			invert1 = dvb->s2p[1].invert;
+
+			v &= ~((0x3<<S2P0_FEC_SERIAL_SEL)|
+				(0x1f<<INVERT_S2P0_FEC_CLK)|
+				(0x3<<S2P1_FEC_SERIAL_SEL) |
+				(0x1f<<INVERT_S2P1_FEC_CLK));
 
 			v |= (fec_s0<<S2P0_FEC_SERIAL_SEL)|
 				(invert0<<INVERT_S2P0_FEC_CLK)|
@@ -2355,58 +2344,62 @@ static int dmx_remove_feed(struct aml_dmx *dmx, struct dvb_demux_feed *feed)
 
 int aml_dmx_hw_init(struct aml_dmx *dmx)
 {
-	//struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
+	struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
 	unsigned long flags;
 	int ret;
 
 	/*Demux initialize*/
-	spin_lock_irqsave(&dmx->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	ret = dmx_init(dmx);
-	spin_unlock_irqrestore(&dmx->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
 
 int aml_dmx_hw_deinit(struct aml_dmx *dmx)
 {
+	struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
 	unsigned long flags;
 	int ret;
-	spin_lock_irqsave(&dmx->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	ret = dmx_deinit(dmx);
-	spin_unlock_irqrestore(&dmx->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
 
 int aml_asyncfifo_hw_init(struct aml_asyncfifo *afifo)
 {
+	struct aml_dvb *dvb = afifo->dvb;
 	unsigned long flags;
 	int ret;
 
 	/*Async FIFO initialize*/
-	spin_lock_irqsave(&afifo->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	ret = async_fifo_init(afifo);
-	spin_unlock_irqrestore(&afifo->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
 
 int aml_asyncfifo_hw_deinit(struct aml_asyncfifo *afifo)
 {
+	struct aml_dvb *dvb = afifo->dvb;
 	unsigned long flags;
 	int ret;
-	spin_lock_irqsave(&afifo->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	ret = async_fifo_deinit(afifo);
-	spin_unlock_irqrestore(&afifo->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
 
 int aml_asyncfifo_hw_reset(struct aml_asyncfifo *afifo)
 {
+	struct aml_dvb *dvb = afifo->dvb;
 	unsigned long flags;
 	int ret, src = -1;
-	spin_lock_irqsave(&afifo->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	if (afifo->init) {
 		src = afifo->source;
 		async_fifo_deinit(afifo);
@@ -2419,7 +2412,7 @@ int aml_asyncfifo_hw_reset(struct aml_asyncfifo *afifo)
 	if(ret==0 && afifo->dvb) {
 		reset_async_fifos(afifo->dvb);
 	}
-	spin_unlock_irqrestore(&afifo->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
@@ -2427,13 +2420,13 @@ int aml_asyncfifo_hw_reset(struct aml_asyncfifo *afifo)
 int aml_dmx_hw_start_feed(struct dvb_demux_feed *dvbdmxfeed)
 {
 	struct aml_dmx *dmx = (struct aml_dmx*)dvbdmxfeed->demux;
-	//struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
+	struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
 	unsigned long flags;
 	int ret = 0;
 
-	spin_lock_irqsave(&dmx->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	ret = dmx_add_feed(dmx, dvbdmxfeed);
-	spin_unlock_irqrestore(&dmx->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
@@ -2441,12 +2434,12 @@ int aml_dmx_hw_start_feed(struct dvb_demux_feed *dvbdmxfeed)
 int aml_dmx_hw_stop_feed(struct dvb_demux_feed *dvbdmxfeed)
 {
 	struct aml_dmx *dmx = (struct aml_dmx*)dvbdmxfeed->demux;
-	//struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
+	struct aml_dvb *dvb = (struct aml_dvb*)dmx->demux.priv;
 	unsigned long flags;
 
-	spin_lock_irqsave(&dmx->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	dmx_remove_feed(dmx, dvbdmxfeed);
-	spin_unlock_irqrestore(&dmx->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return 0;
 }
@@ -2459,7 +2452,7 @@ int aml_dmx_hw_set_source(struct dmx_demux* demux, dmx_source_t src)
 	int hw_src;
 	unsigned long flags;
 
-	spin_lock_irqsave(&dmx->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 
 	hw_src = dmx->source;
 
@@ -2487,7 +2480,7 @@ int aml_dmx_hw_set_source(struct dmx_demux* demux, dmx_source_t src)
 		dmx_reset_hw_ex(dvb, 0);
 	}
 
-	spin_unlock_irqrestore(&dmx->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
@@ -2607,10 +2600,11 @@ int aml_tso_hw_set_source(struct aml_dvb *dvb, dmx_source_t src)
 
 int aml_asyncfifo_hw_set_source(struct aml_asyncfifo *afifo, aml_dmx_id_t src)
 {
+	struct aml_dvb *dvb = afifo->dvb;
 	int ret = -1;
 	unsigned long flags;
 
-	spin_lock_irqsave(&afifo->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 
 	pr_dbg("asyncfifo %d set source %d->%d", afifo->id, afifo->source, src);
 	switch(src) {
@@ -2632,7 +2626,7 @@ int aml_asyncfifo_hw_set_source(struct aml_asyncfifo *afifo, aml_dmx_id_t src)
 		reset_async_fifos(afifo->dvb);
 	}
 
-	spin_unlock_irqrestore(&afifo->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }
@@ -2644,13 +2638,13 @@ int aml_dmx_hw_set_dump_ts_select(struct dmx_demux* demux, int dump_ts_select)
 	int ret = 0;
 	unsigned long flags;
 
-	spin_lock_irqsave(&dmx->slock, flags);
+	spin_lock_irqsave(&dvb->slock, flags);
 	dump_ts_select = !!dump_ts_select;
 	if (dmx->dump_ts_select != dump_ts_select){
 		dmx->dump_ts_select = dump_ts_select;
 		dmx_reset_hw_ex(dvb, 0);
 	}
-	spin_unlock_irqrestore(&dmx->slock, flags);
+	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
 }

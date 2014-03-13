@@ -38,9 +38,7 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 
-//#include <linux/dvb/frontend.h>
-#include <uapi/linux/dvb/frontend.h>
-
+#include <linux/dvb/frontend.h>
 
 #include "dvbdev.h"
 
@@ -54,7 +52,6 @@ struct dvb_frontend_tune_settings {
 	int min_delay_ms;
 	int step_size;
 	int max_drift;
-	struct dvb_frontend_parameters parameters;
 };
 
 struct dvb_frontend;
@@ -214,7 +211,7 @@ struct dvb_tuner_ops {
 	int (*set_analog_params)(struct dvb_frontend *fe, struct analog_parameters *p);
 
 	/** This is support for demods like the mt352 - fills out the supplied buffer with what to write. */
-	int (*calc_regs)(struct dvb_frontend *fe, struct dvb_frontend_parameters *p, u8 *buf, int buf_len);
+	int (*calc_regs)(struct dvb_frontend *fe, u8 *buf, int buf_len);
 
 	/** This is to allow setting tuner-specific configs */
 	int (*set_config)(struct dvb_frontend *fe, void *priv_cfg);
@@ -255,11 +252,12 @@ struct analog_demod_ops {
 
 	struct analog_demod_info info;
 
-	void (*set_params)(struct dvb_frontend *fe);
-	int  (*has_signal)(struct dvb_frontend *fe);
+	void (*set_params)(struct dvb_frontend *fe,
+			   struct analog_parameters *params);
+	int  (*has_signal)(struct dvb_frontend *fe, u16 *signal);
+	int  (*get_afc)(struct dvb_frontend *fe, s32 *afc);
 	int  (*is_stereo)(struct dvb_frontend *fe);
-	int  (*get_afc)(struct dvb_frontend *fe);
-        int  (*get_snr)(struct dvb_frontend *fe);
+	int  (*get_snr)(struct dvb_frontend *fe);
 	void (*get_status)(struct dvb_frontend *fe, void *status);
 	void (*get_pll_status)(struct dvb_frontend *fe, void *status);
 	void (*tuner_status)(struct dvb_frontend *fe);
@@ -316,7 +314,7 @@ struct dvb_frontend_ops {
 
 	/* if this is set, it overrides the default swzigzag */
 	int (*tune)(struct dvb_frontend* fe,
-		    struct dvb_frontend_parameters* params,
+		    bool re_tune,
 		    unsigned int mode_flags,
 		    unsigned int *delay,
 		    fe_status_t *status);
@@ -351,7 +349,7 @@ struct dvb_frontend_ops {
 	/* These callbacks are for devices that implement their own
 	 * tuning algorithms, rather than a simple swzigzag
 	 */
-	enum dvbfe_search (*search)(struct dvb_frontend *fe, struct dvb_frontend_parameters *p);
+	enum dvbfe_search (*search)(struct dvb_frontend *fe);
 	int (*track)(struct dvb_frontend *fe, struct dvb_frontend_parameters *p);
 
 	struct dvb_tuner_ops tuner_ops;

@@ -266,5 +266,11 @@ config AM_SI2177
 	help
 		select the 2177 tuner.
 
+config AM_DIBCOM8096
+	tristate "dibcom8096 demod driver"
+	default n
+	depends on AM_DVB
+	help
+		Select to enable dibcom8096 demod driver.
 endmenu
 

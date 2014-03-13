@@ -6,13 +6,13 @@
 #include <linux/netdevice.h>
 #include <linux/i2c.h>
 
-#include <uapi/linux/dvb/video.h>
-#include <uapi/linux/dvb/audio.h>
-#include <uapi/linux/dvb/dmx.h>
-#include <uapi/linux/dvb/ca.h>
-#include <uapi/linux/dvb/osd.h>
-#include <uapi/linux/dvb/net.h>
-#include <uapi/linux/dvb/frontend.h>
+#include <linux/dvb/video.h>
+#include <linux/dvb/audio.h>
+#include <linux/dvb/dmx.h>
+#include <linux/dvb/ca.h>
+#include <linux/dvb/osd.h>
+#include <linux/dvb/net.h>
+#include <linux/dvb/frontend.h>
 
 #include <linux/mutex.h>
 #include <linux/spinlock.h>
@@ -23,17 +23,19 @@
 #endif
 
 
-#include "../../media/dvb-core/dvbdev.h"
-#include "../../media/dvb-core/demux.h"
-#include "../../media/dvb-core/dvb_demux.h"
-#include "../../media/dvb-core/dmxdev.h"
-#include "../../media/dvb-core/dvb_filter.h"
-#include "../../media/dvb-core/dvb_net.h"
-#include "../../media/dvb-core/dvb_ringbuffer.h"
-#include "../../media/dvb-core/dvb_frontend.h"
+#include "drivers/media/dvb-core/dvbdev.h"
+#include "drivers/media/dvb-core/demux.h"
+#include "drivers/media/dvb-core/dvb_demux.h"
+#include "drivers/media/dvb-core/dmxdev.h"
+#include "drivers/media/dvb-core/dvb_filter.h"
+#include "drivers/media/dvb-core/dvb_net.h"
+#include "drivers/media/dvb-core/dvb_ringbuffer.h"
+#include "drivers/media/dvb-core/dvb_frontend.h"
 
 #include <linux/of.h>
 #include <linux/pinctrl/consumer.h>
+
+#include <mach/c_stb_define.h>
 
 #define TS_IN_COUNT       3
 #define S2P_COUNT         2
@@ -116,7 +118,6 @@ struct aml_dmx {
 	struct dmx_frontend  hw_fe[DMX_DEV_COUNT];
 	struct dmx_frontend  mem_fe;
 	struct dvb_net       dvb_net;
-	spinlock_t           slock;
 	int                  dmx_irq;
 	int                  dvr_irq;
 	struct tasklet_struct     dmx_tasklet;
@@ -162,7 +163,6 @@ struct aml_asyncfifo {
 	int buf_read;
 	int flush_size;
 	struct tasklet_struct     asyncfifo_tasklet;
-	spinlock_t           slock;
 	struct aml_dvb *dvb;
 };
 

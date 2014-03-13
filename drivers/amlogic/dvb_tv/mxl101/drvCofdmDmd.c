@@ -256,7 +256,7 @@ static MS_BOOL _Demod_Init(void)
 /*
 //Mstar Cofdm comman interface
 MS_BOOL MDrv_CofdmDmd_Check_lock(void)
-{
+{	
 	static MS_U8 u8Check = 0;
     if(MxL101SF_GetLock() != _plock)
     {
@@ -273,7 +273,7 @@ MS_BOOL MDrv_CofdmDmd_Check_lock(void)
 	{
 		u8Check = 0;
 	}
-	return _plock;
+	return _plock;	
 }
 
 */
