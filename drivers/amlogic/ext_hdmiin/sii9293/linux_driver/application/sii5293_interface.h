@@ -28,5 +28,8 @@ int sii_get_h_freq(void);
 int sii_get_v_freq(void);
 int sii_get_interlaced(void);
 
+int sii_get_pwr5v_status(void);
+int sii_get_audio_sampling_freq(void);
+
 #endif
 
