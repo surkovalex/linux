@@ -291,11 +291,12 @@ struct aml_fe_drv ctc703_tuner_drv ={
     .suspend	=	ctc703_suspend,
     .resume		=	ctc703_resume,
 };
-static int ctc703_get_afc(struct dvb_frontend *fe)
+static int ctc703_get_afc(struct dvb_frontend *fe, s32 *afc)
 {
     int afc_fre = 0;
     xc_get_frequency_error(&afc_fre);
-    return afc_fre/1000;
+	*afc = afc_fre/1000;
+    return 0;
 }
 static int ctc703_get_snr(struct dvb_frontend *fe)
 {

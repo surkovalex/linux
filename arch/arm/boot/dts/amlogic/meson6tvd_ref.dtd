@@ -638,6 +638,57 @@
 			amlogic,pins = "GPIOA_12","GPIOA_13","GPIOA_14","GPIOA_15";
 		};
 
+//$$ MATCH "dvb_p_ts0_pins_match" = "&dvb_p_ts0_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 8 = "amlogic,clrmask"
+//$$ L2 PROP_STR 12 = "amlogic,pins"
+	dvb_p_ts0_pins: dvb_p_ts0_pins {
+		amlogic,setmask = <3 0x3F>;
+		amlogic,clrmask = <1 0xCCC41
+				   4 0x2000000
+				   7 0x20000000
+				   9 0x431F>;
+		amlogic,pins = "GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14","GPIOY_15","GPIOY_16","GPIOY_0","GPIOY_1","GPIOY_4","GPIOY_8";
+	};
+
+//$$ MATCH "dvb_s_ts0_pins_match" = "&dvb_s_ts0_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 8 = "amlogic,clrmask"
+//$$ L2 PROP_STR 12 = "amlogic,pins"
+	dvb_s_ts0_pins: dvb_s_ts0_pins {
+		amlogic,setmask = <3 0x2F>;
+		amlogic,clrmask = <1 0xCCC41
+				   4 0x2000000
+				   7 0x20000000
+				   9 0x4310>;
+		amlogic,pins = "GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14","GPIOY_15","GPIOY_16","GPIOY_0","GPIOY_1","GPIOY_4","GPIOY_8";
+	};
+
+	//$$ MATCH "dvb_p_ts1_pins_match" = "&dvb_p_ts1_pins"
+	dvb_p_ts1_pins: dvb_p_ts1_pins {
+	};
+
+	//$$ MATCH "dvb_s_ts1_pins_match" = "&dvb_s_ts1_pins"
+	dvb_s_ts1_pins: dvb_s_ts1_pins {
+	};
+
+	//$$ MATCH "dvb_p_ts2_pins_match" = "&dvb_p_ts2_pins"
+	dvb_p_ts2_pins: dvb_p_ts2_pins {
+	};
+
+	//$$ MATCH "dvb_s_ts2_pins_match" = "&dvb_s_ts2_pins"
+	dvb_s_ts2_pins: dvb_s_ts2_pins {
+	};
+
+//$$ MATCH "dvb_fe_pins_match" = "&dvb_fe_pins"
+//$$ L2 PROP_U32 4 = "amlogic,clrmask"
+//$$ L2 PROP_STR 1 = "amlogic,pins"
+		dvb_fe_pins: dvb_fe_pins {
+			amlogic,clrmask = <5 0x800
+								8 0x2>;
+			amlogic,pins = "GPIOX_8";
+		};
+
 	}; /* end of pinmux*/
 
 	hdmirx {
@@ -824,82 +875,28 @@
 		d2d3_id = <1>;
 	};
 
-//$$ MATCH "dvb_p_ts0_pins_match" = "&dvb_p_ts0_pins"
-//$$ L2 PROP_U32 2 = "amlogic,setmask"
-//$$ L2 PROP_U32 8 = "amlogic,clrmask"
-//$$ L2 PROP_STR 12 = "amlogic,pins"
-	dvb_p_ts0_pins: dvb_p_ts0_pins {
-		amlogic,setmask = <3 0x3F>;
-		amlogic,clrmask = <1 0xCCC41
-				   4 0x2000000
-				   7 0x20000000
-				   9 0x431F>;
-		amlogic,pins = "GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14","GPIOY_15","GPIOY_16","GPIOY_0","GPIOY_1","GPIOY_4","GPIOY_8";
-	};
+/// ***************************************************************************************
+///	-	DVB
+//$$ MODULE="DVB"
 
-//$$ MATCH "dvb_s_ts0_pins_match" = "&dvb_s_ts0_pins"
-//$$ L2 PROP_U32 2 = "amlogic,setmask"
-//$$ L2 PROP_U32 8 = "amlogic,clrmask"
-//$$ L2 PROP_STR 12 = "amlogic,pins"
-	dvb_s_ts0_pins: dvb_s_ts0_pins {
-		amlogic,setmask = <3 0x2F>;
-		amlogic,clrmask = <1 0xCCC41
-				   4 0x2000000
-				   7 0x20000000
-				   9 0x4310>;
-		amlogic,pins = "GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14","GPIOY_15","GPIOY_16","GPIOY_0","GPIOY_1","GPIOY_4","GPIOY_8";
-	};
-
-	//$$ MATCH "dvb_p_ts1_pins_match" = "&dvb_p_ts1_pins"
-	dvb_p_ts1_pins: dvb_p_ts1_pins {
-	};
-
-	//$$ MATCH "dvb_s_ts1_pins_match" = "&dvb_s_ts1_pins"
-	dvb_s_ts1_pins: dvb_s_ts1_pins {
-	};
-
-	//$$ MATCH "dvb_p_ts2_pins_match" = "&dvb_p_ts2_pins"
-	dvb_p_ts2_pins: dvb_p_ts2_pins {
-	};
-
-	//$$ MATCH "dvb_s_ts2_pins_match" = "&dvb_s_ts2_pins"
-	dvb_s_ts2_pins: dvb_s_ts2_pins {
-	};
-
-	//$$ MATCH "dvb_fe_pins_match" = "&dvb_fe_pins"
-	dvb_fe_pins: dvb_fe_pins {
-	};
-
-
-	amlogic_dvb_fe_device {
-		compatible = "amlogic,dvbfe";
-		dev_name = "amlogic-dvb-fe";
-		status = "ok";
-		dtv_demod0 = <0>;    /**   DTV demod: M6=0, MXL101=2, ATBM8869=4 */
-		dtv_demod0_i2c_adap_id = <0>;
-		dtv_demod0_i2c_addr = <0x60>;
-		dtv_demod0_reset_value = <0>;
-		dtv_demod0_reset_gpio = "GPIOX_8" ;
-		fe0_dtv_demod = <0>;
-		fe0_ts = <2>;
-		fe0_dev = <0>;
-		fe0_mem = <0>;
-		reserve-memory = <0x06400000>;
-		reserve-iomap = "true";
-		tuner0 = <6>;
-		tuner0_i2c_adap_id = <1>;
-		tuner0_i2c_addr = <0x60>;
-		tuner0_reset_value = <0>;
-		tuner0_reset_gpio =  "GPIOX_8" ;  /*GPIOX_8   76*/
-		fe0_tuner = <0>;
-		atv_demod0 = <6>;
-		fe0_atv_demod = <0>;
-		fe1_tuner = <0>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&dvb_fe_pins>;
-	};
-
-	amlogic_dvb_device {
+//$$ DEVICE="dvb"
+//$$ L2 PROP_STR = "ts0"
+//$$ L2 PROP_STR = "ts1"
+//$$ L2 PROP_STR = "ts2"
+//$$ L2 PROP_U32 = "ts0_invert"
+//$$ L2 PROP_U32 = "ts1_invert"
+//$$ L2 PROP_U32 = "ts2_invert"
+//$$ L2 PROP_U32 = "ts0_control"
+//$$ L2 PROP_U32 = "ts1_control"
+//$$ L2 PROP_U32 = "ts2_control"
+//$$ L2 PROP_STR 6 = "pinctrl-names"
+//$$ L2 PROP_CHOICE "dvb_p_ts0_pins_match" = "pinctrl-0"
+//$$ L2 PROP_CHOICE "dvb_s_ts0_pins_match" = "pinctrl-1"
+//$$ L2 PROP_CHOICE "dvb_p_ts1_pins_match" = "pinctrl-2"
+//$$ L2 PROP_CHOICE "dvb_s_ts1_pins_match" = "pinctrl-3"
+//$$ L2 PROP_CHOICE "dvb_p_ts2_pins_match" = "pinctrl-4"
+//$$ L2 PROP_CHOICE "dvb_s_ts2_pins_match" = "pinctrl-5"
+	dvb{
 		compatible = "amlogic,dvb";
 		/*"parallel","serial","disable"*/
 		ts0 = "parallel";
@@ -919,5 +916,41 @@
 		pinctrl-4 = <&dvb_p_ts2_pins>;
 		pinctrl-5 = <&dvb_s_ts2_pins>;
 	};
+
+//$$ DEVICE="dvbfe"
+//$$ L2 PROP_STR = "dtv_demod0"
+//$$ L2 PROP_U32 = "dtv_demod0_i2c_adap_id"
+//$$ L2 PROP_U32 = "dtv_demod0_i2c_addr"
+//$$ L2 PROP_U32 = "dtv_demod0_reset_value"
+//$$ L2 PROP_STR = "dtv_demod0_reset_gpio"
+//$$ L2 PROP_U32 = "fe0_dtv_demod"
+//$$ L2 PROP_U32 = "fe0_ts"
+//$$ L2 PROP_U32 = "fe0_dev"
+//$$ L2 PROP_STR 1 = "pinctrl-names"
+//$$ L2 PROP_CHOICE "dvb_fe_pins_match" = "pinctrl-0"
+
+	dvbfe{
+		compatible = "amlogic,dvbfe";
+		dtv_demod0 = "AMLDEMOD";
+		dtv_demod0_i2c_adap_id = <0>;
+		dtv_demod0_i2c_addr = <0x60>;
+		dtv_demod0_reset_value = <0>;
+		dtv_demod0_reset_gpio = "GPIOX_8" ;
+		dtv_demod0_mem = <1>;
+		reserve-memory = <0x06400000>;
+		reserve-iomap = "true";
+		fe0_dtv_demod = <0>;
+		fe0_ts = <2>;
+		fe0_dev = <0>;
+		tuner0 = "si2177_tuner";
+		tuner0_i2c_adap_id = <1>;
+		tuner0_i2c_addr = <0x60>;
+		tuner0_reset_value = <0>;
+		tuner0_reset_gpio =  "GPIOX_8" ;  /*GPIOX_8   76*/
+		fe0_tuner = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&dvb_fe_pins>;
+	};
+
 }; /* end of / */
 

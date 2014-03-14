@@ -59,6 +59,8 @@ static int freq_dvbc=0;
 static struct aml_demod_sta demod_status;
 static fe_modulation_t atsc_mode=VSB_8;
 
+long *mem_buf;
+int memstart;
 
 MODULE_PARM_DESC(frontend_mode, "\n\t\t Frontend mode 0-DVBC, 1-DVBT");
 static int frontend_mode = -1;
@@ -1243,6 +1245,9 @@ static int m6_demod_fe_enter_mode(struct aml_fe *fe, int mode)
 		if(dvbc_get_cci_task()==1)
 			dvbc_create_cci_task();
 	}
+
+	memstart = fe->dtv_demod->mem_start;
+	mem_buf=(long*)phys_to_virt(memstart);
 	return 0;
 }
 
@@ -1260,7 +1265,7 @@ static int m6_demod_fe_leave_mode(struct aml_fe *fe, int mode)
 
 static struct aml_fe_drv m6_demod_dtv_demod_drv = {
 .id         = AM_DTV_DEMOD_M1,
-.name       = "M6_DEMOD",
+.name       = "AMLDEMOD",
 .capability = AM_FE_QPSK|AM_FE_QAM|AM_FE_ATSC|AM_FE_OFDM|AM_FE_DTMB,
 .get_ops    = m6_demod_fe_get_ops,
 .suspend    = m6_demod_fe_suspend,

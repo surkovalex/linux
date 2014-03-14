@@ -4,4 +4,5 @@ atbm8878_fe-objs = atbm887x.o atbmfrontend.o  ###log_calc.o atbmdvbc.o atbm884x.
 
 ##atbm8859_fe-objs += si2176/si2176_func.o
 
-EXTRA_CFLAGS += -Idrivers/media/dvb/dvb-core
+EXTRA_CFLAGS += -I.
+EXTRA_CFLAGS += -Idrivers/media/dvb-core

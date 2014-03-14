@@ -890,6 +890,38 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 	}
 #endif /*CONFIG_OF*/
 
+#ifdef CONFIG_OF
+	{
+		long *mem_buf;
+		int memstart;
+		int memend;
+		int memsize;
+		snprintf(buf, sizeof(buf), "%s%d_mem", name, id);
+		ret = of_property_read_u32(pdev->dev.of_node, buf, &value);
+		if(!ret && value){
+			ret = find_reserve_block(pdev->dev.of_node->name,0);
+			if(ret < 0){
+				pr_error("%s%d memory resource undefined.\n", name, id);
+				dev->mem_start = 0;
+				dev->mem_end = 0;
+			}else{
+				memstart = (phys_addr_t)get_reserve_block_addr(ret);
+				memsize = (phys_addr_t)get_reserve_block_size(ret);
+				memend = memstart+memsize-1;
+				mem_buf=(long*)phys_to_virt(memstart);
+				printk("memend is %x,memstart is %x,memsize is %x\n",memend,memstart,memsize);
+				memset(mem_buf,0,memsize-1);
+				dev->mem_start = memstart;
+				dev->mem_end = memend;
+			}
+		}else{
+			pr_error("%s%d memory resource undefined.\n", name, id);
+			dev->mem_start = 0;
+			dev->mem_end = 0;
+		}
+	}
+#endif
+
 	if(dev->drv->init){
 		ret = dev->drv->init(dev);
 		if(ret != 0){
@@ -912,8 +944,7 @@ static int aml_fe_dev_release(struct aml_dvb *dvb, aml_fe_dev_type_t type, struc
 	dev->drv = NULL;
 	return 0;
 }
-long *mem_buf;
-int memstart;
+
 static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, struct aml_fe *fe, int id)
 {
 #ifndef CONFIG_OF
