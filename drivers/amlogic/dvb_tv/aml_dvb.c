@@ -92,6 +92,7 @@ static struct tsdemux_ops aml_tsdemux_ops = {
 
 static int control_ts_on_csi_port(int tsin, int enable)
 {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	unsigned int temp_data;
 	if(tsin==2 && enable) {
 		//TS2 is on CSI port.
@@ -104,6 +105,7 @@ static int control_ts_on_csi_port(int tsin, int enable)
 		temp_data |= 0x80000fc0;
 		WRITE_CBUS_REG(HHI_CSI_PHY_CNTL2,temp_data);
 	}
+#endif
 	return 0;
 }
 
