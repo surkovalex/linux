@@ -372,7 +372,7 @@ static buffer_spec_t buffer_spec[DECODE_BUFFER_NUM_MAX+DISPLAY_BUFFER_NUM];
      ((x)->u_canvas_index << 8)  | \
      ((x)->y_canvas_index << 0))
 
-#define VF_POOL_SIZE        16
+#define VF_POOL_SIZE        32
 
 static DECLARE_KFIFO(newframe_q, vframe_t *, VF_POOL_SIZE);
 static DECLARE_KFIFO(display_q, vframe_t *, VF_POOL_SIZE);
