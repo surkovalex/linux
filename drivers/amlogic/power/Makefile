@@ -22,7 +22,6 @@ obj-$(CONFIG_AML_PMU)                       += aml_pmu/
 obj-$(CONFIG_RICOH_PMU)                     += ricoh/
 obj-$(CONFIG_UBOOT_BATTERY_PARAMETERS)      += battery_parameter.o
 obj-$(CONFIG_AMLOGIC_PMU_OF)                += aml_pmu_of_common.o pmu_mutex.o 
-obj-$(CONFIG_AML_PMU_ALGORITHM_SUPPORT)     += aml_pmu_algorithm.o 
 
 endif
 

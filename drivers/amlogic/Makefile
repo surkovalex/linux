@@ -67,6 +67,10 @@ obj-$(CONFIG_AML_RTC)+= rtc/
 
 obj-y += power/
 
+ifneq ($(wildcard $(srctree)/../hardware/amlogic/pmu),)
+    obj-$(CONFIG_AML_PMU_ALGORITHM_SUPPORT) += ../../../hardware/amlogic/pmu/
+endif
+
 obj-y += tvin_v4l2/
 ifneq ($(wildcard $(srctree)/../hardware/tvin),)
 	obj-$(CONFIG_TVIN) += ../../../hardware/tvin/
