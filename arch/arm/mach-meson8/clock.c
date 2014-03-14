@@ -1705,14 +1705,14 @@ static int __init meson_clock_init(void)
     // Add clk usb0
     CLK_DEFINE(usb0,xtal,4,NULL,clk_msr_get,clk_enable_usb,clk_disable_usb,"usb0");
     meson_clk_register(&clk_usb0,&clk_xtal);
-    clk_usb0.clk_gate_reg_adr = P_USB_ADDR0;
-    clk_usb0.clk_gate_reg_mask = (1<<0);
+    //clk_usb0.clk_gate_reg_adr = P_USB_ADDR0;
+    //clk_usb0.clk_gate_reg_mask = (1<<0);
     
     // Add clk usb1
     CLK_DEFINE(usb1,xtal,5,NULL,clk_msr_get,clk_enable_usb,clk_disable_usb,"usb1");
     meson_clk_register(&clk_usb1,&clk_xtal);
-    clk_usb1.clk_gate_reg_adr = P_USB_ADDR8;
-    clk_usb1.clk_gate_reg_mask = (1<<0);
+    //clk_usb1.clk_gate_reg_adr = P_USB_ADDR8;
+    //clk_usb1.clk_gate_reg_mask = (1<<0);
 #endif
 		
 	{
