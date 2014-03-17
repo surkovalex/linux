@@ -818,15 +818,18 @@ static struct aml_fe_drv si2176_tuner_drv = {
         .resume = si2176_resume,
 };
 
-static int si2176_analog_get_afc(struct dvb_frontend *fe)
+static int si2176_analog_get_afc(struct dvb_frontend *fe, s32 *afc)
 {
         if(si2176_atv_status(&si2176_devp->tuner_client, SI2176_ATV_STATUS_CMD_INTACK_OK, &si2176_devp->si_cmd_reply)!=0)
         {
                 pr_info("[si2176..]%s: get si2176 atv status error.\n",__func__);
+				*afc=0;
                 return -ERROR;
         }
         else
-                return si2176_devp->si_cmd_reply.atv_status.afc_freq;
+             *afc = si2176_devp->si_cmd_reply.atv_status.afc_freq;
+
+		return 0;
 }
 static int si2176_analog_get_snr(struct dvb_frontend *fe)
 {

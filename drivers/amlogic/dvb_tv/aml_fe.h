@@ -124,6 +124,10 @@ struct aml_fe_dev{
 	int      lnb_power_gpio;
 	/*for ant overload control, it possible in dtv dvbsx and depond on fe hw*/
 	int      antoverload_gpio;
+
+	/*for mem reserved*/
+	int      mem_start;
+	int      mem_end;
 };
 
 struct aml_fe{
@@ -142,7 +146,6 @@ struct aml_fe{
 	struct aml_fe_dev *dtv_demod;
 	//struct dvb_frontend_parameters params;
 	struct dtv_frontend_properties params;
-
 };
 
 struct aml_fe_man{

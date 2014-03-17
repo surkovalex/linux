@@ -791,15 +791,17 @@ static struct aml_fe_drv si2177_tuner_drv = {
         .resume = si2177_resume,
 };
 
-static int si2177_analog_get_afc(struct dvb_frontend *fe)
+static int si2177_analog_get_afc(struct dvb_frontend *fe, s32 *afc)
 {
         if(si2177_atv_status(&si2177_devp->tuner_client, SI2177_ATV_STATUS_CMD_INTACK_OK, &si2177_devp->si_cmd_reply)!=0)
         {
                 pr_info("[si2177..]%s: get si2177 atv status error.\n",__func__);
+				*afc=0;
                 return -ERROR;
         }
         else
-                return si2177_devp->si_cmd_reply.atv_status.afc_freq;
+                *afc = si2177_devp->si_cmd_reply.atv_status.afc_freq;
+		return 0;
 }
 static int si2177_analog_get_snr(struct dvb_frontend *fe)
 {

@@ -691,16 +691,18 @@ static struct aml_fe_drv si2196_tuner_drv = {
         .leave_mode=si2196_leave_mode
 };
 /*the analog driver*/
-static int si2196_analog_get_afc(struct dvb_frontend *fe)
+static int si2196_analog_get_afc(struct dvb_frontend *fe, s32 *afc)
 {
     if(si2196_atv_status(&si2196_devp->tuner_client, 0, &si2196_devp->si_cmd_reply)!=0)
     {
             printk("[si2196..]%s:get si2196 atv status error.\n",__func__);
+			*afc = 0;
             return -ERROR;
     }
     if(si2196_debug)
         printk("[si2196..] %s afc: %d \n", __func__, si2196_devp->si_cmd_reply.atv_status.afc_freq);
-    return si2196_devp->si_cmd_reply.atv_status.afc_freq;
+    *afc = si2196_devp->si_cmd_reply.atv_status.afc_freq;
+	return 0;
 }
 
 static int si2196_analog_get_snr(struct dvb_frontend *fe)

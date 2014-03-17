@@ -22,5 +22,6 @@ aml_fe-objs += amlfrontend.o
 aml_fe-objs	+= aml_demod.o
 ##endif
 
-EXTRA_CFLAGS += -Idrivers/media/dvb/dvb-core
+EXTRA_CFLAGS += -I.
+EXTRA_CFLAGS += -Idrivers/media/dvb-core
 
