@@ -210,10 +210,34 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 		//audio_set_i2s_mode(AIU_I2S_MODE_PCM16);
 		//audio_set_aiubuf(start, size);		
 	}else{
-		set.chan_stat->chstat0_l = 0x1902;//NONE-PCM
-		set.chan_stat->chstat0_r = 0x1902;
-		set.chan_stat->chstat1_l = 0X200;
-		set.chan_stat->chstat1_r = 0X200;
+		if(IEC958_mode_codec == 4){ //DD+
+			if(runtime->rate == 32000){
+				set.chan_stat->chstat1_l = 0x300;
+				set.chan_stat->chstat1_r = 0x300;
+			}
+			else if(runtime->rate == 44100){
+				set.chan_stat->chstat1_l = 0xc00;
+				set.chan_stat->chstat1_r = 0xc00;			
+			}
+			else{
+				set.chan_stat->chstat1_l = 0Xe00;
+				set.chan_stat->chstat1_r = 0Xe00;			
+			}		
+		}
+		else{   //DTS,DD
+			if(runtime->rate == 32000){
+				set.chan_stat->chstat1_l = 0x300;
+				set.chan_stat->chstat1_r = 0x300;
+			}
+			else if(runtime->rate == 44100){
+				set.chan_stat->chstat1_l = 0;
+				set.chan_stat->chstat1_r = 0;			
+			}
+			else{
+				set.chan_stat->chstat1_l = 0X200;
+				set.chan_stat->chstat1_r = 0X200;			
+			}
+		}
 		start = buf->addr;
 		size = snd_pcm_lib_buffer_bytes(substream);;
 		audio_set_958outbuf(start, size, (iec958_mode == AIU_958_MODE_RAW)?1:0);
