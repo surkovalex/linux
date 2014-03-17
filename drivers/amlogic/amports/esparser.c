@@ -120,7 +120,7 @@ static ssize_t _esparser_write(const char __user *buf,
     } else {
         parser_type = PARSER_SUBPIC;
     }
-
+	
     wp = buf_rp(type);
 
     if (r > 0) {
@@ -576,6 +576,7 @@ ssize_t esparser_write(struct file *file,
 	        }
 	}
     }
+	stbuf->last_write_jiffies64=jiffies_64;
     len = min(len, count);
     mutex_lock(&esparser_mutex);
 	r = _esparser_write(buf, len, stbuf->type,0);

@@ -581,6 +581,7 @@ static u32 vsync_pts_inc_upint = 0;
 static u32 vsync_pts_inc_adj = 0;
 static u32 vsync_pts_125 = 0;
 static u32 vsync_pts_112 = 0;
+static u32 vsync_pts_101 = 0;
 static u32 vsync_pts_100 = 0;
 static u32 vsync_freerun = 0;
 
@@ -1809,34 +1810,33 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
         u32 delayed_ms, t1, t2;
         delayed_ms = calculation_stream_delayed_ms(PTS_TYPE_VIDEO, &t1, &t2);
         if (vf_get_states(&frame_states) == 0) {
-            if (delayed_ms > 600) {
+			u32 pcr=timestamp_pcrscr_get();
+			u32 vpts=timestamp_vpts_get();
+			u32 diff=pcr-vpts;
+            if (delayed_ms > 200) {
                 vsync_freerun++;
+				if(pcr<next_vf->pts || pcr<vpts+next_vf->duration)
+				{
+	                if(next_vf->pts>0){
+	                    timestamp_pcrscr_set(next_vf->pts);
+	                }else{
+	                    timestamp_pcrscr_set(vpts+next_vf->duration);
+	                }
+                }
                 return true;
-            }
-            if ((delayed_ms > 300) && (frame_states.buf_avail_num >= 3)) {
+            }else if((frame_states.buf_avail_num >= 3) && diff <vsync_pts_inc<<2){
                 vsync_pts_inc_adj = vsync_pts_inc + (vsync_pts_inc >> 2);
                 vsync_pts_125++;
-            } else if (delayed_ms < 250) {
-            #if 0
-                if (vf_get_states(&frame_states) == 0) {
-                    if (frame_states.buf_avail_num >= 3) {
-                        return true;
-                    } /*else if ((frame_states.buf_avail_num < 10) && (frame_states.buf_avail_num > 3)) {
-                        if (cur_vf) {
-                            pts -=  (next_vf->pts - cur_vf->pts)/ 2;
-                            printk("next frame pts 0x%x, next_vf->pts 0x%x\n", pts, next_vf->pts);
-                        }
-                    }*/
-                }
-            #endif
+            }else if((frame_states.buf_avail_num >= 2 && diff <vsync_pts_inc<<1 )){
+                vsync_pts_inc_adj = vsync_pts_inc + (vsync_pts_inc >> 3);
+                vsync_pts_112++;
+            }else if(frame_states.buf_avail_num >= 1 && diff< vsync_pts_inc-20){
+            	vsync_pts_inc_adj = vsync_pts_inc + 10;
+                vsync_pts_101++;
+            } else{
                 vsync_pts_inc_adj = 0;
                 vsync_pts_100++;
-            } else {
-                if (frame_states.buf_avail_num >= 2) {
-                    vsync_pts_inc_adj = vsync_pts_inc + (vsync_pts_inc >> 3);
-                    vsync_pts_112++;
-                }
-            }
+            }	
         }
     }
 #endif
@@ -4341,12 +4341,23 @@ static ssize_t vframe_states_show(struct class *cla, struct class_attribute* att
 {
     int ret = 0;
     vframe_states_t states;
-
+    unsigned long flags;
+	
     if (vf_get_states(&states) == 0) {
         ret += sprintf(buf + ret, "vframe_pool_size=%d\n", states.vf_pool_size);
         ret += sprintf(buf + ret, "vframe buf_free_num=%d\n", states.buf_free_num);
         ret += sprintf(buf + ret, "vframe buf_recycle_num=%d\n", states.buf_recycle_num);
         ret += sprintf(buf + ret, "vframe buf_avail_num=%d\n", states.buf_avail_num);
+ 			
+        spin_lock_irqsave(&lock, flags);
+        {
+            vframe_t *vf;
+            vf = video_vf_peek();
+            if(vf){
+                ret += sprintf(buf + ret, "vframe ready frame delayed =%dms\n",(int)(jiffies_64-vf->ready_jiffies64)*1000/HZ);
+            }
+        }
+        spin_unlock_irqrestore(&lock, flags);
 
     } else {
         ret += sprintf(buf + ret, "vframe no states\n");
@@ -4448,8 +4459,8 @@ static ssize_t trickmode_duration_store(struct class *cla, struct class_attribut
 static ssize_t video_vsync_pts_inc_upint_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
     if (vsync_pts_inc_upint)
-        return sprintf(buf, "%d, vsync_freerun %d, 1.25xInc %d, 1.12xInc %d, 1xInc %d\n",
-            vsync_pts_inc_upint, vsync_freerun, vsync_pts_125, vsync_pts_112, vsync_pts_100);
+        return sprintf(buf, "%d, vsync_freerun %d, 1.25xInc %d, 1.12xInc %d,inc+10 %d, 1xInc %d\n",
+            vsync_pts_inc_upint, vsync_freerun, vsync_pts_125, vsync_pts_112, vsync_pts_101,vsync_pts_100);
     else
         return sprintf(buf, "%d\n", vsync_pts_inc_upint);
 }

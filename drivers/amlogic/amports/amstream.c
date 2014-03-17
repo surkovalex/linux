@@ -1718,9 +1718,14 @@ static ssize_t bufs_show(struct class *class, struct class_attribute *attr, char
 			int calc_delayms=0;
 			u32 bitrate=0,avg_bitrate=0;
 			calc_delayms=calculation_stream_delayed_ms(p->type,&bitrate,&avg_bitrate);
-			if(calc_delayms>0){
+			if(calc_delayms>=0){
 		    	pbuf += sprintf(pbuf, "\tbuf current delay:%dms\n",calc_delayms);
 		    	pbuf += sprintf(pbuf, "\tbuf bitrate latest:%dbps,avg:%dbps\n",bitrate,avg_bitrate);
+		    	pbuf += sprintf(pbuf, "\tbuf time after last pts:%d ms\n",
+                      calculation_stream_ext_delayed_ms(p->type));
+				pbuf += sprintf(pbuf, "\tbuf time after last write data :%d ms\n",
+					  (int)(jiffies_64 - p->last_write_jiffies64)*1000/HZ);
+
 			}
 		}
     }

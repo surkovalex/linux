@@ -1053,7 +1053,7 @@ static void vh264_isr(void)
 
                 p_last_vf = vf;
                 last_ptr = fill_ptr;
-
+                vf->ready_jiffies64=jiffies_64;
                 INCPTR(fill_ptr);
                 vf_notify_receiver(PROVIDER_NAME,VFRAME_EVENT_PROVIDER_VFRAME_READY,NULL);
             } else {
@@ -1076,7 +1076,7 @@ static void vh264_isr(void)
                 vf->pts_us64= (pts_valid) ? pts_us64 : 0;
                 vf->canvas0Addr = vf->canvas1Addr = spec2canvas(&buffer_spec[buffer_index]);
                 vfbuf_use[buffer_index]++;
-
+                vf->ready_jiffies64=jiffies_64;
                 INCPTR(fill_ptr);
 
                 vf = &vfpool[fill_ptr];
@@ -1107,6 +1107,7 @@ static void vh264_isr(void)
 
                 p_last_vf = vf;
                 last_ptr = fill_ptr;
+                vf->ready_jiffies64=jiffies_64;
 
                 INCPTR(fill_ptr);
                 vf_notify_receiver(PROVIDER_NAME,VFRAME_EVENT_PROVIDER_VFRAME_READY,NULL);
@@ -1735,6 +1736,7 @@ static void stream_switching_do(struct work_struct *work)
         }
 
         vfpool_idx[fill_ptr] = -1;
+        vf_curr->ready_jiffies64=jiffies_64;		
         INCPTR(fill_ptr);
 
         spin_unlock_irqrestore(&lock, flags);

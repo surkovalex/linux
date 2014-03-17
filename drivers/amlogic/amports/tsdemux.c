@@ -684,6 +684,8 @@ ssize_t tsdemux_write(struct file *file,
 	        }
         }
     }
+	vbuf->last_write_jiffies64=jiffies_64;
+	abuf->last_write_jiffies64=jiffies_64;
 	write_size=limited_delay_check(file,vbuf,abuf,buf,count);
     if (write_size > 0) {
         return _tsdemux_write(buf, write_size);

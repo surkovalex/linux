@@ -5,6 +5,7 @@
 #include <linux/amlogic/amports/ptsserv.h>
 #include <linux/amlogic/amports/timestamp.h>
 #include <linux/amlogic/amports/tsync.h>
+#include "ampotrs_priv.h"
 
 #include <mach/am_regs.h>
 
@@ -61,6 +62,7 @@ typedef struct pts_table_s {
     u32 last_checkin_pts;
     u32 last_checkout_pts;
     u32 last_checkout_offset;
+       u32 last_checkin_jiffies;
     u32 last_bitrate;
     u32 last_avg_bitrate;
 #endif
@@ -191,13 +193,15 @@ int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
 	else 
 		outtime=timestamp_pcrscr_get();
     timestampe_delayed=(pTable->last_checkin_pts-outtime)/90;
-	///printk("get delay =%d ms\n",timestampe_delayed);
 	if((timestampe_delayed<0 ||timestampe_delayed>5*1000) && pTable->last_avg_bitrate>0){
 		int diff=pTable->last_checkin_offset-pTable->last_checkout_offset;
+		int diff2=stbuf_level(get_buf_by_type(type));
+		if((diff-diff2)> (pTable->last_avg_bitrate/8/10) || (diff-diff2*10))
+			diff =diff2;
 		int delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
 		if(timestampe_delayed< 0 ||abs(timestampe_delayed-delay_ms)>3*1000){
 			timestampe_delayed=delay_ms;
-			///printk("..recalculated %d ms delay\n",timestampe_delayed);
+			printk("..recalculated %d ms delay,diff=%d\n",timestampe_delayed,diff);
 		}
 	}
 	if(latestbitrate)
@@ -207,6 +211,19 @@ int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
 	return timestampe_delayed;
 }
 EXPORT_SYMBOL(calculation_stream_delayed_ms);
+int calculation_stream_ext_delayed_ms(u8 type)
+{
+       pts_table_t *pTable;
+       int extdelay_ms;
+       if (type >= PTS_TYPE_MAX) {
+        return 0;
+    }
+       pTable = &pts_table[type];
+       extdelay_ms=jiffies-pTable->last_checkin_jiffies;
+       if(extdelay_ms<0)
+               extdelay_ms=0;
+       return extdelay_ms*1000/HZ;
+}
 
 #endif
 
@@ -284,6 +301,7 @@ static int pts_checkin_offset_inline(u8 type, u32 offset, u32 val,u64 uS64)
 			}
 			pTable->last_checkin_offset = offset;
 			pTable->last_checkin_pts    = val;
+			pTable->last_checkin_jiffies = jiffies;
 			
 		}
 	}
