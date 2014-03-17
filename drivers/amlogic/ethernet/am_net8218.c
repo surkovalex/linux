@@ -2723,7 +2723,7 @@ static const struct of_device_id eth_dt_match[]={
 static struct platform_driver ethernet_driver = {
 	.probe   = ethernet_probe,
 	.remove  = ethernet_remove,
-#ifdef  CONFIG_PM
+#ifndef  CONFIG_PM
 	.suspend = ethernet_suspend,
 	.resume  = ethernet_resume,
 #endif
