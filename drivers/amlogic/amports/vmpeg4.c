@@ -605,8 +605,14 @@ static void vmpeg4_canvas_init(void)
         decbuf_size = 0x100000;
     } else {
         /* HD & SD */
-        canvas_width = 1920;
-        canvas_height = 1088;
+        if(vmpeg4_amstream_dec_info.height > vmpeg4_amstream_dec_info.width){
+            canvas_width = 1088;
+            canvas_height = 1920;            
+        }
+        else{
+            canvas_width = 1920;
+            canvas_height = 1088;
+        }
         decbuf_y_size = 0x200000;
         decbuf_uv_size = 0x80000;
         decbuf_size = 0x300000;
