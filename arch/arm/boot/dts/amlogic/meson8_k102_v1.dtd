@@ -189,7 +189,7 @@ void root_func(){
 		compatible = "amlogic,ppmgr";
 		dev_name = "ppmgr";
 		status = "okay";
-		reserve-memory = <0x01000000>;
+		reserve-memory = <0x03600000>;//54M, 500W camera need 54M
 		reserve-iomap = "true";
 	};
 
@@ -271,6 +271,7 @@ void root_func(){
 ///	-	ION
 //$$ MODULE="ION"
 //$$ DEVICE="ion_dev"
+//$$ L2 share-memory-size
 //$$ L2 PROP_STR = "status"
     ion_dev{
         compatible = "amlogic,ion_dev";
@@ -278,7 +279,15 @@ void root_func(){
         status = "ok";
         share-memory-name = "ppmgr0";
         share-memory-offset = <0>;
-        share-memory-size = <0x01000000>;
+        share-memory-size = <0x03600000>;//ion_dev use same buffer with ppmgr0
+                                     /** 1920*1088*1.5*6/1024/1024 + 2624*1952*3/1024/1024=34M,than add old 20M,=54M
+                                        -------------------------   -------------------------
+                                                  |                           |
+                                                 \|/                         \|/
+                                                  V                           V
+                                           1080p preview               max picture size is 5M
+                                         whose size is 32byte align, 64byte align is better */
+
     };
 /// ***************************************************************************************
 ///	-	DISP&MM-Vout
