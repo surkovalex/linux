@@ -37,12 +37,18 @@
 #include <linux/dma-contiguous.h>
 
 #include <mach/am_regs.h>
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <mach/vpu.h>
+#endif
 #include "vdec_reg.h"
 
 #include "vdec.h"
 #include "amvdec.h"
 #include "vh264_4k2k_mc.h"
+
+#if  MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD
+#define DOUBLE_WRITE
+#endif
 
 #define DRIVER_NAME "amvdec_h264_4k2k"
 #define MODULE_NAME "amvdec_h264_4k2k"
@@ -103,8 +109,6 @@ static DEFINE_MUTEX(vh264_4k2k_mutex);
 static void (*probe_callback)(void) = NULL;
 static void (*remove_callback)(void) = NULL;
 static struct device *cma_dev;
-
-#define CBCR_MERGE
 
 #ifdef DUAL_PROT
 #define MAILBOX_COMMAND         AV_SCRATCH_0
@@ -346,7 +350,7 @@ static const char *reg_name[] = {
 static unsigned work_space_adr, decoder_buffer_start, decoder_buffer_end;
 static unsigned reserved_buffer;
 
-#define DECODE_BUFFER_NUM_MAX    16
+#define DECODE_BUFFER_NUM_MAX    32
 #define DISPLAY_BUFFER_NUM       6
 
 #define video_domain_addr(adr) (adr&0x7fffffff)
@@ -354,12 +358,18 @@ static unsigned reserved_buffer;
 
 typedef struct {
     unsigned int y_addr;
-    unsigned int u_addr;
-    unsigned int v_addr;
+    unsigned int uv_addr;
+#ifdef DOUBLE_WRITE
+    unsigned int y_dw_addr;
+    unsigned int uv_dw_addr;
+#endif
 
     int y_canvas_index;
-    int u_canvas_index;
-    int v_canvas_index;
+    int uv_canvas_index;
+#ifdef DOUBLE_WRITE
+    int y_dw_canvas_index;
+    int uv_dw_canvas_index;
+#endif
 
     struct page *alloc_pages;
     int alloc_count;
@@ -367,10 +377,17 @@ typedef struct {
 
 static buffer_spec_t buffer_spec[DECODE_BUFFER_NUM_MAX+DISPLAY_BUFFER_NUM];
 
+#ifdef DOUBLE_WRITE
 #define spec2canvas(x)  \
-    (((x)->v_canvas_index << 16) | \
-     ((x)->u_canvas_index << 8)  | \
+    (((x)->uv_dw_canvas_index << 16) | \
+     ((x)->uv_dw_canvas_index << 8)  | \
+     ((x)->y_dw_canvas_index << 0))
+#else
+#define spec2canvas(x)  \
+    (((x)->uv_canvas_index << 16) | \
+     ((x)->uv_canvas_index << 8)  | \
      ((x)->y_canvas_index << 0))
+#endif
 
 #define VF_POOL_SIZE        32
 
@@ -387,8 +404,13 @@ static void set_frame_info(vframe_t *vf)
 {
     unsigned int ar;
 
+#ifdef DOUBLE_WRITE
+    vf->width = frame_width / 2;
+    vf->height = frame_height / 2;
+#else
     vf->width = frame_width;
     vf->height = frame_height;
+#endif
     vf->duration = frame_dur;
     vf->duration_pulldown = 0;
 
@@ -488,8 +510,8 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
     mutex_lock(&vh264_4k2k_mutex);
     
     for (i=0; i<dpb_number; i++) {
-        WRITE_VREG(canvas_addr++, index | ((index+1)<<8) | ((index+2)<<16));
-        WRITE_VREG(vdec2_canvas_addr++, index | ((index+1)<<8) | ((index+2)<<16));
+        WRITE_VREG(canvas_addr++, index | ((index+1)<<8) | ((index+1)<<16));
+        WRITE_VREG(vdec2_canvas_addr++, index | ((index+1)<<8) | ((index+1)<<16));
 
         if (((dpb_addr + (mb_total << 8) + (mb_total << 7)) >= decoder_buffer_end) && (!use_alloc)) {
             printk("start alloc for %d/%d\n", i, dpb_number);
@@ -497,7 +519,11 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
         }
 
         if (use_alloc) {
+#ifdef DOUBLE_WRITE
+            int page_count = PAGE_ALIGN((mb_total << 8) + (mb_total << 7) + (mb_total << 6) + (mb_total << 5)) / PAGE_SIZE;
+#else
             int page_count = PAGE_ALIGN((mb_total << 8) + (mb_total << 7)) / PAGE_SIZE;
+#endif
 
             if (buffer_spec[i].alloc_pages) {
                 if (page_count != buffer_spec[i].alloc_count) {
@@ -535,6 +561,9 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
 
             addr = dpb_addr;
             dpb_addr += dpb_size;
+#ifdef DOUBLE_WRITE
+            dpb_addr += dpb_size/4;
+#endif
         }
 
         if (((addr + 7) >> 3) == disp_addr) {
@@ -552,10 +581,9 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
 
         addr += mb_total << 8;
         index++;
-        buffer_spec[i].u_addr = addr;
-        buffer_spec[i].u_canvas_index = index;
 
-#ifdef CBCR_MERGE
+        buffer_spec[i].uv_addr = addr;
+        buffer_spec[i].uv_canvas_index = index;
         canvas_config(index,
                   addr,
                   mb_width << 4,
@@ -563,14 +591,12 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
                   CANVAS_ADDR_NOWRAP,
                   CANVAS_BLKMODE_32X32);
 
-        index++;
-
-        buffer_spec[i].v_addr = addr;
-        buffer_spec[i].v_canvas_index = index;
-
-        index++;
         addr += mb_total << 7;
-#else
+        index++;
+
+#ifdef DOUBLE_WRITE
+        buffer_spec[i].y_dw_addr = addr;
+        buffer_spec[i].y_dw_canvas_index = index;
         canvas_config(index,
                   addr,
                   mb_width << 3,
@@ -580,24 +606,24 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
 
         addr += mb_total << 6;
         index++;
-        buffer_spec[i].v_addr = addr;
-        buffer_spec[i].v_canvas_index = index;
+
+        buffer_spec[i].uv_dw_addr = addr;
+        buffer_spec[i].uv_dw_canvas_index = index;
         canvas_config(index,
                   addr,
                   mb_width << 3,
-                  mb_height << 3,
+                  mb_height << 2,
                   CANVAS_ADDR_NOWRAP,
                   CANVAS_BLKMODE_32X32);
 
-
-        addr += mb_total << 6;
+        addr += mb_total << 5;
         index++;
 #endif
     }
 
     mutex_unlock(&vh264_4k2k_mutex);
 
-    printk("H264 4k2k decoder canvas allocation successful, %d CMA blocks allocated\n", alloc_count);
+    printk("H264 4k2k decoder canvas allocation successful, %d CMA blocks allocated, canvas %d-%d\n", alloc_count, AMVDEC_H264_4K2K_CANVAS_INDEX, index-1);
 
     return 0;
 }
@@ -793,9 +819,7 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
 
             vf->index = display_buff_id;
             vf->type = VIDTYPE_PROGRESSIVE | VIDTYPE_VIU_FIELD;
-#ifdef CBCR_MERGE
             vf->type |= VIDTYPE_VIU_NV21;
-#endif
             vf->canvas0Addr = vf->canvas1Addr = spec2canvas(&buffer_spec[display_buff_id]);
             set_frame_info(vf);
 
@@ -864,6 +888,7 @@ printk("M->S,[%d] %s = 0x%x\n",ret, reg_name[ret], READ_VREG(MAILBOX_DATA_1));
     return IRQ_HANDLED;
 }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static irqreturn_t vh264_4k2k_vdec2_isr(int irq, void *dev_id)
 {
     int ret = READ_VREG(VDEC2_MAILBOX_COMMAND);
@@ -926,6 +951,7 @@ printk("S->M,[%d] %s = 0x%x\n", ret, reg_name[ret], READ_VREG(VDEC2_MAILBOX_DATA
 
     return IRQ_HANDLED;
 }
+#endif
 
 static void vh264_4k2k_put_timer_func(unsigned long arg)
 {
@@ -1134,11 +1160,15 @@ static void H264_DECODE2_INIT(void)
 static void vh264_4k2k_prot_init(void)
 {
     /* clear mailbox interrupt */
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_VREG(VDEC2_ASSIST_MBOX0_CLR_REG, 1);
+#endif
     WRITE_VREG(VDEC_ASSIST_MBOX1_CLR_REG, 1);
 
     /* enable mailbox interrupt */
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_VREG(VDEC2_ASSIST_MBOX0_MASK, 1);
+#endif
     WRITE_VREG(VDEC_ASSIST_MBOX1_MASK, 1);
 
     /* disable PSCALE for hardware sharing */
@@ -1197,15 +1227,47 @@ static void vh264_4k2k_prot_init(void)
     WRITE_VREG(ALLOC_INFO_1, 0);
 #endif
 
-#ifdef CBCR_MERGE
     SET_VREG_MASK(MDEC_PIC_DC_CTRL, 1<<17);
     SET_VREG_MASK(VDEC2_MDEC_PIC_DC_CTRL, 1<<17);
-#endif
 
     WRITE_VREG(MDEC_PIC_DC_THRESH, 0x404038aa);
     WRITE_VREG(VDEC2_MDEC_PIC_DC_THRESH, 0x404038aa);
 
     amvenc_dos_top_reg_fix();
+
+#ifdef DOUBLE_WRITE
+    WRITE_VREG(MDEC_DOUBLEW_CFG0, (0   << 31) | // half y address
+                                  (1   << 30) | // 0:No Merge 1:Automatic Merge
+                                  (0   << 28) | // Field Picture, 0x:no skip 10:top only 11:bottom only
+                                  (0   << 27) | // Source from, 1:MCW 0:DBLK
+                                  (0   << 24) | // Endian Control for Chroma
+                                  (0   << 18) | // DMA ID
+                                  (0   << 12) | // DMA Burst Number
+                                  (0   << 11) | // DMA Urgent
+                                  (0   << 10) | // 1:Round 0:Truncation
+                                  (1   <<  9) | // Size by vertical,   0:original size 1: 1/2 shrunken size
+                                  (1   <<  8) | // Size by horizontal, 0:original size 1: 1/2 shrunken size
+                                  (0   <<  6) | // Pixel sel by vertical,   0x:1/2 10:up 11:down
+                                  (0   <<  4) | // Pixel sel by horizontal, 0x:1/2 10:left 11:right
+                                  (0   <<  1) | // Endian Control for Luma
+                                  (1   <<  0)); // Double Write Enable
+
+    WRITE_VREG(VDEC2_MDEC_DOUBLEW_CFG0, (0   << 31) | // half y address
+                                  (1   << 30) | // 0:No Merge 1:Automatic Merge
+                                  (0   << 28) | // Field Picture, 0x:no skip 10:top only 11:bottom only
+                                  (0   << 27) | // Source from, 1:MCW 0:DBLK
+                                  (0   << 24) | // Endian Control for Chroma
+                                  (0   << 18) | // DMA ID
+                                  (0   << 12) | // DMA Burst Number
+                                  (0   << 11) | // DMA Urgent
+                                  (0   << 10) | // 1:Round 0:Truncation
+                                  (1   <<  9) | // Size by vertical,   0:original size 1: 1/2 shrunken size
+                                  (1   <<  8) | // Size by horizontal, 0:original size 1: 1/2 shrunken size
+                                  (0   <<  6) | // Pixel sel by vertical,   0x:1/2 10:up 11:down
+                                  (0   <<  4) | // Pixel sel by horizontal, 0x:1/2 10:left 11:right
+                                  (0   <<  1) | // Endian Control for Luma
+                                  (1   <<  0)); // Double Write Enable
+#endif
 }
 
 static void vh264_4k2k_local_init(void)
@@ -1311,6 +1373,7 @@ static s32 vh264_4k2k_init(void)
         return -ENOENT;
     }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     if (request_irq(INT_VDEC2, vh264_4k2k_vdec2_isr,
                     IRQF_SHARED, "vh264_4k2k-vdec2-irq", (void *)vh264_4k2k_dec_id2)) {
         printk("vh264_4k2k irq register error.\n");
@@ -1319,6 +1382,7 @@ static s32 vh264_4k2k_init(void)
         amvdec2_disable();
         return -ENOENT;
     }
+#endif
 
     stat |= STAT_ISR_REG;
 
@@ -1369,7 +1433,9 @@ static int vh264_4k2k_stop(void)
         WRITE_VREG(VDEC_ASSIST_MBOX1_MASK, 0);
         WRITE_VREG(VDEC2_ASSIST_MBOX0_MASK, 0);
         free_irq(INT_VDEC, (void *)vh264_4k2k_dec_id);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
         free_irq(INT_VDEC2, (void *)vh264_4k2k_dec_id2);
+#endif
         stat &= ~STAT_ISR_REG;
     }
 
@@ -1382,6 +1448,11 @@ static int vh264_4k2k_stop(void)
         vf_unreg_provider(&vh264_4k2k_vf_prov);
         stat &= ~STAT_VF_HOOK;
     }
+
+#ifdef DOUBLE_WRITE
+    WRITE_VREG(MDEC_DOUBLEW_CFG0, 0);
+    WRITE_VREG(VDEC2_MDEC_DOUBLEW_CFG0, 0);
+#endif
 
     amvdec_disable();
     amvdec2_disable();
@@ -1442,7 +1513,9 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
         return -ENODEV;
     }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     request_vpu_clk_vmod(360000000, VPU_VIU_VD1);
+#endif
 
     if (probe_callback) {
         probe_callback();

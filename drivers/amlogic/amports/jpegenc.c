@@ -19,6 +19,7 @@
 #include <linux/spinlock.h>
 #include <mach/am_regs.h>
 #include <mach/power_gate.h>
+#include <mach/mod_gate.h>
 #include <plat/io.h>
 #include <linux/ctype.h>
 #include <linux/amlogic/amports/ptsserv.h>
@@ -1348,7 +1349,8 @@ static s32 jpegenc_poweron(void)
     enable_hcoder_ddr_access();
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-    CLK_GATE_ON(DOS);
+    //CLK_GATE_ON(DOS);
+    switch_mod_gate_by_name("vdec", 1);
 
     spin_lock_irqsave(&lock, flags);
 
@@ -1412,7 +1414,8 @@ static s32 jpegenc_poweroff(void)
     spin_unlock_irqrestore(&lock, flags);
 
     // release DOS clk81 clock gating
-    CLK_GATE_OFF(DOS);
+    //CLK_GATE_OFF(DOS);
+    switch_mod_gate_by_name("vdec", 0);
 #else
     jpegenc_clock_disable();
 #endif

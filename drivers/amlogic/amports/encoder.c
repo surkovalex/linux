@@ -19,6 +19,7 @@
 #include <linux/spinlock.h>
 #include <mach/am_regs.h>
 #include <mach/power_gate.h>
+#include <mach/mod_gate.h>
 #include <plat/io.h>
 #include <linux/ctype.h>
 #include <linux/amlogic/amports/ptsserv.h>
@@ -1053,7 +1054,7 @@ s32 amvenc_loadmc(const u32 *p)
     return ret;
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 const u32 fix_mc[] __attribute__ ((aligned (8))) = {
     0x0809c05a, 0x06696000, 0x0c780000, 0x00000000
 };
@@ -1137,11 +1138,13 @@ static s32 avc_poweron(void)
 	data32 = 0;
 	enable_hcoder_ddr_access();
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-	CLK_GATE_ON(DOS);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+	//CLK_GATE_ON(DOS);
+	switch_mod_gate_by_name("vdec", 1);
 
 	spin_lock_irqsave(&lock, flags);
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	data32 = READ_AOREG(AO_RTI_PWR_CNTL_REG0);
 	data32 = data32 & (~(0x18));
 	WRITE_AOREG(AO_RTI_PWR_CNTL_REG0, data32);
@@ -1152,12 +1155,14 @@ static s32 avc_poweron(void)
 	WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, data32);
 	udelay(10);
 #endif
+#endif
 
 	WRITE_VREG(DOS_SW_RESET1, 0xffffffff);
 	WRITE_VREG(DOS_SW_RESET1, 0);
 
 	// Enable Dos internal clock gating
 	hvdec_clock_enable();
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	//Powerup HCODEC memories
 	WRITE_VREG(DOS_MEM_PD_HCODEC, 0x0);
@@ -1167,7 +1172,7 @@ static s32 avc_poweron(void)
 	data32 = data32 & (~(0x30));
 	WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, data32);
 	udelay(10);
-
+#endif
 	// Disable auto-clock gate
 	data32 = READ_VREG(DOS_GEN_CTRL0);
 	data32 = data32 | 0x1;
@@ -1186,24 +1191,29 @@ static s32 avc_poweron(void)
 
 static s32 avc_poweroff(void)
 {
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 	unsigned long flags;
 
 	spin_lock_irqsave(&lock, flags);
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	// enable HCODEC isolation
 	WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0x30);
 	// power off HCODEC memories
 	WRITE_VREG(DOS_MEM_PD_HCODEC, 0xffffffffUL);
+#endif
 	// disable HCODEC clock
 	hvdec_clock_disable();
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	// HCODEC power off
 	WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0x3);
-
+#endif
 	spin_unlock_irqrestore(&lock, flags);
 
 	// release DOS clk81 clock gating
-	CLK_GATE_OFF(DOS);
+	//CLK_GATE_OFF(DOS);
+	switch_mod_gate_by_name("vdec", 0);
 #else
 	hvdec_clock_disable();
 #endif
@@ -1311,8 +1321,10 @@ void amvenc_avc_stop(void)
 	debug_level(1,"amvenc_avc_stop\n");
 }
 
+#ifdef CONFIG_CMA
 static struct platform_device *this_pdev;
 static struct page *venc_pages;
+#endif
 
 static int amvenc_avc_open(struct inode *inode, struct file *file)
 {

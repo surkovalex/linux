@@ -585,17 +585,20 @@ static  int amstream_port_init(stream_port_t *port)
             goto error1;
         }
     }
+
     if ((port->type & PORT_TYPE_VIDEO) && (port->flag & PORT_FLAG_VFORMAT)) {
-		pubuf->buf_size = 0;
-		pubuf->buf_start = 0;
-		pubuf->buf_wp = 0;
-		pubuf->buf_rp = 0;
+        pubuf->buf_size = 0;
+        pubuf->buf_start = 0;
+        pubuf->buf_wp = 0;
+        pubuf->buf_rp = 0;
+
         r = video_port_init(port, pvbuf);
         if (r < 0) {
             printk("video_port_init  failed\n");
             goto error2;
         }
     }
+
     if ((port->type & PORT_TYPE_SUB) && (port->flag & PORT_FLAG_SID)) {
         r = sub_port_init(port, psbuf);
         if (r < 0) {
@@ -627,7 +630,7 @@ static  int amstream_port_init(stream_port_t *port)
                      (port->flag & PORT_FLAG_AID) ? port->aid : 0xffff);
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
     if ((port->type & PORT_TYPE_VIDEO) && (port->vformat == VFORMAT_H264_4K2K)) {
         stbuf_vdec2_init(pvbuf);
     }
@@ -988,15 +991,6 @@ static int amstream_open(struct inode *inode, struct file *file)
     stream_port_t *s;
     stream_port_t *this = &ports[iminor(inode)];
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-    switch_mod_gate_by_name("demux", 1);
-    switch_mod_gate_by_name("audio", 1);
-#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
-    switch_mod_gate_by_name("demux", 1);
-    switch_mod_gate_by_name("audio", 1);
-    switch_mod_gate_by_name("vdec", 1);
-#endif
-
     if (iminor(inode) >= MAX_AMSTREAM_PORT_NUM) {
         return (-ENODEV);
     }
@@ -1013,18 +1007,27 @@ static int amstream_open(struct inode *inode, struct file *file)
         }
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+    switch_mod_gate_by_name("demux", 1);
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
     CLK_GATE_ON(HIU_PARSER_TOP);
+#endif
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     CLK_GATE_ON(VPU_INTR);
+#endif
 
     if (this->type & PORT_TYPE_VIDEO) {
-        CLK_GATE_ON(DOS);
+        switch_mod_gate_by_name("vdec", 1);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
         vdec_poweron(VDEC_1);
+#endif
         memset(&amstream_dec_info, 0, sizeof(amstream_dec_info));
     }
-#else
-    if (this->type & PORT_TYPE_VIDEO) {
-        memset(&amstream_dec_info, 0, sizeof(amstream_dec_info));
+
+    if (this->type & PORT_TYPE_AUDIO) {
+        switch_mod_gate_by_name("audio", 1);
     }
 #endif
 
@@ -1068,21 +1071,26 @@ static int amstream_release(struct inode *inode, struct file *file)
     }
 #endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-    switch_mod_gate_by_name("audio", 0);
-    switch_mod_gate_by_name("demux", 0);
-
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     if (this->type & PORT_TYPE_VIDEO) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
         vdec_poweroff(VDEC_1);
-        CLK_GATE_OFF(DOS);
+#endif
+        switch_mod_gate_by_name("vdec", 0);
     }
 
-    CLK_GATE_OFF(HIU_PARSER_TOP);
-    CLK_GATE_OFF(VPU_INTR);
+    if (this->type & PORT_TYPE_AUDIO) {
+        switch_mod_gate_by_name("audio", 0);
+    }
 
-#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
-    switch_mod_gate_by_name("audio", 0);
-    switch_mod_gate_by_name("vdec", 0);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    CLK_GATE_OFF(VPU_INTR);
+#endif
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+    CLK_GATE_OFF(HIU_PARSER_TOP);
+#endif
+
     switch_mod_gate_by_name("demux", 0);
 #endif 
 
@@ -1832,15 +1840,13 @@ static int  amstream_probe(struct platform_device *pdev)
         printk("amstream class create fail.\n");
         return r;
     }
+
     r = astream_dev_register();
     if (r) {
         return r;
     }
 
-
-
     r = register_chrdev(AMSTREAM_MAJOR, "amstream", &amstream_fops);
-
     if (r < 0) {
         printk("Can't allocate major for amstreaming device\n");
 
