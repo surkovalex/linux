@@ -602,6 +602,7 @@ static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
        case MEMLOCK:
        case MEMUNLOCK:
        case MEMGETBADBLOCK:
+	   case BLKWIPEPART:
            return 0;
        default:
            ret = -EINVAL;
