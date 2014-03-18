@@ -15,6 +15,7 @@ struct aml_uart_platform{
 		int irq_no[MESON_UART_PORT_NUM];
 		int fifo_level[MESON_UART_PORT_NUM];
 		void * pinmux_uart[MESON_UART_PORT_NUM];
+		const char * clk_name[MESON_UART_PORT_NUM];
 };
 
 #endif

@@ -50,6 +50,8 @@
 #include <asm/serial.h>
 #include <linux/of.h>
 #include <linux/pinctrl/consumer.h>
+#include <mach/mod_gate.h>
+
 /* UART name and device definitions */
 
 #define MESON_SERIAL_NAME		"ttyS"
@@ -793,6 +795,7 @@ static inline struct aml_uart_platform   *aml_get_driver_data(
 				*port_index = index;
 
 				//printk(" %s (index: %d) %s\n", port_name, index,enable);
+				switch_mod_gate_by_name(aup->clk_name[index], 1);
 				return aup;
 			}
 		}
@@ -970,6 +973,7 @@ static struct aml_uart_platform  aml_uart_driver_data = {
 	.regaddr 	= {MESON_UART_ADDRS},
 	.irq_no 	= {MESON_UART_IRQS},
 	.fifo_level = {MESON_UART_FIFO},
+	.clk_name = {MESON_UART_CLK_NAME},
 };
 
 #define MESON_SERIAL_DRV_DATA ((kernel_ulong_t)&aml_uart_driver_data)
