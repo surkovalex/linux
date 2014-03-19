@@ -95,11 +95,6 @@ source "drivers/amlogic/ion_dev/Kconfig"
 #
 source "drivers/amlogic/crypto/Kconfig"
 
-#
-# TrustZone
-#
-source "drivers/amlogic/trustzone/Kconfig"
-
 source "drivers/amlogic/mhl/Kconfig"
 isource "../hardware/amlogic/pmu/Kconfig"
 endmenu
