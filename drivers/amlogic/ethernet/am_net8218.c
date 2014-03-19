@@ -99,6 +99,7 @@ MODULE_PARM_DESC(amlog_level, "ethernet debug level\n");
 //#define PHY_LOOPBACK_TEST
 
 static int running = 0;
+static struct ethtool_wol *syswol =NULL;
 static struct net_device *my_ndev = NULL;
 static struct aml_eth_platdata *eth_pdata = NULL;
 static unsigned int g_ethernet_registered = 0;
@@ -2577,7 +2578,58 @@ static ssize_t eth_linkspeed_show(struct class *class, struct class_attribute *a
 
 	return ret;
 }
+static const char *g_pwol_help = {
+	"Ethernet WOL:\n"
+	"    0. disable PHY WOL.\n"
+	"    1. enable PHY  WOL, Magic Packet.\n"
 
+};
+static void eth_pwol_show(struct class *class, struct class_attribute *attr, char *buf)
+{
+	struct am_net_private *np = netdev_priv(my_ndev);
+	int ret;
+	struct ethtool_wolinfo syswol;
+	syswol.supported = 0;
+	syswol.wolopts = 0;
+	if (np->phydev)
+		phy_ethtool_get_wol(np->phydev, &syswol);
+	ret = sprintf(buf, "%s\n", g_pwol_help);
+	printk("Current PHY WOL: %d\n", syswol.wolopts);
+	return ret;
+}
+static int eth_pwol_store(struct class *class, struct class_attribute *attr, const char *buf, size_t count)
+{
+	struct am_net_private *np = netdev_priv(my_ndev);
+	int err;
+	unsigned int enable = -1;
+	struct ethtool_wolinfo syswol;
+	if (np->phydev == NULL)
+		return -EOPNOTSUPP;
+	enable = simple_strtoul(buf, NULL, 0);
+	if((enable >=0) && (enable <2)){
+	switch(enable){
+		case 0:
+			// close wol funtion
+			 syswol.wolopts = WAKE_PHY;
+			 err = phy_ethtool_set_wol(np->phydev, &syswol);
+				return count;
+		case 1:
+			//open wol funtion
+			syswol.wolopts = WAKE_MAGIC;
+			printk("Set PHY i11WOL: %d\n,WAKE_MAGIC = %d\n",syswol.wolopts,WAKE_MAGIC);
+			 phy_ethtool_set_wol(np->phydev, &syswol);
+			printk("Set PHY WOL: %d\n", enable);
+				return count;
+		default:
+			return count;
+	}
+	}
+	else{
+			printk("Set Ethernet WOL Error\n");
+			return count;
+	}
+	return count;
+}
 static struct class *eth_sys_class;
 static CLASS_ATTR(mdcclk, S_IWUSR | S_IRUGO, eth_mdcclk_show, eth_mdcclk_store);
 static CLASS_ATTR(debug, S_IWUSR | S_IRUGO, eth_debug_show, eth_debug_store);
@@ -2585,6 +2637,7 @@ static CLASS_ATTR(count, S_IWUSR | S_IRUGO, eth_count_show, eth_count_store);
 static CLASS_ATTR(phyreg, S_IWUSR | S_IRUGO, eth_phyreg_help, eth_phyreg_func);
 static CLASS_ATTR(macreg, S_IWUSR | S_IRUGO, eth_macreg_help, eth_macreg_func);
 static CLASS_ATTR(wol, S_IWUSR | S_IRUGO, eth_wol_show, eth_wol_store);
+static CLASS_ATTR(pwol, S_IWUSR | S_IRUGO, eth_pwol_show, eth_pwol_store);
 static CLASS_ATTR(linkspeed, S_IWUSR | S_IRUGO, eth_linkspeed_show, NULL);
 
 /* --------------------------------------------------------------------------*/
@@ -2606,6 +2659,7 @@ static int __init am_eth_class_init(void)
 	ret = class_create_file(eth_sys_class, &class_attr_phyreg);
 	ret = class_create_file(eth_sys_class, &class_attr_macreg);
 	ret = class_create_file(eth_sys_class, &class_attr_wol);
+	ret = class_create_file(eth_sys_class, &class_attr_pwol);
 	ret = class_create_file(eth_sys_class, &class_attr_linkspeed);
 
 	return ret;
