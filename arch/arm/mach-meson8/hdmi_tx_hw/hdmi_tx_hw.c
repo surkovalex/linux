@@ -2063,6 +2063,10 @@ static int hdmitx_set_audmode(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_audio
     
     hdmi_print(INF, AUD "audio channel num is %d\n", hdmitx_device->cur_audio_param.channel_num);
 
+    hdmi_wr_reg(TX_PACKET_CONTROL_2, hdmi_rd_reg(TX_PACKET_CONTROL_2) & (~(1<<3)));
+    hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_1, 0x30);     // reset audio master & sample
+    hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_1, 0x00);
+
     if(!hdmi_audio_off_flag){
         hdmi_audio_init(i2s_to_spdif_flag);
     }
@@ -2229,7 +2233,7 @@ static int hdmitx_set_audmode(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_audio
     hdmi_wr_reg(TX_SYS1_ACR_N_0, (audio_N_para&0xff)); // N[7:0]
     hdmi_wr_reg(TX_SYS1_ACR_N_1, (audio_N_para>>8)&0xff); // N[15:8]
     hdmi_wr_reg(TX_SYS1_ACR_N_2, (audio_N_tolerance<<4)|((audio_N_para>>16)&0xf)); // N[19:16]
-    hdmi_wr_reg(TX_AUDIO_CONTROL,   hdmi_rd_reg(TX_AUDIO_CONTROL)|0x1); 
+    hdmi_wr_reg(TX_AUDIO_CONTROL,   hdmi_rd_reg(TX_AUDIO_CONTROL)|0x1);
 
     hdmi_wr_reg(TX_SYS0_ACR_CTS_0, 0);      //audio_CTS & 0xff);
     hdmi_wr_reg(TX_SYS0_ACR_CTS_1, 0);      //(audio_CTS>>8) & 0xff);
@@ -2905,9 +2909,10 @@ static int hdmitx_cntl_config(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigne
     case CONF_AUDIO_MUTE_OP:
         if(argv == AUDIO_MUTE) {
             hdmi_wr_reg(TX_AUDIO_PACK, 0x00); // disable audio sample packets
+            hdmi_wr_reg(TX_PACKET_CONTROL_2, hdmi_rd_reg(TX_PACKET_CONTROL_2) | (1<<3));
         }
-        if(argv == AUDIO_UNMUTE) {
-            hdmi_wr_reg(TX_AUDIO_PACK, 0x01); // disable audio sample packets
+        if((argv == AUDIO_UNMUTE) && (hdmitx_device->tx_aud_cfg == 1)) {
+            hdmitx_device->audio_param_update_flag = 1;
         }
         break;
     case CONF_VIDEO_BLANK_OP:

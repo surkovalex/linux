@@ -615,12 +615,24 @@ static ssize_t store_config(struct device * dev, struct device_attribute *attr, 
             hdmi_set_3d(&hdmitx_device, 0xf, 0);
         }
     }
-    else if(strncmp(buf, "audio", 5)==0){
-        if(buf[5] == '0') {
+    else if(strncmp(buf, "audio_", 6)==0) {
+        if(strncmp(buf+6, "off", 3) == 0) {
+            hdmitx_device.tx_aud_cfg = 0;
             hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_MUTE);
+            hdmi_print(IMP, AUD "configure off\n");
         }
-        else if(buf[5] == '1') {
+        else if(strncmp(buf+6, "on", 2) == 0) {
+            hdmitx_device.tx_aud_cfg = 1;
             hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_UNMUTE);
+            hdmi_print(IMP, AUD "configure on\n");
+        }
+        else if(strncmp(buf+6, "auto", 4) == 0) {
+            // auto mode. if sink doesn't support current audio format, then no audio output
+            hdmitx_device.tx_aud_cfg = 2;
+            hdmi_print(IMP, AUD "configure auto\n");
+        }
+        else {
+            hdmi_print(ERR, AUD "configure error\n");
         }
     }
     return 16;
@@ -967,6 +979,8 @@ static struct notifier_block hdmitx_notifier_nb_a = {
 };
 static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long cmd , void *para)
 {
+    int i, audio_check = 0;
+    rx_cap_t* pRXCap = &(hdmitx_device.RXCap);
     struct snd_pcm_substream *substream =(struct snd_pcm_substream*)para;
     Hdmi_tx_audio_para_t* audio_param = &(hdmitx_device.cur_audio_param);
     audio_fs_t n_rate = aud_samp_rate_map(substream->runtime->rate);
@@ -994,9 +1008,21 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
         audio_param->channel_num = substream->runtime->channels - 1;
         hdmitx_device.audio_param_update_flag = 1;
     }
-
+    if(hdmitx_device.tx_aud_cfg == 2) {
+        hdmi_print(INF, AUD "auto mode\n");
+        // Detect whether Rx is support current audio format
+        for(i = 0; i < pRXCap->AUD_count; i++){
+            if(pRXCap->RxAudioCap[i].audio_format_code == cmd)
+            audio_check = 1;
+        }
+        if((!audio_check) && (cmd != AOUT_EVENT_IEC_60958_PCM)) {      // sink don't support current audio mode
+            printk("Sink not support this audio format %d\n", cmd);
+            hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_MUTE);
+            hdmitx_device.audio_param_update_flag = 0;
+        }
+    }
     if(hdmitx_device.audio_param_update_flag == 0)
-        printk("HDMI: no audio update\n");
+        hdmi_print(INF, AUD "no update\n");
 
     return 0;
 }
@@ -1015,6 +1041,8 @@ static int hdmi_task_handle(void *data)
 
     //When init hdmi, clear the hdmitx module edid ram and edid buffer.
     hdmitx_edid_ram_buffer_clear(hdmitx_device);
+
+    hdmitx_device->tx_aud_cfg = 1; // default audio configure is on
 
     hdmitx_device->HWOp.SetupIRQ(hdmitx_device);
     if(init_flag&INIT_FLAG_POWERDOWN){
