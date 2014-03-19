@@ -36,6 +36,7 @@
 #include <linux/of.h>
 #include <linux/of_fdt.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD
 #include "amvdec.h"
@@ -262,6 +263,7 @@ bit8: vdec.gate
 #define SUPPORT_VCODEC_NUM  1
 static int inited_vcodec_num = 0;
 static int clock_level;
+static unsigned int debug_trace_num = 16*20;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 static int clock_level2;
 #endif
@@ -670,9 +672,9 @@ static ssize_t amrisc_regs_show(struct class *class, struct class_attribute *att
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
     spin_lock_irqsave(&lock, flags);
-    if (!vdec_on(VDEC_1)) {
+    if(!vdec_on(VDEC_1)){
         spin_unlock_irqrestore(&lock, flags);
-        pbuf += sprintf(pbuf, "amrisc not power off\n");
+        pbuf += sprintf(pbuf, "amrisc is power off\n");
         return (pbuf - buf);
     }
 #elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
@@ -691,6 +693,70 @@ static ssize_t amrisc_regs_show(struct class *class, struct class_attribute *att
 #endif
     return (pbuf - buf);
 }
+static ssize_t dump_trace_show(struct class *class, struct class_attribute *attr, char *buf)
+{
+	int i;
+	char *pbuf = buf;
+	u32 pc,oldpc=0;
+	unsigned long flags;
+	u16 *trace_buf=kmalloc(debug_trace_num*2,GFP_KERNEL);
+	if(!trace_buf){
+		pbuf += sprintf(pbuf, "No Memory bug\n");
+		return (pbuf - buf);
+	}
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+    spin_lock_irqsave(&lock, flags);
+	if(!vdec_on(VDEC_1)){
+		spin_unlock_irqrestore(&lock, flags);
+		kfree(trace_buf);
+		pbuf += sprintf(pbuf, "amrisc is power off\n");
+		return (pbuf - buf);
+	}
+#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+    switch_mod_gate_by_type(MOD_VDEC, 1);
+#endif
+	printk("dump trace steps:%d start \n",debug_trace_num);
+	i=0;
+	while(i<=debug_trace_num-16){
+		trace_buf[i] = READ_VREG(MPC_E);
+		trace_buf[i+1] = READ_VREG(MPC_E);
+		trace_buf[i+2] = READ_VREG(MPC_E);
+		trace_buf[i+3] = READ_VREG(MPC_E);
+		trace_buf[i+4] = READ_VREG(MPC_E);
+		trace_buf[i+5] = READ_VREG(MPC_E);
+		trace_buf[i+6] = READ_VREG(MPC_E);
+		trace_buf[i+7] = READ_VREG(MPC_E);
+		trace_buf[i+8] = READ_VREG(MPC_E);
+		trace_buf[i+9] = READ_VREG(MPC_E);
+		trace_buf[i+10] = READ_VREG(MPC_E);
+		trace_buf[i+11] = READ_VREG(MPC_E);
+		trace_buf[i+12] = READ_VREG(MPC_E);
+		trace_buf[i+13] = READ_VREG(MPC_E);
+		trace_buf[i+14] = READ_VREG(MPC_E);
+		trace_buf[i+15] = READ_VREG(MPC_E);
+		i+=16;
+	};
+    printk("dump trace steps:%d finished \n",debug_trace_num);
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+    spin_unlock_irqrestore(&lock, flags);
+#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+    switch_mod_gate_by_type(MOD_VDEC, 0);
+#endif
+	for(i=0;i<debug_trace_num;i++){
+        if(i%4 == 0){
+	        if(i%16 == 0)
+	        	pbuf += sprintf(pbuf, "\n");
+	        else if(i%8 == 0)
+	        	pbuf += sprintf(pbuf, "  ");
+	        else // 4
+	        	pbuf += sprintf(pbuf, " ");
+        }
+		pbuf += sprintf(pbuf, "%04x:",trace_buf[i]);
+	}while(i<debug_trace_num);
+	kfree(trace_buf);
+	pbuf += sprintf(pbuf, "\n");
+	return (pbuf - buf);
+}
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 static ssize_t clock_level_show(struct class *class, struct class_attribute *attr, char *buf)
@@ -705,6 +771,7 @@ static ssize_t clock_level_show(struct class *class, struct class_attribute *att
 
 static struct class_attribute vdec_class_attrs[] = {
     __ATTR_RO(amrisc_regs),
+	__ATTR_RO(dump_trace),
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     __ATTR_RO(clock_level),
 #endif
@@ -794,6 +861,7 @@ static void __exit vdec_module_exit(void)
     platform_driver_unregister(&vdec_driver);
     return ;
 }
+module_param(debug_trace_num, uint, 0664);
 
 module_init(vdec_module_init);
 module_exit(vdec_module_exit);
