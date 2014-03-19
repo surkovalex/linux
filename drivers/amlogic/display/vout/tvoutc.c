@@ -372,6 +372,19 @@ printk(" clk_util_clk_msr 27 = %d\n", clk_util_clk_msr(27));
 printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
 #endif
 
+#ifdef CONFIG_ARCH_MESON6
+	if( (mode==TVMODE_480CVBS) || (mode==TVMODE_576CVBS) )
+	{
+		msleep(1000);
+
+#ifdef CONFIG_MACH_MESON6_G02_DONGLE
+    	aml_write_reg32(P_VENC_VDAC_SETTING, 0x7);
+#else
+    	aml_write_reg32(P_VENC_VDAC_SETTING, 0x5);
+#endif
+	}
+#endif
+
 #ifdef CONFIG_ARCH_MESON8
 	if( (mode==TVMODE_480CVBS) || (mode==TVMODE_576CVBS) )
 	{

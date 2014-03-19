@@ -330,10 +330,12 @@ static const reg_t tvregs_480cvbs[] = {
     {ENCI_DBG_PX_RST,              0,     },
     {VENC_INTCTRL,                 0x2,   },
     {ENCI_VFIFO2VD_CTL,            0x4e01,},
+#if 0 // move it to tvoutc_setmode() tvoutc.c 
 #ifdef CONFIG_MACH_MESON6_G02_DONGLE
     {VENC_VDAC_SETTING,          0x07,     },
 #else
-    {VENC_VDAC_SETTING,          5,     },
+    {VENC_VDAC_SETTING,          0x05,     },
+#endif
 #endif
     {VENC_UPSAMPLE_CTRL0,          0x0061,},
     {VENC_UPSAMPLE_CTRL1,          0x4061,},
@@ -536,10 +538,12 @@ static const reg_t tvregs_576cvbs[] = {
     {ENCI_DBG_PX_RST,                 0,         },
     {VENC_INTCTRL,                    0x2,       },
     {ENCI_VFIFO2VD_CTL,               0x4e01,    },
+#if 0 // move it to tvoutc_setmode() tvoutc.c 
 #ifdef CONFIG_MACH_MESON6_G02_DONGLE
     {VENC_VDAC_SETTING,          0x07,     },
 #else
-    {VENC_VDAC_SETTING,          0,     },
+    {VENC_VDAC_SETTING,          0x05,     },
+#endif
 #endif
     {VENC_UPSAMPLE_CTRL0,             0x0061,    },
     {VENC_UPSAMPLE_CTRL1,             0x4061,    },
@@ -556,7 +560,6 @@ static const reg_t tvregs_576cvbs[] = {
     {ENCI_DACSEL_1,                   0x11       },
     {ENCP_VIDEO_EN,                   0,         },
     {ENCI_VIDEO_EN,                   1,         },
-    {VENC_VDAC_SETTING,				  0x5		 },
     {VENC_VDAC_DAC1_GAINCTRL,		  0x1b		 },
     {ENCI_YC_DELAY,					  0x333		 },
     {ENCI_VIDEO_SAT,				  0x5		 },
