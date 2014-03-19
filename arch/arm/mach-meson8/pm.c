@@ -31,6 +31,9 @@
 #include <plat/regops.h>
 #include <plat/io.h>
 #include <plat/wakeup.h>
+#ifdef CONFIG_MESON_TRUSTZONE
+#include <mach/meson-secure.h>
+#endif
 
 #ifdef CONFIG_SUSPEND_WATCHDOG
 #include <mach/watchdog.h>
@@ -267,7 +270,11 @@ static void meson_pm_suspend(void)
 		WRITE_AOBUS_REG(AO_RTI_STATUS_REG2, FLAG_WAKEUP_PWRKEY);
 	}else{
 #ifdef CONFIG_MESON_SUSPEND
+#ifdef CONFIG_MESON_TRUSTZONE
+		meson_suspend_firmware();
+#else
 		meson_power_suspend();
+#endif
 #else
 #if 0
 		//k101 power key

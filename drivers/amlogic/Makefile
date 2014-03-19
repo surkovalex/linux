@@ -120,3 +120,6 @@ endif
 obj-$(CONFIG_AMLOGIC_ION) += ion_dev/
 
 obj-y += crypto/
+
+obj-$(CONFIG_MESON_TRUSTZONE) += trustzone/
+#obj-$(CONFIG_MESON_TRUSTZONE) += secure_monitor/

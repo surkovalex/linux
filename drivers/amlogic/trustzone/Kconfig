@@ -1,0 +1,7 @@
+menu "Amlogic TrustZone Support"
+
+config MESON_TRUSTZONE
+	bool "Support Arm TrustZone"
+	default n
+
+endmenu

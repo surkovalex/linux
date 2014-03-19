@@ -44,6 +44,11 @@
 //#include <mach/hardware.h>
 //#include <mach/clk_set.h>
 //#include <mach/power_gate.h>
+
+#ifdef CONFIG_MESON_TRUSTZONE
+#include <mach/meson-secure.h>
+#endif
+
 static DEFINE_SPINLOCK(clockfw_lock);
 static DEFINE_MUTEX(clock_ops_lock);
 
@@ -874,14 +879,31 @@ void meson_set_cpu_power_ctrl(uint32_t cpu,int is_power_on)
 void meson_set_cpu_ctrl_reg(int cpu,int is_on)
 {
 	spin_lock(&clockfw_lock);
+
+#ifdef CONFIG_MESON_TRUSTZONE
+	uint32_t value = 0;
+	value = meson_read_corectrl();
+	value |= is_on << cpu;
+	value |= 1;
+	meson_modify_corectrl(value);
+#else
 	aml_set_reg32_bits(MESON_CPU_CONTROL_REG,is_on,cpu,1);
 	aml_set_reg32_bits(MESON_CPU_CONTROL_REG,1,0,1);
+#endif
+
 	spin_unlock(&clockfw_lock);
 }
+
 void meson_set_cpu_ctrl_addr(uint32_t cpu, const uint32_t addr)
 {
 	spin_lock(&clockfw_lock);
+
+#ifdef CONFIG_MESON_TRUSTZONE
+	meson_auxcoreboot_addr(cpu, addr);
+#else
 	aml_write_reg32((MESON_CPU1_CONTROL_ADDR_REG + ((cpu-1) << 2)), addr);
+#endif
+
 	spin_unlock(&clockfw_lock);	
 }
 
@@ -911,7 +933,11 @@ static inline void meson_smp_init_transaction(void)
 {
     int cpu;
 
+#ifdef CONFIG_MESON_TRUSTZONE
+	meson_modify_corectrl(0);
+#else
     aml_write_reg32(MESON_CPU_CONTROL_REG, 0);
+#endif
 
     for_each_online_cpu(cpu) {
         aml_write_reg32(MESON_CPU_STATUS_REG(cpu), 0);
