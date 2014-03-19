@@ -2879,19 +2879,20 @@ static void video_vf_unreg_provider(void)
 #endif
     }
 
-    //if (!trickmode_fffb)
-    if (cur_dispbuf)
-    {
-        vf_keep_current();
-    }
-    tsync_avevent(VIDEO_STOP, 0);
-
     vsync_pts_100 = 0;
     vsync_pts_112 = 0;
     vsync_pts_125 = 0;
     vsync_freerun = 0;
     video_prot.video_started = 0;
     spin_unlock_irqrestore(&lock, flags);
+
+    //if (!trickmode_fffb)
+    if (cur_dispbuf)
+    {
+        vf_keep_current();
+    }
+    tsync_avevent(VIDEO_STOP, 0);
+    
     atomic_set(&video_unreg_flag, 0);
     enable_video_discontinue_report = 1;
 }
