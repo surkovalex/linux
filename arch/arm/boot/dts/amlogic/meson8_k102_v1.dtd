@@ -175,7 +175,7 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-                reserve-memory = <0x04000000>;
+                reserve-memory = <0x04000000>;//64M
 		reserve-iomap = "true";
         };
 
@@ -219,8 +219,8 @@ void root_func(){
         dev_name = "vdin0";
         status = "ok";
 	reserve-memory = <0x02700000>;
-	camera_size = <2592 1944>;//2592x1944x2x4=41M
-        reserve-iomap = "true";
+	camera_size = <2592 1944>;//camera is 5647,the picture resolution is 2592x1944;so 2592x1944x2x4=41M
+	 reserve-iomap = "true";
         irq = <115>;
         vdin_id = <0>;
 	};
@@ -234,9 +234,9 @@ void root_func(){
         compatible = "amlogic,vdin";
         dev_name = "vdin1";
         status = "ok";
-        reserve-memory = <0x01000000>;
-	miracast_size = <1920 1080>;//1920x1080x2x4=17M
-	 reserve-iomap = "true";
+        reserve-memory = <0x0600000>;
+	miracast_size = <1024 768>;//miracast resolution is 1024x768,1024x768x2x4=6M
+	reserve-iomap = "true";
         irq = <117>;
         vdin_id = <1>;
 	};
@@ -251,7 +251,7 @@ void root_func(){
 		compatible = "amlogic,amlvideo2";
 		dev_name = "amlvideo2.0";
 		status = "okay";
-		reserve-memory = <0x01800000>;
+		reserve-memory = <0x0600000>;//miracast resolution is 1024x768,1024x768x1.5x4=6M. NV21,not YUV422 now,so not 1024x768x2x4
 		reserve-iomap = "true";
 	};
 
