@@ -1185,6 +1185,9 @@ SETPLL:
 					aml_set_reg32_bits(P_HHI_SYS_PLL_CNTL4, 0, 10, 1);
 					printk(KERN_ERR"  HHI_SYS_PLL_CNTL4: %08x\n", 
 						aml_read_reg32(P_HHI_SYS_PLL_CNTL4));
+				}else{
+					latency.b.afc_dsel_bp_in = !latency.b.afc_dsel_bp_in;
+					printk(KERN_ERR"  INV afc_dsel_bp_in, new latency=%08x\n",latency.d32);
 				}
 				printk(KERN_ERR"  Try again!\n");
 				goto SETPLL;
