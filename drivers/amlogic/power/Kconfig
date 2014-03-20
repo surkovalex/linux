@@ -63,7 +63,6 @@ config AML_PMU_ALGORITHM_SUPPORT
 
 config AML_DVFS
     bool "Amlogic DVFS interface support"
-    depends on AMLOGIC_MESON_CPUFREQ 
     default y
     help
         interface for clock adjustment and power managment
