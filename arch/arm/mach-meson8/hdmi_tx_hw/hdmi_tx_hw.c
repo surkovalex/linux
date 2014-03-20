@@ -1133,6 +1133,8 @@ void hdmi_hw_init(hdmitx_dev_t* hdmitx_device)
 
     aml_write_reg32(P_HHI_HDMI_AFC_CNTL, aml_read_reg32(P_HHI_HDMI_AFC_CNTL) | 0x3);
 
+    hdmi_wr_reg(TX_HDCP_MODE, 0x40);
+
     vic = hdmitx_device->HWOp.GetState(hdmitx_device, STAT_VIDEO_VIC, 0);
     if(vic != HDMI_Unkown) {
         hdmi_print(IMP, SYS "ALREADY init VIC = %d\n", vic);
