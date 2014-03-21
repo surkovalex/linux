@@ -924,6 +924,8 @@
 		tuner0_reset_value = <0>;
 		tuner0_reset_gpio =  "GPIOX_8" ;  /*GPIOX_8   76*/
 		fe0_tuner = <0>;
+		atv_demod0 = "si2177_atv_demod";
+		fe0_atv_demod = <0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&dvb_fe_pins>;
 	};

@@ -234,9 +234,14 @@ static void dvb_frontend_add_event(struct dvb_frontend *fe, fe_status_t status)
 
 	dev_dbg(fe->dvb->device, "%s:\n", __func__);
 
-	if (/*(status & FE_HAS_LOCK) && */has_get_frontend(fe))
-		dtv_get_frontend(fe, &fepriv->parameters_out);
-
+	if(fe->dtv_property_cache.delivery_system == SYS_ANALOG){
+		if ((status & FE_HAS_LOCK) && has_get_frontend(fe))
+			dtv_get_frontend(fe, &fepriv->parameters_out);
+	}else{
+		if (/*(status & FE_HAS_LOCK) && */has_get_frontend(fe))
+			dtv_get_frontend(fe, &fepriv->parameters_out);
+	}
+	
 	mutex_lock(&events->mtx);
 
 	wp = (events->eventw + 1) % MAX_EVENT;
@@ -1559,6 +1564,7 @@ static int dtv_property_cache_sync(struct dvb_frontend *fe,
 		c->analog.audmode   = p->u.analog.audmode;
 		c->analog.std       = p->u.analog.std;
 		c->analog.flag      = p->u.analog.flag;
+		c->analog.afc_range = p->u.analog.afc_range;
 		c->analog.reserved  = p->u.analog.reserved;
 		break;
 	case DVBV3_UNKNOWN:
@@ -1641,6 +1647,7 @@ static int dtv_property_legacy_params_sync(struct dvb_frontend *fe,
 		p->u.analog.audmode  = c->analog.audmode;
 		p->u.analog.std      = c->analog.std;
 		p->u.analog.flag     = c->analog.flag;
+		p->u.analog.afc_range= c->analog.afc_range;
 		p->u.analog.reserved = c->analog.reserved;
 		break;
 
@@ -2316,7 +2323,6 @@ static int dvb_frontend_ioctl(struct file *file,
 	int need_blindscan = 0;
 
 	dev_dbg(fe->dvb->device, "%s: (%d)\n", __func__, _IOC_NR(cmd));
-
 	if (fepriv->exit != DVB_FE_NO_EXIT)
 		return -ENODEV;
 

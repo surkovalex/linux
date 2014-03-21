@@ -316,7 +316,8 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 	struct aml_fe *fee;
 	fee = fe->demodulator_priv;
 
-	if(c->analog.flag & ANALOG_FLAG_MANUL_SCAN){
+	//if(c->analog.flag & ANALOG_FLAG_MANUL_SCAN){
+	if(c->analog.flag == ANALOG_FLAG_MANUL_SCAN){
 		pr_dbg("[%s]:set the mannul scan mode and current freq [%d]\n",__func__,c->frequency);
 		if( fe->ops.set_frontend(fe)){
 		    pr_dbg("[%s]the func of set_param err.\n",__func__);
