@@ -75,6 +75,10 @@ EXPORT_SYMBOL(aml_i2s_playback_start_addr);
 EXPORT_SYMBOL(aml_i2s_capture_start_addr);
 EXPORT_SYMBOL(aml_i2s_playback_off);
 EXPORT_SYMBOL(aml_i2s_playback_enable);
+EXPORT_SYMBOL(aml_i2s_playback_phy_start_addr);
+EXPORT_SYMBOL(aml_i2s_playback_phy_end_addr);
+EXPORT_SYMBOL(aml_i2s_capture_phy_start_addr);
+EXPORT_SYMBOL(aml_i2s_capture_phy_end_addr);
 
 
 /*--------------------------------------------------------------------------*\
