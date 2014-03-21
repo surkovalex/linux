@@ -4320,6 +4320,9 @@ static resolution_param_t* get_resolution_param(struct ar0833_device *dev, int i
 }
 
 static char *res_size[]={
+	"144p",
+	"240p",
+	"288p",
 	"480p",
 	"720p",
 	"960p",

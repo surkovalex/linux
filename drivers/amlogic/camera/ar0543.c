@@ -3365,7 +3365,7 @@ static int ar0543_open(struct file *file)
     unsigned int mem_size = 0;
     int retval = 0;
 #if CONFIG_CMA
-    retval = vm_init_buf(28*SZ_1M);
+    retval = vm_init_buf(24*SZ_1M);
     if(retval <0) {
     	printk("error: no cma memory\n");
         return -1;

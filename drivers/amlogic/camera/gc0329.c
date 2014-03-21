@@ -403,14 +403,14 @@ struct gc0329_fh {
 	return container_of(dev, struct gc0329_fh, dev);
 }*/
 
-static struct v4l2_frmsize_discrete gc0329_prev_resolution[3]= //should include 320x240 and 640x480, those two size are used for recording
+static struct v4l2_frmsize_discrete gc0329_prev_resolution[]= //should include 320x240 and 640x480, those two size are used for recording
 {
 	{320,240},
 	{352,288},
 	{640,480},
 };
 
-static struct v4l2_frmsize_discrete gc0329_pic_resolution[1]=
+static struct v4l2_frmsize_discrete gc0329_pic_resolution[]=
 {
 	{640,480},
 };

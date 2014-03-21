@@ -418,7 +418,7 @@ static struct v4l2_frmsize_discrete bf3720_prev_resolution[]= //should include 3
 
 static struct v4l2_frmsize_discrete bf3720_pic_resolution[]=
 {
-    {640,480},
+	{640,480},
 	{1600, 1200},
 };
 
