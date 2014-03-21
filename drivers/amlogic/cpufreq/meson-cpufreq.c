@@ -298,7 +298,8 @@ static int meson_cpufreq_suspend(struct cpufreq_policy *policy)
      * we have appropriate voltage and/or bus speed for the wakeup process,
      */
 
-    mutex_lock(&meson_cpufreq_mutex);
+    //mutex_lock(&meson_cpufreq_mutex);
+    preempt_disable();
 
     sleep_freq = clk_get_rate(cpufreq.armclk) / 1000;
     printk("cpufreq suspend sleep_freq=%dMhz max=%dMHz\n", sleep_freq/1000, policy->max/1000);
@@ -310,14 +311,16 @@ static int meson_cpufreq_suspend(struct cpufreq_policy *policy)
                                        AML_DVFS_FREQ_PRECHANGE);
         if (ret) {
             pr_err("failed to set voltage %d\n", ret);
-            mutex_unlock(&meson_cpufreq_mutex);
+            //mutex_unlock(&meson_cpufreq_mutex);
+            preempt_enable();
             return 0;
         }
         adjust_jiffies(sleep_freq, policy->max);
     }
     clk_set_rate(cpufreq.armclk, policy->max * 1000);
 
-    mutex_unlock(&meson_cpufreq_mutex);
+    //mutex_unlock(&meson_cpufreq_mutex);
+    preempt_enable();
     return 0;
 }
 
@@ -328,7 +331,8 @@ static int meson_cpufreq_resume(struct cpufreq_policy *policy)
 
     printk("cpufreq resume sleep_freq=%dMhz\n", sleep_freq/1000);
 
-    mutex_lock(&meson_cpufreq_mutex);
+    //mutex_lock(&meson_cpufreq_mutex);
+	preempt_disable();
 
     clk_set_rate(cpufreq.armclk, sleep_freq * 1000);
     cur = clk_get_rate(cpufreq.armclk) / 1000;
@@ -340,11 +344,13 @@ static int meson_cpufreq_resume(struct cpufreq_policy *policy)
                                        AML_DVFS_FREQ_POSTCHANGE);
         if (ret) {
             pr_err("failed to set voltage %d\n", ret);
-            mutex_unlock(&meson_cpufreq_mutex);
+            //mutex_unlock(&meson_cpufreq_mutex);
+            preempt_enable();
             return 0;
         }
     }
-    mutex_unlock(&meson_cpufreq_mutex);
+    //mutex_unlock(&meson_cpufreq_mutex);
+    preempt_enable();
     return 0;
 }
 
