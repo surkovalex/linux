@@ -860,7 +860,7 @@ void dtmb_initial(struct aml_demod_sta *demod_sta)
 {
 
 	pr_dbg("[dtmb]mem_buf is 0x%x\n",memstart);
-	dtmb_write_reg(0x049, memstart);
+	dtmb_write_reg(0x049, memstart);		//only for init
 	dtmb_write_reg(0x010, 0x52);
 	dtmb_write_reg(0x047, 0x33202);  //20 bits, 1 - fpga. 0 - m6tvd
 	dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
@@ -892,9 +892,10 @@ int dtmb_read_snr(void){
 	int ddc_phase,icfo_phase,fcfo_phase,ddc_phase_new,reg_6b;
 	int mobi_det_power;
     int mobile_times;
-    int ctrl_che_working_state;
+    int ctrl_che_working_state,pm_change,constell;
 	mobile_times = 0;
-
+	pm_change = 0;
+	 
 	tmp=dtmb_read_reg(0x0e3);
 	fec_ldpc_it_avg = dtmb_read_reg(0xdd) & 0xffff;
 	fec_bch_add = dtmb_read_reg(0xdf);
@@ -908,7 +909,7 @@ int dtmb_read_snr(void){
         snr_avg = snr_avg - 4096;
     snr_avg = snr_avg / 32;
 	pr_dbg("[dtmb] snr is %d,snr_avg is %d,fec_lock is %d,fec_bch_add is %d,fec_ldpc_it_avg is %d\n",snr,snr_avg,fec_lock,fec_bch_add,fec_ldpc_it_avg/256);
-	ctrl_che_working_state = (dtmb_read_reg(0xf1) >> 28) & 0x3;
+	ctrl_che_working_state = (dtmb_read_reg(0xf1) >> 28) & 0x3;   
     if(((snr_avg < 1  && ctrl_che_working_state == 0) || (snr < 1  && ctrl_che_working_state == 1)) && fec_lock) { // false lock, reset
 //	if((snr_avg<=0)&&(fec_lock==1)){
 		printk("reset dtmb\n");
@@ -919,8 +920,9 @@ int dtmb_read_snr(void){
 			 pr_dbg("-----------  lock ! ------------ \n");
 			 return 1;
 		 }else{
-			fsm_state = dtmb_read_reg(0xd7) & 0xf;
+			fsm_state = dtmb_read_reg(0xd7) & 0xf;      
             local_state = 2;
+			time_cnt=0;
 			 while(fsm_state < 8 && time_cnt < 10) {// state change to pm
                 msleep(50);
                 fsm_state = dtmb_read_reg(0xd7) & 0xf;
@@ -936,19 +938,33 @@ int dtmb_read_snr(void){
 		     	  fec_ldpc_it_avg = dtmb_read_reg(0xdd) & 0xffff;
 
 			  	  mobi_det_power = (dtmb_read_reg(0xf1)>>8) & 0x7ffff;
-
+                     	  
              	  if(mobi_det_power > 10) {
              	      mobile_times = 8;
              	      dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9) + (1 << 1)); // set mobile mode
+             	   //   dtmb_write_reg(0x50, 0x1241);
              	  }
              	  else {
              	      mobile_times -= 1;
              	      if(mobile_times <= 0) {
              	          dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9)); // set static mode
+             	       //   dtmb_write_reg(0x50, 0x1120);
              	          mobile_times = 0;
-             	      }
+             	      }    
              	  }
 
+				  if((fbe_in_num > 360) && (pm_change == 0)) {// two path mode, test distance.
+             	      dtmb_write_reg(0x42, 0x03030202);
+             	      dtmb_write_reg(0x5c, 0x00000000);
+             	      pm_change = 1;
+             	  }
+             	  else if((fbe_in_num <= 360) && (pm_change == 1)){
+             	      dtmb_write_reg(0x42, 0x05050202);
+             	      dtmb_write_reg(0x5c, 0x00000320);
+             	      pm_change = 0;
+             	  }
+                         	      
+		     	  
 		     	  local_state = 4;
 		     	  pr_dbg("*************** local_state = %d ************ \n", local_state);
 		     	  if(mobile_times > 0)
@@ -956,7 +972,7 @@ int dtmb_read_snr(void){
 		     	  if(time_eq){  // in time_eq mode
 		     	      local_state = 5;
 		     	      pr_dbg("*************** local_state = %d ************ \n", local_state);
-
+		     	      
 		     	      if(SC_mode == 1 || fbe_in_num < 30){ // MC mode or not two path mode, restore normal mode
 		     	          dtmb_write_reg(0x2e, 0x131a747d);  // cancel timing-loop
 		     	          dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
@@ -966,18 +982,17 @@ int dtmb_read_snr(void){
 		                pr_dbg(" ------------ normal mode -------------\n");
 		                local_state = 6;
 		                pr_dbg("*************** local_state = %d ************ \n", local_state);
-
+		                
 		     	      }
-		        }
+		        } 
 		        else {
 		            local_state = 7;
 		            pr_dbg("*************** local_state = %d ************ \n", local_state);
-
-		            if(SC_mode == 0 && fbe_in_num > 30 && fec_ldpc_it_avg > 640/*2.5*256*/) { // switch to time_eq mode
+		            constell = (dtmb_read_reg(0xe5) >> 16) & 0x3;
+		            if((SC_mode == 0) && (fbe_in_num > 30) && (fec_ldpc_it_avg > 640)&& (constell > 1)/*2.5*256*/) { // switch to time_eq mode
 		                ddc_phase  = dtmb_read_reg(0x15) & 0x1ffffff;
 		                icfo_phase = dtmb_read_reg(0xe0) & 0xfffff;
-		                fcfo_phase = dtmb_read_reg(0xe1) & 0xfffff;
-
+		                fcfo_phase = dtmb_read_reg(0xe1) & 0xfffff;          
 		                if(icfo_phase > (1<<19))
 		                    icfo_phase -= (1<<20);
 		                if(fcfo_phase > (1<<19))
@@ -985,7 +1000,7 @@ int dtmb_read_snr(void){
 		                ddc_phase_new = ddc_phase + icfo_phase*4 + fcfo_phase;
 		                //printf("before is DDC_phase %x, now is %x \n", ddc_phase, ddc_phase_new);
 		                dtmb_write_reg(0x15, ddc_phase_new);
-
+		                
 		                //printf("switch to time_eq configure : 0 -- No, 1 -- yes");
 		                //scanf("%d", &tmp);
 		                tmp = 1;
@@ -995,15 +1010,15 @@ int dtmb_read_snr(void){
 		                    reg_46 = dtmb_read_reg(0x46);
 		                    reg_46 = reg_46 | ((1<<20) + (1<<16));           // bypass fe and set time_eq
 		                    dtmb_write_reg(0x46, reg_46);
-
+		                    
 		                    reg_6b = dtmb_read_reg(0x6b);
 		                    reg_6b = (reg_6b &~(0x3<<16)) | (1<<17);           // set tune auto
 		                    dtmb_write_reg(0x6b, reg_6b);
-		                }
-		                pr_dbg(" ------------ time_eq mode -------------\n");
-		                local_state = 8;
+		                } 
+		                pr_dbg(" ------------ time_eq mode -------------\n");  
+		                local_state = 8; 
 		                pr_dbg("*************** local_state = %d ************ \n", local_state);
-		                dtmb_reset();
+		                dtmb_reset();  
 						msleep(300);
 	                        }
 	                    }
@@ -1011,17 +1026,18 @@ int dtmb_read_snr(void){
                         {
                             local_state = 9;
                             pr_dbg("*************** local_state = %d ************ \n", local_state);
-
+                            
                             dtmb_register_reset();
-                            dtmb_write_reg(0x49,memstart); //set memory
+                        //    dtmb_write_reg(0x49,memstart); //set memory
                             dtmb_write_reg(0x10,0x52); //set memory
                             dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
                             dtmb_write_reg(0xc, 0x41444400); // shorten che waiting time.
                             dtmb_write_reg(0x47,0x33202);
-							dtmb_write_reg(0x18,0x000a1316); // shorten mobile detect time.
+							dtmb_write_reg(0x18,0x000a1316); // shorten mobile detect time.					     
 				            dtmb_write_reg(0x15,0x0199999A); // shift -5M.
 				            dtmb_write_reg(0x2f,0x13064263); // speed up src
-                        }
+				            pm_change = 0;
+                        }  
 
 		 }
 

@@ -588,7 +588,7 @@ static void dvbc_reg_initial(struct aml_demod_sta *demod_sta)
     ch_if     = demod_sta->ch_if    ; // kHz
     ch_bw     = demod_sta->ch_bw    ; // kHz
     symb_rate = demod_sta->symb_rate; // k/sec
-    ch_mode=4;
+//    ch_mode=4;
     printk("in dvbc_func, clk_freq is %d, adc_freq is %d,ch_mode is %d,ch_if is %d\n", clk_freq, adc_freq,ch_mode,ch_if);
 //	apb_write_reg(DEMOD_CFG_BASE,0x00000007);
     // disable irq

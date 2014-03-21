@@ -1189,7 +1189,7 @@ static int m6_demod_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 	}else if(mode == AM_FE_DTMB){
 
 	fe_ops->info.frequency_min = 51000000;
-	fe_ops->info.frequency_max = 710000000;
+	fe_ops->info.frequency_max = 900000000;
 	fe_ops->info.frequency_stepsize = 0;
 	fe_ops->info.frequency_tolerance = 0;
 	fe_ops->info.caps = FE_CAN_FEC_1_2 | FE_CAN_FEC_2_3 | FE_CAN_FEC_3_4 |
