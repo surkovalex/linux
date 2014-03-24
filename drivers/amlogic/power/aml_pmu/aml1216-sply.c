@@ -170,6 +170,7 @@ EXPORT_SYMBOL_GPL(aml1216_set_dcin);
 
 int aml1216_set_gpio(int pin, int val)
 {
+#if 0
     uint32_t data;
 
     if (pin <= 0 || pin > 3 || val > 1 || val < 0) { 
@@ -184,6 +185,21 @@ int aml1216_set_gpio(int pin, int val)
     }    
     AML_DBG("%s, GPIO:%d, val:%d\n", __func__, pin, val);
     return aml1216_set_bits(0x0013, data, (1 << pin));
+#else
+    uint32_t data;
+
+    if (pin <= 0 || pin > 4 || val > 1 || val < 0) {
+        AML_DBG("ERROR, invalid input value, pin = %d, val= %d\n", pin, val);
+        return -EINVAL;
+    }
+    data = (1 << (pin + 11));
+    AML_DBG("%s, GPIO:%d, val:%d\n", __func__, pin, val);
+    if (val) {
+        return aml1216_write16(0x0084, data);
+    } else {
+        return aml1216_write16(0x0082, data);
+    }
+#endif
 }
 EXPORT_SYMBOL_GPL(aml1216_set_gpio);
 
@@ -571,7 +587,7 @@ static void aml1216_battery_check_status(struct aml1216_supply       *supply,
 static void aml1216_battery_check_health(struct aml1216_supply       *supply,
                                          union  power_supply_propval *val)
 {
-    int status = supply->aml_charger.fault & 0x30;
+    int status = 0; 
 
     if (status == 0x30) {
         // TODO: add other check method?
@@ -1174,6 +1190,7 @@ static int aml1216_update_state(struct aml_charger *charger)
     charger->dcin_valid = (val & 0x10) ? 1 : 0; 
     charger->usb_valid  = (val & 0x08) ? 1 : 0; 
     charger->ext_valid  = charger->dcin_valid | (charger->usb_valid << 1); 
+    charger->fault      = val;
 
     charger->vbat = aml1216_get_battery_voltage();
     charger->ocv  = aml1216_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);
