@@ -908,7 +908,7 @@
 	dvb{
 		compatible = "amlogic,dvb";
 		/*"parallel","serial","disable"*/
-		ts0 = "parallel";
+		ts0 = "disable";
 		ts1 = "serial";
 		ts2 = "parallel";
 		ts0_control = <0>;
