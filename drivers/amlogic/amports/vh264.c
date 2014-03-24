@@ -1027,7 +1027,7 @@ static void vh264_isr(void)
                 }
             }
 
-            if ((!force_interlaced_frame) && (frame_mb_only || prog_frame || (pic_struct_present && pic_struct <= PIC_TRIPLE_FRAME))) {
+            if ((!force_interlaced_frame) && (prog_frame || (pic_struct_present && pic_struct <= PIC_TRIPLE_FRAME))) {
                 if (pic_struct_present) {
                     if (pic_struct == PIC_TOP_BOT_TOP || pic_struct == PIC_BOT_TOP_BOT) {
                         vf->duration += vf->duration >> 1;
