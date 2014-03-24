@@ -490,19 +490,19 @@ sdio{
 //$$ L3 PROP_U32 = "max_req_size"
 //$$ L2 PROP_STR = "gpio_dat3"
 //$$ L2 PROP_U32 = "card_type"
-        emmc{
-            status = "ok";
-            port = <2>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
-            pinname = "emmc";
-            ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
-            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
-            f_min = <300000>;
-            f_max = <50000000>;
-            f_max_w = <50000000>;
-            max_req_size = <0x20000>;          /**128KB*/
-            gpio_dat3 = "BOOT_3";
-            card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-        };
+//        emmc{
+//            status = "ok";
+//            port = <2>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+//            pinname = "emmc";
+//            ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
+//            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
+//            f_min = <300000>;
+//            f_max = <50000000>;
+//            f_max_w = <50000000>;
+//            max_req_size = <0x20000>;          /**128KB*/
+//            gpio_dat3 = "BOOT_3";
+//            card_type = <1>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+//        };
 
 //$$ DEVICE="sdio"
 //$$ L2 PROP_STR = "status"
@@ -767,17 +767,17 @@ sdio{
 //$$ L2 PROP_U32 = "vddao_voltage"
 //$$ L2 PROP_CHOICE "battery_parameter_match" = "board_battery"
 //$$ L2 PROP_STR = "status"
-        axp202 { /* PMU for AXP */
-            compatible = "axp_mfd";                             /* for driver probe, must have          */
-            sub_type = "axp20_mfd";                             /** sub type of pmu family, must have    */
-            i2c_bus = "i2c_bus_ao";                             /** attached i2c bus, must have          */
-            reg = <0x34>;                                       /** device i2c address, must have        */
-            soft_limit_to99 = <0>;                              /** optional                             */
-            ddr_voltage   = <1500000>;                          /** default voltage for DDR, optional    */
-            vddao_voltage = <1200000>;                          /** default voltage for AO, optional     */
-            board_battery = <&battery_parameter>;               /** battery parameter used, must have    */
-            status = "disable";                                 /** status of pmu, only one should be OK */
-        };
+//        axp202 { /* PMU for AXP */
+//            compatible = "axp_mfd";                             /* for driver probe, must have          */
+//            sub_type = "axp20_mfd";                             /** sub type of pmu family, must have    */
+//            i2c_bus = "i2c_bus_ao";                             /** attached i2c bus, must have          */
+//            reg = <0x34>;                                       /** device i2c address, must have        */
+//            soft_limit_to99 = <0>;                              /** optional                             */
+//            ddr_voltage   = <1500000>;                          /** default voltage for DDR, optional    */
+//            vddao_voltage = <1200000>;                          /** default voltage for AO, optional     */
+//            board_battery = <&battery_parameter>;               /** battery parameter used, must have    */
+//            status = "disable";                                 /** status of pmu, only one should be OK */
+//        };
 //$$ DEVICE = "Pmu_aml1212"
 //$$ L2 PROP_STR = "sub_type"
 //$$ L2 PROP_STR = "i2c_bus"
@@ -787,17 +787,17 @@ sdio{
 //$$ L2 PROP_U32 = "vddao_voltage"
 //$$ L2 PROP_CHOICE "battery_parameter_match" = "board_battery"
 //$$ L2 PROP_STR = "status"
-        aml1212{                                                /* PMU for AML1212, see comment above   */
-            compatible = "aml_pmu";                             /* for driver probe, must have          */
-            sub_type = "aml1212";                               /** sub type of pmu family, must have    */
-            i2c_bus = "i2c_bus_ao";                             /** attached i2c bus, must have          */
-            reg = <0x35>;                                       /** device i2c address, must have        */
-            soft_limit_to99 = <0>;                              /** optional                             */
-            ddr_voltage   = <1500000>;                          /** default voltage for DDR, optional    */
-            vddao_voltage = <1200000>;                          /** default voltage for AO, optional     */
-            board_battery = <&battery_parameter>;               /** battery parameter used, must have    */
-            status = "disable";                                 /** status of pmu, only one should be OK */
-        };
+//        aml1212{                                                /* PMU for AML1212, see comment above   */
+//            compatible = "aml_pmu";                             /* for driver probe, must have          */
+//            sub_type = "aml1212";                               /** sub type of pmu family, must have    */
+//            i2c_bus = "i2c_bus_ao";                             /** attached i2c bus, must have          */
+//            reg = <0x35>;                                       /** device i2c address, must have        */
+//            soft_limit_to99 = <0>;                              /** optional                             */
+//            ddr_voltage   = <1500000>;                          /** default voltage for DDR, optional    */
+//            vddao_voltage = <1200000>;                          /** default voltage for AO, optional     */
+//            board_battery = <&battery_parameter>;               /** battery parameter used, must have    */
+//            status = "disable";                                 /** status of pmu, only one should be OK */
+//        };
 //$$ DEVICE = "Pmu_rn5t618"
 //$$ L2 PROP_STR = "sub_type"
 //$$ L2 PROP_STR = "i2c_bus"
@@ -1102,24 +1102,24 @@ sdio{
 //$$ L2 PROP_U32 = "dsi_lane_num"
 //$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
 //$$ L2 PROP_U32 2 = "dsi_sleep_out_display_on_delay"
-	lcd_B080XAN01:lcd_B080XAN01{	//k101
-		model_name="B080XAN01";	/** lcd model name */
-		interface="mipi";		/** lcd_interface(mipi, lvds, edp, ttl) */
-		active_area=<119 159>;		/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
-		lcd_bits_option=<6 1>;		/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
+//	lcd_B080XAN01:lcd_B080XAN01{	//k101
+//		model_name="B080XAN01";	/** lcd model name */
+//		interface="mipi";		/** lcd_interface(mipi, lvds, edp, ttl) */
+//		active_area=<119 159>;		/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
+//		lcd_bits_option=<6 1>;		/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) *///
 
-		resolution=<768 1024>;	/** horizontal resolution, vertical resolution */
-		period=<948 1140>;		/** horizontal period(htotal), vertical period(vtotal) */
+//		resolution=<768 1024>;	/** horizontal resolution, vertical resolution */
+//		period=<948 1140>;		/** horizontal period(htotal), vertical period(vtotal) */
 
-		clock_hz_pol=<64843200 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<64 56>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<50 30>;	/** vsync_width, vsync_backporch(include vsync_width) */
-		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+//		clock_hz_pol=<64843200 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
+//		hsync_width_backporch=<64 56>;	/** hsync_width, hsync_backporch(include hsync_width) */
+//		vsync_width_backporch=<50 30>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
-        dsi_lane_num=<4>;/** mipi dsi data lane number */
-        dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-        dsi_sleep_out_display_on_delay=<20 20>; /** mipi dsi basic delay: (unit: ms) */
-	};
+//        dsi_lane_num=<4>;/** mipi dsi data lane number */
+//        dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+//        dsi_sleep_out_display_on_delay=<20 20>; /** mipi dsi basic delay: (unit: ms) */
+//	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_CLAP070NJ02>
 //$$ L2 PROP_STR = "model_name"
@@ -1132,20 +1132,20 @@ sdio{
 //$$ L2 PROP_U32 2 = "hsync_width_backporch"
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
-	lcd_CLAP070NJ02:lcd_CLAP070NJ02{	//g33
-		model_name="CLAP070NJ02";	/** lcd model name */
-		interface="ttl";			/** lcd_interface(mipi, lvds, edp, ttl) */
-		active_area=<154 86>;		/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
-		lcd_bits_option=<8 1>;		/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
+//	lcd_CLAP070NJ02:lcd_CLAP070NJ02{	//g33
+//		model_name="CLAP070NJ02";	/** lcd model name */
+//		interface="ttl";			/** lcd_interface(mipi, lvds, edp, ttl) */
+//		active_area=<154 86>;		/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
+//		lcd_bits_option=<8 1>;		/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
 		
-		resolution=<1024 600>;	/** horizontal resolution, vertical resolution */
-		period=<1344 635>;		/** horizontal period(htotal), vertical period(vtotal) */
+//		resolution=<1024 600>;	/** horizontal resolution, vertical resolution */
+//		period=<1344 635>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
-		clock_hz_pol=<42700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 160>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
-		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
-	};
+//		clock_hz_pol=<42700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
+//		hsync_width_backporch=<10 160>;	/** hsync_width, hsync_backporch(include hsync_width) */
+//		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+//	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_TN070TN92>
 //$$ L2 PROP_STR = "model_name"
@@ -1158,20 +1158,20 @@ sdio{
 //$$ L2 PROP_U32 2 = "hsync_width_backporch"
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
-	lcd_TN070TN92:lcd_TN070TN92{	//800*480
-		model_name="TN070TN92";	/** lcd model name */
-		interface="ttl";		/** lcd_interface(mipi, lvds, edp, ttl) */
-		active_area=<154 86>;	/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
-		lcd_bits_option=<8 1>;	/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
+//	lcd_TN070TN92:lcd_TN070TN92{	//800*480
+//		model_name="TN070TN92";	/** lcd model name */
+//		interface="ttl";		/** lcd_interface(mipi, lvds, edp, ttl) */
+//		active_area=<154 86>;	/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
+//		lcd_bits_option=<8 1>;	/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
 		
-		resolution=<800 480>;	/** horizontal resolution, vertical resolution */
-		period=<1056 525>;		/** horizontal period(htotal), vertical period(vtotal) */
+//		resolution=<800 480>;	/** horizontal resolution, vertical resolution */
+//		period=<1056 525>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
-		clock_hz_pol=<33300000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 46>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
-		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
-	};
+//		clock_hz_pol=<33300000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
+//		hsync_width_backporch=<10 46>;	/** hsync_width, hsync_backporch(include hsync_width) */
+//		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+//	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_LP097X02>
 //$$ L2 PROP_STR = "model_name"
@@ -1184,20 +1184,20 @@ sdio{
 //$$ L2 PROP_U32 2 = "hsync_width_backporch"
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"	
-	lcd_LP097X02:lcd_LP097X02{	//g24
-		model_name="LP097X02";	/** lcd model name */
-		interface="lvds";		/** lcd_interface(mipi, lvds, edp, ttl) */
-		active_area=<197 147>;	/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
-		lcd_bits_option=<6 0>;	/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
+//	lcd_LP097X02:lcd_LP097X02{	//g24
+//		model_name="LP097X02";	/** lcd model name */
+//		interface="lvds";		/** lcd_interface(mipi, lvds, edp, ttl) */
+//		active_area=<197 147>;	/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
+//		lcd_bits_option=<6 0>;	/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
 		
-		resolution=<1024 768>;	/** horizontal resolution, vertical resolution */
-		period=<2084 810>;		/** horizontal period(htotal), vertical period(vtotal) */
+//		resolution=<1024 768>;	/** horizontal resolution, vertical resolution */
+//		period=<2084 810>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
-		clock_hz_pol=<85700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 70>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<3 30>;	/** vsync_width, vsync_backporch(include vsync_width) */
-		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
-	};
+//		clock_hz_pol=<85700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
+//		hsync_width_backporch=<10 70>;	/** hsync_width, hsync_backporch(include hsync_width) */
+//		vsync_width_backporch=<3 30>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+//	};
 
 //$$ DEVICE="lcd_extern"
 //$$ L2 PROP_STR = "status"
@@ -1231,23 +1231,23 @@ sdio{
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "address"
 //$$ L2 PROP_STR = "i2c_bus"
-        stk831x{
-            dev_name = "stk831x";
-            status = "okay";
-            address = <0x3d>;
-            i2c_bus = "i2c_bus_b";
-        };
+//        stk831x{
+//            dev_name = "stk831x";
+//            status = "okay";
+//            address = <0x3d>;
+//            i2c_bus = "i2c_bus_b";
+//        };
 
 //$$ DEVICE="mma7660"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "address"
 //$$ L2 PROP_STR = "i2c_bus"
-        mma7660{
-            dev_name = "mma7660";
-            status = "okay";
-            address = <0x4c>;
-            i2c_bus = "i2c_bus_b";
-        };
+//        mma7660{
+//            dev_name = "mma7660";
+//            status = "okay";
+//            address = <0x4c>;
+//            i2c_bus = "i2c_bus_b";
+//        };
 
 //$$ DEVICE="mma8452"
 //$$ L2 PROP_STR = "status"
@@ -1267,24 +1267,24 @@ sdio{
 //$$ L2 PROP_U32 = "address"
 //$$ L2 PROP_STR = "i2c_bus"
 //$$ L2 PROP_U32 = "acc_dir"
-        mma865x{
-            dev_name = "mma865x";
-            status = "okay";
-            address = <0x1d>;
-            i2c_bus = "i2c_bus_b";
-            acc_dir = <0x1111>;
-        };
+//        mma865x{
+//            dev_name = "mma865x";
+//            status = "okay";
+//            address = <0x1d>;
+//            i2c_bus = "i2c_bus_b";
+//            acc_dir = <0x1111>;
+//        };
 
 //$$ DEVICE="afa750"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "address"
 //$$ L2 PROP_STR = "i2c_bus"
-        afa750{
-            dev_name = "afa750";
-            status = "okay";
-            address = <0x3c>;
-            i2c_bus = "i2c_bus_b";
-        };
+//        afa750{
+//            dev_name = "afa750";
+//            status = "okay";
+//            address = <0x3c>;
+//            i2c_bus = "i2c_bus_b";
+//        };
 };
 
 
@@ -1352,31 +1352,31 @@ sdio{
 
     aml_audio_codec{
         compatible = "amlogic,audio_codec";
-        rt5616:rt5616{
-            codec_name = "rt5616";
-            i2c_addr = <0x1B>;
-            i2c_bus = "i2c_bus_d";
-            id_reg = <0x00>;
-            id_val = <0x21>;
-            capless = <0>;
-            status = "okay";
-        };
-        rt5631:rt5631{
-            codec_name = "rt5631";
-            i2c_addr = <0x1A>;
-            i2c_bus = "i2c_bus_b";
-            id_reg = <0x00>;
-            id_val = <0x01>;
-            capless = <0>;
-            status = "disable";      
-        };  
-        wm8960:wm8960{
-            codec_name = "wm8960";
-            i2c_addr = <0x1A>;
-            i2c_bus = "i2c_bus_b";
-            capless = <1>;
-	    status = "disable";
-        };
+//        rt5616:rt5616{
+//            codec_name = "rt5616";
+//            i2c_addr = <0x1B>;
+//            i2c_bus = "i2c_bus_d";
+//            id_reg = <0x00>;
+//            id_val = <0x21>;
+//            capless = <0>;
+//            status = "okay";
+//        };
+//        rt5631:rt5631{
+//            codec_name = "rt5631";
+//            i2c_addr = <0x1A>;
+//            i2c_bus = "i2c_bus_b";
+//            id_reg = <0x00>;
+//            id_val = <0x01>;
+//            capless = <0>;
+//            status = "disable";      
+//        };  
+//        wm8960:wm8960{
+//            codec_name = "wm8960";
+//            i2c_addr = <0x1A>;
+//            i2c_bus = "i2c_bus_b";
+//            capless = <1>;
+//	    status = "disable";
+//        };
     };
 
 //$$ DEVICE="aml_m8_sound_card"
@@ -1430,72 +1430,6 @@ sdio{
 		pinctrl-0 = <&aml_cam_gpio_pins> ;
 		pinctrl-1 = <&aml_cam_csi_pins> ;
 
-///	-	gc0308
-//$$ DEVICE = "gc0308"
-//$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 = "front_back"
-//$$ L2 PROP_STR = "i2c_bus"
-//$$ L2 PROP_STR = "gpio_pwdn"
-//$$ L2 PROP_STR = "gpio_rst"
-//$$ L2 PROP_U32 = "mirror_flip"
-//$$ L2 PROP_U32 = "vertical_flip"
-//$$ L2 PROP_STR = "bt_path"
-		cam_0{
-			cam_name = "gc0308";
-			front_back = <0>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_6";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <1>;
-			vertical_flip = <0>;
-			bt_path = "gpio";
-			status = "okay";
-		};	
-
-///	-	gt2005
-//$$ DEVICE="gt2005"
-//$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 = "front_back"
-//$$ L2 PROP_STR = "i2c_bus"
-//$$ L2 PROP_STR = "gpio_pwdn"
-//$$ L2 PROP_STR = "gpio_rst"
-//$$ L2 PROP_U32 = "mirror_flip"
-//$$ L2 PROP_U32 = "vertical_flip"
-//$$ L2 PROP_STR = "bt_path"
-		cam_1{
-			cam_name = "gt2005";
-			front_back = <1>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_5";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;
-			bt_path = "gpio";
-			status = "okay";
-		};	
-
-///	-	gc0328
-//$$ DEVICE="gc0328"
-//$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 = "front_back"
-//$$ L2 PROP_STR = "i2c_bus"
-//$$ L2 PROP_STR = "gpio_pwdn"
-//$$ L2 PROP_STR = "gpio_rst"
-//$$ L2 PROP_U32 = "mirror_flip"
-//$$ L2 PROP_U32 = "vertical_flip"
-//$$ L2 PROP_STR = "bt_path"
-        cam_2{
-			cam_name = "gc0328";
-			front_back = <0>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_6";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
-
 ///	-	gc2035
 //$$ DEVICE="gc2035"
 //$$ L2 PROP_STR = "status"
@@ -1506,7 +1440,7 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-        cam_3{
+        cam_0{
 			cam_name = "gc2035";
 			front_back = <1>;
 			i2c_bus = "i2c_bus_d";
@@ -1517,7 +1451,7 @@ sdio{
 			bt_path = "gpio";
 			status = "okay";
 		};
-
+		
 ///	-	ov5640
 //$$ DEVICE="ov5640"
 //$$ L2 PROP_STR = "status"
@@ -1528,7 +1462,7 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-		cam_4{
+		cam_1{
 			cam_name = "ov5640";
 			front_back = <0>;
 			i2c_bus = "i2c_bus_d";
@@ -1539,29 +1473,7 @@ sdio{
 			bt_path = "gpio";
 			status = "okay";
 		};
-
-///	-	hi253
-//$$ DEVICE="hi253"
-//$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 = "front_back"
-//$$ L2 PROP_STR = "i2c_bus"
-//$$ L2 PROP_STR = "gpio_pwdn"
-//$$ L2 PROP_STR = "gpio_rst"
-//$$ L2 PROP_U32 = "mirror_flip"
-//$$ L2 PROP_U32 = "vertical_flip"
-//$$ L2 PROP_STR = "bt_path"
-		cam_5{
-			cam_name = "hi253";
-			front_back = <0>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_5";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
-
+		
 ///	-	ov5647
 //$$ DEVICE="ov5647"
 //$$ L2 PROP_STR = "status"
@@ -1572,7 +1484,7 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-		cam_6{
+		cam_2{
 			cam_name = "ov5647";
 			front_back = <0>;
 			i2c_bus = "i2c_bus_d";
@@ -1585,6 +1497,95 @@ sdio{
 			bt_path = "gpio";
 			status = "okay";
 		};
+		
+///	-	gc0308
+//$$ DEVICE = "gc0308"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
+//		cam_3{
+//			cam_name = "gc0308";
+//			front_back = <0>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_6";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <1>;
+//			vertical_flip = <0>;
+//			bt_path = "gpio";
+//			status = "okay";
+//		};	
+
+///	-	gt2005
+//$$ DEVICE="gt2005"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
+//		cam_4{
+//			cam_name = "gt2005";
+//			front_back = <1>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_5";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;
+//			bt_path = "gpio";
+//			status = "okay";
+//		};	
+
+///	-	gc0328
+//$$ DEVICE="gc0328"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
+//        cam_5{
+//			cam_name = "gc0328";
+//			front_back = <0>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_6";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
+
+///	-	hi253
+//$$ DEVICE="hi253"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
+//		cam_6{
+//			cam_name = "hi253";
+//			front_back = <0>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_5";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
+
  ///	-	hm2057
 //$$ DEVICE="hm2057"
 //$$ L2 PROP_STR = "status"
@@ -1595,17 +1596,17 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"    
-            	 cam_7{
-			cam_name = "hm2057";
-			front_back = <0>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_5";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
+//            	 cam_7{
+//			cam_name = "hm2057";
+//			front_back = <0>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_5";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
 
 //$$ DEVICE="sp0a19"
 //$$ L2 PROP_STR = "status"
@@ -1616,18 +1617,17 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-        cam_8{
-			cam_name = "sp0a19";
-			front_back = <0>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_6";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
-
+//        cam_8{
+//			cam_name = "sp0a19";
+//			front_back = <0>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_6";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
 
 ///	-	hm5065
 //$$ DEVICE="hm5065"
@@ -1639,18 +1639,17 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-		cam_9{
-			cam_name = "hm5065";
-			front_back = <0>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_5";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
-
+//		cam_9{
+//			cam_name = "hm5065";
+//			front_back = <0>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_5";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
 
 ///	-    sp1628
 //$$ DEVICE="sp1628"
@@ -1662,17 +1661,17 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-		cam_10{
-			cam_name = "sp1628";
-			front_back = <1>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_6";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
+//		cam_10{
+//			cam_name = "sp1628";
+//			front_back = <1>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_6";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
 
 ///	-    bf3720
 //$$ DEVICE="bf3720"
@@ -1684,17 +1683,17 @@ sdio{
 //$$ L2 PROP_U32 = "mirror_flip"
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
-		cam_11{
-			cam_name = "bf3720";
-			front_back = <1>;
-			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_6";
-			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <0>;	
-			bt_path = "gpio";
-			status = "okay";
-		};
+//		cam_11{
+//			cam_name = "bf3720";
+//			front_back = <1>;
+//			i2c_bus = "i2c_bus_d";
+//			gpio_pwdn = "GPIOH_6";
+//			gpio_rst = "GPIOH_4";
+//			mirror_flip = <0>;
+//			vertical_flip = <0>;	
+//			bt_path = "gpio";
+//			status = "okay";
+//		};
 	};	
 
 /// ***************************************************************************************
@@ -1963,21 +1962,21 @@ sdio{
 //$$ L3 PROP_U32 ="yres"
 //$$ L3 PROP_U32 ="pol"
 //$$ L3 PROP_STR = "fw_file"
-		touch_ft5x06:ft5x06{
-			touch_name = "ft5x06";
-			status = "okay";
-			i2c_bus = "i2c_bus_a";
-			reg = <0x38>;
-			ic_type = <0>;
-			irq = <0>;
-			gpio_interrupt = "GPIOZ_7";
-			gpio_reset = "GPIOZ_6";
-			xres = <1024>;
-			yres = <600>;
-			pol = <0x1>;
-			fw_file = "/etc/touch/ft5x06.fw";
+//		touch_ft5x06:ft5x06{
+//			touch_name = "ft5x06";
+//			status = "okay";
+//			i2c_bus = "i2c_bus_a";
+//			reg = <0x38>;
+//			ic_type = <0>;
+//			irq = <0>;
+//			gpio_interrupt = "GPIOZ_7";
+//			gpio_reset = "GPIOZ_6";
+//			xres = <1024>;
+//			yres = <600>;
+//			pol = <0x1>;
+//			fw_file = "/etc/touch/ft5x06.fw";
 						
-		};
+//		};
 
 //$$ DEVICE = "touch_gt9xx"
 //$$ L2 PROP_STR = "status"

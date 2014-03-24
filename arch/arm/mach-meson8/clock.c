@@ -1663,7 +1663,7 @@ static ssize_t freq_limit_show(struct class *cla, struct class_attribute *attr, 
 
 
 static struct class_attribute freq_limit_class_attrs[] = {
-	__ATTR(limit, S_IRWXU, freq_limit_show, freq_limit_store),
+	__ATTR(limit, S_IRUGO|S_IWUSR|S_IWGRP, freq_limit_show, freq_limit_store),
 	__ATTR_NULL,
 };
 

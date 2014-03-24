@@ -1038,11 +1038,11 @@ static struct dvb_device dvbdev_dsc = {
 
 static struct class_attribute aml_stb_class_attrs[] = {
 	__ATTR(hw_setting, S_IRUGO|S_IWUSR, stb_show_hw_setting, stb_store_hw_setting),
-	__ATTR(source,  S_IRUGO | S_IWUSR, stb_show_source, stb_store_source),
+	__ATTR(source,  S_IRUGO | S_IWUSR | S_IWGRP, stb_show_source, stb_store_source),
 	__ATTR(dsc_source,  S_IRUGO | S_IWUSR, dsc_show_source, dsc_store_source),
 	__ATTR(tso_source,  S_IRUGO | S_IWUSR, tso_show_source, tso_store_source),
 #define DEMUX_SOURCE_ATTR_DECL(i)\
-		__ATTR(demux##i##_source,  S_IRUGO | S_IWUSR, demux##i##_show_source, demux##i##_store_source)
+		__ATTR(demux##i##_source,  S_IRUGO | S_IWUSR | S_IWGRP, demux##i##_show_source, demux##i##_store_source)
 #define DEMUX_FREE_FILTERS_ATTR_DECL(i)\
 		__ATTR(demux##i##_free_filters,  S_IRUGO | S_IWUSR, demux##i##_show_free_filters, NULL)
 #define DEMUX_FILTER_USERS_ATTR_DECL(i)\
@@ -1078,9 +1078,9 @@ static struct class_attribute aml_stb_class_attrs[] = {
 	DEMUX_CHANNEL_ACTIVITY_ATTR_DECL(2),
 #endif
 #define ASYNCFIFO_SOURCE_ATTR_DECL(i)\
-		__ATTR(asyncfifo##i##_source,  S_IRUGO | S_IWUSR, asyncfifo##i##_show_source, asyncfifo##i##_store_source)
+		__ATTR(asyncfifo##i##_source,  S_IRUGO | S_IWUSR | S_IWGRP, asyncfifo##i##_show_source, asyncfifo##i##_store_source)
 #define ASYNCFIFO_FLUSHSIZE_ATTR_DECL(i)\
-		__ATTR(asyncfifo##i##_flush_size,  S_IRUGO | S_IWUSR, asyncfifo##i##_show_flush_size, asyncfifo##i##_store_flush_size)
+		__ATTR(asyncfifo##i##_flush_size,  S_IRUGO | S_IWUSR | S_IWGRP, asyncfifo##i##_show_flush_size, asyncfifo##i##_store_flush_size)
 #if ASYNCFIFO_COUNT>0
 	ASYNCFIFO_SOURCE_ATTR_DECL(0),
 	ASYNCFIFO_FLUSHSIZE_ATTR_DECL(0),
@@ -1090,8 +1090,8 @@ static struct class_attribute aml_stb_class_attrs[] = {
 	ASYNCFIFO_FLUSHSIZE_ATTR_DECL(1),
 #endif
 	__ATTR(demux_reset,  S_IRUGO | S_IWUSR, NULL, demux_do_reset),
-	__ATTR(video_pts,  S_IRUGO | S_IWUSR, demux_show_video_pts, NULL),
-	__ATTR(audio_pts,  S_IRUGO | S_IWUSR, demux_show_audio_pts, NULL),
+	__ATTR(video_pts,  S_IRUGO | S_IWUSR | S_IWGRP, demux_show_video_pts, NULL),
+	__ATTR(audio_pts,  S_IRUGO | S_IWUSR | S_IWGRP, demux_show_audio_pts, NULL),
 	__ATTR(first_video_pts,  S_IRUGO | S_IWUSR, demux_show_first_video_pts, NULL),
 	__ATTR(first_audio_pts,  S_IRUGO | S_IWUSR, demux_show_first_audio_pts, NULL),
 	__ATTR(free_dscs,  S_IRUGO | S_IWUSR, dsc_show_free_dscs, NULL),
