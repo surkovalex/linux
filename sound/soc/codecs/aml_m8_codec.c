@@ -585,7 +585,7 @@ static void start_codec(struct snd_soc_codec *codec)
     data32 |= 1 << 1;   // [    1] rstadcdpz
     data32 |= 1 << 0;   // [    0] rstdacdpz
     snd_soc_write(codec, 0, data32);
-
+	snd_soc_write(codec, 24, 0xf3);
     data32  = 0;
     data32 |= 1 << 4;   // [    4] pd_micb2z
     data32 |= 1 << 3;   // [    3] pd_micb1z
@@ -734,10 +734,10 @@ static const struct snd_soc_dapm_widget aml_m8_dapm_widgets[] = {
 	//SND_SOC_DAPM_DAC("Right DAC", "Playback", AMLM8_PD_3, 1, 0),
 	//SND_SOC_DAPM_PGA("Left HP OUT PGA", AMLM8_PD_3, 4, 0, NULL, 0),
 	//SND_SOC_DAPM_PGA("Right HP OUT PGA", AMLM8_PD_3, 5, 0, NULL, 0),
-	SND_SOC_DAPM_MIXER("Left Output Mixer", AMLM8_PD_3, 6, 0,
+	SND_SOC_DAPM_MIXER("Left Output Mixer", SND_SOC_NOPM, 6, 0,
 		&amlm8_left_ld1_mixer[0],
 		ARRAY_SIZE(amlm8_left_ld1_mixer)),
-	SND_SOC_DAPM_MIXER("Right Output Mixer", AMLM8_PD_3, 7, 0,
+	SND_SOC_DAPM_MIXER("Right Output Mixer", SND_SOC_NOPM, 7, 0,
 		&amlm8_right_ld1_mixer[0],
 		ARRAY_SIZE(amlm8_right_ld1_mixer)),
     SND_SOC_DAPM_DAC_E("Left DAC", "Playback", SND_SOC_NOPM, 0, 0, pd3_env,
