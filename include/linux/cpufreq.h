@@ -456,7 +456,7 @@ static inline void cpu_up_num(unsigned int num)
 
 static inline void cpufreq_set_max_cpu_num(unsigned int cpu_num)
 {
-	int i=0
+	int i=0;
 	if(cpu_num>=NR_CPUS)
 	{
 		cpu_up_num(NR_CPUS);
