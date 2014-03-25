@@ -380,10 +380,11 @@ am_uart_set_termios(struct uart_port *port, struct ktermios *termios,
     }
     writel(tmp, &uart->mode);
 
-	baud = tty_termios_baud_rate(termios);
-	meson_uart_change_speed(mup, baud);
-	uart_update_timeout(port, termios->c_cflag, baud);
-
+    baud = tty_termios_baud_rate(termios);
+    if(baud){
+        meson_uart_change_speed(mup, baud);
+        uart_update_timeout(port, termios->c_cflag, baud);
+    }
 	return;
 }
 
