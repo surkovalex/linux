@@ -1808,11 +1808,12 @@ sdio{
 //$$ L2 PROP_U32 = "idle_interval"
 	thermal{
 		compatible = "amlogic-thermal";
-		#thermal-cells=<5>;
+		#thermal-cells=<7>;
 		dev_name = "aml_thermal";
-		trip_point=<40 1200000 1200000 500 500
-			    70  800000 800000 400 400 
-			    110 0xffffffff 0xffffffff 0xffffffff 0xffffffff>;
+		trip_point=<60 1608001 1608001 511 511 2 3
+			    70 1200001 1200001 435 435 2 3
+			    80  800001 800001  328 328 1 1
+			    110 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff>;
 		cpu_cali_a=<0>;
 		idle_interval=<1000>;
 

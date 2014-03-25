@@ -6,6 +6,8 @@ config AMLOGIC_THERMAL
     select THERMAL
     select CPU_THERMAL
     select GPU_THERMAL
+    select CPUCORE_THERMAL
+    select GPUCORE_THERMAL
     default n
     help
       This is the Amlogic Thermal interface driver
