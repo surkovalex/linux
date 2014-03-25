@@ -51,17 +51,16 @@ void gpucore_cooling_unregister(struct thermal_cooling_device *cdev);
 struct gpucore_cooling_device * gpucore_cooling_alloc(void);
 
 #else /* !CONFIG_CPU_THERMAL */
-struct gpucore_cooling_device * gpucore_cooling_alloc(){
-	return NULL;
-}
-
-static inline struct thermal_cooling_device *
-gpucore_cooling_register(struct gpucore_cooling_device *)
+inline struct gpucore_cooling_device * gpucore_cooling_alloc(void)
 {
 	return NULL;
 }
-static inline
-void gpucore_cooling_unregister(struct thermal_cooling_device *cdev)
+
+inline struct thermal_cooling_device * gpucore_cooling_register(struct gpucore_cooling_device *gcd)
+{
+	return NULL;
+}
+inline void gpucore_cooling_unregister(struct thermal_cooling_device *cdev)
 {
 	return;
 }
