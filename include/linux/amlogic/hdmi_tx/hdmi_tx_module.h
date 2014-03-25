@@ -2,6 +2,7 @@
 #define _HDMI_TX_MODULE_H
 #include "hdmi_info_global.h"
 #include <plat/hdmi_config.h>
+#include <linux/wait.h>
 //#include <linux/amlogic/aml_gpio_consumer.h>
 
 /*****************************
@@ -64,6 +65,8 @@ typedef struct hdmi_tx_dev_s {
     struct task_struct *task;
     struct task_struct *task_monitor;
     struct task_struct *task_hdcp;
+    struct task_struct *task_cec;
+    wait_queue_head_t cec_wait_rx;
     struct {
         void (*SetPacket)(int type, unsigned char* DB, unsigned char* HB);
         void (*SetAudioInfoFrame)(unsigned char* AUD_DB, unsigned char* CHAN_STAT_BUF);
