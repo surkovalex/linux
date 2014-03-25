@@ -231,6 +231,8 @@ void root_func(){
 		port_name = "uart_a";
 		status = "okay";
 		dev_name = "uart_0";
+		pinctrl-names = "default";
+		pinctrl-0 = <&a_uart_pins>;
 	};
 	
 //$$ DEVICE="uart_1"
@@ -259,6 +261,19 @@ void root_func(){
 		status = "ok";
 		dev_name = "uart_3";
 	};
+
+/// ***************************************************************************************
+///	-	Bluetooth
+//$$ MODULE="Bluetooth"
+
+    bt-dev{
+        compatible = "amlogic,bt-dev";
+        dev_name = "bt-dev";
+        gpio_reset = "GPIOE_10";
+        gpio_en = "GPIOE_11";
+        gpio_wake = "GPIOX_10";
+        status = "ok";
+    };
 
 /// ***************************************************************************************
 ///	-	WiFi
@@ -978,7 +993,7 @@ void root_func(){
 			amlogic,setmask=<4 0x3c00>;
 			amlogic,pins="GPIOX_13", "GPIOX_14", "GPIOX_15", "GPIOX_16";
 		};
-		
+
 //$$ MATCH "meson_vcck_dvfs_pin_0_match" = "&aml_pwm_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
 //$$ L2 PROP_U32 2 = "amlogic,clrmask"

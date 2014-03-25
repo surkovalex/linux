@@ -189,6 +189,7 @@ typedef struct vframe_s {
         struct tvafe_vga_parm_s vga_parm;
         /* pixel aspect ratio */
         enum pixel_aspect_ratio_e pixel_ratio;
+        u64 ready_jiffies64;//ready from decode on  jiffies_64
 } vframe_t;
 
 #if 0

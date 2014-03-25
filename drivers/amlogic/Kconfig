@@ -57,6 +57,7 @@ source "drivers/amlogic/nfc/Kconfig"
 #
 comment "Audio devices"
 source "drivers/amlogic/amaudio/Kconfig"
+source "drivers/amlogic/amaudio2/Kconfig"
 source "drivers/amlogic/audiodsp/Kconfig"
 
 #

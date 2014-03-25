@@ -2177,14 +2177,14 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	para.frame_rate = gt2005_frmintervals_active.denominator;
 	para.h_active = gt2005_h_active;
 	para.v_active = gt2005_v_active;
-    para.hsync_phase = 1;
+	para.hsync_phase = 1;
 	para.vsync_phase = 1;
 	para.hs_bp = 0;
 	para.vs_bp = 2;
 	para.cfmt = TVIN_YUV422;
 	para.scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;
 	para.skip_count =  2; //skip_num
-    printk("gt2005,h=%d, v=%d, frame_rate=%d\n", 
+	printk("gt2005,h=%d, v=%d, frame_rate=%d\n", 
 		gt2005_h_active, gt2005_v_active, gt2005_frmintervals_active.denominator);
 	ret =  videobuf_streamon(&fh->vb_vidq);
 	if(ret == 0){

@@ -440,13 +440,14 @@ struct sp2518_fh {
 	return container_of(dev, struct sp2518_fh, dev);
 }*/
 
-static struct v4l2_frmsize_discrete sp2518_prev_resolution[2]= //should include 352x288 and 640x480, those two size are used for recording
+static struct v4l2_frmsize_discrete sp2518_prev_resolution[]= //should include 352x288 and 640x480, those two size are used for recording
 {
+	{320,240},
 	{352,288},
 	{640,480},
 };
 
-static struct v4l2_frmsize_discrete sp2518_pic_resolution[2]=
+static struct v4l2_frmsize_discrete sp2518_pic_resolution[]=
 {
 	{1600,1200},
 	{800,600}

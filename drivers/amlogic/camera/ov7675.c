@@ -337,13 +337,14 @@ struct ov7675_fh {
 	return container_of(dev, struct ov7675_fh, dev);
 }*/
 
-static struct v4l2_frmsize_discrete ov7675_prev_resolution[2]=
+static struct v4l2_frmsize_discrete ov7675_prev_resolution[]=
 {
 	{320,240},
+	{352,288},
 	{640,480},
 };
 
-static struct v4l2_frmsize_discrete ov7675_pic_resolution[1]=
+static struct v4l2_frmsize_discrete ov7675_pic_resolution[]=
 {
 	{640,480},
 };

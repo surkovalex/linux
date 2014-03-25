@@ -432,14 +432,14 @@ static inline struct sp0a19_fh *to_fh(struct sp0a19_device *dev)
 	return container_of(dev, struct sp0a19_fh, dev);
 }
 
-static struct v4l2_frmsize_discrete sp0a19_prev_resolution[3]= //should include 320x240 and 640x480, those two size are used for recording
+static struct v4l2_frmsize_discrete sp0a19_prev_resolution[]= //should include 320x240 and 640x480, those two size are used for recording
 {
 	{320,240},
 	//{352,288},
 	{640,480},
 };
 
-static struct v4l2_frmsize_discrete sp0a19_pic_resolution[1]=
+static struct v4l2_frmsize_discrete sp0a19_pic_resolution[]=
 {
 	{640,480},
 };

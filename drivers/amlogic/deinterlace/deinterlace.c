@@ -291,7 +291,7 @@ static int frame_count = 0;
 static int provider_vframe_level = 0;
 static int frame_packing_mode = 1;
 static int disp_frame_count = 0;
-static int start_frame_drop_count = 0;
+static int start_frame_drop_count = 1;
 //static int start_frame_hold_count = 0;
 #if defined(CONFIG_ARCH_MESON2)
 static int pre_de_irq_check = 0;

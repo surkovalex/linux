@@ -439,4 +439,42 @@ void cpufreq_frequency_table_get_attr(struct cpufreq_frequency_table *table,
 void cpufreq_frequency_table_update_policy_cpu(struct cpufreq_policy *policy);
 
 void cpufreq_frequency_table_put_attr(unsigned int cpu);
+#ifdef CONFIG_CPU_FREQ_GOV_HOTPLUG
+void cpufreq_set_max_cpu_num(unsigned int cpu_num);
+#else
+unsigned int max_cpu_num=NR_CPUS;
+unsigned int last_max_cpu_num=max_cpu_num;
+static inline void cpu_up_num(unsigned int num)
+{
+	for(i = 0; i < num; i++){
+		if(cpu_online(i))
+			continue;
+		cpu_up(i);
+		cpumask_set_cpu(i, tsk_cpus_allowed(NULL_task));
+	}
+}
+
+static inline void cpufreq_set_max_cpu_num(unsigned int cpu_num)
+{
+	int i=0
+	if(cpu_num>=NR_CPUS)
+	{
+		cpu_up_num(NR_CPUS);
+	}else
+	{
+		if(cpu_num>last_max_cpu_num){
+			cpu_up_num(cpu_num);
+		}else{
+			for(i=NR_CPUS-1;i>=cpu_num;i--)
+			{
+				if(!cpu_active(i))
+					continue;
+				cpu_down(i);
+			}
+		}
+		
+	}
+	
+}
+#endif
 #endif /* _LINUX_CPUFREQ_H */

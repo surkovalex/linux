@@ -411,6 +411,7 @@ struct gc2035_fh {
 
 static struct v4l2_frmsize_discrete gc2035_prev_resolution[]= //should include 352x288 and 640x480, those two size are used for recording
 {
+	{320,240},
 	{352,288},
 	{640,480},
 };
