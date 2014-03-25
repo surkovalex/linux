@@ -608,7 +608,7 @@ static int vidioc_synchronization_dqbuf(struct file *file, void *priv, struct v4
 
     buf = container_of(vb, struct ionvideo_buffer, vb);
     if (dev->receiver_register) {
-        tsync_avevent_locked(VIDEO_START, buf->pts ? buf->pts : timestamp_pcrscr_get());
+        tsync_avevent_locked(VIDEO_START, buf->pts ? buf->pts : timestamp_vpts_get());
         dev->receiver_register = 0;
         d = 0;
     } else if (buf->pts) {
@@ -776,6 +776,7 @@ static int video_receiver_event_fun(int type, void* data, void* private_data) {
 
     if (type == VFRAME_EVENT_PROVIDER_UNREG) {
         dev->receiver_register = 0;
+        tsync_avevent(VIDEO_STOP, 0);
         printk("unreg:ionvideo\n");
     }else if (type == VFRAME_EVENT_PROVIDER_REG) {
         dev->receiver_register = 1;
