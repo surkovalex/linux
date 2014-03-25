@@ -21,6 +21,11 @@ config AML1216
     ---help---
         drivers for amlogic pmu AML1216 
 
+config AML1218
+    bool "AML1218 driver"
+    ---help---
+        drivers for amlogic pmu AML1218 
+
 endchoice
 
 endif #AML_PMU

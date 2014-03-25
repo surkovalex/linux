@@ -22,6 +22,10 @@ static struct notifier_block aml1212_usb_nb;                            // notif
 static struct notifier_block aml1216_otg_nb;                            // notifier_block for OTG issue
 static struct notifier_block aml1216_usb_nb;                            // notifier_block for USB charger issue
 #endif
+#ifdef CONFIG_AML1218
+static struct notifier_block aml1218_otg_nb;                            // notifier_block for OTG issue
+static struct notifier_block aml1218_usb_nb;                            // notifier_block for USB charger issue
+#endif
 extern int dwc_otg_power_register_notifier(struct notifier_block *nb);
 extern int dwc_otg_power_unregister_notifier(struct notifier_block *nb);
 extern int dwc_otg_charger_detect_register_notifier(struct notifier_block *nb);
@@ -31,15 +35,21 @@ extern int dwc_otg_charger_detect_unregister_notifier(struct notifier_block *nb)
 #ifdef CONFIG_AML1216
 struct i2c_client *g_aml1216_client = NULL; 
 #endif
+#ifdef CONFIG_AML1218
+struct i2c_client *g_aml1218_client = NULL; 
+#endif
 #ifdef CONFIG_AML1212
 struct i2c_client *g_aml1212_client = NULL; 
 #endif
 static const struct i2c_device_id aml_pmu_id_table[] = {
-#ifdef CONFIG_AML1216
-	{ AML1216_DRIVER_NAME, 0},
-#endif
 #ifdef CONFIG_AML1212
-	{ "aml1212", 1},
+	{ "aml1212", 0},
+#endif
+#ifdef CONFIG_AML1216
+	{ AML1216_DRIVER_NAME, 1},
+#endif
+#ifdef CONFIG_AML1218
+	{ AML1218_DRIVER_NAME, 2},
 #endif
 	{},
 };
@@ -208,6 +218,64 @@ struct aml_dvfs_driver aml1216_dvfs_driver = {
 
 #endif
 
+#if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1218)
+extern struct aml_pmu_driver aml1218_pmu_driver;
+static int convert_id_to_dcdc(uint32_t id)
+{
+    int dcdc = 0; 
+    switch (id) {
+    case AML_DVFS_ID_VCCK:
+        dcdc = 4;
+        break;
+
+    case AML_DVFS_ID_VDDEE:
+        dcdc = 2;
+        break;
+
+    case AML_DVFS_ID_DDR:
+        dcdc = 3;
+        break;
+
+    default:
+        break;
+    }
+    return dcdc;
+}
+
+static int aml1218_set_voltage(uint32_t id, uint32_t min_uV, uint32_t max_uV)
+{
+    int dcdc = convert_id_to_dcdc(id);
+    uint32_t vol = 0;
+    
+    if (min_uV > max_uV) {
+        return -1;    
+    }
+    vol = (min_uV + max_uV) / 2;
+    if (dcdc >= 1 && dcdc <= 4) {
+        return aml1218_set_dcdc_voltage(dcdc, vol);
+    }
+    return -EINVAL;
+}
+
+static int aml1218_get_voltage(uint32_t id, uint32_t *uV)
+{
+    int dcdc = convert_id_to_dcdc(id);
+
+    if (dcdc >= 1 && dcdc <= 3) {
+        return aml1218_get_dcdc_voltage(dcdc, uV);    
+    }
+
+    return -EINVAL;
+}
+
+struct aml_dvfs_driver aml1218_dvfs_driver = {
+    .name        = "aml1218-dvfs",
+    .id_mask     = (AML_DVFS_ID_VCCK | AML_DVFS_ID_VDDEE | AML_DVFS_ID_DDR),
+    .set_voltage = aml1218_set_voltage, 
+    .get_voltage = aml1218_get_voltage,
+};
+#endif
+
 static int aml_pmu_check_device(struct i2c_client *client)
 {
     int ret;
@@ -266,8 +334,20 @@ static int aml_pmu_probe(struct i2c_client *client,
         goto out_free_chip;
     }
 
-#ifdef CONFIG_AML1216
+#ifdef CONFIG_AML1212
     if (type->driver_data == 0) {
+        g_aml1212_client = client;     
+        aml_pmu_register_driver(&aml1212_driver);
+    #ifdef CONFIG_AMLOGIC_USB
+        aml1212_otg_nb.notifier_call = aml1212_otg_change;
+        aml1212_usb_nb.notifier_call = aml1212_usb_charger;
+        dwc_otg_power_register_notifier(&aml1212_otg_nb);
+        dwc_otg_charger_detect_register_notifier(&aml1212_usb_nb);
+    #endif
+    }
+#endif
+#ifdef CONFIG_AML1216
+    if (type->driver_data == 1) {
         g_aml1216_client = client;            
     #if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1216)
         aml_dvfs_register_driver(&aml1216_dvfs_driver);
@@ -281,16 +361,19 @@ static int aml_pmu_probe(struct i2c_client *client,
         aml_pmu_register_driver(&aml1216_pmu_driver);
     }
 #endif
-#ifdef CONFIG_AML1212
-    if (type->driver_data == 1) {
-        g_aml1212_client = client;     
-        aml_pmu_register_driver(&aml1212_driver);
-    #ifdef CONFIG_AMLOGIC_USB
-        aml1212_otg_nb.notifier_call = aml1212_otg_change;
-        aml1212_usb_nb.notifier_call = aml1212_usb_charger;
-        dwc_otg_power_register_notifier(&aml1212_otg_nb);
-        dwc_otg_charger_detect_register_notifier(&aml1212_usb_nb);
+#ifdef CONFIG_AML1218
+    if (type->driver_data == 2) {
+        g_aml1218_client = client;            
+    #if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1218)
+        aml_dvfs_register_driver(&aml1218_dvfs_driver);
     #endif
+    #ifdef CONFIG_AMLOGIC_USB
+        aml1218_otg_nb.notifier_call = aml1218_otg_change;
+        aml1218_usb_nb.notifier_call = aml1218_usb_charger;
+        dwc_otg_power_register_notifier(&aml1218_otg_nb);
+        dwc_otg_charger_detect_register_notifier(&aml1218_usb_nb);
+    #endif
+        aml_pmu_register_driver(&aml1218_pmu_driver);
     }
 #endif
     pdev = platform_device_alloc(sub_type, 0);
@@ -317,6 +400,12 @@ static int aml_pmu_remove(struct i2c_client *client)
 {
     struct platform_device *pdev = i2c_get_clientdata(client);
 
+#ifdef CONFIG_AML1212
+    g_aml1212_client = NULL;
+    aml_pmu_clear_driver();
+    dwc_otg_power_unregister_notifier(&aml1212_otg_nb);
+    dwc_otg_charger_detect_unregister_notifier(&aml1212_usb_nb);
+#endif
 #ifdef CONFIG_AML1216
     g_aml1216_client = NULL;
 #if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1216)
@@ -326,11 +415,14 @@ static int aml_pmu_remove(struct i2c_client *client)
     dwc_otg_power_unregister_notifier(&aml1216_otg_nb);
     dwc_otg_charger_detect_unregister_notifier(&aml1216_usb_nb);
 #endif
-#ifdef CONFIG_AML1212
-    g_aml1212_client = NULL;
+#ifdef CONFIG_AML1218
+    g_aml1218_client = NULL;
+#if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1218)
+    aml_dvfs_unregister_driver(&aml1218_dvfs_driver);
+#endif
     aml_pmu_clear_driver();
-    dwc_otg_power_unregister_notifier(&aml1212_otg_nb);
-    dwc_otg_charger_detect_unregister_notifier(&aml1212_usb_nb);
+    dwc_otg_power_unregister_notifier(&aml1218_otg_nb);
+    dwc_otg_charger_detect_unregister_notifier(&aml1218_usb_nb);
 #endif
     platform_device_del(pdev);
 
