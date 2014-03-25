@@ -96,7 +96,7 @@ HHI_VDEC_CLK_CNTL
 
 #define vdec_clock_hi_enable() \
     VDEC1_CLOCK_OFF(); \
-    VDEC1_319M(); \
+    VDEC1_364M(); \
     VDEC1_CLOCK_ON(); \
     clock_level = 1;
 
@@ -108,7 +108,7 @@ HHI_VDEC_CLK_CNTL
 
 #define vdec2_clock_hi_enable() \
     VDEC2_CLOCK_OFF(); \
-    VDEC2_319M(); \
+    VDEC2_364M(); \
     VDEC2_CLOCK_ON(); \
     clock_level2 = 1;
 

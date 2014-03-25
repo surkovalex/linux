@@ -110,59 +110,6 @@ static void (*probe_callback)(void) = NULL;
 static void (*remove_callback)(void) = NULL;
 static struct device *cma_dev;
 
-#ifdef DUAL_PROT
-#define MAILBOX_COMMAND         AV_SCRATCH_0
-#define MAILBOX_DATA_0          AV_SCRATCH_1
-#define MAILBOX_DATA_1          AV_SCRATCH_2
-// [7:0] recycle buff_id + 1
-// [11:8] recycle video_id
-#define BUFFER_RECYCLE          AV_SCRATCH_3
-// [31] drop_enable
-// [15:8] drop_picture_left 
-// [7:0] drop_picture_period
-#define DROP_CONTROL            AV_SCRATCH_4
-#define DECODE_STATUS           AV_SCRATCH_5
-#define SPS_STATUS              AV_SCRATCH_6
-#define PPS_STATUS              AV_SCRATCH_7
-#define WORKSPACE_START         AV_SCRATCH_8
-#define CURRENT_SPS_PPS         AV_SCRATCH_9 // bit[15:9]-SPS, bit[8:0]-PPS
-#define DECODE_SKIP_PICTURE     AV_SCRATCH_A
-#define REF_START_VIEW_0        AV_SCRATCH_B
-#define REF_START_VIEW_1        AV_SCRATCH_C
-#define DECODED_PIC_NUM         PSCALE_PICI_W // AV_SCRATCH_F
-#define DECODE_ERROR_CNT        PSCALE_PICI_H // AV_SCRATCH_G
-#define CURRENT_UCODE           PSCALE_PICO_W // AV_SCRATCH_H
-#define PICTURE_COUNT           PSCALE_PICO_H // AV_SCRATCH_9
-#define MS_ID                   PSCALE_PICO_START_X // AV_SCRATCH_D
-#define CANVAS_START            PSCALE_PICO_START_Y // AV_SCRATCH_6
-
-#define VDEC2_MAILBOX_COMMAND         VDEC2_AV_SCRATCH_0
-#define VDEC2_MAILBOX_DATA_0          VDEC2_AV_SCRATCH_1
-#define VDEC2_MAILBOX_DATA_1          VDEC2_AV_SCRATCH_2
-// [7:0] recycle buff_id + 1
-// [11:8] recycle video_id
-#define VDEC2_BUFFER_RECYCLE          VDEC2_AV_SCRATCH_3
-// [31] drop_enable
-// [15:8] drop_picture_left 
-// [7:0] drop_picture_period
-#define VDEC2_DROP_CONTROL            VDEC2_AV_SCRATCH_4
-#define VDEC2_DECODE_STATUS           VDEC2_AV_SCRATCH_5
-#define VDEC2_SPS_STATUS              VDEC2_AV_SCRATCH_6
-#define VDEC2_PPS_STATUS              VDEC2_AV_SCRATCH_7
-#define VDEC2_WORKSPACE_START         VDEC2_AV_SCRATCH_8
-#define VDEC2_CURRENT_SPS_PPS         VDEC2_AV_SCRATCH_9 // bit[15:9]-SPS, bit[8:0]-PPS
-#define VDEC2_DECODE_SKIP_PICTURE     VDEC2_AV_SCRATCH_A
-#define VDEC2_REF_START_VIEW_0        VDEC2_AV_SCRATCH_B
-#define VDEC2_REF_START_VIEW_1        VDEC2_AV_SCRATCH_C
-#define VDEC2_DECODED_PIC_NUM         VDEC2_PSCALE_PICI_W // AV_SCRATCH_F
-#define VDEC2_DECODE_ERROR_CNT        VDEC2_PSCALE_PICI_H // AV_SCRATCH_G
-#define VDEC2_CURRENT_UCODE           VDEC2_PSCALE_PICO_W // AV_SCRATCH_H
-#define VDEC2_PICTURE_COUNT           VDEC2_PSCALE_PICO_H // AV_SCRATCH_9
-#define VDEC2_MS_ID                   VDEC2_PSCALE_PICO_START_X // AV_SCRATCH_D
-#define VDEC2_CANVAS_START            VDEC2_PSCALE_PICO_START_Y // AV_SCRATCH_6
-
-#else
-
 // bit[3:0] command :
 //           0 - command finished
 //               (DATA0 - {level_idc_mmco, max_reference_frame_num, width, height}
@@ -216,8 +163,6 @@ static struct device *cma_dev;
 #define VDEC2_REF_START_VIEW_0        VDEC2_AV_SCRATCH_M
 #define VDEC2_REF_START_VIEW_1        VDEC2_AV_SCRATCH_N
 
-#endif
-
 /********************************************
  *  DECODE_STATUS Define
 ********************************************/
@@ -233,91 +178,7 @@ static struct device *cma_dev;
 /********************************************
  *  Dual Core Communication 
 ********************************************/
-#ifdef DUAL_PROT
-
-#define PRE_MASTER_UPDATE_TIMES AV_SCRATCH_D // DOS_SCRATCH20
-// bit[31] - REQUEST
-// bit[30:0] - MASTER_UPDATE_TIMES
-#define SLAVE_WAIT_DPB_UPDATE   AV_SCRATCH_E // DOS_SCRATCH21
-// [15:8] - current_ref, [7:0] current_dpb (0x80 means no buffer found)
-#define SLAVE_REF_DPB           AV_SCRATCH_F // DOS_SCRATCH22
-#define SAVE_I_POC              AV_SCRATCH_G // DOS_SCRATCH24 -- 32 bits
-// bit[31:30] - core_status 0-idle, 1-mmco, 2-decoding, 3-finished
-// bit[29:0] - core_pic_count
-#define CORE_STATUS_M           AV_SCRATCH_H // DOS_SCRATCH25
-#define CORE_STATUS_S           AV_SCRATCH_I // DOS_SCRATCH26
-#define SAVE_ref_status_view_0  AV_SCRATCH_J // DOS_SCRATCH27
-#define SAVE_ref_status_view_1  AV_SCRATCH_K // DOS_SCRATCH28
-#define ALLOC_INFO_0            AV_SCRATCH_L // DOS_SCRATCH29
-#define ALLOC_INFO_1            AV_SCRATCH_M // DOS_SCRATCH30
-#define DOS_MCRCC_STALL_CTRL    AV_SCRATCH_N //
-#define SAVE_MVC_ENTENSION_0    PSCALE_CMD_BLK_X // DOS_SCRATCH23 --  1 bit
-
-#define VDEC2_PRE_MASTER_UPDATE_TIMES VDEC2_AV_SCRATCH_D // DOS_SCRATCH20
-// bit[31] - REQUEST
-// bit[30:0] - MASTER_UPDATE_TIMES
-#define VDEC2_SLAVE_WAIT_DPB_UPDATE   VDEC2_AV_SCRATCH_E // DOS_SCRATCH21
-// [15:8] - current_ref, [7:0] current_dpb (0x80 means no buffer found)
-#define VDEC2_SLAVE_REF_DPB           VDEC2_AV_SCRATCH_F // DOS_SCRATCH22
-#define VDEC2_SAVE_I_POC              VDEC2_AV_SCRATCH_G // DOS_SCRATCH24 -- 32 bits
-// bit[31:30] - core_status 0-idle, 1-mmco, 2-decoding, 3-finished
-// bit[29:0] - core_pic_count
-#define VDEC2_CORE_STATUS_M           VDEC2_AV_SCRATCH_H // DOS_SCRATCH25
-#define VDEC2_CORE_STATUS_S           VDEC2_AV_SCRATCH_I // DOS_SCRATCH26
-#define VDEC2_SAVE_ref_status_view_0  VDEC2_AV_SCRATCH_J // DOS_SCRATCH27
-#define VDEC2_SAVE_ref_status_view_1  VDEC2_AV_SCRATCH_K // DOS_SCRATCH28
-#define VDEC2_ALLOC_INFO_0            VDEC2_AV_SCRATCH_L // DOS_SCRATCH29
-#define VDEC2_ALLOC_INFO_1            VDEC2_AV_SCRATCH_M // DOS_SCRATCH30
-#define VDEC2_DOS_MCRCC_STALL_CTRL    VDEC2_AV_SCRATCH_N //
-#define VDEC2_SAVE_MVC_ENTENSION_0    VDEC2_PSCALE_CMD_BLK_X // DOS_SCRATCH23 --  1 bit
-
-static unsigned prot_reg[] =
-{
-PRE_MASTER_UPDATE_TIMES,
-SLAVE_WAIT_DPB_UPDATE,
-SLAVE_REF_DPB,
-SAVE_I_POC,
-CORE_STATUS_M,
-CORE_STATUS_S,
-SAVE_ref_status_view_0,
-SAVE_ref_status_view_1,
-ALLOC_INFO_0,
-ALLOC_INFO_1,
-DOS_MCRCC_STALL_CTRL,
-SAVE_MVC_ENTENSION_0
-};
-
-static unsigned vdec2_prot_reg[] =
-{
-VDEC2_PRE_MASTER_UPDATE_TIMES,
-VDEC2_SLAVE_WAIT_DPB_UPDATE,
-VDEC2_SLAVE_REF_DPB,
-VDEC2_SAVE_I_POC,
-VDEC2_CORE_STATUS_M,
-VDEC2_CORE_STATUS_S,
-VDEC2_SAVE_ref_status_view_0,
-VDEC2_SAVE_ref_status_view_1,
-VDEC2_ALLOC_INFO_0,
-VDEC2_ALLOC_INFO_1,
-VDEC2_DOS_MCRCC_STALL_CTRL,
-VDEC2_SAVE_MVC_ENTENSION_0
-};
-
-static const char *reg_name[] = {
-"PRE_MASTER_UPDATE_TIMES",
-"SLAVE_WAIT_DPB_UPDATE",
-"SLAVE_REF_DPB",
-"SAVE_I_POC",
-"CORE_STATUS_M",
-"CORE_STATUS_S",
-"SAVE_ref_status_view_0",
-"SAVE_ref_status_view_1",
-"ALLOC_INFO_0",
-"ALLOC_INFO_1",
-"DOS_MCRCC_STALL_CTRL",
-"SAVE_MVC_ENTENSION_0"
-};
-#else
+#define FATAL_ERROR             DOS_SCRATCH16
 #define PRE_MASTER_UPDATE_TIMES DOS_SCRATCH20
 // bit[31] - REQUEST
 // bit[30:0] - MASTER_UPDATE_TIMES
@@ -334,7 +195,6 @@ static const char *reg_name[] = {
 #define SAVE_ref_status_view_1  DOS_SCRATCH28
 #define ALLOC_INFO_0            DOS_SCRATCH29
 #define ALLOC_INFO_1            DOS_SCRATCH30
-#endif
 
 /********************************************
  *  Mailbox command
@@ -342,9 +202,6 @@ static const char *reg_name[] = {
 #define CMD_FINISHED               0
 #define CMD_ALLOC_VIEW             1
 #define CMD_FRAME_DISPLAY          3
-#ifdef DUAL_PROT
-#define CMD_SETINFO                4
-#endif
 #define CMD_DEBUG                  10
 
 static unsigned work_space_adr, decoder_buffer_start, decoder_buffer_end;
@@ -829,18 +686,6 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
         }
         break;
 
-#ifdef DUAL_PROT
-    case CMD_SETINFO:
-        ret = READ_VREG(MAILBOX_DATA_0);
-        if (ret < ARRAY_SIZE(vdec2_prot_reg)) {
-printk("M->S,[%d] %s = 0x%x\n",ret, reg_name[ret], READ_VREG(MAILBOX_DATA_1));
-            WRITE_VREG(vdec2_prot_reg[ret], READ_VREG(MAILBOX_DATA_1));
-        }
-
-        WRITE_VREG(MAILBOX_COMMAND, CMD_FINISHED);
-        break;
-#endif
-
     case CMD_DEBUG:
         printk("M: core_status 0x%08x 0x%08x; ", READ_VREG(CORE_STATUS_M), READ_VREG(CORE_STATUS_S));
         switch (READ_VREG(MAILBOX_DATA_0)) {
@@ -934,17 +779,6 @@ static irqreturn_t vh264_4k2k_vdec2_isr(int irq, void *dev_id)
         }
         break;
 
-#ifdef DUAL_PROT
-    case CMD_SETINFO:
-        ret = READ_VREG(VDEC2_MAILBOX_DATA_0);
-        if (ret < ARRAY_SIZE(prot_reg)) {
-printk("S->M,[%d] %s = 0x%x\n", ret, reg_name[ret], READ_VREG(VDEC2_MAILBOX_DATA_1));
-            WRITE_VREG(prot_reg[ret], READ_VREG(VDEC2_MAILBOX_DATA_1));
-        }
-        WRITE_VREG(VDEC2_MAILBOX_COMMAND, CMD_FINISHED);
-        break;
-#endif
-
     default:
         break;
     }
@@ -978,6 +812,12 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
             printk("H264 4k2k decoder fatal error watchdog.\n");
             fatal_error = 0x10;
         }
+    }
+
+    if (READ_VREG(FATAL_ERROR) != 0) {
+        printk("H264 4k2k decoder ucode fatal error.\n");
+        fatal_error = 0x10;
+        WRITE_VREG(FATAL_ERROR, 0);
     }
 
     while (!kfifo_is_empty(&recycle_q) &&
@@ -1208,12 +1048,6 @@ static void vh264_4k2k_prot_init(void)
     WRITE_VREG(DECODE_SKIP_PICTURE, 0);
     WRITE_VREG(VDEC2_DECODE_SKIP_PICTURE, 0);
 
-#ifdef DUAL_PROT
-    for (i=0; i<ARRAY_SIZE(prot_reg); i++) {
-        WRITE_VREG(prot_reg[i], 0);
-        WRITE_VREG(vdec2_prot_reg[i], 0);
-    }
-#else
     WRITE_VREG(PRE_MASTER_UPDATE_TIMES, 0);
     WRITE_VREG(SLAVE_WAIT_DPB_UPDATE, 0);
     WRITE_VREG(SLAVE_REF_DPB, 0);
@@ -1225,7 +1059,7 @@ static void vh264_4k2k_prot_init(void)
     WRITE_VREG(SAVE_ref_status_view_1, 0);
     WRITE_VREG(ALLOC_INFO_0, 0);
     WRITE_VREG(ALLOC_INFO_1, 0);
-#endif
+    WRITE_VREG(FATAL_ERROR, 0);
 
     SET_VREG_MASK(MDEC_PIC_DC_CTRL, 1<<17);
     SET_VREG_MASK(VDEC2_MDEC_PIC_DC_CTRL, 1<<17);
