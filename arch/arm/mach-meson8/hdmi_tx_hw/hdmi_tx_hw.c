@@ -1691,7 +1691,7 @@ static void hdmi_audio_init(unsigned char spdif_flag)
     tmp_add_data  = tx_i2s_8_channel ? 0xff : 0x03;
     hdmi_wr_reg(TX_AUDIO_SAMPLE, tmp_add_data); // Channel valid for up to 8 channels, 1 bit per channel.
 
-    hdmi_wr_reg(TX_AUDIO_PACK, 0x01); // Enable audio sample packets
+    hdmi_wr_reg(TX_AUDIO_PACK, 0x00); // Enable audio sample packets
 
     // Set N = 4096 (N is not measured, N must be configured so as to be a reference to clock_meter)
     hdmi_wr_reg(TX_SYS1_ACR_N_0, 0x00); // N[7:0]
@@ -2911,10 +2911,11 @@ static int hdmitx_cntl_config(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigne
     case CONF_AUDIO_MUTE_OP:
         if(argv == AUDIO_MUTE) {
             hdmi_wr_reg(TX_AUDIO_PACK, 0x00); // disable audio sample packets
-            hdmi_wr_reg(TX_PACKET_CONTROL_2, hdmi_rd_reg(TX_PACKET_CONTROL_2) | (1<<3));
+            //hdmi_wr_reg(TX_PACKET_CONTROL_2, hdmi_rd_reg(TX_PACKET_CONTROL_2) | (1<<3));
         }
-        if((argv == AUDIO_UNMUTE) && (hdmitx_device->tx_aud_cfg == 1)) {
-            hdmitx_device->audio_param_update_flag = 1;
+        if((argv == AUDIO_UNMUTE) && (hdmitx_device->tx_aud_cfg != 0)) {
+            hdmi_wr_reg(TX_AUDIO_PACK, 0x01);
+            //hdmitx_device->audio_param_update_flag = 1;
         }
         break;
     case CONF_VIDEO_BLANK_OP:

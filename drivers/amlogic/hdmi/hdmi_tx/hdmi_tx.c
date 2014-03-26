@@ -581,7 +581,22 @@ static ssize_t store_edid(struct device * dev, struct device_attribute *attr, co
 static ssize_t show_config(struct device * dev, struct device_attribute *attr, char * buf)
 {
     int pos=0;
+    unsigned char *aud_conf;
+    switch(hdmitx_device.tx_aud_cfg) {
+    case 0:
+        aud_conf = "off";
+        break;
+    case 1:
+        aud_conf = "on";
+        break;
+    case 2:
+        aud_conf = "auto";
+        break;
+    default:
+        aud_conf = "none";
+    }
     pos += snprintf(buf+pos, PAGE_SIZE, "disp switch (force or edid): %s\r\n", (hdmitx_device.disp_switch_config==DISP_SWITCH_FORCE)?"force":"edid");
+    pos += snprintf(buf+pos, PAGE_SIZE, "audio config: %s\r\n", aud_conf);
     return pos;
 }
 
@@ -987,6 +1002,7 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
     audio_sample_size_t n_size = aud_size_map(substream->runtime->sample_bits);
 
     hdmitx_device.audio_param_update_flag = 0;
+    hdmitx_device.audio_notify_flag = 0;
 
     if(audio_param->sample_rate != n_rate) {
         audio_param->sample_rate = n_rate;
@@ -1016,14 +1032,15 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
             audio_check = 1;
         }
         if((!audio_check) && (cmd != AOUT_EVENT_IEC_60958_PCM)) {      // sink don't support current audio mode
-            printk("Sink not support this audio format %d\n", cmd);
+            printk("Sink not support this audio format %lu\n", cmd);
             hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_MUTE);
             hdmitx_device.audio_param_update_flag = 0;
         }
     }
     if(hdmitx_device.audio_param_update_flag == 0)
         hdmi_print(INF, AUD "no update\n");
-
+    else
+        hdmitx_device.audio_notify_flag = 1;
     return 0;
 }
 
@@ -1085,6 +1102,13 @@ static int hdmi_task_handle(void *data)
         if((!hdmi_audio_off_flag)&&(hdmitx_device->audio_param_update_flag)) {
             if(hdmitx_device->hpd_state == 1) {     // plug-in & update audio param
                 hdmitx_set_audio(hdmitx_device, &(hdmitx_device->cur_audio_param), hdmi_ch);
+                if((hdmitx_device->audio_notify_flag == 1) || (hdmitx_device->audio_step == 1)) {
+                    hdmitx_device->audio_notify_flag = 0;
+                    hdmitx_device->audio_step = 0;
+#ifndef CONFIG_AML_HDMI_TX_HDCP
+                    hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_UNMUTE);
+#endif
+                }
                 hdmitx_device->audio_param_update_flag = 0;
                 hdmi_print(INF, AUD "set audio param\n");
             }

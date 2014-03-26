@@ -119,6 +119,8 @@ typedef struct hdmi_tx_dev_s {
     unsigned int  tv_no_edid;           // For some un-well-known TVs, no edid at all
     unsigned int  hpd_lock;
     unsigned int  output_blank_flag;    // if equals to 1, means current video & audio output are blank
+    unsigned int  audio_notify_flag;
+    unsigned int  audio_step;
     hdmi_mo_s hpd;
     hdmi_mo_s hdcp;
 }hdmitx_dev_t;
