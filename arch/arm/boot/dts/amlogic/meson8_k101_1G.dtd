@@ -1377,31 +1377,31 @@ sdio{
 
     aml_audio_codec{
         compatible = "amlogic,audio_codec";
-//        rt5616:rt5616{
-//            codec_name = "rt5616";
-//            i2c_addr = <0x1B>;
-//            i2c_bus = "i2c_bus_d";
-//            id_reg = <0x00>;
-//            id_val = <0x21>;
-//            capless = <0>;
-//            status = "okay";
-//        };
-//        rt5631:rt5631{
-//            codec_name = "rt5631";
-//            i2c_addr = <0x1A>;
-//            i2c_bus = "i2c_bus_b";
-//            id_reg = <0x00>;
-//            id_val = <0x01>;
-//            capless = <0>;
-//            status = "disable";      
-//        };  
-//        wm8960:wm8960{
-//            codec_name = "wm8960";
-//            i2c_addr = <0x1A>;
-//            i2c_bus = "i2c_bus_b";
-//            capless = <1>;
-//	    status = "disable";
-//        };
+        rt5616:rt5616{
+            codec_name = "rt5616";
+            i2c_addr = <0x1B>;
+            i2c_bus = "i2c_bus_d";
+            id_reg = <0x00>;
+            id_val = <0x21>;
+            capless = <0>;
+            status = "okay";
+        };
+        rt5631:rt5631{
+            codec_name = "rt5631";
+            i2c_addr = <0x1A>;
+            i2c_bus = "i2c_bus_b";
+            id_reg = <0x00>;
+            id_val = <0x01>;
+            capless = <0>;
+            status = "disable";      
+        };  
+        wm8960:wm8960{
+            codec_name = "wm8960";
+            i2c_addr = <0x1A>;
+            i2c_bus = "i2c_bus_b";
+            capless = <1>;
+	    status = "disable";
+        };
     };
 
 //$$ DEVICE="aml_m8_sound_card"
