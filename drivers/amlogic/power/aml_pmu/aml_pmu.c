@@ -149,6 +149,7 @@ static int setup_platform_pmu_init_data(struct device_node *node, struct amlogic
 static struct i2c_device_id *find_id_table_by_name(const struct i2c_device_id *look_table, char *name)
 {
     while (look_table->name && look_table->name[0]) {
+        printk("table name:%s, name:%s\n", look_table->name, name);
         if (!strcmp(look_table->name, name)) {
             return (struct i2c_device_id *)look_table;
         }
@@ -161,7 +162,7 @@ static struct amlogic_pmu_init *init_data;
 
 #if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1216)
 extern struct aml_pmu_driver aml1216_pmu_driver;
-static int convert_id_to_dcdc(uint32_t id)
+static int aml_1216_convert_id_to_dcdc(uint32_t id)
 {
     int dcdc = 0; 
     switch (id) {
@@ -185,7 +186,7 @@ static int convert_id_to_dcdc(uint32_t id)
 
 static int aml1216_set_voltage(uint32_t id, uint32_t min_uV, uint32_t max_uV)
 {
-    int dcdc = convert_id_to_dcdc(id);
+    int dcdc = aml_1216_convert_id_to_dcdc(id);
     uint32_t vol = 0;
     
     if (min_uV > max_uV) {
@@ -200,7 +201,7 @@ static int aml1216_set_voltage(uint32_t id, uint32_t min_uV, uint32_t max_uV)
 
 static int aml1216_get_voltage(uint32_t id, uint32_t *uV)
 {
-    int dcdc = convert_id_to_dcdc(id);
+    int dcdc = aml_1216_convert_id_to_dcdc(id);
 
     if (dcdc >= 1 && dcdc <= 3) {
         return aml1216_get_dcdc_voltage(dcdc, uV);    
@@ -220,7 +221,7 @@ struct aml_dvfs_driver aml1216_dvfs_driver = {
 
 #if defined(CONFIG_AML_DVFS) && defined(CONFIG_AML1218)
 extern struct aml_pmu_driver aml1218_pmu_driver;
-static int convert_id_to_dcdc(uint32_t id)
+static int aml_1218_convert_id_to_dcdc(uint32_t id)
 {
     int dcdc = 0; 
     switch (id) {
@@ -244,7 +245,7 @@ static int convert_id_to_dcdc(uint32_t id)
 
 static int aml1218_set_voltage(uint32_t id, uint32_t min_uV, uint32_t max_uV)
 {
-    int dcdc = convert_id_to_dcdc(id);
+    int dcdc = aml_1218_convert_id_to_dcdc(id);
     uint32_t vol = 0;
     
     if (min_uV > max_uV) {
@@ -259,7 +260,7 @@ static int aml1218_set_voltage(uint32_t id, uint32_t min_uV, uint32_t max_uV)
 
 static int aml1218_get_voltage(uint32_t id, uint32_t *uV)
 {
-    int dcdc = convert_id_to_dcdc(id);
+    int dcdc = aml_1218_convert_id_to_dcdc(id);
 
     if (dcdc >= 1 && dcdc <= 3) {
         return aml1218_get_dcdc_voltage(dcdc, uV);    
