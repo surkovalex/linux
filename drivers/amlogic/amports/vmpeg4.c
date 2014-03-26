@@ -702,7 +702,7 @@ static void vmpeg4_prot_init(void)
 #endif
 
     /* notify ucode the buffer offset */
-    WRITE_VREG(AV_SCRATCH_F, buf_offset >> 12);
+    WRITE_VREG(AV_SCRATCH_F, buf_offset);
 
     /* disable PSCALE for hardware sharing */
     WRITE_VREG(PSCALE_CTRL, 0);

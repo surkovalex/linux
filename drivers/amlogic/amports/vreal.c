@@ -588,7 +588,7 @@ static void vreal_prot_init(void)
 #endif
 
     /* notify ucode the buffer offset */
-    WRITE_VREG(AV_SCRATCH_F, buf_offset >> 12);
+    WRITE_VREG(AV_SCRATCH_F, buf_offset);
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6  
     WRITE_VREG(DOS_SW_RESET0, (1<<9) | (1<<8));
