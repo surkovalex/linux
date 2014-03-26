@@ -32,6 +32,7 @@
 #include <media/v4l2-device.h>
 #include <media/v4l2-ioctl.h>
 #include <linux/wakelock.h>
+#include <linux/vmalloc.h>
 
 #include <linux/i2c.h>
 #include <media/v4l2-chip-ident.h>
@@ -4129,7 +4130,7 @@ static int ov5647_open(struct file *file)
     aml_cam_init(&dev->cam_info);
     printk("config path:%s\n",(dev->cam_info).config);
     if((dev->cam_info).config != NULL){
-        if((dev->configure = kmalloc(sizeof(configure_t),0)) != NULL){
+        if((dev->configure = vmalloc(sizeof(configure_t))) != NULL){
             if(parse_config((dev->cam_info).config,dev->configure) == 0){
                 printk("parse successfully");
             }else{
@@ -4239,7 +4240,7 @@ static int ov5647_close(struct file *file)
                 dev->configure->aet.aet[i].aet_table = NULL;
             }
         }
-        kfree(dev->configure);
+        vfree(dev->configure);
         dev->configure = NULL;
     }
     cf = NULL;
