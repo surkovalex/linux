@@ -4077,8 +4077,8 @@ static ssize_t lcd_debug(struct class *class, struct class_attribute *attr, cons
 					case 1:
 						WRITE_LCD_REG(venc_video_mode, 0);
 						WRITE_LCD_REG((venc_test_base+1), 1);
-						WRITE_LCD_REG((venc_test_base+5), pDev->pConf->lcd_basic.h_active / 8);
-						WRITE_LCD_REG((venc_test_base+6), pDev->pConf->lcd_basic.h_active / 8);
+						WRITE_LCD_REG((venc_test_base+5), pDev->pConf->lcd_timing.video_on_pixel);
+						WRITE_LCD_REG((venc_test_base+6), (pDev->pConf->lcd_basic.h_active / 9));
 						WRITE_LCD_REG(venc_test_base, 1);
 						printk("show bist pattern 1\n");
 						break;
