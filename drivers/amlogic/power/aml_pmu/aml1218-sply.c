@@ -60,8 +60,6 @@ struct input_dev                *aml1218_power_key = NULL;
 
 static int power_protection   = 0;
 static int over_discharge_cnt = 0;
-static int battery_pre_state  = 0;
-static int battery_state      = 0;
 static int adc_sign_bit       = 0; 
 #define BATTERY_CHARGING      1
 #define BATTERY_DISCHARGING   0
@@ -1179,29 +1177,11 @@ static int aml1218_update_state(struct aml_charger *charger)
     charger->vbat = aml1218_get_battery_voltage();
     charger->ocv  = aml1218_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);
 
-    battery_pre_state = battery_state;
-
-    if (charger->ext_valid ==1 )
-    {
-        if ( (charger->ibat > 20) && (adc_sign_bit == 1 ) ) 
-        {
-            battery_state = BATTERY_CHARGING;
-        }
-        else
-        {
-            battery_state = BATTERY_DISCHARGING;
-        }
-
-        if( battery_pre_state != battery_state)
-        {
-            if (battery_state == BATTERY_CHARGING)
-            {
-                aml1218_set_charge_enable(0);
-                msleep(1000);
-                aml1218_set_charge_enable(1);               
-            }
-        }
-
+    if (val & 0x40) {
+        AML_DBG("%s, charge timeout, val:0x%02x, reset charger now\n", __func__, val);
+        aml1216_set_charge_enable(0);
+        msleep(1000);
+        aml1216_set_charge_enable(1);
     }
 
     return 0;
