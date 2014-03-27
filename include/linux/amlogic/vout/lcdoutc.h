@@ -154,8 +154,8 @@
 	#define DIV_CTRL_POST_SEL		8	//[9:8]
 	#define DIV_CTRL_DIV_PRE		4	//[6:4]
 
-	#define CLK_TEST_FLAG			31
-	#define CLK_CTRL_AUTO			30
+	#define CLK_CTRL_AUTO			31
+	#define CLK_TEST_FLAG			30
 	#define CLK_CTRL_FRAC			16	//[27:16]
 	#define CLK_CTRL_LEVEL			12	//[13:12]
 	//#define CLK_CTRL_PLL_SEL		10
@@ -198,7 +198,7 @@
 	#define MIPI_PHY_MAX_CLK_IN		(1000 * 1000)
 	#define DIV_PRE_MAX_CLK_IN		(1500 * 1000)
 	#define DIV_POST_MAX_CLK_IN		(1000 * 1000)
-	#define CRT_VID_MAX_CLK_IN		(600 * 1000)
+	#define CRT_VID_MAX_CLK_IN		(1300 * 1000)
 	#define LCD_VENC_MAX_CLK_IN		(333 * 1000)
 #endif
 	/* lcd interface video clk */
@@ -431,35 +431,31 @@ typedef struct {
 
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 typedef struct DSI_Config_s{
-        unsigned int    dsi_clk_div;
-        unsigned int    dsi_clk_max;
-        unsigned int    dsi_clk_min; //2^32 = 4294967296 = 4.2G
-        unsigned int    denominator; //
-        unsigned int    numerator;//default 10000
-				unsigned int    mipi_init_flag;
-        unsigned int    hline;
-        unsigned int    hsa;
-        unsigned int    hbp;
-        unsigned int    vsa;
-        unsigned int    vbp;
-        unsigned int    vfp;
-        unsigned int    vact;
+    unsigned char lane_num;
+    unsigned int bit_rate_max;
+    unsigned int bit_rate_min;
+    unsigned int bit_rate;
+    unsigned int factor_denominator;
+    unsigned int factor_numerator;
+    unsigned int hline;
+    unsigned int hsa;
+    unsigned int hbp;
+    unsigned int vsa;
+    unsigned int vbp;
+    unsigned int vfp;
+    unsigned int vact;
 
-        unsigned int    venc_color_type;
-        unsigned int    dpi_color_type;
-        unsigned char   dpi_chroma_subsamp;
-        unsigned int    venc_fmt;
-        unsigned char   lane_num;
-        unsigned char   trans_mode;
+    unsigned int venc_data_width;
+    unsigned int dpi_data_format;
+    unsigned int venc_fmt;
+    unsigned char operation_mode;  //mipi-dsi operation mode: video, command
+    unsigned char transfer_ctrl;  //LP mode auto stop clk lane
+    unsigned char video_mode_type;  //burst, non-burst(sync pulse, sync event)
 
-        unsigned char   trans_type;    //such ad hs or lp
-        unsigned char   ack_type;      //if need bta ack check
-        unsigned char   tear_switch;
-
-        unsigned char   is_rgb;        //whether dpi color type is rgb
-        unsigned char   mipi_init[20];
-        unsigned int 		sleep_out_delay;
-        unsigned int 		display_on_delay;
+    unsigned char init_on_flag;
+    unsigned char init_off_flag;
+    unsigned int sleep_out_delay;
+    unsigned int display_on_delay;
 }DSI_Config_t;
 
 typedef struct {
