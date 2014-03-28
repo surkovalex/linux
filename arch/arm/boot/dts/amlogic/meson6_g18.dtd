@@ -674,13 +674,13 @@ void root_func(){
 	adc_keypad{
 		compatible = "amlogic,adc_keypad";
 		status = "okay";
-		key_num = <5>;
+		key_num = <6>;
 		name_len = <20>;
-		key_name = "menu","vol-","vol+","back","home";
-		key_code = <139 114 115 158 102>;
-		key_chan = <4 4 4 4 4>;
-		key_val = <9 275 150 392 513>;
-		key_tolerance = <40 40 40 40 40>;
+		key_name = "menu","vol-","vol+","back","home","ok";
+		key_code = <139 114 115 158 102 232>;
+		key_chan = <4 4 4 4 4 4>;
+		key_val = <9 150 275 392 513 639>;
+		key_tolerance = <40 40 40 40 40 40>;
 	};
 //$$ DEVICE="key_input"
 //$$ L2 PROP_STR = "status"
