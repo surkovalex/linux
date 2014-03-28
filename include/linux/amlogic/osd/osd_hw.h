@@ -51,6 +51,7 @@ extern void  osd_set_colorkey_hw(u32 index,u32 bpp,u32 colorkey ) ;
 extern void  osd_srckey_enable_hw(u32  index,u8 enable);
 extern void  osd_set_gbl_alpha_hw(u32 index,u32 gbl_alpha);
 extern u32  osd_get_gbl_alpha_hw(u32  index);
+extern void osd_set_color_mode(int index, const color_bit_define_t *color);
 extern void osd_setup(struct osd_ctl_s *osd_ctl,
                 u32 xoffset,
                 u32 yoffset,

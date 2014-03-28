@@ -512,7 +512,7 @@ void osd_set_scan_mode(int index)
 		}
 	}
 
-	if(osd_hw.free_scale_enable[OSD1]){
+	if(osd_hw.free_scale_enable[OSD1] || osd_hw.free_scale_enable[OSD2]){
 		osd_hw.scan_mode= SCAN_MODE_PROGRESSIVE;
 	}
 }
@@ -589,6 +589,13 @@ void  osd_srckey_enable_hw(u32  index,u8 enable)
 		osd_wait_vsync_hw();
 	}
 
+}
+
+void osd_set_color_mode(int index, const color_bit_define_t *color) {
+    if(color != osd_hw.color_info[index]) {
+        osd_hw.color_info[index] = color;
+        add_to_update_list(index, OSD_COLOR_MODE);
+    }
 }
 
 void osddev_update_disp_axis_hw(
@@ -785,33 +792,27 @@ void osd_free_scale_enable_hw(u32 index,u32 enable)
 			osd_hw.free_scale_enable[index] = 0;
 		}
 
-		if (index==OSD1)
+		if (osd_hw.free_scale_enable[index])
 		{
-			if (osd_hw.free_scale_enable[index])
-			{
-				if ((osd_hw.free_scale_data[OSD1].x_end > 0) && hfs_enable){
-					osd_hw.free_scale_width[OSD1] = osd_hw.free_scale_data[OSD1].x_end - \
-									osd_hw.free_scale_data[OSD1].x_start;
-				}
-
-				if ((osd_hw.free_scale_data[OSD1].y_end > 0) && vfs_enable){
-					osd_hw.free_scale_height[OSD1] = osd_hw.free_scale_data[OSD1].y_end -\
-									 osd_hw.free_scale_data[OSD1].y_start;
-				}
-				osd_set_scan_mode(index);
-				add_to_update_list(index,OSD_COLOR_MODE);
-				add_to_update_list(index,OSD_FREESCALE_COEF);
-				add_to_update_list(index,DISP_GEOMETRY);
-				add_to_update_list(index,DISP_FREESCALE_ENABLE);
-			}else{
-				osd_set_scan_mode(index);
-				add_to_update_list(index,OSD_COLOR_MODE);
-				add_to_update_list(index,DISP_GEOMETRY);
-				add_to_update_list(index,DISP_FREESCALE_ENABLE);
+			if ((osd_hw.free_scale_data[index].x_end > 0) && hfs_enable){
+				osd_hw.free_scale_width[index] = osd_hw.free_scale_data[index].x_end - \
+								osd_hw.free_scale_data[index].x_start;
 			}
+
+			if ((osd_hw.free_scale_data[index].y_end > 0) && vfs_enable){
+				osd_hw.free_scale_height[index] = osd_hw.free_scale_data[index].y_end -\
+								 osd_hw.free_scale_data[index].y_start;
+			}
+			osd_set_scan_mode(index);
+			add_to_update_list(index,OSD_COLOR_MODE);
+			add_to_update_list(index,OSD_FREESCALE_COEF);
+			add_to_update_list(index,DISP_GEOMETRY);
+			add_to_update_list(index,DISP_FREESCALE_ENABLE);
 		}else{
-			add_to_update_list(OSD2,DISP_GEOMETRY);
-			add_to_update_list(OSD2,OSD_COLOR_MODE);
+			osd_set_scan_mode(index);
+			add_to_update_list(index,OSD_COLOR_MODE);
+			add_to_update_list(index,DISP_GEOMETRY);
+			add_to_update_list(index,DISP_FREESCALE_ENABLE);
 		}
 
 		osd_enable_hw(osd_hw.enable[index],index);
@@ -1548,12 +1549,18 @@ static  void  osd2_update_disp_freescale_enable(void)
 {
 	int hf_phase_step, vf_phase_step;
 	int dst_w, dst_h;
+	int bot_ini_phase;
 	int vsc_ini_rcv_num, vsc_ini_rpt_p0_num;
+	int vsc_bot_rcv_num = 6, vsc_bot_rpt_p0_num = 2;
 	int hsc_ini_rcv_num, hsc_ini_rpt_p0_num;
 
 	int hf_bank_len = 4;
 	int vf_bank_len = 4;
 
+	if(osd_hw.scale_workaround){
+		vf_bank_len = 2;
+	}
+    
 	hsc_ini_rcv_num = hf_bank_len;
 	vsc_ini_rcv_num = vf_bank_len;
 	hsc_ini_rpt_p0_num = (hf_bank_len/2 - 1) > 0 ?  (hf_bank_len/2 - 1): 0;
@@ -1565,6 +1572,11 @@ static  void  osd2_update_disp_freescale_enable(void)
 
 	dst_h = osd_hw.free_dst_data[OSD2].y_end - osd_hw.free_dst_data[OSD2].y_start+1;
 	vf_phase_step = ((osd_hw.free_scale_height[OSD2]+1) << 20) / dst_h;
+	if (osd_hw.field_out_en){  //interface output
+		bot_ini_phase = ((vf_phase_step/2) >> 4);
+	}else{
+		bot_ini_phase = 0;
+	}
 	vf_phase_step = (vf_phase_step << 4);
 
 	VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_SC_DUMMY_DATA, 0x00808000, 0, 32);
@@ -1574,7 +1586,9 @@ static  void  osd2_update_disp_freescale_enable(void)
 		VSYNCOSD_WR_MPEG_REG_BITS (VPP_OSD_SC_CTRL0, OSD2, 0, 2);
 		VSYNCOSD_WR_MPEG_REG_BITS (VPP_OSD_SC_CTRL0, 0, 4, 8);
 	}else{
-		VSYNCOSD_CLR_MPEG_REG_MASK (VPP_OSD_SC_CTRL0, 1<<3);
+		if (!osd_hw.free_scale_enable[OSD1]){
+		    VSYNCOSD_CLR_MPEG_REG_MASK (VPP_OSD_SC_CTRL0, 1<<3);
+		}
 	}
 
 	if (osd_hw.free_scale_enable[OSD2]){
@@ -1594,16 +1608,36 @@ static  void  osd2_update_disp_freescale_enable(void)
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_HSC_CTRL0, hsc_ini_rpt_p0_num, 8, 2);
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_HSC_CTRL0, 1, 22, 1);
 	}else{
-		VSYNCOSD_CLR_MPEG_REG_MASK(VPP_OSD_HSC_CTRL0, 1<<22);
+		if (!osd_hw.free_scale[OSD1].hfs_enable){
+		    VSYNCOSD_CLR_MPEG_REG_MASK(VPP_OSD_HSC_CTRL0, 1<<22);
+		}
 	}
 
 	if (osd_hw.free_scale[OSD2].vfs_enable){
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, vf_bank_len, 0, 3);
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, vsc_ini_rcv_num, 3, 3);
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, vsc_ini_rpt_p0_num, 8, 2);
+		if (osd_hw.field_out_en){  //interface output
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, vsc_bot_rcv_num, 11, 4);
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, vsc_bot_rpt_p0_num, 16, 2);
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 1, 23, 1);
+		}else{
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 0, 11, 4);
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 0, 16, 2);
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 0, 23, 1);
+		}
+
+		if(osd_hw.scale_workaround){
+			VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 0x1, 21, 1);
+		} else {
+			VSYNCOSD_CLR_MPEG_REG_MASK(VPP_OSD_VSC_CTRL0, 1<<21);
+		}
+        
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_CTRL0, 1, 24, 1);
 	}else{
-		VSYNCOSD_CLR_MPEG_REG_MASK(VPP_OSD_VSC_CTRL0, 1<<24);
+		if (!osd_hw.free_scale[OSD1].vfs_enable){
+		    VSYNCOSD_CLR_MPEG_REG_MASK(VPP_OSD_VSC_CTRL0, 1<<24);
+		}
 	}
 
 	if (osd_hw.free_scale_enable[OSD2]){
@@ -1612,6 +1646,7 @@ static  void  osd2_update_disp_freescale_enable(void)
 
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_PHASE_STEP, vf_phase_step, 0, 28);
 		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_INI_PHASE, 0, 0, 16);
+		VSYNCOSD_WR_MPEG_REG_BITS(VPP_OSD_VSC_INI_PHASE, bot_ini_phase, 16, 16);
 	}
 	remove_from_update_list(OSD2,DISP_FREESCALE_ENABLE);
 }
@@ -1756,10 +1791,14 @@ static   void  osd2_update_enable(void)
 {
 	if (osd_hw.free_scale_mode[OSD2]){
 		if (osd_hw.enable[OSD2] == ENABLE){
-			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
+			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
 			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_POSTBLEND_EN);
 		}else{
-			VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
+			if (osd_hw.enable[OSD1] == ENABLE){
+			    VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
+			} else {
+			    VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND|VPP_OSD2_POSTBLEND);
+			}
 		}
 	}else{
 		u32  video_enable;
