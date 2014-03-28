@@ -284,6 +284,54 @@
 		};
 	};
 
+/$$ DEVICE="meson_vcck_dvfs_driver"
+/$$ L2 PROP_STR = "status"
+/$$ L2 PROP_U32 = "default_uV"
+/$$ L2 PROP_STR = "pinctrl-names"
+/$$ L2 PROP_CHOICE "meson_vcck_dvfs_pin_0_match" = "pinctrl-0"
+/$$ L2 PROP_U32 = "use_pwm"
+/$$ L2 PROP_U32 = "table_count"
+/$$ L2 PROP_U32 16*2 = "cs_voltage_table"
+	meson_vcck_dvfs_driver {
+		compatible = "amlogic, meson_vcck_dvfs";
+		dev_name = "meson_vcck_dvfs_driver";
+		status = "ok";
+		default_uV = <1280000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&aml_pwm_pins>;
+		use_pwm = <1>;
+		pmw_controller = "PWM_B";
+		table_count = <16>;
+		cs_voltage_table = <
+			/*
+			* Note: This table is hardware depended, If your hardware use PWM method,
+			* then first line in this table is PWM register value, second line is
+			* voltage of VCCK according this PWM register value. If your platform use
+			* constant-current source to adjust vcck voltage, then the first line should
+			* set to 0, means not valid, member 'use_pwm' in this node should set to 0.
+			*
+			*  ---- This table must be in ascending order by voltage ----
+			*
+			*  PWM value       VCCK voltage
+			*/
+			0x130009	1010000
+			0x12000a	1050000
+			0x11000b	1070000
+			0x10000c	1090000
+			0x0f000d	1110000
+			0x0e000e	1130000
+			0x0d000f	1150000
+			0x0c0010	1170000
+			0x0b0011	1190000
+			0x0a0012	1210000
+			0x090013	1220000
+			0x080014	1240000
+			0x070015	1270000
+			0x060016	1280000
+			0x050017	1300000
+			0x040018	1320000
+		>;
+	};
 
 /// ***************************************************************************************
 ///	-	USB Controller
@@ -582,6 +630,18 @@
 					   3 0x5400000
 					   7 0x10000000>;
 			amlogic,pins = "GPIOZ_14", "GPIOZ_15", "GPIOZ_16", "GPIOZ_17", "GPIOZ_19";
+		};
+
+		//$$ MATCH "meson_vcck_dvfs_pin_0_match" = "&aml_pwm_pins"
+		//$$ L2 PROP_U32 2 = "amlogic,setmask"
+		//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+		//$$ L2 PROP_STR = "amlogic,pins"
+		aml_pwm_pins:aml_pwm {
+			amlogic,setmask = <2 0x2>;
+			amlogic,clrmask = <1 0x200000
+					   7 0x40000000
+					   9 0x8000000>;
+			amlogic,pins = "GPIOP_5";
 		};
 
 		sdio_all_pins:sdio_all_pins {
