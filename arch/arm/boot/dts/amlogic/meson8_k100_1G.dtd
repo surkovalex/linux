@@ -1407,6 +1407,7 @@ sdio{
             "MICBIAS","MAIN MIC",
             "LINPUT1","MICBIAS";
         mute_gpio = "GPIOY_15";
+        sleep_time = <130>;
         hp_paraments = <800 300 0 5 1>;
 		pinctrl-names = "aml_snd_m8";
 		pinctrl-0 = <&audio_pins>;

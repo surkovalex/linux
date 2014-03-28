@@ -457,7 +457,7 @@ static int speaker_events(struct snd_soc_dapm_widget *w,
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
 		amlogic_set_value(p_audio->gpio_mute, 1, "mute_spk");
-        msleep(50);
+        msleep(p_audio->sleep_time);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		amlogic_set_value(p_audio->gpio_mute, 0, "mute_spk");
@@ -560,6 +560,11 @@ static int aml_asoc_init(struct snd_soc_pcm_runtime *rtd)
         printk("hp detect paraments: h=%d,l=%d,mic=%d,det=%d,ch=%d \n",p_aml_audio->hp_val_h,p_aml_audio->hp_val_l,
             p_aml_audio->mic_val,p_aml_audio->hp_detal,p_aml_audio->hp_adc_ch);
     }
+    ret = of_property_read_u32(card->dev->of_node, "sleep_time", &p_aml_audio->sleep_time);
+    if(ret)
+        printk("falied to get spk event delay time paraments from dts file\n");
+    printk("***delay_time = %d****\n",p_aml_audio->sleep_time);
+    
     init_timer(&p_aml_audio->timer);
     p_aml_audio->timer.function = aml_asoc_timer_func;
     p_aml_audio->timer.data = (unsigned long)p_aml_audio;
