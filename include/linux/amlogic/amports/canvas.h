@@ -49,9 +49,6 @@ typedef struct {
 #define AMVDEC_H264_CANVAS_INDEX 0x80
 #define AMVDEC_H264_CANVAS_MAX 0xbf
 
-
-//0x18-0x23  empty
-
 //jpeg dec
 #define JPEGDEC_CANVAS_INDEX   0//0x18//0x3a
 #define JPEGDEC_CANVAS_MAX_INDEX 5//0x1d//0x3f
@@ -120,12 +117,9 @@ typedef struct {
 #define MIPI_CANVAS_INDEX 0x70
 #define MIPI_CANVAS_MAX_INDEX 0x7f
 
-//tvin vdin0: 0x80-0x97 share with h264 decoder only for tvin&camera
-#define VDIN0_CANVAS_INDEX              0x80
-#define VDIN0_CANVAS_MAX_INDEX          0x97
-//tvin vdin1: 0x24-0x3b
-#define VDIN1_CANVAS_INDEX              0x24
-#define VDIN1_CANVAS_MAX_INDEX          0x3B
+//tvin vdin: 0x18-0x3B
+#define VDIN_CANVAS_INDEX              0x18
+#define VDIN_CANVAS_MAX_INDEX          0x3B
 
 #define CAMERA_USER_CANVAS_INDEX             0x98
 #define CAMERA_USER_CANVAS_MAX_INDEX     0xaf
