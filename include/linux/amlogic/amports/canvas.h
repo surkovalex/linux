@@ -149,10 +149,10 @@ typedef struct {
 #define D2D3_CANVAS_DBR_INDEX      0xEE
 #elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
 #define AMVENC_CANVAS_INDEX 0xDB
-#define AMVENC_CANVAS_MAX_INDEX 0xE0
+#define AMVENC_CANVAS_MAX_INDEX 0xE3
 
-#define D2D3_CANVAS_DPG_INDEX      0xE1
-#define D2D3_CANVAS_DBR_INDEX      0xE2
+#define D2D3_CANVAS_DPG_INDEX      0xE4
+#define D2D3_CANVAS_DBR_INDEX      0xE5
 #endif
 
 extern void canvas_config(u32 index, ulong addr, u32 width,

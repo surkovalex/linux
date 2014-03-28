@@ -194,7 +194,7 @@
 //$$ MODULE = "DISP&MM-AVC Video Encoder"
 //$$ DEVICE="amvenc_avc"
 //$$ L2 PROP_STR = "status"
-//$$ L3 PROP_U32 2 ="reg"
+//$$ L3 PROP_U32 ="reserve-memory"
 	amvenc_avc {
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
