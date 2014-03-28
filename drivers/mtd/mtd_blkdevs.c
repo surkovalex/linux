@@ -302,8 +302,12 @@ static int blktrans_ioctl(struct block_device *bdev, fmode_t mode,
 		break;
 		//add this for m6 old nand driver
 	case BLKWIPEPART:
-	ret =0;	
-        break;
+	//printk("blktrans_ioctl BLKWIPEPART \n");
+	if(dev->tr->wipe_part){
+	printk("blktrans_ioctl dev->tr->wipe_part : \n");
+	ret = dev->tr->wipe_part(dev);
+	}
+	break;
 	default:
 		ret = -ENOTTY;
 	}
