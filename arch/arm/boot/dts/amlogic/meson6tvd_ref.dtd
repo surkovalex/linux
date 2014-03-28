@@ -502,13 +502,13 @@
 	adc_keypad {
 		compatible = "amlogic,adc_keypad";
 		status = "okay";
-		key_num = <5>;
+		key_num = <7>;
 		name_len = <20>;
-		key_name = "menu","vol-","vol+","back","home";
-		key_code = <139 114 115 158 102>;
-		key_chan = <4 4 4 4 4>;
-		key_val = <9 275 150 392 513>;
-		key_tolerance = <40 40 40 40 40>;
+		key_name = "back","enter","menu","ch+","ch-","vol+","vol-";
+		key_code = <158 28 139 103 108 106 105>;
+		key_chan = <1 1 1 0 0 0 0>;
+		key_val = <185 372 570 0 186 370 576>;
+		key_tolerance = <40 40 40 40 40 40 40>;
 	};
 
 	key_input {
