@@ -49,11 +49,8 @@ static long amaudio_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 static long amaudio_utils_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
                   
 extern unsigned int aml_i2s_playback_start_addr;	
-extern unsigned int aml_i2s_playback_end_addr;
-extern unsigned int aml_pcm_playback_phy_start_addr;
-extern unsigned int aml_pcm_playback_phy_end_addr;
-
-                      
+extern unsigned int aml_i2s_playback_phy_start_addr;
+                    
 #define AMAUDIO_IOC_MAGIC  'A'                      
 
 #define AMAUDIO_IOC_GET_SIZE			_IOW(AMAUDIO_IOC_MAGIC, 0x00, int)       

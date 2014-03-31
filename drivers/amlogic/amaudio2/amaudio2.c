@@ -125,7 +125,7 @@ static int amaudio_open(struct inode *inode, struct file *file)
   	}
 	
   	amaudio->hw.addr = (char*)aml_i2s_playback_start_addr;
-  	amaudio->hw.paddr = aml_pcm_playback_phy_start_addr;
+  	amaudio->hw.paddr = aml_i2s_playback_phy_start_addr;
   	amaudio->hw.size = get_i2s_out_size();
   	amaudio->hw.rd = get_i2s_out_ptr();
 		

@@ -43,54 +43,52 @@ static const u8 tas5711_regs[DDX_NUM_BYTE_REG] = {
 	0x00, 0x30, 0x0F, 0x82, 0x02,
 };
 
-static u8 TAS5711_subwoofer_table[2][21]={
+static u8 TAS5711_subwoofer_table[2][20]={
 	//0x5A   150Hz-lowpass
-	{0x5A,
-	 0x00,0x00,0x03,0x1D,
+	{0x00,0x00,0x03,0x1D,
 	 0x00,0x00,0x06,0x3A,
 	 0x00,0x00,0x03,0x1D,
 	 0x00,0xFC,0x72,0x05,
 	 0x0F,0x83,0x81,0x85},
 	//0x5B   150HZ-10dB
-	{0x5B,
-	 0x00,0x81,0x50,0x89,
+	{0x00,0x81,0x50,0x89,
 	 0x0F,0x03,0x68,0x8C,
 	 0x00,0x7B,0x6A,0x2F,
 	 0x00,0xFC,0xA3,0x83,
 	 0x0F,0x83,0x51,0x56}
 };
-static u8 TAS5711_drc1_table[3][9]={
+static u8 TAS5711_drc1_table[3][8]={
 	//0x3A   drc1_ae
-	{0x3A,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 	//0x3B   drc1_aa
-	{0x3B,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 	//0x3C   drc1_ad
-	{0x3C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 };
-static u8 tas5711_drc1_tko_table[3][5]={
+static u8 tas5711_drc1_tko_table[3][4]={
 	//0x40   drc1_t
-	{0x40,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00},
 	//0x41   drc1_k
-	{0x41,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00},
 	//0x42   drc1_o
-	{0x42,0x00,0x00,0x00,0x00}
+	{0x00,0x00,0x00,0x00}
 };
 
-static u8 TAS5711_drc2_table[3][9]={
+static u8 TAS5711_drc2_table[3][8]={
 	//0x3D   drc2_ae
-	{0x3D,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 	//0x3E   drc2_aa
-	{0x3E,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 	//0x3F   drc2_ad
-	{0x3D,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 };
-static u8 tas5711_drc2_tko_table[3][5]={
+static u8 tas5711_drc2_tko_table[3][4]={
 	//0x43   drc2_t
-	{0x43,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00},
 	//0x44   drc2_k
-	{0x44,0x00,0x00,0x00,0x00},
+	{0x00,0x00,0x00,0x00},
 	//0x45   drc2_o
-	{0x45,0x00,0x00,0x00,0x00}
+	{0x00,0x00,0x00,0x00}
 };
 
 /* codec private data */
@@ -144,7 +142,7 @@ static int tas5711_set_dai_fmt(struct snd_soc_dai *codec_dai,
 				  unsigned int fmt)
 {
 	//struct snd_soc_codec *codec = codec_dai->codec;
-	CODEC_DEBUG("~~~~%s\n", __func__);
+	CODEC_DEBUG("%s\n", __func__);
 
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBS_CFS:
@@ -181,7 +179,7 @@ static int tas5711_hw_params(struct snd_pcm_substream *substream,
 	//struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	//struct snd_soc_codec *codec = rtd->codec;
 	unsigned int rate;
-	CODEC_DEBUG("~~~~%s\n", __func__);
+	CODEC_DEBUG("%s\n", __func__);
 
 	rate = params_rate(params);
 	pr_debug("rate: %u\n", rate);
@@ -260,11 +258,15 @@ static int tas5711_set_master_vol(struct snd_soc_codec *codec)
 
 	//using user BSP defined master vol config;
 	if(pdata && pdata->custom_master_vol) {
-		CODEC_DEBUG("tas5711_set_master_vol::using BSP defined master vol config\n");
+		CODEC_DEBUG("tas5711_set_master_vol::%d\n", pdata->custom_master_vol);
 		snd_soc_write(codec, DDX_MASTER_VOLUME, pdata->custom_master_vol);
 	}
-	else
-		snd_soc_write(codec, DDX_MASTER_VOLUME, 0x00);
+	else{
+		CODEC_DEBUG("%s failed:pdata = %x,pdata->custom_master_vol = %d\n",
+			__func__,pdata,pdata->custom_master_vol);
+		snd_soc_write(codec, DDX_MASTER_VOLUME, 0x30);
+	}
+
 	return 0;
 }
 static int tas5711_set_subwoofer(struct snd_soc_codec *codec)
@@ -279,10 +281,16 @@ static int tas5711_set_subwoofer(struct snd_soc_codec *codec)
 		CODEC_DEBUG("tas5711_set_subwoofer::using BSP defined subwoofer config\n");
 		for(i = 0;i < 2;i++)
 			for(j = 0;j < 20;j++)
-				TAS5711_subwoofer_table[i][j+1] = p[i*20 + j];
+				TAS5711_subwoofer_table[i][j] = p[i*20 + j];
+
+	}else{
+		CODEC_DEBUG("tas5711_set_subwoofer fail, pdata = %x, pdata->custom_sub_bq_table = %d\n",
+		pdata,pdata->custom_sub_bq_table);
+		return -1;
 	}
-	snd_soc_bulk_write_raw(codec, DDX_SUBCHANNEL_BQ_0, TAS5711_subwoofer_table[0], 21);
-	snd_soc_bulk_write_raw(codec, DDX_SUBCHANNEL_BQ_1, TAS5711_subwoofer_table[1], 21);
+
+	snd_soc_bulk_write_raw(codec, DDX_SUBCHANNEL_BQ_0, TAS5711_subwoofer_table[0], 20);
+	snd_soc_bulk_write_raw(codec, DDX_SUBCHANNEL_BQ_1, TAS5711_subwoofer_table[1], 20);
 	return 0;
 }
 //tas5711 DRC for channel L/R
@@ -298,18 +306,29 @@ static int tas5711_set_drc1(struct snd_soc_codec *codec)
 		CODEC_DEBUG("tas5711_set_drc1::using BSP defined drc1 config\n");
 		for(i = 0;i < 3;i++){
 			for(j = 0;j < 8;j++)
-				TAS5711_drc1_table[i][j+1] = p[i*8 + j];
-			snd_soc_bulk_write_raw(codec, DDX_DRC1_AE+i, TAS5711_drc1_table[i], 9);
+				TAS5711_drc1_table[i][j] = p[i*8 + j];
+
+			snd_soc_bulk_write_raw(codec, DDX_DRC1_AE+i, TAS5711_drc1_table[i], 8);
 		}
+	}else{
+		CODEC_DEBUG("tas5711_set_drc1 fail, pdata = %x, pdata->custom_drc1_table = %d\n",
+		pdata,pdata->custom_drc1_table);
+		return -1;
 	}
+
 	if(pdata && pdata->custom_drc1_tko_table && pdata->custom_drc1_tko_table_len == 12){
 		p = pdata->custom_drc1_tko_table;
 		CODEC_DEBUG("tas5711_set_drc1::using BSP defined drc1 TKO config\n");
 		for(i = 0;i < 3;i++){
 			for(j = 0;j < 4;j++)
-				tas5711_drc1_tko_table[i][j+1]= p[i*4 + j];
-			snd_soc_bulk_write_raw(codec, DDX_DRC1_T+i, tas5711_drc1_tko_table[i], 5);
+				tas5711_drc1_tko_table[i][j]= p[i*4 + j];
+
+			snd_soc_bulk_write_raw(codec, DDX_DRC1_T+i, tas5711_drc1_tko_table[i], 4);
 		}
+	}else{
+		CODEC_DEBUG("tas5711_set_drc1 fail, pdata = %x, pdata->custom_drc1_tko_table = %d\n",
+		pdata,pdata->custom_drc1_tko_table);
+		return -1;
 	}
 	return 0;
 }
@@ -326,19 +345,31 @@ static int tas5711_set_drc2(struct snd_soc_codec *codec)
 		CODEC_DEBUG("tas5711_set_drc2::using BSP defined drc2 config\n");
 		for(i = 0;i < 3;i++){
 			for(j = 0;j < 8;j++)
-				TAS5711_drc2_table[i][j+1] = p[i*8 + j];
-			snd_soc_bulk_write_raw(codec, DDX_DRC2_AE+i, TAS5711_drc2_table[i], 9);
+				TAS5711_drc2_table[i][j] = p[i*8 + j];
+
+			snd_soc_bulk_write_raw(codec, DDX_DRC2_AE+i, TAS5711_drc2_table[i], 8);
 		}
+	}else{
+		CODEC_DEBUG("tas5711_set_drc2 fail, pdata = %x, pdata->custom_drc2_table = %d\n",
+		pdata,pdata->custom_drc2_table);
+		return -1;
 	}
+
 	if(pdata && pdata->custom_drc2_tko_table && pdata->custom_drc2_tko_table_len == 12){
 		p = pdata->custom_drc2_tko_table;
 		CODEC_DEBUG("tas5711_set_drc2::using BSP defined drc2 TKO config\n");
 		for(i = 0;i < 3;i++){
 			for(j = 0;j < 4;j++)
-				tas5711_drc2_tko_table[i][j+1] = p[i*4 + j];
-			snd_soc_bulk_write_raw(codec, DDX_DRC2_T+i, tas5711_drc2_tko_table[i], 5);
+				tas5711_drc2_tko_table[i][j] = p[i*4 + j];
+
+			snd_soc_bulk_write_raw(codec, DDX_DRC2_T+i, tas5711_drc2_tko_table[i], 4);
 		}
+	}else{
+		CODEC_DEBUG("tas5711_set_drc2 fail, pdata = %x, pdata->custom_drc2_tko_table = %d\n",
+		pdata,pdata->custom_drc2_tko_table);
+		return -1;
 	}
+
 	return 0;
 }
 
@@ -346,7 +377,7 @@ static int tas5711_set_drc(struct snd_soc_codec *codec)
 {
 	struct tas5711_platform_data *pdata = dev_get_platdata(codec->dev);
 	char drc_mask = 0;
-	u8 tas5711_drc_ctl_table[] = {0x46,0x00,0x00,0x00,0x00};
+	u8 tas5711_drc_ctl_table[] = {0x00,0x00,0x00,0x00};
 	if(pdata && pdata->enable_ch1_drc){
 		drc_mask |= 0x01;
 		tas5711_set_drc1(codec);
@@ -355,8 +386,8 @@ static int tas5711_set_drc(struct snd_soc_codec *codec)
 		drc_mask |= 0x02;
 		tas5711_set_drc2(codec);
 	}
-	tas5711_drc_ctl_table[4] = drc_mask;
-	snd_soc_bulk_write_raw(codec, DDX_DRC_CTL, tas5711_drc_ctl_table, 5);
+	tas5711_drc_ctl_table[3] = drc_mask;
+	snd_soc_bulk_write_raw(codec, DDX_DRC_CTL, tas5711_drc_ctl_table, 4);
 	return 0;
 }
 
@@ -368,10 +399,16 @@ static int tas5711_set_eq_biquad(struct snd_soc_codec *codec)
 	u8 tas5711_bq_table[21];
 	struct tas5711_priv *tas5711 = snd_soc_codec_get_drvdata(codec);
 	struct tas5711_platform_data *pdata = tas5711->pdata;
-	struct tas5711_eq_cfg *cfg = pdata->eq_cfgs;
+	struct tas5711_eq_cfg *cfg;
 
-	CODEC_DEBUG("tas5711_set_eq_biquad::using \
-		BSP defined EQ biquad config::%s\n", cfg[tas5711->eq_cfg].name);
+	if(!pdata)
+		return 0;
+
+	if(!(cfg = pdata->eq_cfgs))
+		return 0;
+
+	CODEC_DEBUG("tas5711_set_eq_biquad::using BSP defined EQ biquad config::%s\n",
+										cfg[tas5711->eq_cfg].name);
 	p = cfg[tas5711->eq_cfg].regs;
 
 	for(i = 0;i < 2;i++){
@@ -380,13 +417,12 @@ static int tas5711_set_eq_biquad(struct snd_soc_codec *codec)
 				addr = (DDX_CH1_BQ_0 + i*7 + j);
 			else
 				addr = (DDX_CH1_BQ_7 + i*4 + j - 7);
-			tas5711_bq_table[0] = addr;
 			for(k = 0;k < 20;k++){
-				tas5711_bq_table[k+1]= p[i*9*20 + j*20 + k];
-				printk(KERN_DEBUG "[%d]=%#x\n",k,tas5711_bq_table[k+1]);
+				tas5711_bq_table[k]= p[i*9*20 + j*20 + k];
+				printk(KERN_DEBUG "[%d]=%#x\n",k,tas5711_bq_table[k]);
 			}
 			printk(KERN_DEBUG "\n");
-			snd_soc_bulk_write_raw(codec, addr, tas5711_bq_table, 21);
+			snd_soc_bulk_write_raw(codec, addr, tas5711_bq_table, 20);
 		}
 	}
 	return 0;
@@ -418,12 +454,13 @@ static int tas5711_get_eq_enum(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
+
 static int tas5711_set_eq(struct snd_soc_codec *codec)
 {
 	int i = 0, ret = 0;
 	struct tas5711_priv *tas5711 = snd_soc_codec_get_drvdata(codec);
 	struct tas5711_platform_data *pdata = tas5711->pdata;
-	u8 tas5711_eq_ctl_table[] = {0x50,0x00,0x00,0x00,0x80};
+	u8 tas5711_eq_ctl_table[] = {0x00,0x00,0x00,0x80};
 	struct tas5711_eq_cfg *cfg = pdata->eq_cfgs;
 
 	if(!pdata)
@@ -434,7 +471,7 @@ static int tas5711_set_eq(struct snd_soc_codec *codec)
 			SOC_ENUM_EXT("EQ Mode", tas5711->eq_conf_enum,
 					tas5711_get_eq_enum, tas5711_put_eq_enum);
 
-		tas5711->eq_conf_texts = kmalloc(sizeof(char *) * pdata->num_eq_cfgs, GFP_KERNEL);
+		tas5711->eq_conf_texts = kzalloc(sizeof(char *) * pdata->num_eq_cfgs, GFP_KERNEL);
 		if(!tas5711->eq_conf_texts){
 			dev_err(codec->dev,
 				"Fail to allocate %d EQ config tests\n",
@@ -455,9 +492,33 @@ static int tas5711_set_eq(struct snd_soc_codec *codec)
 
 	tas5711_set_eq_biquad(codec);
 
-	tas5711_eq_ctl_table[4] &= 0x7F;
+	tas5711_eq_ctl_table[3] &= 0x7F;
 	snd_soc_bulk_write_raw(codec, DDX_BANKSWITCH_AND_EQCTL,
-						tas5711_eq_ctl_table, 5);
+						tas5711_eq_ctl_table, 4);
+	return 0;
+}
+
+static int tas5711_customer_init(struct snd_soc_codec *codec)
+{
+    int i = 0;
+	char data[4];
+    struct tas5711_platform_data *pdata = dev_get_platdata(codec->dev);
+
+	if (pdata && pdata->init_regs) {
+		if(pdata->num_init_regs != 4){
+			printk("Error: num_init_regs = %d\n", pdata->num_init_regs);
+			return -1;
+		}
+		for (i = 0; i < pdata->num_init_regs; i++) {
+			data[i] = pdata->init_regs[i];
+		}
+	}else{
+		printk("%s fail: pdata = %x, pdata->init_regs = %d\n",
+					__func__,pdata,pdata->init_regs);
+		return -1;
+	}
+
+	snd_soc_bulk_write_raw(codec, data[0], data, 4);
 	return 0;
 }
 
@@ -488,7 +549,7 @@ static int init_reg_write(struct snd_soc_codec *codec, unsigned int reg, const v
     unsigned char data_buf[64] = { 0 };
     struct tas5711_platform_data *pdata = dev_get_platdata(codec->dev);
     struct tas57xx_reg_cfg *reg_cfgs = NULL;
-printk("5711 %s\n", __func__);
+	printk("5711 %s\n", __func__);
     tmp_index = getRegConfigDataIndex(codec, reg);
     if (tmp_index < 0) {
         if (len == 2) {
@@ -532,10 +593,10 @@ static int init_snd_soc_write(struct snd_soc_codec *codec, unsigned int reg, uns
 static int tas5711_init(struct snd_soc_codec *codec)
 {
 	int ret = 0;
-	unsigned char burst_data[][5]= {
-		{DDX_INPUT_MUX,0x00,0x01,0x77,0x72},
-		{DDX_CH4_SOURCE_SELECT,0x00,0x00,0x42,0x03},
-		{DDX_PWM_MUX,0x01,0x01,0x32,0x45},
+	unsigned char burst_data[][4]= {
+		{0x00,0x01,0x77,0x72},
+		{0x00,0x00,0x42,0x03},
+		{0x01,0x01,0x32,0x45},
 	};
 	struct tas5711_priv *tas5711 = snd_soc_codec_get_drvdata(codec);
 	struct tas5711_platform_data *pdata = tas5711->pdata;
@@ -553,9 +614,9 @@ static int tas5711_init(struct snd_soc_codec *codec)
 */
 	snd_soc_write(codec, DDX_BKND_ERR, 0x02);
 
-	snd_soc_bulk_write_raw(codec, DDX_INPUT_MUX, burst_data[0], 5);
-	snd_soc_bulk_write_raw(codec, DDX_CH4_SOURCE_SELECT, burst_data[1], 5);
-	snd_soc_bulk_write_raw(codec, DDX_PWM_MUX, burst_data[2], 5);
+	snd_soc_bulk_write_raw(codec, DDX_INPUT_MUX, burst_data[0], 4);
+	snd_soc_bulk_write_raw(codec, DDX_CH4_SOURCE_SELECT, burst_data[1], 4);
+	snd_soc_bulk_write_raw(codec, DDX_PWM_MUX, burst_data[2], 4);
 
 	//subwoofer
 	if((ret = tas5711_set_subwoofer(codec)) < 0)
@@ -564,8 +625,11 @@ static int tas5711_init(struct snd_soc_codec *codec)
 	if((ret = tas5711_set_drc(codec)) < 0)
 		CODEC_DEBUG("fail to set tas5711 drc\n");
 	//eq
-	//if((ret = tas5711_set_eq(codec)) < 0)
-	//	CODEC_DEBUG("fail to set tas5711 eq\n");
+	if((ret = tas5711_set_eq(codec)) < 0)
+		CODEC_DEBUG("fail to set tas5711 eq\n");
+	//init
+	if((ret = tas5711_customer_init(codec)) < 0)
+		CODEC_DEBUG("fail to set tas5711 customer init\n");
 
 	snd_soc_write(codec, DDX_VOLUME_CONFIG, 0xD1);
 	snd_soc_write(codec, DDX_SYS_CTL_2, 0x84);
@@ -614,7 +678,7 @@ static int tas5711_probe(struct snd_soc_codec *codec)
 
 static int tas5711_remove(struct snd_soc_codec *codec)
 {
-	CODEC_DEBUG("~~~~~~~~~~~~%s", __func__);
+	CODEC_DEBUG("%s \n", __func__);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
     unregister_early_suspend(&early_suspend);

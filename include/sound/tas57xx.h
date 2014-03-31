@@ -5,26 +5,26 @@
 #define TAS57XX_EQ_BQS 9
 #define TAS57XX_EQ_CHNLS 2
 #define TAS57XX_EQ_BYTES (TAS57XX_EQ_REGS * TAS57XX_EQ_BQS * TAS57XX_EQ_CHNLS)
-
+#define NAME_SIZE 12
 struct tas57xx_reg_cfg {
     const char *reg_data;
 };
 
 struct tas5711_eq_cfg {
-	const char *name;
-	const char *regs;
+	char name[NAME_SIZE];
+	char *regs;
 	int reg_bytes;
 };
 
 struct tas5711_platform_data {
     int (*init_func)(void);
-    int (*early_suspend_func)();
-    int (*suspend_func)();
-    int (*resume_func)();
-    int (*late_resume_func)();
+    int (*early_suspend_func)(void);
+    int (*suspend_func)(void);
+    int (*resume_func)(void);
+    int (*late_resume_func)(void);
     char *custom_init_value_table;
     int init_value_table_len;
-    struct tas57xx_reg_cfg *init_regs;
+    char *init_regs;
     int num_init_regs;
     char *custom_drc1_table;
     int custom_drc1_table_len;
@@ -38,7 +38,7 @@ struct tas5711_platform_data {
     struct tas5711_eq_cfg *eq_cfgs;
     char *custom_sub_bq_table;
     int custom_sub_bq_table_len;
-    char custom_master_vol;
+    unsigned int custom_master_vol;
 
     int enable_ch1_drc;
     int enable_ch2_drc;
@@ -54,10 +54,10 @@ struct tas5707_eq_cfg {
 
 struct tas5707_platform_data {
     int (*init_func)(void);
-    int (*early_suspend_func)();
-    int (*suspend_func)();
-    int (*resume_func)();
-    int (*late_resume_func)();
+    int (*early_suspend_func)(void);
+    int (*suspend_func)(void);
+    int (*resume_func)(void);
+    int (*late_resume_func)(void);
     char *custom_init_value_table;
     int init_value_table_len;
     struct tas57xx_reg_cfg *init_regs;

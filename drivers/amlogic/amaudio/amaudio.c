@@ -72,7 +72,6 @@ extern int audio_in_buf_ready;
 
 extern unsigned int aml_i2s_playback_start_addr;
 extern unsigned int aml_i2s_capture_start_addr;
-extern unsigned int aml_i2s_capture_start_phy;
 extern unsigned int aml_i2s_capture_buf_size;
 
 static dev_t amaudio_devno;

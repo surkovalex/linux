@@ -61,18 +61,18 @@ extern unsigned IEC958_mode_codec;
 
 unsigned int aml_i2s_playback_start_addr = 0;
 unsigned int aml_i2s_capture_start_addr  = 0;
-
 unsigned int aml_pcm_playback_end_addr = 0;
 unsigned int aml_pcm_capture_end_addr = 0;
 
-unsigned int aml_i2s_capture_start_phy = 0;
-unsigned int aml_i2s_capture_buf_size = 0;
+unsigned int aml_i2s_playback_phy_start_addr = 0;
+unsigned int aml_i2s_capture_phy_start_addr = 0;
 unsigned int aml_pcm_playback_phy_start_addr = 0;
 unsigned int aml_pcm_capture_phy_start_addr  = 0;
 unsigned int aml_pcm_playback_phy_end_addr = 0;
 unsigned int aml_pcm_capture_phy_end_addr = 0;
-unsigned int aml_pcm_playback_off = 0;
+
 unsigned int aml_i2s_playback_enable = 1;
+unsigned int aml_i2s_capture_buf_size = 0;
 
 unsigned int aml_iec958_playback_start_addr = 0;
 unsigned int aml_iec958_playback_start_phy = 0;
@@ -104,12 +104,10 @@ static int codec_power_switch(struct snd_pcm_substream *substream, unsigned int 
 
 EXPORT_SYMBOL(aml_i2s_playback_start_addr);
 EXPORT_SYMBOL(aml_i2s_capture_start_addr);
-EXPORT_SYMBOL(aml_pcm_playback_off);
 EXPORT_SYMBOL(aml_i2s_playback_enable);
-EXPORT_SYMBOL(aml_pcm_playback_phy_start_addr);
-EXPORT_SYMBOL(aml_pcm_playback_phy_end_addr);
-EXPORT_SYMBOL(aml_pcm_capture_phy_start_addr);
-EXPORT_SYMBOL(aml_pcm_capture_phy_end_addr);
+EXPORT_SYMBOL(aml_i2s_capture_buf_size);
+EXPORT_SYMBOL(aml_i2s_playback_phy_start_addr);
+EXPORT_SYMBOL(aml_i2s_capture_phy_start_addr);
 
 static void aml_codec_power_switch_queue(struct work_struct* work)
 {
@@ -285,8 +283,9 @@ static int aml_pcm_preallocate_dma_buffer(struct snd_pcm *pcm,
             aml_i2s_playback_start_addr = (unsigned int)buf->area;
 		    aml_pcm_playback_end_addr = (unsigned int)buf->area + size;
 
-		aml_pcm_playback_phy_start_addr = buf->addr;
-		aml_pcm_playback_phy_end_addr = buf->addr+size;
+			aml_pcm_playback_phy_start_addr = buf->addr;
+			aml_pcm_playback_phy_end_addr = buf->addr+size;
+			aml_i2s_playback_phy_start_addr = aml_pcm_playback_phy_start_addr;
 
         /* alloc iec958 buffer */
         aml_iec958_playback_start_addr = (unsigned int)dma_alloc_coherent(pcm->card->dev, size*4,
@@ -312,10 +311,11 @@ static int aml_pcm_preallocate_dma_buffer(struct snd_pcm *pcm,
 
             aml_i2s_capture_start_addr = (unsigned int)buf->area;
 		    aml_pcm_capture_end_addr = (unsigned int)buf->area+size;
-		    aml_i2s_capture_start_phy = buf->addr;
 		    aml_i2s_capture_buf_size = size;
 		    aml_pcm_capture_phy_start_addr = buf->addr;
 		    aml_pcm_capture_phy_end_addr = buf->addr+size;
+			aml_i2s_capture_phy_start_addr = aml_pcm_capture_phy_start_addr;
+
 	    }
 
 	    if (!buf->area)
