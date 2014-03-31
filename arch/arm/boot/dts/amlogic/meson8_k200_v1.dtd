@@ -225,16 +225,16 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "reg"
 //$$ L2 PROP_U32 = "irq"
 //$$ L2 PROP_U32 = "vdin_id"
-//    vdin1{
-//        compatible = "amlogic,vdin";
-//        dev_name = "vdin1";
-//        status = "ok";
-//        reserve-memory = <0x01000000>;
-//	  miracast_size = <1920 1080>;//1920x1080x2x4=17M
-//	  reserve-iomap = "true";
-//        irq = <117>;
-//        vdin_id = <1>;
-//	};
+    vdin1{
+        compatible = "amlogic,vdin";
+        dev_name = "vdin1";
+        status = "ok";
+        reserve-memory = <0x01000000>;
+        miracast_size = <1920 1080>;//1920x1080x2x4=17M
+        reserve-iomap = "true";
+        irq = <117>;
+        vdin_id = <1>;
+    };
 
 /// ***************************************************************************************
 ///	-	DISP&MM-AMLVIDEO2
@@ -242,13 +242,13 @@ void root_func(){
 //$$ DEVICE="amlvideo2"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-//    amlvideo2{
-//		compatible = "amlogic,amlvideo2";
-//		dev_name = "amlvideo2.0";
-//		status = "okay";
-//		reserve-memory = <0x01800000>;
-//		reserve-iomap = "true";
-//	};
+    amlvideo2{
+        compatible = "amlogic,amlvideo2";
+        dev_name = "amlvideo2.0";
+        status = "okay";
+        reserve-memory = <0x01800000>;
+        reserve-iomap = "true";
+    };
 
 /// ***************************************************************************************
 ///	-	ION

@@ -922,27 +922,27 @@ sdio{
 //$$ L3 PROP_STR ="plat-names"
 //$$ L2 PROP_U32 = "plat-num"
 //$$ L2 PROP_CHOICE "plat-part-0_match" = "plat-part-0"
-//	nand{
-//		compatible = "amlogic,aml_nand";
-//		dev_name = "nand";
-//		status = "ok";
-//		reg = <0xd0048600 0x24>;
-//		pinctrl-names = "nand_rb_mod","nand_norb_mod";
-//		pinctrl-0 = <&nand_input_state &conf_nand_state &nand_base>;
-//		pinctrl-1 = <&nand_input_state &conf_nand_state &nand_base>;
-//		device_id = <0>;
-//		plat-names = "nandnormal";
-//		plat-num = <1>;
-//		plat-part-0 = <&normal>;
+	nand{
+		compatible = "amlogic,aml_nand";
+		dev_name = "nand";
+		status = "ok";
+		reg = <0xd0048600 0x24>;
+		pinctrl-names = "nand_rb_mod","nand_norb_mod";
+		pinctrl-0 = <&nand_input_state &conf_nand_state &nand_base>;
+		pinctrl-1 = <&nand_input_state &conf_nand_state &nand_base>;
+		device_id = <0>;
+		plat-names = "nandnormal";
+		plat-num = <1>;
+		plat-part-0 = <&normal>;
 
 //$$ MATCH "plat-part-0_match" = <&normal>
 //$$ L2 PROP_STR 4 = "enable_pad"
 //$$ L2 PROP_STR = "busy_pad"
-//		normal: normal{
-//			enable_pad ="ce0","ce1","ce2","ce3";
-//			busy_pad = "rb0";
-//		};
-//	};
+		normal: normal{
+			enable_pad ="ce0","ce1","ce2","ce3";
+			busy_pad = "rb0";
+		};
+	};
 
 /// ***************************************************************************************
 ///	-	Efuse
@@ -1332,39 +1332,39 @@ sdio{
 //$$ MATCH "Nand_pin_1_match" = "&nand_input_state"
 //$$ L2 PROP_STR 18 = "amlogic,pins"
 //$$ L2 PROP_U32 = "amlogic,enable-output"
-//		nand_input_state:nand_input{
-//			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
-//						"BOOT_5","BOOT_6","BOOT_7","BOOT_12","BOOT_13",
-//						"BOOT_8","BOOT_9","BOOT_10","BOOT_11",
-//						"BOOT_14","BOOT_15","BOOT_16","BOOT_17";
-//			amlogic,enable-output=<1>;
-//		};
+		nand_input_state:nand_input{
+			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
+						"BOOT_5","BOOT_6","BOOT_7","BOOT_12","BOOT_13",
+						"BOOT_8","BOOT_9","BOOT_10","BOOT_11",
+						"BOOT_14","BOOT_15","BOOT_16","BOOT_17";
+			amlogic,enable-output=<1>;
+		};
 		
 //$$ MATCH "Nand_pin_0_match" = "&conf_nand_state"
 //$$ MATCH "Nand_pin_1_match" = "&conf_nand_state"
 //$$ L2 PROP_STR 9 = "amlogic,pins"
 //$$ L2 PROP_U32 = "amlogic,pullup"
-//		conf_nand_state: conf_nand{
-//			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
-//						"BOOT_5","BOOT_6","BOOT_7","BOOT_15";
-//			amlogic,pullup=<0>;
-//		};
+		conf_nand_state: conf_nand{
+			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
+						"BOOT_5","BOOT_6","BOOT_7","BOOT_15";
+			amlogic,pullup=<0>;
+		};
 		
 //$$ MATCH "Nand_pin_0_match" = "&nand_base"
 //$$ MATCH "Nand_pin_1_match" = "&nand_base"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
 //$$ L2 PROP_U32 3*2 = "amlogic,clrmask"
 //$$ L2 PROP_STR 17 = "amlogic,pins"
-//		nand_base: nand{
-//			amlogic,setmask=<2 0x7fe0000>;
-//			amlogic,clrmask=<	5 0xe
-//							6 0x3f000000
-//							4 0x7c000000>;
-//			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
-//						"BOOT_5","BOOT_6","BOOT_7","BOOT_8","BOOT_9",
-//						"BOOT_10","BOOT_12","BOOT_13",
-//						"BOOT_14","BOOT_15","BOOT_16","BOOT_17";
-//		};
+		nand_base: nand{
+			amlogic,setmask=<2 0x7fe0000>;
+			amlogic,clrmask=<	5 0xe
+							6 0x3f000000
+							4 0x7c000000>;
+			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
+						"BOOT_5","BOOT_6","BOOT_7","BOOT_8","BOOT_9",
+						"BOOT_10","BOOT_12","BOOT_13",
+						"BOOT_14","BOOT_15","BOOT_16","BOOT_17";
+		};
 		
 //$$ MATCH "Card_pin_0_match" = "&sdhc_b_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
