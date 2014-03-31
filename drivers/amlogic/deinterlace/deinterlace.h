@@ -25,9 +25,13 @@
 #endif
 
 #if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)
-#define NEW_DI_V1 //from m6tvc
 #define NEW_DI_TV
-#elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8)
+#define NEW_DI_V1 //from m6tvc
+#elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)
+#define NEW_DI_TV
+#define NEW_DI_V1 //from m6tvc
+#define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
+#elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8)
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
 #endif
@@ -165,15 +169,16 @@ typedef struct di_buf_s{
     pulldown_detect_info_t field_pd_info;
     pulldown_detect_info_t win_pd_info[MAX_WIN_NUM];
 
-	  unsigned long mtn_info[5];
+    unsigned long mtn_info[5];
     int pulldown_mode;
     int win_pd_mode[5];
     process_fun_index_t process_fun_index;
     int early_process_fun_index;
-  	int left_right;/*1,left eye; 0,right eye in field alternative*/
+    int left_right;/*1,left eye; 0,right eye in field alternative*/
     /*below for type of VFRAME_TYPE_POST*/
     struct di_buf_s* di_buf[2];
     struct di_buf_s* di_buf_dup_p[5]; /* 0~4: n-2, n-1, n, n+1, n+2 ; n is the field to display*/
+    struct di_buf_s* di_wr_linked_buf;
 }di_buf_t;
 
 extern uint di_mtn_1_ctrl1;
