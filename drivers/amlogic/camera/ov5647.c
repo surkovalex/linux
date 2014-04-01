@@ -2478,7 +2478,8 @@ static CLASS_ATTR(camera_debug, 0664, i2c_debug_show, i2c_debug_store);
 static void power_down_ov5647(struct ov5647_device *dev)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-	i2c_put_byte(client,0x0104, 0x00);
+	i2c_put_byte(client,0x0103, 0x01);
+	msleep(10);
 	i2c_put_byte(client,0x0100, 0x00);
 }
 
