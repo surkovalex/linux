@@ -283,6 +283,45 @@ static int uboot_display_already(tvmode_t mode)
     */
 }
 
+#ifdef CONFIG_ARCH_MESON8
+static unsigned int vdac_cfg_valid = 0, vdac_cfg_value = 0;
+void cvbs_config_vdac(unsigned int flag, unsigned int cfg)
+{
+	vdac_cfg_value = cfg&0x7;
+
+	// flag 1/0 for validity of vdac config
+	if( (flag&0xc0) == 0x80 )
+		vdac_cfg_valid = 1;
+	else
+		vdac_cfg_valid = 0;
+
+	return ;
+}
+static void cvbs_cntl_output(unsigned int open)
+{
+	unsigned int cntl0=0, cntl1=0;
+	
+	if( open == 0 )// close
+	{
+		cntl0 = 0;
+		cntl1 = 8;
+		printk("cvbs close = 0x%x, 0x%x\n", cntl0, cntl1);
+		WRITE_MPEG_REG(HHI_VDAC_CNTL0, cntl0);
+		WRITE_MPEG_REG(HHI_VDAC_CNTL1, cntl1);
+	}
+	else if( open == 1 )// open
+	{
+		cntl0 = 0x1;
+		cntl1 = (vdac_cfg_valid==0)?0:vdac_cfg_value;
+		printk("cvbs open = 0x%x, 0x%x\n", cntl0, cntl1);
+		WRITE_MPEG_REG(HHI_VDAC_CNTL1, cntl1);
+		WRITE_MPEG_REG(HHI_VDAC_CNTL0, cntl0);
+	}
+
+	return ;
+}
+#endif
+
 int tvoutc_setmode(tvmode_t mode)
 {
     const  reg_t *s;
@@ -312,6 +351,10 @@ int tvoutc_setmode(tvmode_t mode)
             return 0;
         }
     }
+
+#ifdef CONFIG_ARCH_MESON8
+    cvbs_cntl_output(0);
+#endif
     while (MREG_END_MARKER != s->reg)
         setreg(s++);
     printk("%s[%d]\n", __func__, __LINE__);
@@ -390,8 +433,7 @@ printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
 	{
 		msleep(1000);
 
-		aml_write_reg32(P_HHI_VDAC_CNTL0,0x650001);
-		aml_write_reg32(P_HHI_VDAC_CNTL1,0x1);
+		cvbs_cntl_output(1);
 	}
 #endif
 //while(1);
