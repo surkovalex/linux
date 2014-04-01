@@ -319,10 +319,10 @@ static int aml_audio_codec_probe(struct platform_device *pdev)
 	struct device_node* child;
 	struct i2c_board_info board_info;
 	struct i2c_adapter *adapter;
+	struct i2c_client *client;
 	aml_audio_codec_info_t temp_audio_codec;
 #ifdef CONFIG_SND_AML_M6TV_AUDIO_CODEC
 	struct tas5711_platform_data *pdata;
-	struct i2c_client *client;
 
 	pdata = kzalloc(sizeof(struct tas5711_platform_data), GFP_KERNEL);
 	if (!pdata) {
@@ -358,8 +358,8 @@ static int aml_audio_codec_probe(struct platform_device *pdev)
 
 static int aml_audio_codec_remove(struct platform_device *pdev)
 {
+#ifdef CONFIG_SND_AML_M6TV_AUDIO_CODEC
 	int i;
-
 	for(i = 0; i < prob_priv.num_eq; i++){
 		if(prob_priv.eq_configs[i].regs)
 			kfree(prob_priv.eq_configs[i].regs);
@@ -370,6 +370,7 @@ static int aml_audio_codec_remove(struct platform_device *pdev)
 
 	if(prob_priv.sub_bq_table)
 		kfree(prob_priv.sub_bq_table);
+#endif
 
     return 0;
 }
