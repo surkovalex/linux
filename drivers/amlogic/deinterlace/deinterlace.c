@@ -145,6 +145,10 @@ static DEFINE_SPINLOCK(di_lock2);
 static bool overturn = false;
 module_param(overturn,bool,0644);
 MODULE_PARM_DESC(overturn,"overturn /disable reverse");
+
+static bool check_start_drop_prog = false;
+module_param(check_start_drop_prog,bool,0644);
+MODULE_PARM_DESC(check_start_drop_prog,"enable/disable progress start drop function");
 #define CHECK_VDIN_BUF_ERROR
 
 #define DEVICE_NAME "deinterlace"
@@ -176,7 +180,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-03-25a";
+static char version_s[] = "2014-03-30";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -1685,6 +1689,7 @@ typedef struct{
     int next_canvas_id;
     bool toggle_flag;
     bool vscale_skip_flag;
+    uint start_pts;
 }di_post_stru_t;
 static di_post_stru_t di_post_stru;
 #ifdef NEW_DI_V1
@@ -5579,7 +5584,15 @@ static int process_post_vframe(void)
                     }
 #endif
                     di_lock_irqfiq_save(irq_flag2, fiq_flag);
-                    if((frame_count<start_frame_drop_count)||
+                    bool check_drop = false;
+                    if((check_start_drop_prog && is_progressive(ready_di_buf->vframe))|| 
+                    	  !is_progressive(ready_di_buf->vframe))
+                        check_drop = true;
+                    if(check_drop && (frame_count == 0)){
+                        di_post_stru.start_pts = di_buf->vframe->pts;      
+                    }
+
+                    if((check_drop &&(frame_count<start_frame_drop_count))||
                         (di_buf->di_buf[0]->throw_flag)){
                         queue_in(di_buf, QUEUE_TMP);
                         recycle_vframe_type_post(di_buf);
@@ -5587,6 +5600,11 @@ static int process_post_vframe(void)
                         recycle_vframe_type_post_print(di_buf, __func__);
 #endif
                     } else {
+                        if(check_drop && (frame_count == start_frame_drop_count)){ 
+                            if((di_post_stru.start_pts != 0) && (di_buf->vframe->pts == 0))
+                                di_buf->vframe->pts = di_post_stru.start_pts;
+                            di_post_stru.start_pts = 0;
+                        }
                         queue_in(di_buf, QUEUE_POST_READY);
                     }
                     frame_count++;
@@ -5696,7 +5714,10 @@ static int process_post_vframe(void)
                 queue_out(di_buf->di_buf[1]);
 
                 di_lock_irqfiq_save(irq_flag2, fiq_flag);
-                if((frame_count<start_frame_drop_count)||
+                if((frame_count == 0) && check_start_drop_prog){
+                    di_post_stru.start_pts = di_buf->vframe->pts;      
+                }
+                if(((frame_count<start_frame_drop_count) && check_start_drop_prog)||
                     (di_buf->di_buf_dup_p[0]->throw_flag)||(di_buf->di_buf_dup_p[1]->throw_flag)){
                     queue_in(di_buf, QUEUE_TMP);
                     recycle_vframe_type_post(di_buf);
@@ -5705,6 +5726,10 @@ static int process_post_vframe(void)
 #endif
                 }
                 else{
+                    if((frame_count == start_frame_drop_count) && check_start_drop_prog){   	                          if((di_post_stru.start_pts != 0) && (di_buf->vframe->pts == 0))
+                            di_buf->vframe->pts = di_post_stru.start_pts;
+                        di_post_stru.start_pts = 0;
+                    }
                     queue_in(di_buf, QUEUE_POST_READY);
                 }
                 frame_count++;
