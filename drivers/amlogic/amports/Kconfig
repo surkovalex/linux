@@ -157,5 +157,11 @@ config AM_SUBTITLE
 	default y
 	help 
 		Internal Sub Title support driver
+
+config AM_VIDEOCAPTURE
+	bool "Amlogic Video Capture support"
+	default y
+	help
+		Internal Video Capture driver
 endmenu
 

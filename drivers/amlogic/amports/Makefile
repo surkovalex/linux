@@ -28,25 +28,25 @@ endif
 
 obj-$(CONFIG_AM_STREAMING) += amports.o
 
-
+AMPROT_OBJS = amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
 ifeq ($(CONFIG_ARCH_MESON8),y)
-amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
-amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+amports-objs := $(AMPROT_OBJS)
+amports-y    := $(AMPROT_OBJS)
 else
 ifeq ($(CONFIG_ARCH_MESON6),y)
-amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
-amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+amports-objs := $(AMPROT_OBJS)
+amports-y    := $(AMPROT_OBJS)
 else
 ifeq ($(CONFIG_ARCH_MESON6TV),y)
-amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
-amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+amports-objs := $(AMPROT_OBJS)
+amports-y    := $(AMPROT_OBJS)
 else
 ifeq ($(CONFIG_ARCH_MESON6TVD),y)
-amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
-amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+amports-objs := $(AMPROT_OBJS)
+amports-y    := $(AMPROT_OBJS)
 else
-amports-objs := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amve.o amcm.o amstream_profile.o
-amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amve.o amcm.o amstream_profile.o
+amports-objs := $(AMPROT_OBJS) amve.o amcm.o
+amports-y    := $(AMPROT_OBJS) amve.o amcm.o
 endif
 endif
 endif
@@ -101,6 +101,11 @@ amvideo-y    := video.o vpp.o video_prot.o
 else
 amvideo-objs := video.o vpp.o
 amvideo-y    := video.o vpp.o
+endif
+
+ifeq ($(CONFIG_AM_VIDEOCAPTURE),y)
+amports-objs +=  amvideocap.o
+amports-y   +=  amvideocap.o
 endif
 
 obj-$(CONFIG_AM_VIDEO2) += amvideo2.o

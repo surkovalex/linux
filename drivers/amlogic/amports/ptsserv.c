@@ -5,7 +5,7 @@
 #include <linux/amlogic/amports/ptsserv.h>
 #include <linux/amlogic/amports/timestamp.h>
 #include <linux/amlogic/amports/tsync.h>
-#include "ampotrs_priv.h"
+#include "amports_priv.h"
 
 #include <mach/am_regs.h>
 

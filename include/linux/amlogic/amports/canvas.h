@@ -114,6 +114,8 @@ typedef struct {
 #define DEINTERLACE_CANVAS_MAX_INDEX	0x7f
 #endif
 
+#define AMVIDEOCAP_CANVAS_INDEX 0x50
+
 #define MIPI_CANVAS_INDEX 0x70
 #define MIPI_CANVAS_MAX_INDEX 0x7f
 

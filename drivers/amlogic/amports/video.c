@@ -68,6 +68,7 @@
 #endif
 
 #include "videolog.h"
+#include "amvideocap_priv.h"
 
 #ifdef CONFIG_AM_VIDEO_LOG
 #define AMLOG
@@ -94,6 +95,7 @@ static int output_fps = 0;
 
 #define RECEIVER_NAME "amvideo"
 static int video_receiver_event_fun(int type, void* data, void*);
+static int ext_end_frame_capture(void);
 
 static const struct vframe_receiver_op_s video_vf_receiver =
 {
@@ -370,6 +372,7 @@ const char video_dev_id[] = "amvideo-dev";
 
 const char video_dev_id2[] = "amvideo-dev2";
 
+int onwaitendframe=0;
 typedef struct{
     int vpp_off;
     int viu_off;
@@ -411,7 +414,7 @@ static u32 video_scaler_mode = 0;
 static int content_top = 0, content_left = 0, content_w = 0, content_h = 0;
 static int scaler_pos_changed = 0;
 #endif
-
+static struct amvideocap_req *capture_frame_req=NULL;
 static video_prot_t video_prot;
 static u32 video_angle = 0;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
@@ -711,6 +714,7 @@ static inline vframe_t *video_vf_get(void)
 
     if (vf) {
 	video_notify_flag |= VIDEO_NOTIFY_PROVIDER_GET;
+    atomic_set(&vf->use_cnt,1);/*always to 1,for first get from vfm provider*/
 #ifdef TV_3D_FUNCTION_OPEN
 	/*can be moved to h264mvc.c*/
 	if((vf->type & VIDTYPE_MVC)&&(process_3d_type&MODE_3D_ENABLE)&&vf->trans_fmt) {
@@ -743,10 +747,52 @@ static int  vf_get_states(vframe_states_t *states)
 static inline void video_vf_put(vframe_t *vf)
 {
     struct vframe_provider_s *vfp = vf_get_provider(RECEIVER_NAME);
-    if (vfp) {
+    if (vfp && atomic_dec_and_test(&vf->use_cnt)) {
         vf_put(vf, RECEIVER_NAME);
         video_notify_flag |= VIDEO_NOTIFY_PROVIDER_PUT;
     }
+}
+int ext_get_cur_video_frame(vframe_t **vf,int *canvas_index)
+{
+	if(cur_dispbuf==NULL)
+		return -1;
+	atomic_inc(&cur_dispbuf->use_cnt);
+	*canvas_index = READ_VCBUS_REG(VD1_IF0_CANVAS0 + cur_dev->viu_off);
+	*vf=cur_dispbuf;
+	return 0;
+}
+int ext_put_video_frame(vframe_t *vf)
+{
+	if(vf==&vf_local){
+		return 0;
+	}
+	video_vf_put(vf);
+	return 0;
+}
+int ext_register_end_frame_callback(struct amvideocap_req *req)
+{
+	mutex_lock(&video_module_mutex);
+	capture_frame_req=req;
+	mutex_unlock(&video_module_mutex);
+	return 0;
+}
+static int ext_frame_capture_poll(int endflags)
+{
+	mutex_lock(&video_module_mutex);
+	if(capture_frame_req && capture_frame_req->callback){
+		vframe_t *vf;
+		int index;
+		int ret;
+		struct amvideocap_req *req=capture_frame_req;
+		ret=ext_get_cur_video_frame (&vf,&index);
+		if(!ret){
+			req->callback(req->data,vf,index);
+			capture_frame_req =NULL;
+		}
+	}
+endexit:
+	mutex_unlock(&video_module_mutex);
+	return 0;
 }
 
 static void vpp_settings_h(vpp_frame_par_t *framePtr)
@@ -3025,7 +3071,9 @@ unsigned int vf_keep_current(void)
         return 0;
     }
 
-    if (blackout|force_blackout) {
+	ext_frame_capture_poll(1); /*pull  if have capture end frame */
+
+	if (blackout|force_blackout) {
         return 0;
     }
 

@@ -63,7 +63,8 @@
 #include "vdec.h"
 #include "adec.h"
 #include "rmparser.h"
-#include "ampotrs_priv.h"
+#include "amports_priv.h"
+#include "amvideocap_priv.h"
 
 #include <linux/of.h>
 #include <linux/of_fdt.h>
