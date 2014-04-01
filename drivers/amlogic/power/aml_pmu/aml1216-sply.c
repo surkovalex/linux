@@ -324,9 +324,13 @@ int aml1216_set_charging_current(int curr)
     } else {                                    // input is charge ratio
         curr = (curr * aml1216_battery->pmu_battery_cap) / 100 + 100; 
     } 
+    
+#if 0    
     if (curr < 750) {                       // limit current to 600mA for stable issue
         curr = 750;    
     }
+#endif
+
     idx_to = (curr - 300) / 150;
     aml1216_read(0x012b, (unsigned char *)&val);
     AML_DBG("%s to %dmA, idx_to:%x, idx_cur:%x\n", __func__, idx_to * 150 + 300, idx_to, val);
