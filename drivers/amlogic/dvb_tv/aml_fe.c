@@ -48,7 +48,7 @@
 
 MODULE_PARM_DESC(debug_fe, "\n\t\t Enable frontend debug information");
 static int debug_fe = 1;
-module_param(debug_fe, int, S_IRUGO);
+module_param(debug_fe, int, 0644);
 
 #define AFC_BEST_LOCK      50
 #define ATV_AFC_1_0MHZ   1000000

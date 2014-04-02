@@ -54,6 +54,8 @@ static int dvb_powerdown_on_sleep = 1;
 static int dvb_mfe_wait_time = 5;
 static int dvb_afc_debug=0;
 static int disable_set_frotend_param=0;
+static int dvb_dtv_debug=0;
+
 
 module_param_named(frontend_debug, dvb_frontend_debug, int, 0644);
 MODULE_PARM_DESC(frontend_debug, "Turn on/off frontend core debugging (default:off).");
@@ -71,9 +73,14 @@ module_param(dvb_afc_debug, int, 0644);
 MODULE_PARM_DESC( dvb_afc_debug,"vb_afc_debug \n");
 module_param(disable_set_frotend_param, int, 0644);
 MODULE_PARM_DESC( disable_set_frotend_param,"disable_set_frotend_param \n");
+module_param(dvb_dtv_debug, int, 0644);
+MODULE_PARM_DESC( dvb_dtv_debug,"vb_afc_debug \n");
+
 
 #define dprintk if (dvb_frontend_debug) printk
 #define pr_afc  if(dvb_afc_debug)printk
+#define dtvprintk  if(dvb_dtv_debug)printk
+
 
 #define FESTATE_IDLE 1
 #define FESTATE_RETUNE 2
@@ -253,7 +260,6 @@ static void dvb_frontend_add_event(struct dvb_frontend *fe, fe_status_t status)
 	e = &events->events[events->eventw];
 	e->status = status;
 	e->parameters = fepriv->parameters_out;
-	printk("[get frontend2] freq is %d\n",e->parameters.frequency);
 	events->eventw = wp;
 
 	mutex_unlock(&events->mtx);
@@ -295,7 +301,6 @@ static int dvb_frontend_get_event(struct dvb_frontend *fe,
 	mutex_lock(&events->mtx);
 	*event = events->events[events->eventr];
 	events->eventr = (events->eventr + 1) % MAX_EVENT;
-	printk("[get frontend1] freq is %d\n",event->parameters.frequency);
 	mutex_unlock(&events->mtx);
 
 	return 0;
@@ -1587,7 +1592,7 @@ static int dtv_property_legacy_params_sync(struct dvb_frontend *fe,
 
 	p->frequency = c->frequency;
 	p->inversion = c->inversion;
-	printk("[get frontend]p is %d\n",p->frequency);
+	dtvprintk("[get frontend]p is %d\n",p->frequency);
 	switch (dvbv3_type(c->delivery_system)) {
 	case DVBV3_UNKNOWN:
 		dev_err(fe->dvb->device,
