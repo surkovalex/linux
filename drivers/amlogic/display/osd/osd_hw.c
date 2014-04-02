@@ -50,6 +50,7 @@ int reset_rdma(void);
 int osd_rdma_enable(u32  enable);
 #endif
 
+static DEFINE_SPINLOCK(osd_onoff_lock);
 static DECLARE_WAIT_QUEUE_HEAD(osd_vsync_wq);
 
 static bool vsync_hit = false;
@@ -1742,100 +1743,109 @@ static   void  osd2_update_color_mode(void)
 
 static   void  osd1_update_enable(void)
 {
-	if (osd_hw.free_scale_mode[OSD1]){
-		if (osd_hw.enable[OSD1] == ENABLE){
-			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
-			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_POSTBLEND_EN);
-		}else{
-			VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
-		}
-	}else{
-		u32  video_enable;
-		video_enable |=VSYNCOSD_RD_MPEG_REG(VPP_MISC)&VPP_VD1_PREBLEND;
+    unsigned long flags;
+    if (osd_hw.free_scale_mode[OSD1]){
+        spin_lock_irqsave(&osd_onoff_lock, flags);
+        if (osd_hw.enable[OSD1] == ENABLE){
+            aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
+            aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
+        }else{
+            aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
+        }
+        spin_unlock_irqrestore(&osd_onoff_lock, flags);
+    }else{
+        u32  video_enable;
+        spin_lock_irqsave(&osd_onoff_lock, flags);
+        video_enable |=aml_read_reg32(P_VPP_MISC)&VPP_VD1_PREBLEND;
 
-		if(osd_hw.enable[OSD1]==ENABLE)
-		{
-			if(osd_hw.free_scale_enable[OSD1])
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_PREBLEND);
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_VD1_POSTBLEND);
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_PREBLEND_EN);
-			}
-			else
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_PREBLEND);
-				if(!video_enable)
-				{
-					VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_VD1_POSTBLEND);
-				}
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
-			}
+        if(osd_hw.enable[OSD1]==ENABLE)
+        {
+            if(osd_hw.free_scale_enable[OSD1])
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
+                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_PREBLEND);
+                aml_set_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
+                aml_set_reg32_mask(P_VPP_MISC,VPP_PREBLEND_EN);
+            }
+            else
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_PREBLEND);
+                if(!video_enable)
+                {
+                    aml_clr_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
+                }
+                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
+            }
 
-		}
-		else
-		{
-			if(osd_hw.free_scale_enable[OSD1])
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_PREBLEND);
-			}
-			else
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
-			}
-		}
-	}
-	remove_from_update_list(OSD1,OSD_ENABLE);
+        }
+        else
+        {
+            if(osd_hw.free_scale_enable[OSD1])
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_PREBLEND);
+            }
+            else
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
+            }
+        }
+        spin_unlock_irqrestore(&osd_onoff_lock, flags);
+    }
+    remove_from_update_list(OSD1,OSD_ENABLE);
 }
 static   void  osd2_update_enable(void)
 {
-	if (osd_hw.free_scale_mode[OSD2]){
-		if (osd_hw.enable[OSD2] == ENABLE){
-			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
-			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_POSTBLEND_EN);
-		}else{
-			if (osd_hw.enable[OSD1] == ENABLE){
-			    VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
-			} else {
-			    VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND|VPP_OSD2_POSTBLEND);
-			}
-		}
-	}else{
-		u32  video_enable;
-		video_enable |=VSYNCOSD_RD_MPEG_REG(VPP_MISC)&VPP_VD1_PREBLEND;
+    unsigned long flags;
+    if (osd_hw.free_scale_mode[OSD2]){
+        spin_lock_irqsave(&osd_onoff_lock, flags);
+        if (osd_hw.enable[OSD2] == ENABLE){
+            aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
+            aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
+        }else{
+            if (osd_hw.enable[OSD1] == ENABLE){
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
+            } else {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND|VPP_OSD2_POSTBLEND);
+            }
+        }
+        spin_unlock_irqrestore(&osd_onoff_lock, flags);
+    }else{
+        u32  video_enable;
+        video_enable |=VSYNCOSD_RD_MPEG_REG(VPP_MISC)&VPP_VD1_PREBLEND;
+        spin_lock_irqsave(&osd_onoff_lock, flags);
+        if(osd_hw.enable[OSD2]==ENABLE)
+        {
+            if(osd_hw.free_scale_enable[OSD2])
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
+                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_PREBLEND);
+                aml_set_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
+            }
+            else
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_PREBLEND);
+                if(!video_enable)
+                {
+                    aml_clr_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
+                }
+                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
+            }
 
-		if(osd_hw.enable[OSD2]==ENABLE)
-		{
-			if(osd_hw.free_scale_enable[OSD2])
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_PREBLEND);
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_VD1_POSTBLEND);
-			}
-			else
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_PREBLEND);
-				if(!video_enable)
-				{
-					VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_VD1_POSTBLEND);
-				}
-				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
-			}
-
-		}
-		else
-		{
-			if(osd_hw.free_scale_enable[OSD2])
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_PREBLEND);
-			}
-			else
-			{
-				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
-			}
-		}
-	}
-	remove_from_update_list(OSD2,OSD_ENABLE);
+        }
+        else
+        {
+            if(osd_hw.free_scale_enable[OSD2])
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_PREBLEND);
+            }
+            else
+            {
+                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
+            }
+        }
+         spin_unlock_irqrestore(&osd_onoff_lock, flags);
+    }
+    remove_from_update_list(OSD2,OSD_ENABLE);
 }
 
 static void osd1_update_disp_osd_reverse(void)
@@ -2057,33 +2067,39 @@ static   void  osd2_update_gbl_alpha(void)
 }
 static   void  osd2_update_order(void)
 {
-	switch(osd_hw.osd_order)
-	{
-		case  OSD_ORDER_01:
-		VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
-		break;
-		case  OSD_ORDER_10:
-		VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
-		break;
-		default:
-		break;
-	}
-	remove_from_update_list(OSD2,OSD_CHANGE_ORDER);
+    unsigned long flags;
+    spin_lock_irqsave(&osd_onoff_lock, flags);
+    switch(osd_hw.osd_order)
+    {
+        case  OSD_ORDER_01:
+        aml_clr_reg32_mask(P_VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
+        break;
+        case  OSD_ORDER_10:
+        aml_clr_reg32_mask(P_VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
+        break;
+        default:
+        break;
+    }
+    spin_unlock_irqrestore(&osd_onoff_lock, flags);
+    remove_from_update_list(OSD2,OSD_CHANGE_ORDER);
 }
 static   void  osd1_update_order(void)
 {
-	switch(osd_hw.osd_order)
-	{
-		case  OSD_ORDER_01:
-		VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
-		break;
-		case  OSD_ORDER_10:
-		VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
-		break;
-		default:
-		break;
-	}
-	remove_from_update_list(OSD1,OSD_CHANGE_ORDER);
+    unsigned long flags;
+    spin_lock_irqsave(&osd_onoff_lock, flags);
+    switch(osd_hw.osd_order)
+    {
+        case  OSD_ORDER_01:
+        aml_clr_reg32_mask(P_VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
+        break;
+        case  OSD_ORDER_10:
+        aml_clr_reg32_mask(P_VPP_MISC,VPP_POST_FG_OSD2|VPP_PRE_FG_OSD2);
+        break;
+        default:
+        break;
+    }
+    spin_unlock_irqrestore(&osd_onoff_lock, flags);
+    remove_from_update_list(OSD1,OSD_CHANGE_ORDER);
 }
 
 static void osd_block_update_disp_geometry(u32 index)
