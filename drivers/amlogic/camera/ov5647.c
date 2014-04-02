@@ -3560,6 +3560,9 @@ static int queue_setup(struct vb2_queue *vq, const struct v4l2_format *fmt,
         unsigned long size;
         int width = dev->width;
         int height = dev->height;
+
+        if (1080 == height)
+                height = 1088;
 				
         if (fmt)
                 size = fmt->fmt.pix.sizeimage;
