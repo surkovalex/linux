@@ -1305,6 +1305,72 @@ void root_func(){
 			amlogic,clrmask=<2 0x380000>;
 			amlogic,pins = "BOOT_12","BOOT_13","BOOT_14","BOOT_17";
 		};
+//$$ MATCH "dvb_p_ts2_pins_match" = "&dvb_p_ts2_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 8 = "amlogic,clrmask"
+//$$ L2 PROP_STR 12 = "amlogic,pins"
+		dvb_p_ts2_pins: dvb_p_ts2_pins {
+		amlogic,setmask = <3 0xfc0>;
+			amlogic,clrmask = <0 0xf
+								5 0xff00>;
+			amlogic,pins = "GPIOB_0","GPIOB_1","GPIOB_2","GPIOB_3","GPIOB_4","GPIOB_5","GPIOB_6","GPIOB_7","GPIOB_8","GPIOB_9","GPIOB_10","GPIOB_11";
+		};
+
+//$$ MATCH "dvb_s_ts2_pins_match" = "&dvb_s_ts2_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 6 = "amlogic,clrmask"
+//$$ L2 PROP_STR 5 = "amlogic,pins"
+		dvb_s_ts2_pins: dvb_s_ts2_pins {
+			amlogic,setmask = <3 0xfc0>;
+			amlogic,clrmask = <0 0xf
+								5 0xff00>;
+			amlogic,pins = "GPIOB_0","GPIOB_1","GPIOB_2","GPIOB_3","GPIOB_4","GPIOB_5","GPIOB_6","GPIOB_7","GPIOB_8","GPIOB_9","GPIOB_10","GPIOB_11";
+		};
+	};
+/// ***************************************************************************************
+///	-	DVB
+//$$ MODULE="DVB"
+
+//$$ DEVICE="dvb"
+//$$ L2 PROP_STR = "ts2"
+//$$ L2 PROP_U32 = "ts2_invert"
+//$$ L2 PROP_U32 = "ts2_control"
+//$$ L2 PROP_STR 6 = "pinctrl-names"
+//$$ L2 PROP_CHOICE "dvb_p_ts2_pins_match" = "pinctrl-0"
+//$$ L2 PROP_CHOICE "dvb_s_ts2_pins_match" = "pinctrl-1"
+	dvb{
+		compatible = "amlogic,dvb";
+		/*"parallel","serial","disable"*/
+		ts2 = "parallel";
+		ts2_control = <0>;
+		ts2_invert = <0>;
+		pinctrl-names = "p_ts2", "s_ts2";
+		pinctrl-0 = <&dvb_p_ts2_pins>;
+		pinctrl-1 = <&dvb_s_ts2_pins>;
+	};
+
+//$$ DEVICE="dvbfe"
+//$$ L2 PROP_STR = "dtv_demod0"
+//$$ L2 PROP_U32 = "dtv_demod0_i2c_adap_id"
+//$$ L2 PROP_U32 = "dtv_demod0_i2c_addr"
+//$$ L2 PROP_U32 = "dtv_demod0_reset_value"
+//$$ L2 PROP_STR = "dtv_demod0_reset_gpio"
+//$$ L2 PROP_U32 = "fe0_dtv_demod"
+//$$ L2 PROP_U32 = "fe0_ts"
+//$$ L2 PROP_U32 = "fe0_dev"
+//$$ L2 PROP_STR 6 = "pinctrl-names"
+//$$ L2 PROP_CHOICE "dvb_fe_pins_match" = "pinctrl-0"
+	dvbfe{
+		compatible = "amlogic,dvbfe";
+		dtv_demod0 = "Avl6211";
+		dtv_demod0_i2c_adap_id = <1>;
+		dtv_demod0_i2c_addr = <0xC0>;
+		dtv_demod0_reset_value = <0>;
+		dtv_demod0_reset_gpio = "GPIOD_8";
+		fe0_dtv_demod = <0>;
+		fe0_ts = <2>;
+		fe0_dev = <0>;
+
 	};
 }; /* end of / */
 
