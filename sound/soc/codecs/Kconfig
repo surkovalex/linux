@@ -523,6 +523,9 @@ config SND_SOC_TAS5711
 config SND_SOC_TAS5707
         tristate
 
+config SND_SOC_AMLPMU3
+        tristate
+        
 # Amp
 config SND_SOC_LM4857
 	tristate

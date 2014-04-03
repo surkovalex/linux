@@ -1422,6 +1422,11 @@ lcd_LD070WX4:lcd_LD070WX4{
     audio_m8_audio{
         compatible = "amlogic,m8_audio_codec";
         dev_name = "aml_m8_codec.0";
+        status = "disable";
+    };
+    audio_pmu3_audio{
+        compatible = "amlogic,aml_pmu3_codec";
+        dev_name = "aml_pmu3_codec.0";
         status = "okay";
     };
 
@@ -1434,7 +1439,7 @@ lcd_LD070WX4:lcd_LD070WX4{
             id_reg = <0x00>;
             id_val = <0x21>;
             capless = <0>;
-            status = "okay";
+            status = "disable";
         };
         rt5631:rt5631{
             codec_name = "rt5631";
@@ -1450,7 +1455,11 @@ lcd_LD070WX4:lcd_LD070WX4{
             i2c_addr = <0x1A>;
             i2c_bus = "i2c_bus_b";
             capless = <1>;
-	    status = "disable";
+	    	status = "disable";
+        };
+        pmu3:pmu3{
+        	codec_name = "amlpmu3";
+			status = "okay";
         };
     };
 
@@ -1464,7 +1473,7 @@ lcd_LD070WX4:lcd_LD070WX4{
     aml_m8_sound_card{
         compatible = "sound_card, aml_snd_m8";
         aml,sound_card = "AML-M8AUDIO";
-        aml,codec_dai = "AML-M8","rt5616-aif1","rt5631-hifi","wm8960-hifi";
+        aml,codec_dai = "AML-M8","rt5616-aif1","rt5631-hifi","wm8960-hifi","pmu3-hifi";
         //aml,codec_name = "aml_m8_codec.0","rt5616.4-001b";
         //aml,audio-codec = <&rt5616>;
         aml,audio-routing-rt5616 = 
@@ -1481,6 +1490,14 @@ lcd_LD070WX4:lcd_LD070WX4{
             "HP","HP_R",
             "MICBIAS","MAIN MIC",
             "LINPUT1","MICBIAS";
+        aml,audio-routing-amlpmu3 = 
+            "Ext Spk","LINEOUTL1",
+            "Ext Spk","LINEOUTR1",
+            "HP","HP_L",
+            "HP","HP_R",
+            "Mic Bias2","MAIN MIC",
+            "LINEINLP","Mic Bias2";
+        sleep_time = <130>;
         mute_gpio = "GPIOY_15";
         I2S_MCLK = "GPIOAO_8";
         I2S_SCLK = "GPIOAO_9";
