@@ -118,6 +118,13 @@ config LIGHT_CM3232
 	help
 	  Say yes here to support Capella's CM3232 light sensor and proximity sensor     
 
+config LIGHT_CM3217
+	tristate "CM3217 light sensor driver"
+	depends on I2C
+	help
+	  Say yes here to support Capella's CM3217 light sensor and proximity sensor     
+
+
 config LIGHT_LTR501
  		tristate "LTR501 light sensor support"
  		help
