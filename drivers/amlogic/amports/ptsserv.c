@@ -201,7 +201,7 @@ int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
 		int delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
 		if(timestampe_delayed< 0 ||abs(timestampe_delayed-delay_ms)>3*1000){
 			timestampe_delayed=delay_ms;
-			printk("..recalculated %d ms delay,diff=%d\n",timestampe_delayed,diff);
+			///printk("..recalculated %d ms delay,diff=%d\n",timestampe_delayed,diff);
 		}
 	}
 	if(latestbitrate)
