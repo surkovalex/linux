@@ -115,7 +115,7 @@ void root_func(){
 		reserve-iomap = "true";
 	  vmode = <0>; /*0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
 	  scale_mode = <0>; /*0:default 1:new*/
-	  display_size_default = <1280 720 1280 1440 32>;  // osd0:8M, osd1:1m  1280*720*4*3 = 11,059,200
+	  display_size_default = <1280 720 1280 2160 32>;  // osd0:8M, osd1:1m  1280*720*4*3 = 11,059,200
 	};
 //$$ DEVICE="deinterlace"
 //$$ L2 PROP_STR = "status"
