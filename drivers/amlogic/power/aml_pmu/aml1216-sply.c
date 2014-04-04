@@ -1193,6 +1193,10 @@ static int aml1216_update_state(struct aml_charger *charger)
     charger->usb_valid  = (val & 0x08) ? 1 : 0; 
     charger->ext_valid  = charger->dcin_valid | (charger->usb_valid << 1); 
     charger->fault      = val;
+    /*
+     * limit duty cycle of DC3 according CHG_GAT_BAT_LV bit
+     */
+    aml1216_set_bits(0x004f, (val & 0x01) << 3, 0x08);
 
     charger->vbat = aml1216_get_battery_voltage();
     charger->ocv  = aml1216_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);

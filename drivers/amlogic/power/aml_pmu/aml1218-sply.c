@@ -1177,7 +1177,7 @@ static int aml1218_update_state(struct aml_charger *charger)
     uint32_t chg_status;
 
     aml1218_read(0x00E0, &val);
-    aml1218_reads(0x00df, &chg_status, 4);
+    aml1218_reads(0x00de, &chg_status, 4);
 
     charger->ibat = aml1218_get_battery_current();
     if (val & 0x18) {
@@ -1194,6 +1194,10 @@ static int aml1218_update_state(struct aml_charger *charger)
     charger->usb_valid  = (val & 0x08) ? 1 : 0; 
     charger->ext_valid  = charger->dcin_valid | (charger->usb_valid << 1); 
     charger->fault      = chg_status;
+    /*
+     * limit duty cycle of DC3 according CHG_GAT_BAT_LV bit
+     */
+    aml1218_set_bits(0x004f, (chg_status & 0x02000000) >> 22, 0x08);
 
     charger->vbat = aml1218_get_battery_voltage();
     charger->ocv  = aml1218_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);
