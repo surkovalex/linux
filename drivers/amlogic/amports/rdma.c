@@ -338,6 +338,7 @@ EXPORT_SYMBOL(vsync_rdma_config_pre);
 static irqreturn_t rdma_isr(int irq, void *dev_id)
 {
     int enc_line;
+    u32 data32;
 
     irq_count++;
     if(post_line_start){
@@ -347,8 +348,10 @@ static irqreturn_t rdma_isr(int irq, void *dev_id)
     }
 
     if(vsync_rdma_config_delay_flag){
+        data32  = Rd(RDMA_ACCESS_AUTO);
+        data32 &= 0xffffedd;
         Wr(RDMA_ACCESS_MAN, 0);
-        Wr(RDMA_ACCESS_AUTO, 0);
+        Wr(RDMA_ACCESS_AUTO, data32);
         rdma_config(1);
         vsync_rdma_config_delay_flag = false;
     }

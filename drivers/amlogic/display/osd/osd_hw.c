@@ -176,6 +176,9 @@ static unsigned int filt_coef2[] =  //2 point bilinear, bank_length == 2
 	0x423e0000,
 	0x40400000
 };
+
+#define OSD_TYPE_TOP_FIELD 0
+#define OSD_TYPE_BOT_FIELD 1
 /********************************************************************/
 /***********		osd psedu frame provider 			*****************/
 /********************************************************************/
@@ -222,7 +225,6 @@ static inline void wait_vsync_wakeup(void)
 	wake_up_interruptible(&osd_vsync_wq);
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static irqreturn_t osd_rdma_isr(int irq, void *dev_id)
 {
 #define  	VOUT_ENCI	1
@@ -290,9 +292,11 @@ static irqreturn_t osd_rdma_isr(int irq, void *dev_id)
 			}
 		} else {
 			if ((osd_hw.pandata[OSD1].y_start%2) == 0){
-				odd_or_even_line = aml_read_reg32(P_ENCI_INFO_READ) & 1;
+				odd_or_even_line = (aml_read_reg32(P_ENCI_INFO_READ) & (1<<29)) ?
+									OSD_TYPE_BOT_FIELD : OSD_TYPE_TOP_FIELD;
 			}else{
-				odd_or_even_line = !(aml_read_reg32(P_ENCI_INFO_READ) & 1);
+				odd_or_even_line = (aml_read_reg32(P_ENCI_INFO_READ) & (1<<29)) ?
+									OSD_TYPE_TOP_FIELD : OSD_TYPE_BOT_FIELD;
 			}
 		}
 
@@ -322,9 +326,9 @@ static irqreturn_t osd_rdma_isr(int irq, void *dev_id)
 	}
 
 	aml_write_reg32(P_RDMA_CTRL, 1<<24);
+
 	return IRQ_HANDLED;
 }
-#endif
 
 static inline void  walk_through_update_list(void)
 {
@@ -362,7 +366,7 @@ static void osd_fiq_isr(void)
 static irqreturn_t vsync_isr(int irq, void *dev_id)
 #endif
 {
-#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+#ifndef CONFIG_VSYNC_RDMA
 #define  	VOUT_ENCI	1
 #define   	VOUT_ENCP	2
 #define	VOUT_ENCT	3
@@ -439,19 +443,18 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 		aml_write_reg32(P_VIU_OSD1_BLK3_CFG_W0+ REG_OFFSET, fb1_cfg_w0);
 	}
 	//go through update list
-#ifndef CONFIG_VSYNC_RDMA
 	walk_through_update_list();
-#endif
+
 	osd_update_3d_mode(osd_hw.mode_3d[OSD1].enable,osd_hw.mode_3d[OSD2].enable);
 #endif
 
-#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+#if 0
 #ifdef CONFIG_VSYNC_RDMA
 	reset_rdma();
 #endif
 #endif
 
-#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+#ifndef CONFIG_VSYNC_RDMA
 	if (!vsync_hit)
 	{
 #ifdef FIQ_VSYNC
@@ -2386,6 +2389,30 @@ static  void  osd2_update_disp_3d_mode(void)
 	}
 	osd_hw.mode_3d[OSD2].left_right^=1;
 }
+
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+void osd_init_scan_mode(void)
+{
+#define  	VOUT_ENCI	1
+#define   	VOUT_ENCP	2
+#define	VOUT_ENCT	3
+	unsigned  char output_type=0;
+	output_type=aml_read_reg32(P_VPU_VIU_VENC_MUX_CTRL)&0x3;
+	osd_hw.scan_mode= SCAN_MODE_PROGRESSIVE;
+	switch(output_type)
+	{
+		case VOUT_ENCP:
+			if (aml_read_reg32(P_ENCP_VIDEO_MODE) & (1 << 12)) //1080i
+				osd_hw.scan_mode= SCAN_MODE_INTERLACE;
+			break;
+		case VOUT_ENCI:
+			if (aml_read_reg32(P_ENCI_VIDEO_EN) & 1)
+				osd_hw.scan_mode= SCAN_MODE_INTERLACE;
+			break;
+	}
+}
+#endif
+
 void osd_init_hw(u32  logo_loaded)
 {
 	u32 group,idx,data32;
@@ -2461,6 +2488,7 @@ void osd_init_hw(u32  logo_loaded)
 	osd_hw.rotation_pandata[OSD1].x_start = osd_hw.rotation_pandata[OSD1].y_start = 0;
 	osd_hw.rotation_pandata[OSD2].x_start = osd_hw.rotation_pandata[OSD2].y_start = 0;
 	osd_hw.antiflicker_mode = 0;
+
 	memset(osd_hw.rotate,0,sizeof(osd_rotate_t));
 
 #ifdef FIQ_VSYNC
@@ -2485,13 +2513,17 @@ void osd_init_hw(u32  logo_loaded)
 #endif
 
 #ifdef CONFIG_VSYNC_RDMA
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+	if (request_irq(INT_RDMA, &osd_rdma_isr,
+                    IRQF_SHARED, "osd_rdma", (void *)"osd_rdma"))
+
+#else
 	if (request_irq(INT_RDMA, &osd_rdma_isr,
                     IRQF_DISABLED, "osd_rdma", (void *)"osd_rdma"))
+#endif
 	{
 		amlog_level(LOG_LEVEL_HIGH,"can't request irq for rdma\r\n");
 	}
-#endif
 #endif
 	return ;
 }

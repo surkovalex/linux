@@ -238,6 +238,10 @@ static int osd0_init(logo_object_t *plogo)
 #else
 		set_current_vmode(plogo->para.vout_mode);
 #endif
+
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+		osd_init_scan_mode();
+#endif
 		output_osd0.vinfo=get_current_vinfo();
 		plogo->dev=&output_osd0;
 		plogo->dev->window.x=0;
@@ -292,6 +296,10 @@ static int osd1_init(logo_object_t *plogo)
 		}
 #else
 		set_current_vmode(plogo->para.vout_mode);
+#endif
+
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+		osd_init_scan_mode();
 #endif
 		output_osd1.vinfo=get_current_vinfo();
 		plogo->dev=&output_osd1;

@@ -119,4 +119,7 @@ extern void osd_cursor_hw(s16 x, s16 y, s16 xstart, s16 ystart, u32 osd_w, u32 o
 extern void osd_suspend_hw(void);
 extern void osd_resume_hw(void);
 extern void osd_init_hw(u32  logo_loaded);
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
+extern void osd_init_scan_mode(void);
+#endif
 #endif 
