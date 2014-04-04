@@ -211,7 +211,7 @@ static int aml_audio_codec_probe(struct platform_device *pdev)
 		}
     }
 	
-	if (!strcmp(audio_codec_dev->name, "amlpmu3")){
+	if (ext_codec &&(!strcmp(audio_codec_dev->name, "amlpmu3"))){
 		printk("using aml pmu3 codec\n");
 		strlcpy(codec_info.name_bus, "aml_pmu3_codec.0", NAME_SIZE);
 		strlcpy(codec_info.name, "amlpmu3", NAME_SIZE);
