@@ -27,6 +27,7 @@
 #define  SMI_ADDR_TSTREAD2    22
 #define  SMI_ADDR_TSTWRITE    23
 
+#define  WR_ADDR_A0CFG        0x11
 #define  WR_ADDR_A1CFG        0x12
 #define  WR_ADDR_A2CFG        0x13
 #define  WR_ADDR_A3CFG        0x14
@@ -89,20 +90,24 @@ static void closeTSTMODE(struct phy_device *phydev)
 
 static void init_internal_phy(struct phy_device *phydev)
 {
-	initTSTMODE(phydev);
-	// write tstcntl addr val
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x1354);//write val
-	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR);//write addr 0
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3e01);//write val
-	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A2CFG);//write addr 0x13
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x8900);//write val
-	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A3CFG);//write addr 0x14
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3412);//write val
-	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x2636);//write val
-	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A5CFG);//write addr 0x16
-	phy_write(phydev,SMI_ADDR_TSTWRITE,3);//write val
-	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
+        initTSTMODE(phydev);
+        // write tstcntl addr val
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0x1354);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR);//write addr 0
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0x38);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A0CFG);//write addr 0x11
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0x0c00);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A1CFG);//write addr 0x12
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0x3e00);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A2CFG);//write addr 0x13
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0xf902);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A3CFG);//write addr 0x14
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0x3412);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
+        phy_write(phydev,SMI_ADDR_TSTWRITE,0x2636);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A5CFG);//write addr 0x16
+        phy_write(phydev,SMI_ADDR_TSTWRITE,3);//write val
+        phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x108);
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A9CFG);//write addr 0x1b
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0xda00);//write val
@@ -118,9 +123,13 @@ void init_internal_phy_10B(struct phy_device *phydev)
 	// write tstcntl addr val
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x0000);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR);//write addr 0
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3e01);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0x38);//write val
+	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A0CFG);//write addr 0x11
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0x0c00);//write val
+	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A1CFG);//write addr 0x12
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3e00);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A2CFG);//write addr 0x13
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x8900);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0xf902);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A3CFG);//write addr 0x14
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3412);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
@@ -130,7 +139,7 @@ void init_internal_phy_10B(struct phy_device *phydev)
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x108);//write val by chandle (2)
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A9CFG);//write addr 0x1b
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0xda06);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0xda00);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A11CFG);//write addr 0x1d
 	closeTSTMODE(phydev);
 }
@@ -142,9 +151,13 @@ void init_internal_phy_100B(struct phy_device *phydev)
 	// write tstcntl addr val
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x9354);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|0x00);//write addr 0x00
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0x38);//write val
+	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A0CFG);//write addr 0x11
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0x0c00);//write val
+	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A1CFG);//write addr 0x12
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3e00);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A2CFG);//write addr 0x13
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x8900);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0xf902);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A3CFG);//write addr 0x14
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x3412);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
@@ -154,7 +167,7 @@ void init_internal_phy_100B(struct phy_device *phydev)
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x00a6);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A9CFG);//write addr 0x1b
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0xda06);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0xda00);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A11CFG);//write addr 0x1d
 	closeTSTMODE(phydev);
 }
@@ -201,17 +214,17 @@ static int amlogic_phy_config_init(struct phy_device *phydev)
 			rc = phy_read(phydev, MII_BMCR);
 		} while (rc & BMCR_RESET);
 	}
-	/*
-	   rc = phy_read(phydev, MII_INTERNAL_CTRL_STATUS);
-	   if (rc < 0)
-	   return rc;
+
+	rc = phy_read(phydev, MII_INTERNAL_CTRL_STATUS);
+	if (rc < 0)
+		return rc;
 
 	// Enable energy detect mode for this AML Transceivers 
 	rc = phy_write(phydev, MII_INTERNAL_CTRL_STATUS,
-	rc | MII_INTERNAL_EDPWRDOWN);
+		       rc & ~MII_INTERNAL_EDPWRDOWN);
 	if (rc < 0)
-	return rc;
-	 */
+		return rc;
+
 	return amlogic_phy_ack_interrupt (phydev);
 }
 
@@ -230,7 +243,10 @@ static int internal_read_status(struct phy_device *phydev)
 	if(phydev->speed == SPEED_100){
 		init_internal_phy_100B(phydev);
 	}
-	if (!phydev->link) {
+	if (AUTONEG_ENABLE == phydev->autoneg){
+		NULL;
+	}
+	else if (!phydev->link) {
 		/* Disable EDPD to wake up PHY */
 		int rc = phy_read(phydev, MII_INTERNAL_CTRL_STATUS);
 		if (rc < 0)

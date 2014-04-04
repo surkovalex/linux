@@ -1653,10 +1653,17 @@ static void set_multicast_list(struct net_device *dev)
 		writel(tmp, (void*)(np->base_addr + ETH_MAC_1_Frame_Filter));//hash muticast
 	}
 }
-static void set_mac_addr_n(struct net_device *dev, void *p){
-	eth_mac_addr(dev,p);
-	write_mac_addr(dev, dev->dev_addr);
+static int set_mac_addr_n(struct net_device *dev, void *addr){
+	printk("mac addr come in\n");
+	struct sockaddr *sa = addr;
 
+	if (!is_valid_ether_addr(sa->sa_data))
+		return -EADDRNOTAVAIL;
+
+	memcpy(dev->dev_addr, sa->sa_data, ETH_ALEN);
+
+	write_mac_addr(dev, dev->dev_addr);
+	return 0;
 }
 
 static const struct net_device_ops am_netdev_ops = {
@@ -1730,6 +1737,23 @@ static int aml_eth_set_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
 		printk( "The PHY does not support set_wol, was CONFIG_MICREL_PHY enabled?\n");
 	return err;
 }
+static int aml_ethtool_op_get_eee(struct net_device *dev,
+				     struct ethtool_eee *edata)
+{
+	struct am_net_private *np = netdev_priv(dev);
+	if (np->phydev == NULL)
+		return -EOPNOTSUPP;
+	return phy_ethtool_get_eee(np->phydev, edata);
+}
+
+static int aml_ethtool_op_set_eee(struct net_device *dev,
+				     struct ethtool_eee *edata)
+{
+	struct am_net_private *np = netdev_priv(dev);
+	if (np->phydev == NULL)
+		return -EOPNOTSUPP;
+	return phy_ethtool_set_eee(np->phydev, edata);
+}
 
 static const struct ethtool_ops aml_ethtool_ops = {
 	.get_settings = aml_ethtool_get_settings,
@@ -1738,7 +1762,8 @@ static const struct ethtool_ops aml_ethtool_ops = {
 	.get_link = ethtool_op_get_link,
 	.get_wol  = aml_eth_get_wol,
 	.set_wol  = aml_eth_set_wol,
-
+	.get_eee = aml_ethtool_op_get_eee,
+	.set_eee = aml_ethtool_op_set_eee,
 };
 /* --------------------------------------------------------------------------*/
 /**
