@@ -394,8 +394,9 @@ int get_amlvideo2_canvas_index(struct amlvideo2_output* output, int start_canvas
 	unsigned buf = (unsigned)output->vbuf;
 	int width = output->width;
 	int height = output->height;
-        if (1080 == height)
-                height = 1088;
+        int canvas_height = height;
+        if (1080 == canvas_height)
+                canvas_height = 1088;
 
 	switch(v4l2_format){
 	case V4L2_PIX_FMT_RGB565X:
@@ -403,7 +404,7 @@ int get_amlvideo2_canvas_index(struct amlvideo2_output* output, int start_canvas
 		canvas = start_canvas;
 		canvas_config(canvas,
 			(unsigned long)buf,
-			width*2, height,
+			width*2, canvas_height,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		break;
 	case V4L2_PIX_FMT_YUV444:
@@ -412,18 +413,18 @@ int get_amlvideo2_canvas_index(struct amlvideo2_output* output, int start_canvas
 		canvas = start_canvas;
 		canvas_config(canvas,
 			(unsigned long)buf,
-			width*3, height,
+			width*3, canvas_height,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		break; 
 	case V4L2_PIX_FMT_NV12:
 	case V4L2_PIX_FMT_NV21: 
 		canvas_config(start_canvas,
 			(unsigned long)buf,
-			width, height,
+			width, canvas_height,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		canvas_config(start_canvas+1,
 			(unsigned long)(buf+width*height),
-			width, height/2,
+			width, canvas_height/2,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		canvas = start_canvas | ((start_canvas+1)<<8);
 		break;
@@ -431,15 +432,15 @@ int get_amlvideo2_canvas_index(struct amlvideo2_output* output, int start_canvas
 	case V4L2_PIX_FMT_YUV420:
 		canvas_config(start_canvas,
 			(unsigned long)buf,
-			width, height,
+			width, canvas_height,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		canvas_config(start_canvas+1,
 			(unsigned long)(buf+width*height),
-			width/2, height/2,
+			width/2, canvas_height/2,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		canvas_config(start_canvas+2,
 			(unsigned long)(buf+width*height*5/4),
-			width/2, height/2,
+			width/2, canvas_height/2,
 			CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_LINEAR);
 		if(V4L2_PIX_FMT_YUV420 == v4l2_format){
 			canvas = start_canvas|((start_canvas+1)<<8)|((start_canvas+2)<<16);
