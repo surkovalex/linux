@@ -2614,9 +2614,9 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
         }
     }
 
-    printk("%s: version %s, prog_proc_type %d, buf start 0x%x, size 0x%x, buf(w%d,h%d) cur num %d (available %d,  total %d) \n",
-        __func__, version_s, di_pre_stru.prog_proc_type, (unsigned int)di_mem_start,
-        (unsigned int)di_mem_size, width, canvas_height, local_buf_num_valid, local_buf_num_available, local_buf_num);
+//    printk("%s: version %s, prog_proc_type %d, buf start 0x%x, size 0x%x, buf(w%d,h%d) cur num %d (available %d,  total %d) \n",
+//        __func__, version_s, di_pre_stru.prog_proc_type, (unsigned int)di_mem_start,
+//        (unsigned int)di_mem_size, width, canvas_height, local_buf_num_valid, local_buf_num_available, local_buf_num);
 
     return 0;
 }
@@ -3897,11 +3897,11 @@ static unsigned char pre_de_buf_config(void)
             	di_pre_stru.di_chan2_buf_dup_p->pre_ref_count = 0;
                 di_pre_stru.di_chan2_buf_dup_p = NULL;
             }
-//#ifdef DI_DEBUG
+#ifdef DI_DEBUG
             printk("%s: source change: 0x%x/%d/%d/%d=>0x%x/%d/%d/%d\n", __func__,
                 di_pre_stru.cur_inp_type, di_pre_stru.cur_width, di_pre_stru.cur_height, di_pre_stru.cur_source_type,
                 di_buf->vframe->type, di_buf->vframe->width, di_buf->vframe->height, di_buf->vframe->source_type);
-//#endif
+#endif
             di_pre_stru.cur_width = di_buf->vframe->width;
             di_pre_stru.cur_height= di_buf->vframe->height;
             di_pre_stru.cur_prog_flag = is_progressive(di_buf->vframe);

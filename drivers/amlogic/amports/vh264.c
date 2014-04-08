@@ -48,7 +48,7 @@
 #define MODULE_NAME "amvdec_h264"
 
 #define HANDLE_H264_IRQ
-#define DEBUG_PTS
+//#define DEBUG_PTS
 #define DROP_B_FRAME_FOR_1080P_50_60FPS
 
 #define RATE_MEASURE_NUM 8
@@ -709,10 +709,10 @@ static void vh264_set_params(void)
 
     if (aspect_ratio_info_present_flag) {
         if (aspect_ratio_idc == EXTEND_SAR) {
-            printk("v264dec: aspect_ratio_idc = EXTEND_SAR, aspect_ratio_info = 0x%x\n", aspect_ratio_info);
+            //printk("v264dec: aspect_ratio_idc = EXTEND_SAR, aspect_ratio_info = 0x%x\n", aspect_ratio_info);
             h264_ar = div_u64(256ULL * (aspect_ratio_info >> 16) * frame_height, (aspect_ratio_info & 0xffff) * frame_width);
         } else {
-            printk("v264dec: aspect_ratio_idc = %d\n", aspect_ratio_idc);
+            //printk("v264dec: aspect_ratio_idc = %d\n", aspect_ratio_idc);
 
             switch (aspect_ratio_idc) {
             case 1:
@@ -1389,7 +1389,7 @@ static void vh264_prot_init(void)
     }
 
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
-    printk("vh264 meson8 prot init\n");
+    //printk("vh264 meson8 prot init\n");
     WRITE_VREG(MDEC_PIC_DC_THRESH, 0x404038aa);
 #endif
 }
@@ -1481,7 +1481,7 @@ static s32 vh264_init(void)
         return -ENOMEM;
     }
 
-    printk("\nvh264_init\n");
+    //printk("\nvh264_init\n");
     init_timer(&recycle_timer);
 
     stat |= STAT_TIMER_INIT;
@@ -1762,7 +1762,7 @@ static int amvdec_h264_probe(struct platform_device *pdev)
 {
     struct resource *mem;
     mutex_lock(&vh264_mutex);
-    printk("amvdec_h264 probe start.\n");
+    //printk("amvdec_h264 probe start.\n");
 
     if (!(mem = platform_get_resource(pdev, IORESOURCE_MEM, 0))) {
         printk("\namvdec_h264 memory resource undefined.\n");
@@ -1792,7 +1792,7 @@ static int amvdec_h264_probe(struct platform_device *pdev)
 
     atomic_set(&vh264_active, 1);
 
-    printk("amvdec_h264 probe end.\n");
+    //printk("amvdec_h264 probe end.\n");
     mutex_unlock(&vh264_mutex);
     return 0;
 }

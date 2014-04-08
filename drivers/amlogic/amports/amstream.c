@@ -341,13 +341,13 @@ static void amstream_change_vbufsize(stream_port_t *port,struct stream_buf_s *pv
         if (port->vformat == VFORMAT_H264_4K2K){				
             pvbuf->buf_size = pvbuf->default_buf_size;
 
-            printk(" amstream_change_vbufsize 4k2k bufsize[0x%x] defaultsize[0x%x]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);
+            //printk(" amstream_change_vbufsize 4k2k bufsize[0x%x] defaultsize[0x%x]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);
         }else if((pvbuf->default_buf_size > MAX_STREAMBUFFER_SIZE)&& (port->vformat != VFORMAT_H264_4K2K)) {
             pvbuf->buf_size = MAX_STREAMBUFFER_SIZE;
 
-            printk(" amstream_change_vbufsize MAX_STREAMBUFFER_SIZE-[0x%x] defaultsize-[0x%x] vformat-[%d]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size,port->vformat);
+            //printk(" amstream_change_vbufsize MAX_STREAMBUFFER_SIZE-[0x%x] defaultsize-[0x%x] vformat-[%d]\n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size,port->vformat);
         } else {
-            printk(" amstream_change_vbufsize bufsize[0x%x] defaultbufsize [0x%x] \n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);	
+            //printk(" amstream_change_vbufsize bufsize[0x%x] defaultbufsize [0x%x] \n",bufs[BUF_TYPE_VIDEO].buf_size,pvbuf->default_buf_size);	
         }
 
         reset_canuse_buferlevel(10000);
