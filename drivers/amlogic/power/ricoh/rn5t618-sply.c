@@ -74,7 +74,6 @@ static struct later_job rn5t618_charger_job = {};
 static struct later_job rn5t618_otg_job = {};
 static int rn5t618_otg_value = -1;
 static int otg_mask = 0;
-struct delayed_work rn5t618_otg_work;
 #endif
 
 static int rn5t618_update_state(struct aml_charger *charger);
@@ -773,12 +772,16 @@ static void rn5t618_battery_setup_psy(struct rn5t618_supply *supply)
 }
 
 #ifdef CONFIG_AMLOGIC_USB
-static void rn5t618_otg_work_fun(struct work_struct *work)
+int rn5t618_otg_change(struct notifier_block *nb, unsigned long value, void *pdata)
 {
     uint8_t val;
-    if (rn5t618_otg_value == -1) {
-        return ;    
+    if (!g_rn5t618_supply) {
+        RICOH_DBG("%s, driver is not ready, do it later\n", __func__);
+        rn5t618_otg_job.flag  = 1;
+        rn5t618_otg_job.value = value;
+        return 0;
     }
+    rn5t618_otg_value = value;
     RICOH_DBG("%s, value:%d, is_short:%d\n", __func__, rn5t618_otg_value, g_rn5t618_init->vbus_dcin_short_connect);
     if (rn5t618_otg_value) {
         rn5t618_read(0xB3, &val);
@@ -809,21 +812,7 @@ static void rn5t618_otg_work_fun(struct work_struct *work)
     printk("register 0xB3:%02x\n", val);
     rn5t618_update_state(&g_rn5t618_supply->aml_charger);
     power_supply_changed(&g_rn5t618_supply->batt);
-    if (rn5t618_otg_value && g_rn5t618_init->vbus_dcin_short_connect) { 
-        schedule_delayed_work(&rn5t618_otg_work, msecs_to_jiffies(2000));
-    }
-}
-
-int rn5t618_otg_change(struct notifier_block *nb, unsigned long value, void *pdata)
-{
-    if (!g_rn5t618_supply) {
-        RICOH_DBG("%s, driver is not ready, do it later\n", __func__);
-        rn5t618_otg_job.flag  = 1;
-        rn5t618_otg_job.value = value;
-        return 0;
-    }
-    rn5t618_otg_value = value;
-    schedule_work(&rn5t618_otg_work.work);
+    msleep(100);
     return 0;
 }
 
@@ -1541,7 +1530,6 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
     charger->coulomb_type        = COULOMB_SINGLE_CHG_INC; 
     supply->charge_timeout_retry = g_rn5t618_init->charge_timeout_retry;
 #ifdef CONFIG_AMLOGIC_USB
-    INIT_DELAYED_WORK(&rn5t618_otg_work, rn5t618_otg_work_fun);
     if (rn5t618_charger_job.flag) {     // do later job for usb charger detect
         rn5t618_usb_charger(NULL, rn5t618_charger_job.value, NULL);    
         rn5t618_charger_job.flag = 0;

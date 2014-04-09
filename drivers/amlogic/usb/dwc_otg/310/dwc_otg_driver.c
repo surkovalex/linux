@@ -690,14 +690,16 @@ static void dwc_otg_set_force_id(dwc_otg_core_if_t *core_if,int mode)
 void set_usb_vbus_power(int pin,char is_power_on)
 {
     if(is_power_on){
+	    dwc_otg_power_notifier_call(is_power_on);		//notify pmu off vbus first
+
         printk( "set usb port power on (board gpio %d)!\n",pin);
         amlogic_gpio_direction_output(pin,is_power_on,VBUS_POWER_GPIO_OWNER);		//set vbus on by gpio	 
-	    dwc_otg_power_notifier_call(is_power_on);		//notify pmu off vbus first
     }
     else    {
         printk("set usb port power off (board gpio %d)!\n",pin);
-        dwc_otg_power_notifier_call(is_power_on);		//notify pmu on vbus
 	    amlogic_gpio_direction_output(pin,is_power_on,VBUS_POWER_GPIO_OWNER);		//set vbus off by gpio first
+
+        dwc_otg_power_notifier_call(is_power_on);		//notify pmu on vbus
     }
 }
 
