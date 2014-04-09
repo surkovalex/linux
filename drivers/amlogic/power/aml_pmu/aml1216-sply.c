@@ -1172,9 +1172,27 @@ int aml1216_cal_ocv(int ibat, int vbat, int dir)
     return result;
 }
 
+int aml1216_get_vsys_voltage(void)
+{
+    uint8_t val[2] = {};
+    int     result;
+    aml1216_write(0x00AA, 0xC3);                            // select VBUS channel
+    aml1216_write(0x009A, 0x28);
+    udelay(100);
+    aml1216_reads(0x00B1, val, 2);
+    result = ((val[1] & 0x1f) << 8) + val[0];
+    if (result & 0x1000) {                                  // complement code
+        result = 0;                                         // avoid ADC offset 
+    } else {
+        result = result * 6400 / 4096;
+    }
+    return result;
+}
 static int aml1216_update_state(struct aml_charger *charger)
 {
     uint8_t val;
+    int  vsys_voltage;
+    vsys_voltage = aml1216_get_vsys_voltage();
 
     aml1216_read(0x0172, &val);
 
@@ -1194,10 +1212,18 @@ static int aml1216_update_state(struct aml_charger *charger)
     charger->ext_valid  = charger->dcin_valid | (charger->usb_valid << 1); 
     charger->fault      = val;
     /*
-     * limit duty cycle of DC3 according CHG_GAT_BAT_LV bit
+     * limit duty cycle of DC3 according vsys voltage
      */
-    aml1216_set_bits(0x004f, (val & 0x01) << 3, 0x08);
+    //aml1216_set_bits(0x004f, (val & 0x01) << 3, 0x08);
 
+    if (vsys_voltage >= 4350)
+    {
+        aml1216_set_bits(0x004f, 0x08, 0x08);
+    }
+    else
+    {
+        aml1216_set_bits(0x004f, 0x00, 0x08);
+    } 
     charger->vbat = aml1216_get_battery_voltage();
     charger->ocv  = aml1216_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);
 
