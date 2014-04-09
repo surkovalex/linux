@@ -74,6 +74,7 @@ static void amvdec_pg_enable(bool enable)
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
         WRITE_VREG(GCLK_EN, 0x3ff);
 #endif
+	CLEAR_VREG_MASK(MDEC_PIC_DC_CTRL, 1<<31);
     } else {
         AMVDEC_CLK_GATE_OFF(AMRISC);
 
