@@ -180,7 +180,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-03-30";
+static char version_s[] = "2014-04-10a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -250,7 +250,7 @@ int di_vscale_skip_enable = 1;
 #define CHECK_DI_DONE
 #endif
 
-#ifdef NEW_DI_V1
+#ifdef NEW_DI_TV
 static int input2pre = 1;
 #else
 static int input2pre = 0;
@@ -1217,7 +1217,7 @@ typedef struct queue_s{
     int num;
     int in_idx;
     int out_idx;
-    int type; /* 0, first in first out; 1, general */
+    int type; /* 0, first in first out; 1, general;2, fix position for di buf*/
     unsigned int pool[MAX_QUEUE_POOL_SIZE];
 }queue_t;
 static queue_t queue[QUEUE_NUM];
@@ -1245,6 +1245,8 @@ static void queue_init(int local_buffer_num)
         if((i==QUEUE_RECYCLE)||(i==QUEUE_DISPLAY)||(i==QUEUE_TMP)){
             q->type = 1;
         }
+        if(i==QUEUE_LOCAL_FREE)
+       	    q->type = 2;
     }
     if(local_buffer_num > 0){
         di_buf_pool[VFRAME_TYPE_IN-1].di_buf_ptr = &di_buf_in[0];
@@ -1284,7 +1286,7 @@ static di_buf_t* get_di_buf(int queue_idx, int* start_pos)
             idx = MAX_QUEUE_POOL_SIZE;
         }
     }
-    else{
+    else if((q->type == 1)||(q->type == 2)){
         for(idx=(*start_pos); idx<MAX_QUEUE_POOL_SIZE; idx++){
             if(q->pool[idx]!=0){
                 *start_pos = idx+1;
@@ -1433,7 +1435,7 @@ static void queue_out(di_buf_t* di_buf)
                     recovery_flag++;
                 }
             }
-            else{
+            else if(q->type==1){
                 int pool_val = (di_buf->type<<8)|(di_buf->index);
                 for(i=0; i<MAX_QUEUE_POOL_SIZE; i++){
                     if(q->pool[i]==pool_val){
@@ -1454,6 +1456,24 @@ static void queue_out(di_buf_t* di_buf)
                     }
                     recovery_flag++;
                 }
+            }else if(q->type==2){
+            	int pool_val = (di_buf->type<<8)|(di_buf->index);
+            	if((di_buf->index < MAX_QUEUE_POOL_SIZE)&&(q->pool[di_buf->index]==pool_val)){
+            	    q->num--;
+            	    q->pool[di_buf->index]=0;
+            	    di_buf->queue_index = -1;
+                }else{
+#ifdef DI_DEBUG
+                    printk("%s: Error\n", __func__);
+#endif
+                    if(recovery_flag==0){
+                        recovery_log_reason = 5;
+                        recovery_log_queue_idx = di_buf->queue_index;
+                        recovery_log_di_buf = di_buf;
+                    }
+                    recovery_flag++;
+                }
+            			
             }
         }
     }
@@ -1517,7 +1537,7 @@ static void queue_in(di_buf_t* di_buf, int queue_idx)
         }
         q->num++;
     }
-    else{
+    else if(q->type==1){
         int i;
         for(i=0; i<MAX_QUEUE_POOL_SIZE; i++){
             if(q->pool[i]==0){
@@ -1537,6 +1557,21 @@ static void queue_in(di_buf_t* di_buf, int queue_idx)
             }
             recovery_flag++;
         }
+    }else if(q->type==2){
+    	if((di_buf->index < MAX_QUEUE_POOL_SIZE)&&(q->pool[di_buf->index]==0)){
+    	   q->pool[di_buf->index] = (di_buf->type<<8)|(di_buf->index);
+           di_buf->queue_index = queue_idx;
+           q->num++;
+    	}else{
+#ifdef DI_DEBUG
+            printk("%s: Error\n", __func__);
+#endif
+            if(recovery_flag==0){
+                recovery_log_reason = 9;
+                recovery_log_queue_idx = queue_idx;
+            }
+            recovery_flag++;
+    	}
     }
 #ifdef DI_DEBUG
     if(di_log_flag&DI_LOG_QUEUE){
@@ -1771,7 +1806,7 @@ static ssize_t store_dump_mem(struct device * dev, struct device_attribute *attr
 static void recycle_vframe_type_pre(di_buf_t* di_buf);
 static void recycle_vframe_type_post(di_buf_t* di_buf);
 #ifdef DI_DEBUG
-static void recycle_vframe_type_post_print(di_buf_t* di_buf, const char* func);
+static void recycle_vframe_type_post_print(di_buf_t* di_buf, const char* func, const int line);
 #endif
 
 reg_cfg_t* reg_cfg_head = NULL;
@@ -2477,7 +2512,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
     for(i=0; i<local_buf_num; i++){
         di_buf_t* di_buf = &(di_buf_local[i]);
         int ii = USED_LOCAL_BUF_MAX;
-        if(new_keep_last_frame_enable){
+        if((used_post_buf_index != -1)&&(new_keep_last_frame_enable)){
             for(ii=0; ii<USED_LOCAL_BUF_MAX; ii++){
                 //printk("%s %d %d\n", __func__, di_buf->index, used_local_buf_index[ii]);
                 if(i == used_local_buf_index[ii]){
@@ -2498,7 +2533,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
             if(prog_flag){
                 di_buf->nr_adr = di_mem_start + (width*canvas_height*2)*i;
 #ifndef DI_USE_FIXED_CANVAS_IDX
-    	          di_buf->nr_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i;
+    	        di_buf->nr_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i;
 #endif
 	              //canvas_config(di_buf->nr_canvas_idx, di_buf->nr_adr, width*2, canvas_height, 0, 0);
                 di_buf->canvas_config_flag = 1;
@@ -2517,7 +2552,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
                 di_buf->nr_adr = di_mem_start + (width*canvas_height*5/4)*i;
 #endif
 #ifndef DI_USE_FIXED_CANVAS_IDX
-    	          di_buf->nr_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i*2;
+    	        di_buf->nr_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i*2;
 #endif
 	              //canvas_config(di_buf->nr_canvas_idx, di_buf->nr_adr, width*2, canvas_height/2, 0, 0);
 #ifdef NEW_DI_V1
@@ -2527,7 +2562,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
                 di_buf->mtn_adr = di_mem_start + (width*canvas_height*5/4)*i + (width*canvas_height);
 #endif
 #ifndef DI_USE_FIXED_CANVAS_IDX
-    	          di_buf->mtn_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i*2+1;
+    	        di_buf->mtn_canvas_idx = DEINTERLACE_CANVAS_BASE_INDEX+i*2+1;
 #endif
 	              //canvas_config(di_buf->mtn_canvas_idx, di_buf->mtn_adr, width/2, canvas_height/2, 0, 0);
                 di_buf->canvas_config_flag = 2;
@@ -2692,7 +2727,7 @@ static void di_clean_in_buf(void)
         di_buf = get_di_buf_head(QUEUE_POST_READY);
         recycle_vframe_type_post(di_buf);
 #ifdef DI_DEBUG
-        recycle_vframe_type_post_print(di_buf, __func__);
+        recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
     }
 
@@ -2897,7 +2932,13 @@ static void print_di_buf(di_buf_t* di_buf, int format)
                         0
 #endif
                         );
+            if(di_buf->di_wr_linked_buf){
+      	        printk("  linked  +index %d, 0x%p, type %d\n", 
+                        di_buf->di_wr_linked_buf->index, di_buf->di_wr_linked_buf, 
+                        di_buf->di_wr_linked_buf->type);
+            }
         }
+        
 
     }
     else if(format == 2){
@@ -2905,12 +2946,18 @@ static void print_di_buf(di_buf_t* di_buf, int format)
             printk("index %d, 0x%p(vframe 0x%p), type %d, vframetype 0x%x, trans_fmt %u,duration %d pts %d\n",
                     di_buf->index, di_buf, di_buf->vframe, di_buf->type, di_buf->vframe->type,
 #ifdef CONFIG_POST_PROCESS_MANAGER_3D_PROCESS
-                        di_buf->vframe->trans_fmt,
+                    di_buf->vframe->trans_fmt,
 #else
-                        0,
+                    0,
 #endif
-                        di_buf->vframe->duration, di_buf->vframe->pts);
+                    di_buf->vframe->duration, di_buf->vframe->pts);
+            if(di_buf->di_wr_linked_buf){
+       	        printk("linked index %d, 0x%p, type %d\n",
+                        di_buf->di_wr_linked_buf->index, di_buf->di_wr_linked_buf, 
+                        di_buf->di_wr_linked_buf->type);
+            }
         }
+
 
     }
 
@@ -2965,6 +3012,11 @@ static void dump_state(void)
     printk("recycle_list:\n");
     queue_for_each_entry(p, ptmp, QUEUE_RECYCLE, list) {
         printk("index %2d, 0x%p, type %d, vframetype 0x%x pre_ref_count %d post_ref_count %d\n", p->index, p, p->type, p->vframe->type, p->pre_ref_count, p->post_ref_count);
+        if(p->di_wr_linked_buf){
+       	    printk("linked index %2d, 0x%p, type %d pre_ref_count %d post_ref_count %d\n",
+                    p->di_wr_linked_buf->index, p->di_wr_linked_buf, p->di_wr_linked_buf->type, 
+                    p->di_wr_linked_buf->pre_ref_count, p->di_wr_linked_buf->post_ref_count);
+        }
     }
     if(di_pre_stru.di_inp_buf)
         printk("di_inp_buf:index %d, 0x%p, type %d\n", di_pre_stru.di_inp_buf->index, di_pre_stru.di_inp_buf, di_pre_stru.di_inp_buf->type);
@@ -3429,7 +3481,16 @@ static void pre_de_done_buf_config(void)
             }
             else{
                 di_pre_stru.di_mem_buf_dup_p->pre_ref_count = 0;
-                di_pre_stru.di_mem_buf_dup_p = di_pre_stru.di_wr_buf;
+                /*recycle the progress throw buffer*/
+                if(di_pre_stru.di_wr_buf->throw_flag){
+               	    di_pre_stru.di_wr_buf->pre_ref_count = 0;
+                    di_pre_stru.di_mem_buf_dup_p = NULL;
+#ifdef DI_DEBUG
+                    di_print("%s set throw %s[%d] pre_ref_count to 0.\n",__func__,vframe_type_name[di_pre_stru.di_wr_buf->type],di_pre_stru.di_wr_buf->index);                
+#endif             
+                } else {
+                    di_pre_stru.di_mem_buf_dup_p = di_pre_stru.di_wr_buf;
+                }
 #ifdef DI_DEBUG
                 di_print("%s: set di_mem_buf_dup_p to di_wr_buf\n", __func__);
 #endif
@@ -3449,13 +3510,13 @@ static void pre_de_done_buf_config(void)
                 di_pre_stru.di_wr_buf->new_format_flag = 1;
                 bypass_state = 0;
 //#ifdef DI_DEBUG
-     						di_print("%s:bypass_state change to 0, is_bypass() %d trick_mode %d bypass_all %d\n", __func__, is_bypass(), trick_mode, bypass_all);
+     		di_print("%s:bypass_state change to 0, is_bypass() %d trick_mode %d bypass_all %d\n", __func__, is_bypass(), trick_mode, bypass_all);
 //#endif
             }
 #ifdef CONFIG_VSYNC_RDMA
-			if((di_debug_flag&0x10)==0){
-				if(interlace_output_flag==0)
-            		enable_rdma(1);
+	    if((di_debug_flag&0x10)==0){
+		if(interlace_output_flag==0)
+        	    enable_rdma(1);
             }
 #endif
             queue_in(di_pre_stru.di_wr_buf, QUEUE_PRE_READY);
@@ -3641,59 +3702,57 @@ static void recycle_vframe_type_pre(di_buf_t* di_buf)
 
     di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
 }
-static bool peek_free_linked_buf(void)
+/*
+* it depend on local buffer queue type is 2
+*/
+static int peek_free_linked_buf(void)
 {
-    di_buf_t *p = NULL, *ptmp, *tmp = NULL;
-    int itmp, p_index = 0;
+    di_buf_t *p = NULL, *p_linked = NULL,*ptmp;
+    int itmp, p_index = -2;
     
-    tmp = get_di_buf_head(QUEUE_LOCAL_FREE);
-    if(tmp)
-    	p_index = tmp->index;
-    else
-    	return false;
-    	
+    if(list_count(QUEUE_LOCAL_FREE) < 2)
+    	return -1;
+    
     queue_for_each_entry(p, ptmp, QUEUE_LOCAL_FREE, list) {
-        if(abs(p->index - p_index)){
-            return true;
+        if(abs(p->index - p_index)==1){
+            return min(p->index,p_index);
         }
         else{
             p_index = p->index;
         }
     }
-    return false;
+    return -1;
 }
-static di_buf_t *get_free_linked_buf(void)
+/*
+* it depend on local buffer queue type is 2
+*/
+static di_buf_t *get_free_linked_buf(int idx)
 {
     di_buf_t *di_buf=NULL, *di_buf_linked=NULL, *di_buf_tmp;
-    di_buf = get_di_buf_head(QUEUE_LOCAL_FREE);
-    if(check_di_buf(di_buf, 11)){
-        return NULL;
-    }
-    queue_out(di_buf);
-    di_buf->di_wr_linked_buf = NULL;
-    while(di_buf->di_wr_linked_buf == NULL) {
-	/* di wr buf linked */         		
-       	di_buf_linked = get_di_buf_head(QUEUE_LOCAL_FREE);
-       	if(check_di_buf(di_buf_linked,11)){
-       	    recycle_vframe_type_pre(di_buf);
-       	    return NULL;
-       	}
-      	queue_out(di_buf_linked);
-       	if((di_buf_linked->index - di_buf->index)==1) {         		    
-       	    di_buf->di_wr_linked_buf = di_buf_linked;
-	    return di_buf;
-        } else if((di_buf->index - di_buf_linked->index)==1){
-            di_buf_tmp = di_buf;
-	    di_buf = di_buf_linked;
-	    di_buf_linked = di_buf_tmp;
-       	    di_buf->di_wr_linked_buf = di_buf_linked;
-	    return di_buf;
-       	} else {
-       	    recycle_vframe_type_pre(di_buf);
-	    di_buf = di_buf_linked;
-            di_buf->di_wr_linked_buf = NULL;
+    int i = 0, pool_idx = 0, di_buf_idx = 0;
+    
+    queue_t *q = &(queue[QUEUE_LOCAL_FREE]);
+    if(list_count(QUEUE_LOCAL_FREE)<2)
+    	return NULL;
+    if(q->pool[idx]!=0 && q->pool[idx+1]!=0){
+    	pool_idx = ((q->pool[idx]>>8)&0xff)-1;
+        di_buf_idx = q->pool[idx]&0xff;
+        if(pool_idx < VFRAME_TYPE_NUM){
+            if(di_buf_idx < di_buf_pool[pool_idx].size){
+                di_buf = &(di_buf_pool[pool_idx].di_buf_ptr[di_buf_idx]);
+                queue_out(di_buf);
+            }
         }
-   	 
+        pool_idx = ((q->pool[idx+1]>>8)&0xff)-1;
+        di_buf_idx = q->pool[idx+1]&0xff;
+        if(pool_idx < VFRAME_TYPE_NUM){
+            if(di_buf_idx < di_buf_pool[pool_idx].size){
+                di_buf_linked = &(di_buf_pool[pool_idx].di_buf_ptr[di_buf_idx]);
+                queue_out(di_buf_linked);
+            }
+        }
+        di_buf->di_wr_linked_buf = di_buf_linked;
+        
     }
     return di_buf;
 }
@@ -3702,7 +3761,7 @@ static unsigned char pre_de_buf_config(void)
 {
     di_buf_t *di_buf = NULL;
     vframe_t* vframe;
-    int i;
+    int i, di_linked_buf_idx = -1;
     
     if((queue_empty(QUEUE_IN_FREE)&&(di_pre_stru.process_count==0))||
         queue_empty(QUEUE_LOCAL_FREE)){
@@ -3724,7 +3783,8 @@ static unsigned char pre_de_buf_config(void)
             return 0;
         }
     }else if(di_pre_stru.prog_proc_type == 2){
-	if(!peek_free_linked_buf())
+    	di_linked_buf_idx = peek_free_linked_buf();
+	if(di_linked_buf_idx == -1)
             return 0;
     }
 
@@ -3826,11 +3886,18 @@ static unsigned char pre_de_buf_config(void)
 
         if(is_source_change(vframe)){ /* source change*/
             if(di_pre_stru.di_mem_buf_dup_p){
-                di_pre_stru.di_mem_buf_dup_p->pre_ref_count = 0;
+            	/*avoid only 2 i field then p field*/
+            	if(di_pre_stru.cur_prog_flag == 0)
+            	    di_pre_stru.di_mem_buf_dup_p->post_proc_flag = -1;
+            	di_pre_stru.di_mem_buf_dup_p->pre_ref_count = 0;
                 di_pre_stru.di_mem_buf_dup_p = NULL;
+
             }
             if(di_pre_stru.di_chan2_buf_dup_p){
-                di_pre_stru.di_chan2_buf_dup_p->pre_ref_count = 0;
+            	/*avoid only 1 i field then p field*/
+            	if(di_pre_stru.cur_prog_flag == 0)
+            	    di_pre_stru.di_chan2_buf_dup_p->post_proc_flag = -1;
+            	di_pre_stru.di_chan2_buf_dup_p->pre_ref_count = 0;
                 di_pre_stru.di_chan2_buf_dup_p = NULL;
             }
 //#ifdef DI_DEBUG
@@ -4030,10 +4097,15 @@ static unsigned char pre_de_buf_config(void)
 
      /* di_wr_buf */
      if(di_pre_stru.prog_proc_type == 2){
-         di_buf = get_free_linked_buf();
+     	 di_linked_buf_idx = peek_free_linked_buf();
+     	 if(di_linked_buf_idx != -1)
+             di_buf = get_free_linked_buf(di_linked_buf_idx);
+         else 
+             di_buf = NULL;
 	 if(di_buf == NULL){
-	     recycle_vframe_type_pre(di_pre_stru.di_inp_buf);
-	     di_pre_stru.di_inp_buf = NULL;
+	     //recycle_vframe_type_pre(di_pre_stru.di_inp_buf);
+	     /*save for next process*/
+	     di_pre_stru.di_inp_buf_next = di_pre_stru.di_inp_buf;
 	     return 0;
 	 }
 	 di_buf->post_proc_flag = 0;
@@ -4146,15 +4218,14 @@ static int check_recycle_buf(void)
         if((di_buf->pre_ref_count == 0)&&(di_buf->post_ref_count == 0)){
             if(di_buf->type == VFRAME_TYPE_IN){
                 queue_out(di_buf);
-                    if(vframe_in[di_buf->index]){
-                        vf_put(vframe_in[di_buf->index], VFM_NAME);
-
-                        vf_notify_provider(VFM_NAME, VFRAME_EVENT_RECEIVER_PUT, NULL);
+                if(vframe_in[di_buf->index]){
+                    vf_put(vframe_in[di_buf->index], VFM_NAME);
+                    vf_notify_provider(VFM_NAME, VFRAME_EVENT_RECEIVER_PUT, NULL);
 #ifdef DI_DEBUG
-                        di_print("%s: vf_put(%d) %x\n", __func__, di_pre_stru.recycle_seq, vframe_in[di_buf->index]);
+                    di_print("%s: vf_put(%d) %x\n", __func__, di_pre_stru.recycle_seq, vframe_in[di_buf->index]);
 #endif
-                        vframe_in[di_buf->index] = NULL;
-                    }
+                    vframe_in[di_buf->index] = NULL;
+                }
                 di_buf->invert_top_bot_flag = 0;
                 queue_in(di_buf, QUEUE_IN_FREE);
                 di_pre_stru.recycle_seq++;
@@ -4163,8 +4234,14 @@ static int check_recycle_buf(void)
             else{
                 queue_out(di_buf);
                 di_buf->invert_top_bot_flag = 0;
-                di_buf->di_wr_linked_buf = NULL;
                 queue_in(di_buf, QUEUE_LOCAL_FREE);
+                if(di_buf->di_wr_linked_buf){
+               	    queue_in(di_buf->di_wr_linked_buf,QUEUE_LOCAL_FREE);
+#ifdef DI_DEBUG
+            	    di_print("%s: linked %s[%d]=>recycle_list\n",__func__, vframe_type_name[di_buf->di_wr_linked_buf->type], di_buf->di_wr_linked_buf->index);
+#endif
+               	    di_buf->di_wr_linked_buf = NULL;
+                }
                 ret |= 2;
             }
 #ifdef DI_DEBUG
@@ -5021,13 +5098,6 @@ static void recycle_vframe_type_post(di_buf_t* di_buf)
     for(i=0;i<2;i++){
         if(di_buf->di_buf[i]){
             queue_in(di_buf->di_buf[i], QUEUE_RECYCLE);
-            if(di_buf->di_buf[i]->di_wr_linked_buf){
-            	queue_in(di_buf->di_buf[i]->di_wr_linked_buf, QUEUE_RECYCLE);
-            	#ifdef DI_DEBUG
-            	di_print("linked %s[%d]<%d>=>recycle_list\n", vframe_type_name[di_buf->di_buf[i]->di_wr_linked_buf->type], di_buf->di_buf[i]->di_wr_linked_buf->index, i);
-            	#endif
-            	di_buf->di_buf[i]->di_wr_linked_buf = NULL;
-            }
          }
     }
     queue_out(di_buf); //remove it from display_list_head
@@ -5036,10 +5106,10 @@ static void recycle_vframe_type_post(di_buf_t* di_buf)
 }
 
 #ifdef DI_DEBUG
-static void recycle_vframe_type_post_print(di_buf_t* di_buf, const char* func)
+static void recycle_vframe_type_post_print(di_buf_t* di_buf, const char* func, const int line)
 {
     int i;
-    di_print("%s:", func);
+    di_print("%s:%d ", func,line);
     for(i=0;i<2;i++){
         if(di_buf->di_buf[i]){
             di_print("%s[%d]<%d>=>recycle_list; ", vframe_type_name[di_buf->di_buf[i]->type], di_buf->di_buf[i]->index, i);
@@ -5297,7 +5367,7 @@ static void force_bob_vframe(di_buf_t* di_buf)
         queue_in(di_buf, QUEUE_TMP);
         recycle_vframe_type_post(di_buf);
 #ifdef DI_DEBUG
-        recycle_vframe_type_post_print(di_buf, __func__);
+        recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
     } else {
         queue_in(di_buf, QUEUE_POST_READY);
@@ -5342,7 +5412,7 @@ static int process_post_vframe(void)
             i = 0;
             queue_for_each_entry(p, ptmp, QUEUE_PRE_READY, list) {
                 //if(p->post_proc_flag == 0){
-                if(p->type == VFRAME_TYPE_IN){
+                if((p->type == VFRAME_TYPE_IN)||(p->post_proc_flag == 0)){
                     ready_di_buf->post_proc_flag = -1;
                     ready_di_buf->new_format_flag = 1;
                 }
@@ -5465,7 +5535,7 @@ static int process_post_vframe(void)
                             queue_in(di_buf, QUEUE_TMP);
                             recycle_vframe_type_post(di_buf);
 #ifdef DI_DEBUG
-                            recycle_vframe_type_post_print(di_buf, __func__);
+                            recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
                         }
                         else{
@@ -5568,8 +5638,9 @@ static int process_post_vframe(void)
                     else{
                         if(ready_di_buf->type == VFRAME_TYPE_IN)
                             di_buf->vframe->early_process_fun = do_nothing_fun;
-                        else
+                        else{
                             di_buf->vframe->early_process_fun = do_pre_only_fun;
+                          }
                     }
                     di_buf->vframe->process_fun = NULL;
                     di_buf->process_fun_index = PROCESS_FUN_NULL;
@@ -5597,7 +5668,7 @@ static int process_post_vframe(void)
                         queue_in(di_buf, QUEUE_TMP);
                         recycle_vframe_type_post(di_buf);
 #ifdef DI_DEBUG
-                        recycle_vframe_type_post_print(di_buf, __func__);
+                        recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
                     } else {
                         if(check_drop && (frame_count == start_frame_drop_count)){ 
@@ -5722,7 +5793,7 @@ static int process_post_vframe(void)
                     queue_in(di_buf, QUEUE_TMP);
                     recycle_vframe_type_post(di_buf);
 #ifdef DI_DEBUG
-                    recycle_vframe_type_post_print(di_buf, __func__);
+                    recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
                 }
                 else{
@@ -5904,11 +5975,11 @@ di_set_para_by_tvinfo(vframe);
 #ifdef DI_DEBUG
             di_print("%s: vframe come => di_init_buf\n", __func__);
 #endif
-            if(is_progressive(vframe)&&
-                    (
-                    (is_from_vdin(vframe)&&(prog_proc_config&0x1))||
-                    ((!is_from_vdin(vframe))&&(prog_proc_config&0x10))
-                    )
+            if(is_progressive(vframe)&&(prog_proc_config&0x10)
+                    //(
+                    //(is_from_vdin(vframe)&&(prog_proc_config&0x1))||
+                    //((!is_from_vdin(vframe))&&(prog_proc_config&0x10))
+                    //)
                 ){
 #if (!(defined RUN_DI_PROCESS_IN_IRQ))||(defined ENABLE_SPIN_LOCK_ALWAYS)
                 spin_lock_irqsave(&plist_lock, flags);
@@ -6505,8 +6576,8 @@ static void recycle_keep_buffer(void)
 	    queue_in(&di_buf_post[used_post_buf_index],QUEUE_POST_FREE);
 	    di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
 	    printk(")\n");
-	    used_post_buf_index = -1;
 	}
+	used_post_buf_index = -1;
     }
  }
 static vframe_t *di_vf_get(void* arg)
@@ -6567,7 +6638,9 @@ get_vframe:
             vframe_ret->early_process_fun(vframe_ret->private_data, vframe_ret);
         }
     }
-
+    if(vframe_ret)
+	recycle_keep_buffer();
+			
     return vframe_ret;
 }
 
@@ -6584,7 +6657,7 @@ static void di_vf_put(vframe_t *vf, void* arg)
         return;
     }
     log_buffer_state("pu_");
-    recycle_keep_buffer();
+    //recycle_keep_buffer();
     if(di_buf->type == VFRAME_TYPE_POST){
         di_lock_irqfiq_save(irq_flag2, fiq_flag);
 
@@ -6593,22 +6666,15 @@ static void di_vf_put(vframe_t *vf, void* arg)
         }
         di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
 #ifdef DI_DEBUG
-        recycle_vframe_type_post_print(di_buf, __func__);
+        recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
     }
     else{
-    	di_buf_t *di_tmp = di_buf->di_wr_linked_buf;
         di_lock_irqfiq_save(irq_flag2, fiq_flag);
-        if(di_tmp){        	
-            di_buf->di_wr_linked_buf = NULL;
-            queue_in(di_tmp, QUEUE_RECYCLE);        	
-        }
         queue_in(di_buf, QUEUE_RECYCLE);
         di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
 #ifdef DI_DEBUG
         di_print("%s: %s[%d] =>recycle_list\n", __func__, vframe_type_name[di_buf->type], di_buf->index);
-        if(di_tmp)
-            di_print("%s: %s linked [%d] =>recycle_list\n", __func__, vframe_type_name[di_tmp->type], di_tmp->index);
 #endif
     }
 
