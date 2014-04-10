@@ -517,6 +517,13 @@ static int cpu_idle_thread(void *data)
 	cpu = get_cpu();
 	put_cpu();
 	dbs_info = &per_cpu(hg_cpu_dbs_info, cpu);
+	while(1){
+		if(dbs_info->enable)
+			break;
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule();
+		set_current_state(TASK_RUNNING);
+	}
 	policy = dbs_info->cdbs.cur_policy;
 	dbs_data = policy->governor_data;
 	cdbs = dbs_data->cdata->get_cpu_cdbs(cpu);
@@ -556,7 +563,8 @@ void cpufreq_set_max_cpu_num(unsigned int cpu_num)
 			if(cpu_num>=num_online_cpus())
 				return ;
 			cpu_hotplug_flag = CPU_HOTPLUG_UNPLUG;
-			wake_up_process(cpu_hotplug_task);
+			if(cpu_hotplug_task)
+				wake_up_process(cpu_hotplug_task);
 		}
 	}
 	last_max_cpu_num=max_cpu_num;
@@ -577,6 +585,13 @@ static int __ref cpu_hotplug_thread(void *data)
 	cpu = get_cpu();
 	put_cpu();
 	dbs_info = &per_cpu(hg_cpu_dbs_info, cpu);
+	while(1){
+		if(dbs_info->enable)
+			break;
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule();
+		set_current_state(TASK_RUNNING);
+	}
 	policy = dbs_info->cdbs.cur_policy;
 	dbs_data = policy->governor_data;
 	hg_tuners = dbs_data->tuners;
@@ -934,7 +949,12 @@ static int hg_cpufreq_governor_dbs(struct cpufreq_policy *policy,
 }
 static int do_null_task(void *data)
 {
-	printk("---add for hotplug governor\n");
+	while(1){
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule();
+		set_current_state(TASK_RUNNING);
+		printk("---add for hotplug governor\n");
+	}
 	return 1;
 }
 struct cpufreq_governor cpufreq_gov_hotplug = {
@@ -953,7 +973,6 @@ static int __init cpufreq_gov_dbs_init(void)
 
 	idle_time = get_cpu_idle_time_us(cpu, &wall);
 	put_cpu();
-
 	if (idle_time == -1ULL) {
 		pr_err("cpufreq-hotplug: %s: assumes CONFIG_NO_HZ\n",
 				__func__);
@@ -974,7 +993,7 @@ static int __init cpufreq_gov_dbs_init(void)
 		cpumask_set_cpu(i, tsk_cpus_allowed(NULL_task));
 	}
 	cpumask_clear_cpu(0, tsk_cpus_allowed(NULL_task));
-
+	wake_up_process(NULL_task);
 
 	/*******************cpu hotplug task******************/
 	cpu_hotplug_task =
@@ -986,7 +1005,7 @@ static int __init cpufreq_gov_dbs_init(void)
 	sched_setscheduler_nocheck(cpu_hotplug_task, SCHED_FIFO, &param);
 	get_task_struct(cpu_hotplug_task);
 	cpu_hotplug_flag = CPU_HOTPLUG_NONE;
-
+	wake_up_process(cpu_hotplug_task);
 	/*******************cpu idle task******************/
 	cpu_idle_task =
 		kthread_create_on_cpu(cpu_idle_thread, NULL, 0,
@@ -997,6 +1016,7 @@ static int __init cpufreq_gov_dbs_init(void)
 	}
 	sched_setscheduler_nocheck(cpu_idle_task, SCHED_FIFO, &param);
 	get_task_struct(cpu_idle_task);
+	wake_up_process(cpu_idle_task);
 
 	err = cpufreq_register_governor(&cpufreq_gov_hotplug);
 
