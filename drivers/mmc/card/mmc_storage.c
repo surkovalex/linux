@@ -14,6 +14,7 @@
 #include <linux/err.h>
 #include <linux/mtd/mtd.h>
 #include <linux/list.h>
+#include <linux/mmc/card.h>
 
 #include "mmc_storage.h"
 
@@ -140,6 +141,12 @@ int mmc_storage_rw_kernel(struct mmc_card *device, struct storage_node_t * stora
     
 	mmc_claim_host(device->host);
 
+    ret = mmc_blk_main_md_part_switch(device);
+    if (ret) {
+        pr_err("%s: error %d mmc_blk_main_md_part_switch\n", __FUNCTION__, ret);
+        goto exit_err;
+    }
+
 	start_blk = (storage_node->offset_addr >> bit);
 	size =len >> bit;
 	force_size = MMC_STORAGE_DEFAULT_SIZE >> bit;
@@ -165,9 +172,9 @@ int mmc_storage_rw_kernel(struct mmc_card *device, struct storage_node_t * stora
 			size -=force_size;
 		}
 	}
-	  mmc_release_host(device->host);
 
 exit_err: 
+    mmc_release_host(device->host);
 	return ret;
 }
 

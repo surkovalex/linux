@@ -7,6 +7,7 @@
 #include <linux/mtd/partitions.h>
 #include <linux/slab.h>
 
+#include <linux/mmc/card.h>
 #include <linux/mmc/emmc_partitions.h>
 #include "emmc_key.h"
 
@@ -64,6 +65,11 @@ static int emmc_key_kernel_rw (struct mmc_card *card, struct emmckey_valid_node_
     int ret = -1;
 
 	mmc_claim_host(card->host);
+    ret = mmc_blk_main_md_part_switch(card);
+    if (ret) {
+        pr_err("%s: error %d mmc_blk_main_md_part_switch\n", __FUNCTION__, ret);
+        goto exit_err;
+    }
 
 	blk = emmckey_valid_node->phy_addr >> bit;
 	cnt = emmckey_valid_node->phy_size >> bit;
@@ -74,6 +80,7 @@ static int emmc_key_kernel_rw (struct mmc_card *card, struct emmckey_valid_node_
         ret = mmc_read_internal(card, blk, cnt, buf);
 	}
 
+exit_err: 
     mmc_release_host(card->host);
 
 	return ret;

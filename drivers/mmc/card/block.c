@@ -658,6 +658,13 @@ static inline int mmc_blk_part_switch(struct mmc_card *card,
 	return 0;
 }
 
+int mmc_blk_main_md_part_switch(struct mmc_card *card)
+{
+	struct mmc_blk_data *main_md = mmc_get_drvdata(card);
+    
+    return mmc_blk_part_switch(card, main_md);
+}
+
 static u32 mmc_sd_num_wr_blocks(struct mmc_card *card)
 {
 	int err;
