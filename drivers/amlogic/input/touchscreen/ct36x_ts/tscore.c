@@ -572,6 +572,7 @@ int ct36x_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 #endif
 	remove_proc_entry(DRIVER_NAME, NULL);
 	ts_com->owner = NULL;
+	i2c_unregister_device(client);
 	return err;
 }
 
@@ -646,7 +647,6 @@ int ct36x_ts_remove(struct i2c_client *client)
 	printk(">>>>> %s() called <<<<< \n", __FUNCTION__);
 
 	ts = (struct ct36x_ts_info *)i2c_get_clientdata(client);
-	destroy_remove(client->dev, ts_com);
 	/* Driver clean up */
 	disable_irq(ts->irq);
 	cancel_work_sync(&ts->event_work);
@@ -660,6 +660,9 @@ int ct36x_ts_remove(struct i2c_client *client)
 #endif
 	remove_proc_entry(DRIVER_NAME, NULL);
 
+	destroy_remove(client->dev, ts_com);
+	ts_com->owner = NULL;
+	i2c_unregister_device(client);
 	return 0;
 }
 

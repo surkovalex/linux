@@ -159,8 +159,8 @@ static u16 x_old[MAX_CONTACTS+1] = {0};
 static u16 y_old[MAX_CONTACTS+1] = {0};
 static u16 x_new = 0;
 static u16 y_new = 0;
-#ifdef LATE_UPGRADE
 static struct fw_data *ptr_fw = NULL;
+#ifdef LATE_UPGRADE
 static u32 fw_len = 0;
 static struct aml_gsl_api *api = NULL;
 #endif
@@ -310,7 +310,6 @@ static __inline__ void fw2buf(u8 *buf, const u32 *fw)
 	u32 *u32_buf = (int *)buf;
 	*u32_buf = *fw;
 }
-#define READ_COUNT  20
 static void gsl_load_fw(struct i2c_client *client)
 {
 	u8 buf[DMA_TRANS_LEN*4 + 1] = {0};
@@ -323,7 +322,16 @@ static void gsl_load_fw(struct i2c_client *client)
 	u32 state = 0;
 #endif
 #ifdef LATE_UPGRADE
-	if (!ptr_fw) return;
+	if (!ptr_fw) {
+	#ifdef AML_RESUME
+		if (ts->dl_fw && !state) {
+			complete(&ts->fw_completion);
+			state = 1;
+			printk("0000 fw_completion complete\n");
+		}
+	#endif
+		return;
+	}
 	source_len = fw_len;
 #else
 	#ifdef GSL3680_COMPATIBLE
@@ -1474,6 +1482,7 @@ static void gsl_ts_late_resume(struct early_suspend *h)
 #endif
 #endif
 #ifdef LATE_UPGRADE
+#define READ_COUNT  18
 static int gslx680_late_upgrade(void *data)
 {
 	u32 offset = 0, i = 5;
@@ -1482,12 +1491,10 @@ static int gslx680_late_upgrade(void *data)
 	int ret = 0;
 	u32 fw_tmp[2] = {0};
 //static int count;
-	while(1) {
-
-		while (aml_gsl_get_api() == NULL)
+	while (aml_gsl_get_api() == NULL)
 			schedule_timeout(1);
 		api = aml_gsl_get_api();
-
+	while(1) {
 		file_size = touch_open_fw(ts_com->fw_file);
 		if(file_size < 0) {
 //			printk("%s: %d\n", __func__, count++);
@@ -1496,38 +1503,50 @@ static int gslx680_late_upgrade(void *data)
 		else break;
 	}
 	printk("%s: file_size = %d\n", __func__, file_size);
-	ptr_fw = kzalloc(sizeof(struct fw_data)*8192, GFP_KERNEL);
+	ptr_fw = kzalloc(sizeof(struct fw_data)*(max_t(int, file_size/READ_COUNT, 8192)), GFP_KERNEL);
 	if (ptr_fw == NULL) {
 		printk("%s: Insufficient memory in upgrade!\n",ts_com->owner);
 		return -1;
 	}
 
 	while (offset < file_size) {
-		if (offset >= file_size) break;
-			touch_read_fw(offset, READ_COUNT, &tmp[0]);
+			memset(tmp, 0, READ_COUNT);
+			touch_read_fw(offset, min_t(int,file_size-offset,READ_COUNT), &tmp[0]);
 			if (!strncmp("/*", tmp, 2)) {
+				//printk("%s: %s\n", ts_com->owner, tmp);
+				offset++;
 				do {
-					offset += 2;
-					touch_read_fw(offset, READ_COUNT, &tmp[0]);
+					offset++;
+					if (offset >= file_size)
+					{
+						touch_close_fw();
+						printk("%s: firmware format error!\n", ts_com->owner);
+						return -1;
+					}
+					memset(tmp, 0, READ_COUNT);
+					touch_read_fw(offset, min_t(int,file_size-offset,READ_COUNT), &tmp[0]);
 				}while(strncmp("*/", tmp, 2));
-			}
-			
-			touch_read_fw(offset, READ_COUNT, &tmp[0]);
-			ret = sscanf(&tmp[0],"{0x%x,0x%lx},",&fw_tmp[0],(long unsigned int*)&fw_tmp[1]);
-			offset ++;
-			if (ret != 2) {
+				offset += 2;
+				//printk("%s: %s\n", ts_com->owner, tmp);
 				continue;
 			}
+			
+			ret = sscanf(&tmp[0],"{0x%x,0x%lx},",&fw_tmp[0],(long unsigned int*)&fw_tmp[1]);
+			if (ret != 2) {
+				offset ++;
+				continue;
+			}
+			offset += READ_COUNT >> 2;
 			(ptr_fw+fw_len)->offset = fw_tmp[0];
 			(ptr_fw+fw_len)->val = fw_tmp[1];
-			if (fw_len < 5)
-			{
-				printk("%d %s: {0x%x,0x%lx},\n", fw_len, __func__, (ptr_fw+fw_len)->offset, (long)(ptr_fw+fw_len)->val);
-			}
 			fw_len ++;
 	}
-	for (i=5; i>0; i--)
-		printk("%d %s: {0x%x,0x%lx},\n",5-i, __func__, (ptr_fw+fw_len-i)->offset, (long)(ptr_fw+fw_len-i)->val);
+	for (i=0; i<10; i++) {
+		printk("%d %s: {0x%x,0x%lx},\n", i, __func__, (ptr_fw+i)->offset, (long)(ptr_fw+i)->val);
+	}
+	for (i=fw_len-10; i<fw_len; i++) {
+		printk("%d %s: {0x%x,0x%lx},\n", i, __func__, (ptr_fw+i)->offset, (long)(ptr_fw+i)->val);
+	}
 	touch_close_fw();
 	init_chip(gsl_client);
 	check_mem_data(gsl_client);
@@ -1663,7 +1682,7 @@ error_mutex_destroy:
 err_gslX680_is_not_exist:
 	free_touch_gpio(ts_com);
 	ts_com->owner = NULL;
-	
+	i2c_unregister_device(client);
 	return rc;
 }
 
@@ -1680,8 +1699,6 @@ static int gsl_ts_remove(struct i2c_client *client)
 	cancel_delayed_work_sync(&gsl_monitor_work);
 	destroy_workqueue(gsl_monitor_workqueue);
 #endif
-	free_touch_gpio(ts_com);
-	ts_com->owner = NULL;
 	device_init_wakeup(&client->dev, 0);
 	cancel_work_sync(&ts->work);
 	free_irq(ts->irq, ts);
@@ -1695,6 +1712,9 @@ static int gsl_ts_remove(struct i2c_client *client)
 	if (ptr_fw != NULL)
 		kfree(ptr_fw);
 #endif
+	free_touch_gpio(ts_com);
+	ts_com->owner = NULL;
+	i2c_unregister_device(client);
 	return 0;
 }
 
