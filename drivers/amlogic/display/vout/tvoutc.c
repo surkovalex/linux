@@ -36,6 +36,7 @@
 #include <mach/tvregs.h>
 #include <mach/mod_gate.h>
 #include <linux/amlogic/vout/enc_clk_config.h>
+#include <linux/amlogic/vout/vout_notify.h>
 
 static u32 curr_vdac_setting=DEFAULT_VDAC_SEQUENCE;
 
@@ -420,11 +421,17 @@ printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
 	{
 		msleep(1000);
 
-#ifdef CONFIG_MACH_MESON6_G02_DONGLE
-    	aml_write_reg32(P_VENC_VDAC_SETTING, 0x7);
-#else
-    	aml_write_reg32(P_VENC_VDAC_SETTING, 0x5);
-#endif
+		if(get_power_level() == 0) {
+		    aml_write_reg32(P_VENC_VDAC_SETTING, 0x5);
+		} else {
+		    aml_write_reg32(P_VENC_VDAC_SETTING, 0x7);
+		}
+	} else {
+		if(get_power_level() == 0) {
+		    aml_write_reg32(P_VENC_VDAC_SETTING, 0x0);
+		} else {
+		    aml_write_reg32(P_VENC_VDAC_SETTING, 0x7);
+		}
 	}
 #endif
 

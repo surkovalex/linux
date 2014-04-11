@@ -1348,6 +1348,10 @@ static int get_dt_pwr_init_data(struct device_node *np, struct hdmi_pwr_ctl *pwr
         }
         idx++;
     }
+
+    if(np != NULL) {
+	    ret = of_property_read_u32(np,"pwr_level",&pwr->pwr_level);
+    }
 #if 0
     struct pwr_ctl_var (*var)[HDMI_TX_PWR_CTRL_NUM] = (struct pwr_ctl_var (*)[HDMI_TX_PWR_CTRL_NUM])pwr;
     for(idx = 0; idx < HDMI_TX_PWR_CTRL_NUM; idx++) {
@@ -1503,6 +1507,7 @@ static int amhdmitx_probe(struct platform_device *pdev)
             if(!hdmitx_device.config_data.pwr_ctl) {
                 hdmi_print(INF, SYS "can not get pwr_ctl mem\n");
             }
+            memset(hdmitx_device.config_data.pwr_ctl, 0, sizeof(struct hdmi_pwr_ctl));
             ret = get_dt_pwr_init_data(init_data, hdmitx_device.config_data.pwr_ctl);
             if(ret) {
                 hdmi_print(INF, SYS "not find pwr_ctl\n");

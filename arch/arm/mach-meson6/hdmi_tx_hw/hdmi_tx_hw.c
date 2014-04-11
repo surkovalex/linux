@@ -1771,12 +1771,12 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t
     mdelay(5);
 
     // power comsumption
-#ifdef CONFIG_MESON_POWER_PROFILE_LOW
-    hdmi_wr_reg(TX_HDMI_PHY_CONFIG0, 0xf0);
-#else
-    hdmi_wr_reg(TX_HDMI_PHY_CONFIG0, 0xfe);
-#endif
-    
+    if(hdmitx_device->config_data.pwr_ctl->pwr_level == 0) {
+        hdmi_wr_reg(TX_HDMI_PHY_CONFIG0, 0xfe);
+    } else {
+        hdmi_wr_reg(TX_HDMI_PHY_CONFIG0, 0xf0);
+    }
+ 
     return 0;
 }    
 

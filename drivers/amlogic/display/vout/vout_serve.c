@@ -36,6 +36,8 @@
 #include <linux/slab.h>
 #include <linux/interrupt.h>
 #include <linux/ctype.h>
+#include <linux/of.h>
+
 #include <linux/amlogic/vout/vinfo.h>
 #include <mach/am_regs.h>
 #include <asm/uaccess.h>
@@ -64,6 +66,14 @@ SET_VOUT_CLASS_ATTR(rd_reg,read_reg)
 
 
 static  vout_info_t	vout_info;
+int power_level=0;
+
+int get_power_level()
+{
+    return power_level;
+}
+EXPORT_SYMBOL(get_power_level);
+
 
 /*****************************************************************
 **
@@ -288,6 +298,10 @@ static int
     early_suspend.resume = meson_vout_late_resume;
 	register_early_suspend(&early_suspend);
 #endif
+
+	if(pdev->dev.of_node != NULL) {
+	    ret = of_property_read_u32(pdev->dev.of_node,"power_level",&power_level);
+	}
 
 	ret =create_vout_attr();
 	if(ret==0)

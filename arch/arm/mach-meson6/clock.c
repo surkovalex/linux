@@ -43,7 +43,6 @@
 #include <mach/clk_set.h>
 //#include <mach/power_gate.h>
 
-
 static DEFINE_SPINLOCK(mali_clk_lock);
 static DEFINE_SPINLOCK(clockfw_lock);
 static DEFINE_MUTEX(clock_ops_lock);
@@ -1356,6 +1355,14 @@ static void smp_a9_clk_change(struct clk_change_info * info)
 }
 #endif /* CONFIG_SMP */
 
+static int device_low_power = 0;
+static  int __init meson_device_low_power(char *s)
+{
+    if(strcmp(s, "1") == 0) {
+        device_low_power = 1;
+    }
+}
+__setup("meson_device_low_power=",meson_device_low_power);
 
 
 static int clk_set_rate_a9(struct clk *clk, unsigned long rate)
@@ -1367,16 +1374,15 @@ static int clk_set_rate_a9(struct clk *clk, unsigned long rate)
 
 	if (rate < 1000)
 		rate *= 1000000;
-#ifdef CONFIG_MACH_MESON6_G02_DONGLE
-#define CPU_FREQ_LIMIT 600000000
-#else
-#define CPU_FREQ_LIMIT 1200000000
-#endif
 
-	if(freq_limit && rate > CPU_FREQ_LIMIT)
+	int cpu_freq_limit = 1200000000;
+	if(device_low_power != 0) {
+		cpu_freq_limit = 600000000;
+	}
+	if(freq_limit && rate > cpu_freq_limit)
 	{
-		rate = CPU_FREQ_LIMIT;
-		printk("cpu freq limited to %ld \n", rate);
+		rate = cpu_freq_limit;
+		//printk("cpu freq limited to %ld \n", rate);
 	}		
 #ifdef CONFIG_SMP
 #if USE_ON_EACH_CPU
