@@ -37,8 +37,8 @@ typedef struct {
 } canvas_t;
 
 #define AMVDEC_ALL_CANVAS_INDEX 0x0
-#define AMVDEC_ALL_CANVAS_RANGE_0 0xb  // vc1/real/mpeg12/mpeg4/ jpeg logo / h264 
-#define AMVDEC_ALL_CANVAS_RANGE_1 0x17 //mjpeg
+#define AMVDEC_ALL_CANVAS_RANGE_0 0xb  // vc1/real/mpeg12/mpeg4/ jpeg logo / h264
+#define AMVDEC_ALL_CANVAS_RANGE_1 0x25 //mjpeg
 
 #define AMVDEC_H264MVC_CANVAS_INDEX 0x78
 #define AMVDEC_H264MVC_CANVAS_MAX 0xbf
@@ -120,7 +120,7 @@ typedef struct {
 #define MIPI_CANVAS_MAX_INDEX 0x7f
 
 //tvin vdin: 0x18-0x3B
-#define VDIN_CANVAS_INDEX              0x18
+#define VDIN_CANVAS_INDEX              0x26
 #define VDIN_CANVAS_MAX_INDEX          0x3B
 
 #define CAMERA_USER_CANVAS_INDEX             0x98
