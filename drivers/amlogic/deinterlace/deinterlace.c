@@ -52,6 +52,7 @@
 
 #if defined(NEW_DI_TV)
 #define FORCE_BOB_SUPPORT
+#define ENABLE_SPIN_LOCK_ALWAYS
 #else
 #define ENABLE_SPIN_LOCK_ALWAYS
 #endif
@@ -60,12 +61,8 @@
 #endif
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
-    #define RUN_DI_PROCESS_IN_IRQ
-    #ifdef NEW_DI_TV
-	#undef RUN_REG_IN_IRQ 
-    #else
-    	#define RUN_REG_IN_IRQ
-    #endif
+#define RUN_DI_PROCESS_IN_IRQ
+#define RUN_REG_IN_IRQ
 #endif
 
 //#define RUN_DI_PROCESS_IN_TIMER_IRQ
@@ -180,7 +177,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-04-10a";
+static char version_s[] = "2014-04-11a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -5940,6 +5937,8 @@ static void di_unreg_process_irq(void)
 
 static void di_reg_process_2(void)
 {
+    /*get vout information first time*/
+    set_output_mode_info();
     vf_provider_init(&di_vf_prov, VFM_NAME, &deinterlace_vf_provider, NULL);
     vf_reg_provider(&di_vf_prov);
     vf_notify_receiver(VFM_NAME,VFRAME_EVENT_PROVIDER_START,NULL);
@@ -5964,7 +5963,6 @@ static void di_reg_process(void)
             di_set_power_control(0,1);
             di_set_power_control(1,1);
 
-            set_output_mode_info();
 /* add for di Reg re-init */
 #if defined(NEW_DI_TV)
 di_set_para_by_tvinfo(vframe);
