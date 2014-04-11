@@ -1196,10 +1196,11 @@ sdio{
 		status = "ok";
 
 		/*efuse-version = <0>;*/ /*m6 efuse version 2,m3 efuse version 1, not config efuse version in default*/
-		unifykey-num = <3>;
+		unifykey-num = <4>;
 		unifykey-index-0 = <&keysn_0>;
 		unifykey-index-1 = <&keysn_1>;
 		unifykey-index-2 = <&keysn_2>;
+		unifykey-index-3 = <&keysn_3>;
 
 
 //$$ MATCH "Unifykey_0_match" = <&keysn_0>
@@ -1222,7 +1223,7 @@ sdio{
 		keysn_1:key_1{
 			key-name = "mac";
 			key-device = "nandkey";
-			key-dataformat = "hexdata";
+			key-dataformat = "hexascii";
 			key-permit = "read","write","del";
 		};
 		
@@ -1232,10 +1233,22 @@ sdio{
 //$$ L2 PROP_STR = "key-dataformat"
 //$$ L2 PROP_STR 3 = "key-permit"
 		keysn_2:key_2{
-			key-name = "key2";
+			key-name = "hdcp";
 			key-device = "nandkey";
 			key-dataformat = "hexdata";
 			key-permit = "read","write","del";
+		};
+
+//$$ MATCH "Unifykey_3_match" = <&keysn_3>
+//$$ L2 PROP_STR = "key-name"
+//$$ L2 PROP_STR = "key-device"
+//$$ L2 PROP_STR = "key-dataformat"
+//$$ L2 PROP_STR 3 = "key-permit"
+		keysn_3:key_3{
+			key-name = "secure_boot_set";
+			key-device = "efusekey";
+			key-dataformat = "hexdata";
+			key-permit = "read","write";
 		};
 	};
 	
