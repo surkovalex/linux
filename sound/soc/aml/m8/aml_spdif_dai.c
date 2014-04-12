@@ -210,6 +210,8 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 		//audio_set_i2s_mode(AIU_I2S_MODE_PCM16);
 		//audio_set_aiubuf(start, size);		
 	}else{
+		set.chan_stat->chstat0_l = 0x1902;
+                set.chan_stat->chstat0_r = 0x1902;
 		if(IEC958_mode_codec == 4){ //DD+
 			if(runtime->rate == 32000){
 				set.chan_stat->chstat1_l = 0x300;

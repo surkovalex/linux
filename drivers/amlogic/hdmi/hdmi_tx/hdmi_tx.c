@@ -1041,6 +1041,24 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
         hdmi_print(INF, AUD "no update\n");
     else
         hdmitx_device.audio_notify_flag = 1;
+
+
+    if((!hdmi_audio_off_flag)&&(hdmitx_device.audio_param_update_flag)) {
+        if(hdmitx_device.hpd_state == 1) {     // plug-in & update audio param
+            hdmitx_set_audio(&hdmitx_device, &(hdmitx_device.cur_audio_param), hdmi_ch);
+	    if((hdmitx_device.audio_notify_flag == 1) || (hdmitx_device.audio_step == 1)) {
+                hdmitx_device.audio_notify_flag = 0;
+                hdmitx_device.audio_step = 0;
+#ifndef CONFIG_AML_HDMI_TX_HDCP
+                hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_UNMUTE);
+#endif
+            }
+            hdmitx_device.audio_param_update_flag = 0;
+            hdmi_print(INF, AUD "set audio param\n");
+        }
+    }
+
+
     return 0;
 }
 
@@ -1099,21 +1117,6 @@ static int hdmi_task_handle(void *data)
             }
         }
 
-        if((!hdmi_audio_off_flag)&&(hdmitx_device->audio_param_update_flag)) {
-            if(hdmitx_device->hpd_state == 1) {     // plug-in & update audio param
-                hdmitx_set_audio(hdmitx_device, &(hdmitx_device->cur_audio_param), hdmi_ch);
-                if((hdmitx_device->audio_notify_flag == 1) || (hdmitx_device->audio_step == 1)) {
-                    hdmitx_device->audio_notify_flag = 0;
-                    hdmitx_device->audio_step = 0;
-#ifndef CONFIG_AML_HDMI_TX_HDCP
-                    hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_UNMUTE);
-#endif
-                }
-                hdmitx_device->audio_param_update_flag = 0;
-                hdmi_print(INF, AUD "set audio param\n");
-            }
-        }
-
         if(hdmitx_device->hpd_state == 0) {
             hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
         }
@@ -1167,6 +1170,7 @@ edid_op:
                 hdmitx_device->tv_no_edid = 0;
             }
             set_disp_mode_auto();
+            hdmitx_set_audio(hdmitx_device, &(hdmitx_device->cur_audio_param), hdmi_ch);
             switch_set_state(&sdev, 1);
             cec_node_init(hdmitx_device);
         }
