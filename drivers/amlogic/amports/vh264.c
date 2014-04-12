@@ -1139,8 +1139,19 @@ static void vh264_isr(void)
         fatal_error_flag = 0x10;
         // this is fatal error, need restart
         printk("fatal error happend\n");
-    if(!fatal_error_reset)
-        schedule_work(&error_wd_work);
+        if (!fatal_error_reset) {
+            schedule_work(&error_wd_work);
+        }
+    } else if ((cpu_cmd & 0xff) == 7) {
+        vh264_running = 0;
+        frame_width = (READ_VREG(AV_SCRATCH_1) + 1) * 16;
+        printk("Over decoder supported size, width = %d\n", frame_width);
+        fatal_error_flag = 0x10;
+    } else if ((cpu_cmd & 0xff) == 8) {
+        vh264_running = 0;
+        frame_height = (READ_VREG(AV_SCRATCH_1) + 1) * 16;
+        printk("Over decoder supported size, height = %d\n", frame_height);
+        fatal_error_flag = 0x10;
     }
 
 #ifdef HANDLE_H264_IRQ
