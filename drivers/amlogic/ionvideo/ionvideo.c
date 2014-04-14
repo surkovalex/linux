@@ -611,6 +611,13 @@ static int vidioc_synchronization_dqbuf(struct file *file, void *priv, struct v4
         tsync_avevent_locked(VIDEO_START, buf->pts ? buf->pts : timestamp_vpts_get());
         dev->receiver_register = 0;
         d = 0;
+
+		while(!list_empty(&q->done_list)) {
+			   ret = vb2_ioctl_dqbuf(file, priv, p);
+			   if (ret) {  return ret; }
+			   ret = vb2_ioctl_qbuf(file, priv, p);
+			   if (ret) { return ret; }
+		}
     } else if (buf->pts) {
         if (abs(timestamp_pcrscr_get() - buf->pts) > tsync_vpts_discontinuity_margin()) {
             tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, buf->pts);
