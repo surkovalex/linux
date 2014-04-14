@@ -1217,7 +1217,6 @@ err_i2c_failed:
 err_goodix_is_not_exist:
 	free_touch_gpio(g_pdata);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 //err_alloc_data_failed:
 err_check_functionality_failed:
 	return ret;
@@ -1243,7 +1242,6 @@ static int goodix_ts_remove(struct i2c_client *client)
 #ifdef CONFIG_TOUCHSCREEN_GOODIX_IAP
 	remove_proc_entry("goodix-update", NULL);
 #endif
-	i2c_unregister_device(client);
 	goodix_debug_sysfs_deinit();
 
 	if (ts && ts->use_irq)

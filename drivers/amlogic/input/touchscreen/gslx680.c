@@ -1391,7 +1391,6 @@ error_mutex_destroy:
 exit_check_functionality_failed:
 	free_touch_gpio(g_pdata);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return rc;
 }
 
@@ -1421,7 +1420,6 @@ static int gsl_ts_remove(struct i2c_client *client)
 #endif
 	free_touch_gpio(g_pdata);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return 0;
 }
 

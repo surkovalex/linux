@@ -1378,7 +1378,6 @@ exit_ft5x06_is_not_exist:
 exit_alloc_data_failed:
 exit_check_functionality_failed:
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	printk("%s: probe failed!\n", __FUNCTION__);
 	return err;
 }
@@ -1408,7 +1407,6 @@ static int __exit ft5x0x_ts_remove(struct i2c_client *client)
 	i2c_set_clientdata(client, NULL);
 	free_touch_gpio(g_pdata);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return 0;
 }
 

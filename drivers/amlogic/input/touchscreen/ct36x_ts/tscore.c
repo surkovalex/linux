@@ -572,7 +572,6 @@ int ct36x_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 #endif
 	remove_proc_entry(DRIVER_NAME, NULL);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return err;
 }
 
@@ -662,7 +661,6 @@ int ct36x_ts_remove(struct i2c_client *client)
 
 	destroy_remove(client->dev, ts_com);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return 0;
 }
 

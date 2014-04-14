@@ -1682,7 +1682,6 @@ error_mutex_destroy:
 err_gslX680_is_not_exist:
 	free_touch_gpio(ts_com);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return rc;
 }
 
@@ -1714,7 +1713,6 @@ static int gsl_ts_remove(struct i2c_client *client)
 #endif
 	free_touch_gpio(ts_com);
 	ts_com->owner = NULL;
-	i2c_unregister_device(client);
 	return 0;
 }
 

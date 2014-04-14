@@ -2434,7 +2434,6 @@ err_alloc_data_failed:
 err_goodix_request_gpio:
     free_touch_gpio(ts_com);
     ts_com->owner = NULL;
-	i2c_unregister_device(client);
 err_check_functionality_failed:
 	
   return ret;
@@ -2487,7 +2486,6 @@ static int goodix_ts_remove(struct i2c_client *client)
     kfree(ts);
     free_touch_gpio(ts_com);
     ts_com->owner = NULL;
-	i2c_unregister_device(client);
     return 0;
 }
 
