@@ -80,7 +80,6 @@ obj-$(CONFIG_AML_EXT_HDMIIN) += ext_hdmiin/
 
 obj-y += thermal/
 
-
 obj-$(CONFIG_BOOT_MONITOR) += boot_monitor/
 
 #obj-$(CONFIG_AML_WATCHDOG) += aml_watchdog/
@@ -112,6 +111,8 @@ obj-$(CONFIG_AMLOGIC_MIPI) += mipi/
 obj-$(CONFIG_D2D3_PROCESS) += d2d3/
 
 obj-$(CONFIG_AML_REG_DEBUG) += regd/
+
+obj-$(CONFIG_AML_WATCHDOG) += watchdog/
 
 ifneq ($(wildcard $(srctree)/../hardware/arm/gpu),)
 	obj-$(CONFIG_UMP) += ../../../hardware/arm/gpu/ump/
