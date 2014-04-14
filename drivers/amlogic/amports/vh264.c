@@ -218,6 +218,7 @@ static uint ucode_type = 0;
 #ifdef DEBUG_PTS
 static unsigned long pts_missed, pts_hit;
 #endif
+static uint debugfirmware=0;
 
 static atomic_t vh264_active = ATOMIC_INIT(0);
 static struct work_struct error_wd_work;
@@ -1502,7 +1503,70 @@ static s32 vh264_init(void)
     }
 
     amvdec_enable();
-	
+    if(debugfirmware){
+        printk("start debug load firmware ...\n");
+        char *mbuf=kmalloc(4096 * 4*6, GFP_KERNEL);
+        if (!mbuf) {
+            printk("\nvh264_init: Cannot malloc mbuf  memory\n");
+            return -ENOMEM;
+        }
+        memset(mbuf,0,4096 * 4*6);
+        request_video_firmware("vh264_mc",mbuf,4096 * 4*6);
+        const char *pvh264_header_mc=mbuf+(0x800 + 0x400*2)*4;
+        const char *pvh264_data_mc=mbuf+(0x800 + 0x400*1)*4;
+        const char *pvh264_mmco_mc=mbuf+(0x800 + 0x400*4)*4;
+        const char *pvh264_list_mc=mbuf+(0x800 + 0x400*3)*4;
+        const char *pvh264_slice_mc=mbuf+(0x800 + 0x400*0)*4;
+        
+        char *mc=kmalloc(4096 * 4, GFP_KERNEL);
+        if (!mc) {
+            kfree(mbuf);
+            printk("\nvh264_init: Cannot malloc mbuf  memory\n");
+            return -ENOMEM;
+        }
+        memcpy(mc,mbuf,0x800*4);
+        memcpy(mc+0x800*4,pvh264_data_mc,0x400*4);
+        memcpy(mc+0x800*4+0x400*4,pvh264_list_mc,0x400*4);
+        if (amvdec_loadmc(mc) < 0) {
+            kfree(mbuf);
+            kfree(mc);
+            amvdec_disable();
+            return -EBUSY;
+        }
+        memcpy(p1,
+        pvh264_header_mc, 0x400*4);//vh264_header_mc   //0x4000
+        memcpy((void *)((ulong)p1 + 0x1000),
+        pvh264_data_mc, 0x400*4);//vh264_data_mc //0x3000
+        memcpy((void *)((ulong)p1 + 0x2000),
+        pvh264_mmco_mc, 0x400*4);//vh264_mmco_mc//0x6000
+        memcpy((void *)((ulong)p1 + 0x3000),
+        pvh264_list_mc, 0x400*4);//vh264_list_mc//0x5000
+        memcpy((void *)((ulong)p1 + 0x4000),
+        pvh264_slice_mc, 0x400*4);//vh264_slice_mc //0x2000
+        kfree(mbuf);
+        kfree(mc);
+    }else{
+        printk("start load firmware ...\n");
+        if (amvdec_loadmc(vh264_mc) < 0) {
+            amvdec_disable();
+            return -EBUSY;
+        }
+        
+        memcpy(p1,
+        vh264_header_mc, sizeof(vh264_header_mc));
+        
+        memcpy((void *)((ulong)p1 + 0x1000),
+        vh264_data_mc, sizeof(vh264_data_mc));
+        
+        memcpy((void *)((ulong)p1 + 0x2000),
+        vh264_mmco_mc, sizeof(vh264_mmco_mc));
+        
+        memcpy((void *)((ulong)p1 + 0x3000),
+        vh264_list_mc, sizeof(vh264_list_mc));
+        
+        memcpy((void *)((ulong)p1 + 0x4000),
+        vh264_slice_mc, sizeof(vh264_slice_mc));
+    }	
     if (amvdec_loadmc(vh264_mc) < 0) { 
         amvdec_disable();
         return -EBUSY;
@@ -1870,6 +1934,9 @@ module_param(max_refer_buf, uint, 0664);
 MODULE_PARM_DESC(max_refer_buf, "\n amvdec_h264 decoder buffering or not for reference frame \n");
 module_param(ucode_type, uint, 0664);
 MODULE_PARM_DESC(ucode_type, "\n amvdec_h264 decoder buffering or not for reference frame \n");
+module_param(debugfirmware, uint, 0664);
+MODULE_PARM_DESC(debugfirmware, "\n amvdec_h264 debug load firmware \n");
+
 module_init(amvdec_h264_driver_init_module);
 module_exit(amvdec_h264_driver_remove_module);
 

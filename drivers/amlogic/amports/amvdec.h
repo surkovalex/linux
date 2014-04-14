@@ -33,6 +33,7 @@ extern void amvdec_start(void);
 extern void amvdec_stop(void);
 extern void amvdec_enable(void);
 extern void amvdec_disable(void);
+s32 amvdec_loadmc_ex(const char*name,char *def);
 
 #if HAS_VDEC2
 extern  s32 amvdec2_loadmc(const u32 *p);
@@ -43,7 +44,7 @@ extern void amvdec2_disable(void);
 #endif
 
 #if HAS_HDEC
-extern void amhcodec_loadmc(const u32 *p);
+extern s32 amhcodec_loadmc(const u32 *p);
 extern void amhcodec_start(void);
 extern void amhcodec_stop(void);
 #endif

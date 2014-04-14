@@ -65,6 +65,7 @@
 #include "rmparser.h"
 #include "amports_priv.h"
 #include "amvideocap_priv.h"
+#include <linux/firmware.h>
 
 #include <linux/of.h>
 #include <linux/of_fdt.h>
@@ -1826,7 +1827,42 @@ static struct class_attribute amstream_class_attrs[] = {
 static struct class amstream_class = {
         .name = "amstream",
         .class_attrs = amstream_class_attrs,
-    };
+};
+int request_video_firmware(const char * file_name,char *buf,int size)
+{
+	const struct firmware *firmware;
+	int err=0;
+	struct device *micro_dev;
+	printk("try load %s  ...",file_name);
+	micro_dev = device_create(&amstream_class,
+					    NULL, MKDEV(AMSTREAM_MAJOR, 100),
+					    NULL, "videodec");
+	if(micro_dev ==NULL ){
+		printk("device_create failed =%d\n",err);
+		return -1;
+	}
+	if((err=request_firmware(&firmware,file_name, micro_dev))<0)
+	{
+		printk("can't load the %s,err=%d\n",file_name,err);
+		goto error1;
+	}
+	if(firmware->size>size)
+	{
+		printk("not enough memory size for audiodsp code\n");
+		err=ENOMEM;
+		goto release;
+	}
+
+	memcpy(buf,(char*)firmware->data,firmware->size);
+    mb();
+	printk("load mcode size=%d\n mcode name %s\n",firmware->size,file_name);
+	err=firmware->size;
+release:	
+	release_firmware(firmware);
+error1:
+	device_destroy(&amstream_class, MKDEV(AMSTREAM_MAJOR, 100));
+	return err;
+}
 
 static struct resource memobj;
 static int  amstream_probe(struct platform_device *pdev)

@@ -38,6 +38,7 @@
 #ifdef CONFIG_WAKELOCK
 #include <linux/wakelock.h>
 #endif
+#include "amports_priv.h"
 
 #include <mach/am_regs.h>
 #include <mach/power_gate.h>
@@ -198,6 +199,32 @@ int amvdec_wake_unlock(void)
 #define amvdec_wake_unlock();
 #endif
 
+
+
+static s32 am_loadmc_ex(const char*name,char *def,s32(* load)(const u32 *))
+{
+    char *mc_addr = kmalloc(4096 * 4, GFP_KERNEL);
+    char *pmc_addr=def;
+	int err;
+    if(mc_addr){
+        int loaded;
+        loaded=request_video_firmware(name,mc_addr,(4096 * 4));
+        if(loaded>0){
+            pmc_addr=mc_addr;
+        }
+    }
+	if(!pmc_addr){
+		kfree(mc_addr);
+		return -1;
+	}
+    if ((err=(*load)((u32*)pmc_addr)) < 0) {
+    	return err;
+    }
+    if(mc_addr)
+       kfree(mc_addr);
+	return err;
+}
+
 s32 amvdec_loadmc(const u32 *p)
 {
     ulong timeout;
@@ -249,6 +276,10 @@ s32 amvdec_loadmc(const u32 *p)
 #endif	
 
     return ret;
+}
+s32 amvdec_loadmc_ex(const char*name,char *def)
+{
+	return am_loadmc_ex(name,def,&amvdec_loadmc);
 }
 
 #if HAS_VDEC2
@@ -304,10 +335,15 @@ s32 amvdec2_loadmc(const u32 *p)
 
     return ret;
 }
+s32 amvdec2_loadmc_ex(const char*name,char *def)
+{
+       return am_loadmc_ex(name,def,&amvdec2_loadmc);
+}
+
 #endif
 
 #if HAS_HDEC
-void amhcodec_loadmc(const u32 *p)
+s32 amhcodec_loadmc(const u32 *p)
 {
 #ifdef AMVDEC_USE_STATIC_MEMORY
     if (mc_addr == NULL)
@@ -338,6 +374,11 @@ void amhcodec_loadmc(const u32 *p)
     kfree(mc_addr);
 #endif
 }
+s32 amhcodec_loadmc_ex(const char*name,char *def)
+{
+	return am_loadmc_ex(name,def,&amhcodec_loadmc);
+}
+
 #endif
 
 void amvdec_start(void)
