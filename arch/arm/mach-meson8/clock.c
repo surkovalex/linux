@@ -890,7 +890,7 @@ void meson_set_cpu_ctrl_reg(int cpu,int is_on)
 #ifdef CONFIG_MESON_TRUSTZONE
 	uint32_t value = 0;
 	value = meson_read_corectrl();
-	value |= is_on << cpu;
+	value = value & ~(1U << cpu) | (is_on << cpu);
 	value |= 1;
 	meson_modify_corectrl(value);
 #else
