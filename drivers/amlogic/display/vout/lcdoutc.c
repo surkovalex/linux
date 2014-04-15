@@ -76,7 +76,7 @@
 #else
 #define DRV_TYPE "c8"
 #endif
-#define DRIVER_DATE		"20140325"
+#define DRIVER_DATE		"20140415"
 
 //#define LCD_DEBUG_INFO
 #ifdef LCD_DEBUG_INFO
@@ -1155,28 +1155,7 @@ static void set_lcd_spread_spectrum(int ss_level)
 	WRITE_LCD_CBUS_REG(HHI_VIID_PLL_CNTL2, pll_ctrl2);
 	WRITE_LCD_CBUS_REG(HHI_VIID_PLL_CNTL3, pll_ctrl3);
 	WRITE_LCD_CBUS_REG(HHI_VIID_PLL_CNTL4, pll_ctrl4);
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
-	pll_ctrl4 = (READ_LCD_CBUS_REG(HHI_VID2_PLL_CNTL4) & ~((0xf<<4) | (0xf<<0)));
-	switch (ss_level) {
-		case 1:	//0.5%
-			pll_ctrl4 |= ((1<<9) | (2<<4) | (1<<0));
-			break;
-		case 2:	//1%
-			pll_ctrl4 |= ((1<<9) | (1<<4) | (1<<0));
-			break;
-		case 3:	//1.5%
-			pll_ctrl4 |= ((1<<9) | (8<<4) | (1<<0));
-			break;
-		case 4: //2%
-			pll_ctrl4 |= ((1<<9) | (0<<4) | (1<<0));
-			break;
-		case 0:
-		default:
-			pll_ctrl4 |= ((6<<4) | (7<<0));
-			break;
-	}
-	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL4, pll_ctrl4);
-#endif	
+#endif
 }
 
 static void vclk_set_lcd(int lcd_type, int vclk_sel, unsigned long pll_reg, unsigned long vid_div_reg, unsigned int clk_ctrl_reg)
@@ -1186,7 +1165,7 @@ static void vclk_set_lcd(int lcd_type, int vclk_sel, unsigned long pll_reg, unsi
 	int wait_loop = PLL_WAIT_LOCK_CNT;
 	unsigned pll_lock = 0;
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
-	unsigned tmp;
+	unsigned ss_level=0, pll_ctrl2, pll_ctrl3, pll_ctrl4, od_fb;
 #endif
 	unsigned long flags = 0;
 	spin_lock_irqsave(&lcd_clk_lock, flags);
@@ -1203,6 +1182,7 @@ static void vclk_set_lcd(int lcd_type, int vclk_sel, unsigned long pll_reg, unsi
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	pll_level = (clk_ctrl_reg >> CLK_CTRL_LEVEL) & 0x7;
 	pll_frac = (clk_ctrl_reg >> CLK_CTRL_FRAC) & 0xfff;
+	ss_level = (clk_ctrl_reg >> CLK_CTRL_SS) & 0xf;
 	pll_reg |= (1 << PLL_CTRL_EN);
 #endif
 	
@@ -1212,7 +1192,7 @@ static void vclk_set_lcd(int lcd_type, int vclk_sel, unsigned long pll_reg, unsi
 		WRITE_LCD_CBUS_REG_BITS(HHI_VID_CLK_CNTL, 0, 19, 2);	//disable vclk1_en1,en0
 	udelay(2);
 
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)	
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	WRITE_LCD_CBUS_REG(HHI_EDP_TX_PHY_CNTL0, (1 << 16));	//reset edp tx phy	
 #endif
 
@@ -1224,62 +1204,87 @@ static void vclk_set_lcd(int lcd_type, int vclk_sel, unsigned long pll_reg, unsi
 	WRITE_LCD_CBUS_REG(HHI_VIID_PLL_CNTL4, 0x110 );
 	WRITE_LCD_CBUS_REG(HHI_VIID_PLL_CNTL, pll_reg );
 	do{
-		udelay(100);
+		udelay(50);
 		pll_lock = (READ_LCD_CBUS_REG(HHI_VIID_PLL_CNTL) >> PLL_CTRL_LOCK) & 0x1;
-		if (wait_loop < 20)
-			printk("vid2_pll_locked=%u, wait_lock_loop=%d\n", pll_lock, (PLL_WAIT_LOCK_CNT - wait_loop + 1));
 		wait_loop--;
 	}while((pll_lock == 0) && (wait_loop > 0));
+	if (wait_loop == 0)
+		printk("[error]: vid2_pll lock failed\n");
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	if (pll_frac == 0)
-		tmp = 0x0421a000;
+		pll_ctrl2 = 0x0421a000;
 	else
-		tmp = 0x0431a000 | pll_frac;
-			
-	switch (pll_level) {
-		case 1:
-			WRITE_LCD_CBUS_REG(HHI_VID_PLL_CNTL5, 0x00012286);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL2, tmp);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL3, 0xca45b823);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL4, 0xd4000d67);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL5, 0x00700001);	//[8] od_fb
-			
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg | (1 << PLL_CTRL_RST));
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg);
+		pll_ctrl2 = (0x0431a000 | pll_frac);
+	
+	pll_ctrl4 = (0xd4000d67 & ~((1<<13) | (0xf<<14) | (0xf<<18)));
+	switch (ss_level) {
+		case 1:	//0.5%
+			pll_ctrl4 |= ((1<<13) | (2<<18) | (1<<14));
 			break;
-		case 2:
-			WRITE_LCD_CBUS_REG(HHI_VID_PLL_CNTL5, 0x00012286);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL2, tmp);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL3, 0xca49b823);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL4, 0xd4000d67);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL5, 0x00700101);
-			
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg | (1 << PLL_CTRL_RST));
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg);
+		case 2:	//1%
+			pll_ctrl4 |= ((1<<13) | (1<<18) | (1<<14));
 			break;
-		case 3:
-			WRITE_LCD_CBUS_REG(HHI_VID_PLL_CNTL5, 0x00012286);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL2, tmp);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL3, 0xce49c022);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL4, 0xd4000d67);
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL5, 0x00700101);
-			
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg | (1 << PLL_CTRL_RST));
-			WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg);
+		case 3:	//1.5%
+			pll_ctrl4 |= ((1<<13) | (8<<18) | (1<<14));
 			break;
+		case 4: //2%
+			pll_ctrl4 |= ((1<<13) | (0<<18) | (1<<14));
+			break;
+		case 0:
 		default:
+			ss_level = 0;
 			break;
 	}
+	
+	switch (pll_level) {
+		case 1:
+			pll_ctrl3 = (ss_level > 0) ? 0xca7e3823 : 0xca45b823;
+			od_fb = 0;
+			break;
+		case 2:
+			pll_ctrl2 |= (1<<19);//special adjust
+			pll_ctrl3 = (ss_level > 0) ? 0xca7e3823 : 0xca49b823;
+			od_fb = 1;
+			break;
+		case 3:
+			pll_ctrl3 = (ss_level > 0) ? 0xca7e3823 : 0xca49b823;
+			od_fb = 1;
+			break;
+		case 4:
+			pll_ctrl3 = (ss_level > 0) ? 0xca7e3823 : 0xce49c022;
+			od_fb = 1;
+			break;
+		default:
+			pll_ctrl3 = 0xca7e3823;
+			od_fb = 0;
+			break;
+	}
+	WRITE_LCD_CBUS_REG_BITS(HHI_VID_PLL_CNTL5, 1, 16, 1);//enable bandgap
+	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL2, pll_ctrl2);
+	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL3, pll_ctrl3);
+	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL4, pll_ctrl4);
+	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL5, (0x00700001 | (od_fb << 8)));	//[8] od_fb
+	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg | (1 << PLL_CTRL_RST));
+	WRITE_LCD_CBUS_REG(HHI_VID2_PLL_CNTL, pll_reg);
 	do{
-		udelay(100);
+		udelay(50);
 		pll_lock = (READ_LCD_CBUS_REG(HHI_VID2_PLL_CNTL) >> PLL_CTRL_LOCK) & 0x1;
-		if (wait_loop < 20)
-			printk("vid2_pll_locked=%u, wait_lock_loop=%d\n", pll_lock, (PLL_WAIT_LOCK_CNT - wait_loop + 1));
+		if (wait_loop == 100) {
+			if (pll_level == 2) {
+				//change setting if can't lock
+				WRITE_LCD_CBUS_REG_BITS(HHI_VID2_PLL_CNTL2, 1, 18, 1);
+				WRITE_LCD_CBUS_REG_BITS(HHI_VID2_PLL_CNTL, 1, PLL_CTRL_RST, 1);
+				WRITE_LCD_CBUS_REG_BITS(HHI_VID2_PLL_CNTL, 0, PLL_CTRL_RST, 1);
+				printk("change setting for vid2 pll stability\n");
+			}
+		}
 		wait_loop--;
 	}while((pll_lock == 0) && (wait_loop > 0));
+	if (wait_loop == 0)
+		printk("[error]: vid2_pll lock failed\n");
 #endif
 
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)	
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	//select logic & encl clock
 	switch (lcd_type) {
 		case LCD_DIGITAL_MIPI:
@@ -2434,9 +2439,13 @@ static void generate_clk_parameter(Lcd_Config_t *pConf)
                                         if ((pll_vco >= PLL_VCO_MIN) && (pll_vco <= PLL_VCO_MAX)) {
                                             if ((pll_vco >= 2500000) && (pll_vco <= PLL_VCO_MAX)) {
                                                 od_fb = 1;
+                                                pll_level = 4;
+                                            }
+                                            else if ((pll_vco >= 2000000) && (pll_vco < 2500000)) {
+                                                od_fb = 1;
                                                 pll_level = 3;
                                             }
-                                            else if ((pll_vco >= 1700000) && (pll_vco < 2500000)) {
+                                            else if ((pll_vco >= 1700000) && (pll_vco < 2000000)) {//special adjust
                                                 od_fb = 1;
                                                 pll_level = 2;
                                             }
@@ -2485,7 +2494,7 @@ static void generate_clk_parameter(Lcd_Config_t *pConf)
                     n = 1;
                     m = 56;
                     od_sel = 0;
-                    pll_level = 3;
+                    pll_level = 4;
                     pll_frac = 0x400;
                     fout_pll = 2700000;
                     break;
@@ -2594,9 +2603,13 @@ static void generate_clk_parameter(Lcd_Config_t *pConf)
                                         if ((pll_vco >= PLL_VCO_MIN) && (pll_vco <= PLL_VCO_MAX)) {
                                             if ((pll_vco >= 2500000) && (pll_vco <= PLL_VCO_MAX)) {
                                                 od_fb = 1;
+                                                pll_level = 4;
+                                            }
+                                            else if ((pll_vco >= 2000000) && (pll_vco < 2500000)) {
+                                                od_fb = 1;
                                                 pll_level = 3;
                                             }
-                                            else if ((pll_vco >= 1700000) && (pll_vco < 2500000)) {
+                                            else if ((pll_vco >= 1700000) && (pll_vco < 2000000)) {
                                                 od_fb = 1;
                                                 pll_level = 2;
                                             }
@@ -2668,11 +2681,8 @@ static void lcd_sync_duration(Lcd_Config_t *pConf)
 	od_fb = 0;
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	frac = ((pConf->lcd_timing.clk_ctrl) >> CLK_CTRL_FRAC) & 0xfff;
-	od_fb = ((pConf->lcd_timing.clk_ctrl) >> CLK_CTRL_LEVEL) & 0x3;
-	if (od_fb > 1)
-		od_fb = 1;
-	else
-		od_fb = 0;
+	od_fb = ((((pConf->lcd_timing.clk_ctrl) >> CLK_CTRL_LEVEL) & 0x7) > 1) ? 1 : 0;
+
 #endif	
 	pre_div = ((pConf->lcd_timing.div_ctrl) >> DIV_CTRL_DIV_PRE) & 0x7;
 	pre_div = div_pre_table[pre_div];
@@ -2899,10 +2909,11 @@ static void select_edp_link_config(Lcd_Config_t *pConf)
 
 static void lcd_control_config_pre(Lcd_Config_t *pConf) //before generate_clk_parameter
 {
-    unsigned char ss_level = (pConf->lcd_timing.clk_ctrl >> CLK_CTRL_SS) & 0xf;
+    unsigned vclk_sel, ss_level;
     unsigned int bit_rate;
 
-    ss_level = ((ss_level >= SS_LEVEL_MAX) ? (SS_LEVEL_MAX-1) : ss_level);
+    vclk_sel = 1;
+    ss_level = (pConf->lcd_timing.clk_ctrl >> CLK_CTRL_SS) & 0xf;
 
     switch (pConf->lcd_basic.lcd_type) {
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
@@ -2930,6 +2941,7 @@ static void lcd_control_config_pre(Lcd_Config_t *pConf) //before generate_clk_pa
             break;
 #endif
         case LCD_DIGITAL_LVDS:
+            ss_level = ((ss_level >= SS_LEVEL_MAX) ? (SS_LEVEL_MAX-1) : ss_level);
             if (pConf->lcd_control.lvds_config->lvds_repack_user == 0) {
                 if (pConf->lcd_basic.lcd_bits == 6)
                     pConf->lcd_control.lvds_config->lvds_repack = 0;
@@ -2939,12 +2951,15 @@ static void lcd_control_config_pre(Lcd_Config_t *pConf) //before generate_clk_pa
             break;
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
         case LCD_DIGITAL_MINILVDS:
+            ss_level = ((ss_level >= SS_LEVEL_MAX) ? (SS_LEVEL_MAX-1) : ss_level);
             break;
 #endif
         default:
+            ss_level = ((ss_level >= SS_LEVEL_MAX) ? (SS_LEVEL_MAX-1) : ss_level);
             break;
     }
-    pConf->lcd_timing.clk_ctrl = ((pConf->lcd_timing.clk_ctrl & ~(0xf << CLK_CTRL_SS)) | (ss_level << CLK_CTRL_SS));
+    pConf->lcd_timing.clk_ctrl &= (~((1 << CLK_CTRL_VCLK_SEL) | (0xf << CLK_CTRL_SS)));
+    pConf->lcd_timing.clk_ctrl |= ((vclk_sel << CLK_CTRL_VCLK_SEL) | (ss_level << CLK_CTRL_SS));
 }
 
 static void lcd_control_config_post(Lcd_Config_t *pConf) //before generate_clk_parameter
@@ -3938,6 +3953,7 @@ static void reset_lcd_config(Lcd_Config_t *pConf)
 	
 	_lcd_module_disable();
 	printk("reset lcd config.\n");
+	mdelay(200);
 	if ((pConf->lcd_basic.h_active != temp_lcd_basic.h_active) || (pConf->lcd_basic.v_active != temp_lcd_basic.v_active))
 		res = 1;
 	
@@ -4212,6 +4228,7 @@ static ssize_t lcd_debug(struct class *class, struct class_attribute *attr, cons
 			}
 			else {
 				_lcd_module_disable();
+				mdelay(200);
 				lcd_config_init(pDev->pConf);
 				_lcd_module_enable();
 				scale_framebuffer();

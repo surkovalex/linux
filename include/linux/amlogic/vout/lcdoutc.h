@@ -157,14 +157,14 @@
 	#define CLK_CTRL_AUTO			31
 	#define CLK_TEST_FLAG			30
 	#define CLK_CTRL_FRAC			16	//[27:16]
-	#define CLK_CTRL_LEVEL			12	//[13:12]
+	#define CLK_CTRL_LEVEL			12	//[14:12]
 	//#define CLK_CTRL_PLL_SEL		10
 	//#define CLK_CTRL_DIV_SEL		9
 	#define CLK_CTRL_VCLK_SEL		8
 	#define CLK_CTRL_SS				4	//[7:4]
 	#define CLK_CTRL_XD				0	//[3:0]
 	
-	#define PLL_WAIT_LOCK_CNT		100
+	#define PLL_WAIT_LOCK_CNT		200
 
 /**** clk frequency limit ***/
 	#define FIN_FREQ				(24 * 1000)
@@ -182,7 +182,7 @@
 	#define PLL_M_MIN				2
 	#define PLL_M_MAX				511
 	#define PLL_N_MIN				1
-	#define PLL_N_MAX				2
+	#define PLL_N_MAX				1
 	#define PLL_FREF_MIN			(5 * 1000)
 	#define PLL_FREF_MAX			(25 * 1000)
 	#define PLL_VCO_MIN				(1200 * 1000)
@@ -344,9 +344,10 @@ typedef struct {
 	u16 de_hstart;
 	u16 de_vstart;
 	u16 de_valid;
+	u32 vsync_h_phase; //[31]sign [15:0]value
 	u32 h_offset;
 	u32 v_offset;
-	u32 vsync_h_phase;
+
 	u16 sth1_hs_addr;
 	u16 sth1_he_addr;
 	u16 sth1_vs_addr;
