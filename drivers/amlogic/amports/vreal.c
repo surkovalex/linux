@@ -60,7 +60,7 @@
 #define NV21
 #endif
 
-#define RM_DEF_BUFFER_ADDR        0x81000000
+#define RM_DEF_BUFFER_ADDR        0x01000000
 /* protocol registers */
 #define STATUS_AMRISC   AV_SCRATCH_4
 #define PARSER_ERROR_WRONG_PACKAGE_SIZE 0x80
