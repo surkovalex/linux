@@ -1947,6 +1947,29 @@ static ssize_t record_type_show(struct class* class, struct class_attribute* att
          return sprintf(buf, "audioin_mode can't match mode\n");
      }
 }
+
+
+static ssize_t store_debug(struct class* class, struct class_attribute* attr,  const char* buf, size_t count )
+{
+    if(strncmp(buf, "chstatus_set", 12)==0)
+     {     
+               WRITE_MPEG_REG(AIU_958_VALID_CTRL,0);//disable 958 invalid bit			
+               WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1900);		
+               WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1900);
+     }else if(strncmp(buf, "chstatus_off", 12)==0){
+            	WRITE_MPEG_REG(AIU_958_VALID_CTRL,3);//enable 958 invalid bit				
+            	WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1902);		
+              WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1902);	 
+      }
+      return count;
+}
+
+static ssize_t show_debug(struct class* class, struct class_attribute* attr,  char* buf)
+{
+      return 0;
+}
+
+
 static struct class_attribute amaudio_attrs[]={
   __ATTR(enable_direct_audio,  S_IRUGO | S_IWUSR, show_direct_flag, store_direct_flag),
   __ATTR(enable_music_mix, S_IRUGO | S_IWUSR, show_music_mix, store_music_mix),
@@ -1962,6 +1985,7 @@ static struct class_attribute amaudio_attrs[]={
   __ATTR(dac_mute_const, S_IRUGO | S_IWUSR, dac_mute_const_show, dac_mute_const_store),
   __ATTR_RO(output_enable),
   __ATTR(record_type, S_IRUGO | S_IWUSR, record_type_show, record_type_store),  
+   __ATTR(debug, S_IRUGO | S_IWUSR, show_debug, store_debug),
   __ATTR_NULL
 };
 
