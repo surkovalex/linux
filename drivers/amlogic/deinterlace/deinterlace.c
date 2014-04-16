@@ -177,7 +177,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-04-11a";
+static char version_s[] = "2014-04-16a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -249,12 +249,15 @@ int di_vscale_skip_enable = 1;
 
 #ifdef NEW_DI_TV
 static int input2pre = 1;
+static bool use_2_interlace_buff = true;/*false:process progress by field;true: process progress by frame with 2 interlace buffer*/
 #else
 static int input2pre = 0;
+static bool use_2_interlace_buff = false;
 #endif
 static int input2pre_buf_miss_count = 0;
 static int input2pre_proc_miss_count = 0;
 static int input2pre_throw_count = 6;
+
 #ifdef NEW_DI_V1
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
 #else
@@ -1242,7 +1245,7 @@ static void queue_init(int local_buffer_num)
         if((i==QUEUE_RECYCLE)||(i==QUEUE_DISPLAY)||(i==QUEUE_TMP)){
             q->type = 1;
         }
-        if(i==QUEUE_LOCAL_FREE)
+        if((i==QUEUE_LOCAL_FREE) && use_2_interlace_buff)
        	    q->type = 2;
     }
     if(local_buffer_num > 0){
@@ -1602,9 +1605,6 @@ static bool is_in_queue(di_buf_t* di_buf, int queue_idx)
     return ret;
 }
 
-static bool use_2_interlace_buff = true;
-module_param(use_2_interlace_buff,bool,0664);
-MODULE_PARM_DESC(use_2_interlace_buff,"/n debug for progress interlace mixed source /n");
 typedef struct{
     /* pre input */
     DI_MIF_t di_inp_mif;
@@ -3884,7 +3884,7 @@ static unsigned char pre_de_buf_config(void)
         if(is_source_change(vframe)){ /* source change*/
             if(di_pre_stru.di_mem_buf_dup_p){
             	/*avoid only 2 i field then p field*/
-            	if(di_pre_stru.cur_prog_flag == 0)
+            	if((di_pre_stru.cur_prog_flag == 0) && use_2_interlace_buff)
             	    di_pre_stru.di_mem_buf_dup_p->post_proc_flag = -1;
             	di_pre_stru.di_mem_buf_dup_p->pre_ref_count = 0;
                 di_pre_stru.di_mem_buf_dup_p = NULL;
@@ -3892,7 +3892,7 @@ static unsigned char pre_de_buf_config(void)
             }
             if(di_pre_stru.di_chan2_buf_dup_p){
             	/*avoid only 1 i field then p field*/
-            	if(di_pre_stru.cur_prog_flag == 0)
+            	if((di_pre_stru.cur_prog_flag == 0) && use_2_interlace_buff)
             	    di_pre_stru.di_chan2_buf_dup_p->post_proc_flag = -1;
             	di_pre_stru.di_chan2_buf_dup_p->pre_ref_count = 0;
                 di_pre_stru.di_chan2_buf_dup_p = NULL;
@@ -5409,7 +5409,7 @@ static int process_post_vframe(void)
             i = 0;
             queue_for_each_entry(p, ptmp, QUEUE_PRE_READY, list) {
                 //if(p->post_proc_flag == 0){
-                if((p->type == VFRAME_TYPE_IN)||(p->post_proc_flag == 0)){
+                if((p->type == VFRAME_TYPE_IN)||((p->post_proc_flag == 0) && use_2_interlace_buff)){
                     ready_di_buf->post_proc_flag = -1;
                     ready_di_buf->new_format_flag = 1;
                 }
@@ -7282,6 +7282,9 @@ module_param(force_update_post_reg, uint, 0664);
 
 MODULE_PARM_DESC(update_post_reg_count, "\n update_post_reg_count\n");
 module_param(update_post_reg_count, uint, 0664);
+
+module_param(use_2_interlace_buff,bool,0664);
+MODULE_PARM_DESC(use_2_interlace_buff,"/n debug for progress interlace mixed source /n");
 
 MODULE_DESCRIPTION("AMLOGIC HDMI TX driver");
 MODULE_LICENSE("GPL");
