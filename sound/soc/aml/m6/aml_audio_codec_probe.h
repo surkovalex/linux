@@ -34,8 +34,8 @@ enum codecs_enum{
 
 typedef struct {
 	enum codecs_enum codec_index;
-	char name[NAME_SIZE];
-	char name_bus[NAME_SIZE];
+	char name[I2C_NAME_SIZE];
+	char name_bus[I2C_NAME_SIZE];
 }codec_info_t;
 
 extern codec_info_t codec_info;

@@ -10,13 +10,13 @@ struct tas57xx_reg_cfg {
     const char *reg_data;
 };
 
-struct tas5711_eq_cfg {
+struct tas57xx_eq_cfg {
 	char name[NAME_SIZE];
 	char *regs;
 	int reg_bytes;
 };
 
-struct tas5711_platform_data {
+struct tas57xx_platform_data {
     int (*init_func)(void);
     int (*early_suspend_func)(void);
     int (*suspend_func)(void);
@@ -35,7 +35,7 @@ struct tas5711_platform_data {
     char*custom_drc2_tko_table;
     int custom_drc2_tko_table_len;
     int num_eq_cfgs;
-    struct tas5711_eq_cfg *eq_cfgs;
+    struct tas57xx_eq_cfg *eq_cfgs;
     char *custom_sub_bq_table;
     int custom_sub_bq_table_len;
     unsigned int custom_master_vol;
@@ -45,7 +45,7 @@ struct tas5711_platform_data {
     int enable_hardmute;
     int i2c_addr;
 };
-
+#if 0
 struct tas5707_eq_cfg {
 	const char *name;
 	const char *regs;
@@ -60,7 +60,7 @@ struct tas5707_platform_data {
     int (*late_resume_func)(void);
     char *custom_init_value_table;
     int init_value_table_len;
-    struct tas57xx_reg_cfg *init_regs;
+    char *init_regs;
     int num_init_regs;
     char *custom_drc1_table;
     int custom_drc1_table_len;
@@ -74,5 +74,5 @@ struct tas5707_platform_data {
     int enable_hardmute;
     int i2c_addr;
 };
-
+#endif
 #endif

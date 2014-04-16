@@ -112,16 +112,17 @@ err_out:
 }
 
 #ifdef CONFIG_SND_AML_M6TV_AUDIO_CODEC
+codec_info_t codec_info;
 static struct codec_probe_priv prob_priv;
 struct codec_probe_priv{
 	int num_eq;
-	struct tas5711_eq_cfg *eq_configs;
+	struct tas57xx_eq_cfg *eq_configs;
 	char *sub_bq_table;
 	char *drc1_table;
 	char *drc1_tko_table;
 };
 
-static int of_get_eq_pdata(struct tas5711_platform_data *pdata, struct device_node* p_node)
+static int of_get_eq_pdata(struct tas57xx_platform_data *pdata, struct device_node* p_node)
 {
 	int i, ret = 0, length = 0;
 	const char *str = NULL;
@@ -136,7 +137,7 @@ static int of_get_eq_pdata(struct tas5711_platform_data *pdata, struct device_no
 
 	pdata->num_eq_cfgs = prob_priv.num_eq;
 
-	prob_priv.eq_configs = kzalloc(prob_priv.num_eq * sizeof(struct tas5711_eq_cfg), GFP_KERNEL);
+	prob_priv.eq_configs = kzalloc(prob_priv.num_eq * sizeof(struct tas57xx_eq_cfg), GFP_KERNEL);
 
 	for(i = 0; i < prob_priv.num_eq; i++){
 		ret = of_property_read_string_index(p_node, "eq_name", i , &str);
@@ -197,7 +198,7 @@ exit:
 	return p;
 }
 
-static int of_get_subwoofer_pdata(struct tas5711_platform_data *pdata, struct device_node *p_node)
+static int of_get_subwoofer_pdata(struct tas57xx_platform_data *pdata, struct device_node *p_node)
 {
 	int length = 0;
 	char *pd = NULL;
@@ -214,7 +215,7 @@ static int of_get_subwoofer_pdata(struct tas5711_platform_data *pdata, struct de
 	return 0;
 }
 
-static int of_get_drc_pdata(struct tas5711_platform_data *pdata, struct device_node* p_node)
+static int of_get_drc_pdata(struct tas57xx_platform_data *pdata, struct device_node* p_node)
 {
 	int length = 0;
 	char *pd = NULL;
@@ -263,7 +264,7 @@ static int of_get_drc_pdata(struct tas5711_platform_data *pdata, struct device_n
 	return 0;
 }
 
-static int of_get_init_pdata(struct tas5711_platform_data *pdata, struct device_node* p_node)
+static int of_get_init_pdata(struct tas57xx_platform_data *pdata, struct device_node* p_node)
 {
 	int length = 0;
 	char *pd = NULL;
@@ -286,7 +287,7 @@ static int of_get_init_pdata(struct tas5711_platform_data *pdata, struct device_
 	return 0;
 
 }
-static int codec_get_of_pdata(struct tas5711_platform_data *pdata, struct device_node* p_node)
+static int codec_get_of_pdata(struct tas57xx_platform_data *pdata, struct device_node* p_node)
 {
 	int ret = 0;
 
@@ -322,11 +323,12 @@ static int aml_audio_codec_probe(struct platform_device *pdev)
 	struct i2c_client *client;
 	aml_audio_codec_info_t temp_audio_codec;
 #ifdef CONFIG_SND_AML_M6TV_AUDIO_CODEC
-	struct tas5711_platform_data *pdata;
+	struct tas57xx_platform_data *pdata;
+	char tmp[NAME_SIZE];
 
-	pdata = kzalloc(sizeof(struct tas5711_platform_data), GFP_KERNEL);
+	pdata = kzalloc(sizeof(struct tas57xx_platform_data), GFP_KERNEL);
 	if (!pdata) {
-		printk("ERROR, NO enough mem for tas5711_platform_data!\n");
+		printk("ERROR, NO enough mem for tas57xx_platform_data!\n");
 		return -ENOMEM;
     }
 #endif
@@ -348,6 +350,11 @@ static int aml_audio_codec_probe(struct platform_device *pdev)
         board_info.platform_data = &temp_audio_codec;
         client = i2c_new_device(adapter, &board_info);
 #ifdef CONFIG_SND_AML_M6TV_AUDIO_CODEC
+	snprintf(tmp, I2C_NAME_SIZE, "%s", temp_audio_codec.name);
+	strlcpy(codec_info.name, tmp, I2C_NAME_SIZE);
+	snprintf(tmp, I2C_NAME_SIZE, "%s.%s", temp_audio_codec.name, dev_name(&client->dev));
+	strlcpy(codec_info.name_bus, tmp, I2C_NAME_SIZE);
+
 	codec_get_of_pdata(pdata, child);
 	client->dev.platform_data = pdata;
 #endif
