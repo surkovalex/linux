@@ -124,7 +124,7 @@ static struct page_info *alloc_largest_available(struct ion_system_heap *heap,
 	struct zone *zone = NULL;
 	struct zoneref *z;
 	struct zonelist *zonelist;
-	bool ret;
+	bool ret = true;
 
 	zonelist = NODE_DATA(numa_node_id())->node_zonelists;
 
@@ -132,7 +132,7 @@ static struct page_info *alloc_largest_available(struct ion_system_heap *heap,
 
 		for_each_zone_zonelist(zone, z, zonelist,
 				gfp_zone(heap->pools[order_to_index(orders[i])]->gfp_mask)) {
-			ret = zone_watermark_ok_safe(zone, orders[i], low_wmark_pages(zone), 0, 0);
+			ret = zone_watermark_ok_safe(zone, orders[i], high_wmark_pages(zone), 0, 0);
 			if(ret)
 				break;
 		}
