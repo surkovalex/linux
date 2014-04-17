@@ -35,7 +35,7 @@
 #endif
 #include <linux/sched.h>
 
-#define MESON_SECURE_DEBUG 1
+#define MESON_SECURE_DEBUG 0
 #ifdef MESON_SECURE_DEBUG
 #define TZDBG(fmt, args...) printk("meson-secure: " fmt, ## args);
 #else
@@ -67,7 +67,7 @@ int meson_secure_memblock(unsigned startaddr, unsigned endaddr, struct secure_me
 */
 
 struct memconfig memsecure[MEMCONFIG_NUM] = {0};
-int meson_trustzone_memconfig()
+int meson_trustzone_memconfig(void)
 {
 	int ret;
 	struct memconfig_hal_api_arg arg;
@@ -90,7 +90,7 @@ int meson_trustzone_memconfig()
 	return ret;
 }
 
-unsigned int meson_trustzone_getmemsecure_size()
+unsigned int meson_trustzone_getmemsecure_size(void)
 {
 	unsigned int size = 0;
 	int i;
@@ -164,6 +164,7 @@ uint32_t meson_secure_reg_read(uint32_t addr)
 
 	return ret;
 }
+EXPORT_SYMBOL(meson_secure_reg_read);
 
 uint32_t meson_secure_reg_write(uint32_t addr, uint32_t val)
 {
@@ -178,13 +179,14 @@ uint32_t meson_secure_reg_write(uint32_t addr, uint32_t val)
 
 	return ret;
 }
+EXPORT_SYMBOL(meson_secure_reg_write);
 
-uint32_t meson_secure_mem_size(vold)
+uint32_t meson_secure_mem_size(void)
 {
 	return MESON_TRUSTZONE_MEM_SIZE;
 }
 
-uint32_t meson_secure_mem_end(vold)
+uint32_t meson_secure_mem_end(void)
 {
 	return (MESON_TRUSTZONE_MEM_START + MESON_TRUSTZONE_MEM_SIZE);
 }
