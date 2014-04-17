@@ -1646,7 +1646,8 @@ static int clk_enable_mali(struct clk *clk)
 	}
 #endif
 
-	spin_lock_irqsave(&clockfw_lock, flags);
+	while(!spin_trylock_irqsave(&clockfw_lock, flags))
+		udelay(2);
 
 	cpu = clk_get_rate_a9(clk->priv);
 	_clk_set_rate_gpu(NULL, 0, cpu);
@@ -1669,7 +1670,8 @@ static int clk_disable_mali(struct clk *clk)
 	unsigned long flags;
 	unsigned long mali_flags;
 
-	spin_lock_irqsave(&clockfw_lock, flags);
+	while(!spin_trylock_irqsave(&clockfw_lock, flags))
+		udelay(2);
 #ifdef CONFIG_CPU_FREQ_DEBUG
 	printk(KERN_INFO "%s() GPU=%luMHz CPU=%luMhz\n", __FUNCTION__, clk_get_rate_gpu(NULL) / 1000000, clk_get_rate_a9(clk->priv) / 1000000);
 #endif /* CONFIG_CPU_FREQ_DEBUG */

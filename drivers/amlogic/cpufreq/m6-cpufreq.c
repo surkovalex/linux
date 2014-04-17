@@ -48,8 +48,8 @@ static void adjust_jiffies(unsigned int freqOld, unsigned int freqNew);
 
 static struct cpufreq_frequency_table meson_freq_table[]=
 {
-    //	0	, CPUFREQ_ENTRY_INVALID    , 
-    //	1	, CPUFREQ_ENTRY_INVALID    , 
+    //	0	, CPUFREQ_ENTRY_INVALID    ,
+    //	1	, CPUFREQ_ENTRY_INVALID    ,
     {0	, 96000    },
     {1	, 192000   },
     {2	, 312000   },
@@ -453,6 +453,8 @@ static void adjust_jiffies(unsigned int freqOld, unsigned int freqNew)
 int meson_cpufreq_boost(unsigned int freq)
 {
     int ret = 0;
+	struct cpufreq_policy * policy = NULL;
+
     if (!early_suspend_flag) {
         // only allow freq boost when not in early suspend
         //check last_cpu_rate. inaccurate but no lock
@@ -461,7 +463,8 @@ int meson_cpufreq_boost(unsigned int freq)
         if ((clk_get_rate(cpufreq.armclk) / 1000) < freq) {
             mutex_lock(&meson_cpufreq_mutex);
             if ((clk_get_rate(cpufreq.armclk) / 1000) < freq) {
-                ret = meson_cpufreq_target_locked(NULL,
+				policy = cpufreq_cpu_get(0);
+                ret = meson_cpufreq_target_locked(policy,
                         freq,
                         CPUFREQ_RELATION_H);
             }
