@@ -3236,6 +3236,7 @@ static int lcd_set_current_vmode(vmode_t mode)
 		mutex_unlock(&lcd_vout_mutex);
 		return -EINVAL;
 	}
+	_disable_backlight();
 	vpp2_sel = 0;
 
 	WRITE_LCD_REG(VPP_POSTBLEND_H_SIZE, pDev->lcd_info.width);
@@ -3261,6 +3262,7 @@ static int lcd_set_current_vmode2(vmode_t mode)
 		mutex_unlock(&lcd_vout_mutex);
 		return -EINVAL;
 	}
+	_disable_backlight();
     vpp2_sel = 1;
 
     WRITE_LCD_REG(VPP2_POSTBLEND_H_SIZE, pDev->lcd_info.width);

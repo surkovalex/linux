@@ -122,7 +122,15 @@ typedef struct {
 	struct delayed_work bl_delayed_work;
 } Lcd_Bl_Config_t;
 
-static Lcd_Bl_Config_t bl_config;
+static Lcd_Bl_Config_t bl_config = {
+	.level_default = 128,
+	.level_mid = 128,
+	.level_mid_mapping = 128,
+	.level_min = 10,
+	.level_max = 255,
+	.power_on_delay = 10,
+	.method = BL_CTL_MAX,
+};
 static unsigned bl_level = BL_LEVEL_DEFAULT;
 static int bl_status = 1;
 static int bl_real_status = 1;
@@ -1081,7 +1089,7 @@ static void __exit aml_bl_exit(void)
     platform_driver_unregister(&aml_bl_driver);
 }
 
-module_init(aml_bl_init);
+arch_initcall(aml_bl_init);
 module_exit(aml_bl_exit);
 
 MODULE_DESCRIPTION("Meson Backlight Driver");
