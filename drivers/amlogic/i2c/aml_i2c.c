@@ -1183,10 +1183,14 @@ static const struct of_device_id meson6_i2c_dt_match[]={
 #define meson6_i2c_dt_match NULL
 #endif
 
-static	int aml_i2c_suspend(struct platform_device *pdev, pm_message_t state)
+//static	int aml_i2c_suspend(struct platform_device *pdev, pm_message_t state)
+static	int aml_i2c_suspend(struct device *dev)
 {
+    struct platform_device *pdev = to_platform_device(dev); 
 	struct i2c_adapter *adapter;
 	struct aml_i2c *i2c;
+
+    printk("%s\n", __func__);
 	adapter = i2c_get_adapter(pdev->id==-1? 0: pdev->id);
 	BUG_ON(!adapter);
 	i2c = i2c_get_adapdata(adapter);
@@ -1199,11 +1203,14 @@ static	int aml_i2c_suspend(struct platform_device *pdev, pm_message_t state)
 	return 0;
 }
 
-static	int aml_i2c_resume(struct platform_device *pdev)
+//static	int aml_i2c_resume(struct platform_device *pdev)
+static	int aml_i2c_resume(struct device *dev)
 {
+    struct platform_device *pdev = to_platform_device(dev); 
 	struct i2c_adapter *adapter;
 	struct aml_i2c *i2c;
 
+    printk("%s\n", __func__);
 	adapter = i2c_get_adapter(pdev->id==-1? 0: pdev->id);
 	BUG_ON(!adapter);
 	i2c = i2c_get_adapdata(adapter);
@@ -1215,6 +1222,12 @@ static	int aml_i2c_resume(struct platform_device *pdev)
 	}
 	return 0;
 }
+
+static struct dev_pm_ops aml_i2c_pm_ops = {
+    .suspend_noirq = aml_i2c_suspend,
+    .resume_noirq  = aml_i2c_resume,
+};
+
 static struct platform_driver aml_i2c_driver = {
     .probe = aml_i2c_probe,
     .remove = aml_i2c_remove,
@@ -1222,9 +1235,10 @@ static struct platform_driver aml_i2c_driver = {
         .name = "aml-i2c",
         .owner = THIS_MODULE,
         .of_match_table=meson6_i2c_dt_match,
+        .pm = &aml_i2c_pm_ops, 
     },
-	.suspend = aml_i2c_suspend,
-	.resume = aml_i2c_resume,
+//	.suspend = aml_i2c_suspend,
+//	.resume = aml_i2c_resume,
 };
 
 static int __init aml_i2c_init(void)
