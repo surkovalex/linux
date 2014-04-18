@@ -344,17 +344,15 @@ int aml1218_set_dcdc_voltage(int dcdc, uint32_t voltage)
     }
     idx_to   = find_idx(start, voltage, step, range);
     idx_cur  = (val & 0x7e) >> 1;
-    while (idx_cur != idx_to) {
-        if (idx_cur < idx_to) {                                 // adjust to target voltage step by step
-            idx_cur++;    
-        } else {
-            idx_cur--;
-        }
-        val &= ~0x7e;
-        val |= (idx_cur << 1);
-        aml1218_write(addr, val);
-        udelay(50);                                             // atleast delay 100uS
+
+    step = idx_cur - idx_to;
+    if (step < 0) {
+        step = -step;
     }
+    val &= ~0x7e;
+    val |= (idx_to << 1);
+    aml1218_write(addr, val);
+    udelay(20 * step);
     dcdc_val[dcdc] = val;
     return 0;
 }
