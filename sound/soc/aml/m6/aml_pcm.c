@@ -78,6 +78,8 @@ unsigned int aml_iec958_playback_start_addr = 0;
 unsigned int aml_iec958_playback_start_phy = 0;
 unsigned int aml_iec958_playback_size = 0;  // in bytes
 
+unsigned int aml_i2s_alsa_write_addr = 0;
+
 static  unsigned  playback_substream_handle = 0 ;
 /*to keep the pcm status for clockgating*/
 static unsigned clock_gating_status = 0;
@@ -108,6 +110,7 @@ EXPORT_SYMBOL(aml_i2s_playback_enable);
 EXPORT_SYMBOL(aml_i2s_capture_buf_size);
 EXPORT_SYMBOL(aml_i2s_playback_phy_start_addr);
 EXPORT_SYMBOL(aml_i2s_capture_phy_start_addr);
+EXPORT_SYMBOL(aml_i2s_alsa_write_addr);
 
 static void aml_codec_power_switch_queue(struct work_struct* work)
 {
@@ -1030,6 +1033,7 @@ static int aml_pcm_copy_playback(struct snd_pcm_runtime *runtime, int channel,
     int i = 0, j = 0;
     int  align = runtime->channels * 32 / runtime->byte_align;
     char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos);
+	aml_i2s_alsa_write_addr = frames_to_bytes(runtime, pos);
     n = frames_to_bytes(runtime, count);
     if(aml_i2s_playback_enable == 0)
       return res;
