@@ -181,7 +181,7 @@ static struct dwc_otg_driver_module_params dwc_otg_module_params = {
 	.host_support_fs_ls_low_power = -1,
 	.host_ls_low_power_phy_clk = -1,
 	.enable_dynamic_fifo = 1,
-	#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON6
+	#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON6TV
 	.data_fifo_size = 2048,
 	#else
 	.data_fifo_size = 1024,
@@ -228,7 +228,7 @@ static struct dwc_otg_driver_module_params dwc_otg_module_params = {
 				   -1
 				   /* 15 */
 				   },
-	#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON6
+	#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON6TV
 	.host_rx_fifo_size = 1024,
 	#else 
 	.host_rx_fifo_size = 512,
