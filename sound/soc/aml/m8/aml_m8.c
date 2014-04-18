@@ -58,6 +58,8 @@
 #define DRV_NAME "aml_snd_m8"
 #define HP_DET                  1
 extern int ext_codec;
+extern struct device *spdif_dev;
+
 static void aml_set_clock(int enable)
 {
     /* set clock gating */
@@ -286,6 +288,8 @@ static struct snd_soc_ops aml_asoc_ops = {
 struct aml_audio_private_data *p_audio;
 
 static int aml_m8_spk_enabled;
+static bool aml_audio_i2s_mute_flag = 0;
+static bool aml_audio_spdif_mute_flag = 0;
 
 static int aml_m8_set_spk(struct snd_kcontrol *kcontrol,
     struct snd_ctl_elem_value *ucontrol)
@@ -310,6 +314,49 @@ static int aml_m8_get_spk(struct snd_kcontrol *kcontrol,
     return 0;
 }
 
+static int aml_audio_set_i2s_mute(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    aml_audio_i2s_mute_flag = ucontrol->value.integer.value[0];
+    printk(KERN_INFO "aml_audio_i2s_mute_flag: flag=%d\n",aml_audio_i2s_mute_flag);
+    if(aml_audio_i2s_mute_flag){
+        aml_audio_i2s_mute();
+    }else{
+        aml_audio_i2s_unmute();
+    }
+    return 0;
+}
+
+static int aml_audio_get_i2s_mute(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    ucontrol->value.integer.value[0] = aml_audio_i2s_mute_flag;
+    return 0;
+}
+
+
+static bool spdif_mute_flag;
+
+static int aml_audio_set_spdif_mute(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    
+    aml_audio_spdif_mute_flag = ucontrol->value.integer.value[0];
+    printk(KERN_INFO "aml_audio_set_spdif_mute: flag=%d\n",aml_audio_spdif_mute_flag);
+    if(aml_audio_spdif_mute_flag){
+        aml_spdif_pinmux_deinit(spdif_dev);
+    }else{
+        aml_spdif_pinmux_init(spdif_dev);
+    }
+    return 0;
+}
+
+static int aml_audio_get_spdif_mute(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    ucontrol->value.integer.value[0] = aml_audio_spdif_mute_flag;
+    return 0;
+}
 static int aml_set_bias_level(struct snd_soc_card *card,
         struct snd_soc_dapm_context *dapm, enum snd_soc_bias_level level)
 {
@@ -488,6 +535,13 @@ static struct snd_soc_jack_pin jack_pins[] = {
 static const struct snd_kcontrol_new aml_m8_controls[] = {
 	SOC_DAPM_PIN_SWITCH("Ext Spk"),
 
+    SOC_SINGLE_BOOL_EXT("aml audio i2s mute", 0,
+        aml_audio_get_i2s_mute,
+        aml_audio_set_i2s_mute),
+        
+    SOC_SINGLE_BOOL_EXT("aml audio spdif mute", 0,
+        aml_audio_get_spdif_mute,
+        aml_audio_set_spdif_mute),
 
 	SOC_SINGLE_BOOL_EXT("Amp Spk enable", 0,
 		aml_m8_get_spk,

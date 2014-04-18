@@ -938,6 +938,8 @@ sdio{
     audio_spdif_codec{
         compatible = "amlogic,aml-spdif-codec";
         dev_name = "spdif-dit.0";
+        pinctrl-names = "aml_audio_spdif";
+        pinctrl-0 = <&audio_spdif_pins>;
         status = "okay";
     };
 
@@ -1530,18 +1532,24 @@ sdio{
 		};
 
 //$$ MATCH "Audio_pin_0_match" = "&audio_pins"
-//$$ L2 PROP_U32 4 = "amlogic,setmask"
-//$$ L2 PROP_U32 10 = "amlogic,clrmask"
-//$$ L2 PROP_STR 6 = "amlogic,pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 4 = "amlogic,clrmask"
+//$$ L2 PROP_STR 4 = "amlogic,pins"
         audio_pins:audio_pin{
-            amlogic,setmask=<1 0x80
-                             1 0x75>;
-            amlogic,clrmask=<1 0x10000
-                             1 0x0a
-                             3 0x389
-                             4 0x3c00000
-                             9 0xd>;
-            amlogic,pins = "GPIOY_3","GPIOY_4","GPIOY_5","GPIOY_6","GPIOY_7","GPIOY_8";
+            amlogic,setmask=<3 0x78000000>;    /*bt pcm*/
+            amlogic,clrmask=<4 0x3c000         /*bt pcm*/            
+                             5 0x1000>;        /*bt pcm*/
+            amlogic,pins = "GPIOX_4","GPIOX_5","GPIOX_6","GPIOX_7";        /*bt pcm*/
+        };
+
+//$$ MATCH "Audio_pin_0_match" = "&audio_spdif_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+//$$ L2 PROP_STR 1 = "amlogic,pins"
+        audio_spdif_pins:audio_pin1{
+            amlogic,setmask=<1 0x80>;       /*spdif_out*/
+            amlogic,clrmask=<1 0x10000>;    /*spdif_out*/
+            amlogic,pins ="GPIOY_3";        /*spdif_out*/
         };
 
 //$$ MATCH "Spi_pin_0_match" = "&aml_spi_nor_pins"

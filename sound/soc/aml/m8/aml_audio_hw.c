@@ -853,6 +853,15 @@ unsigned int read_iec958_rd_ptr(void)
     val = READ_MPEG_REG(AIU_MEM_IEC958_RD_PTR);
     return val;
 }
+void aml_audio_i2s_unmute(void)
+{
+    WRITE_MPEG_REG_BITS(AIU_I2S_MUTE_SWAP, 0, 8, 8);
+}
+
+void aml_audio_i2s_mute(void)
+{
+    WRITE_MPEG_REG_BITS(AIU_I2S_MUTE_SWAP, 0xff, 8, 8);
+}
 void audio_i2s_unmute(void)
 {
     WRITE_MPEG_REG_BITS(AIU_I2S_MUTE_SWAP, 0, 8, 8);

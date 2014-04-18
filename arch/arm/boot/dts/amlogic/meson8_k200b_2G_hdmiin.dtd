@@ -942,6 +942,8 @@ sdio{
     audio_spdif_codec{
         compatible = "amlogic,aml-spdif-codec";
         dev_name = "spdif-dit.0";
+        pinctrl-names = "aml_audio_spdif";
+        pinctrl-0 = <&audio_spdif_pins>;
         status = "okay";
     };
 
@@ -1587,20 +1589,31 @@ sdio{
 
 //$$ MATCH "Audio_pin_0_match" = "&audio_pins"
 //$$ L2 PROP_U32 6 = "amlogic,setmask"
-//$$ L2 PROP_U32 10 = "amlogic,clrmask"
-//$$ L2 PROP_STR 10 = "amlogic,pins"
+//$$ L2 PROP_U32 8 = "amlogic,clrmask"
+//$$ L2 PROP_STR 9 = "amlogic,pins"
         audio_pins:audio_pin{
-            amlogic,setmask=<1 0x180
-                             1 0x75
-                             10 0x78000000>;
-            amlogic,clrmask=<1 0x30000
-                             1 0x0a
-                             3 0x40389
-                             4 0x3c00000
-                             9 0xd>;
-            amlogic,pins = "GPIOY_2","GPIOY_3","GPIOY_4","GPIOY_5","GPIOY_6","GPIOY_7","GPIOY_8","GPIOAO_8","GPIOAO_9","GPIOAO_10","GPIOAO_11";
+            amlogic,setmask=<1 0x100          /*spdif_in*/
+                             3 0x78000000     /*bt_pcm*/
+                             10 0x78000000>;  /*external audio codec*/
+            amlogic,clrmask=<1 0x20000        /*spdif_in*/
+                             3 0x40000        /*spdif_in*/
+                             4 0x3c000         /*bt_pcm*/           
+                             5 0x1000>;        /*bt_pcm*/
+            amlogic,pins = "GPIOY_2",         /*spdif_in*/
+                           "GPIOX_4","GPIOX_5","GPIOX_6","GPIOX_7",        /*bt_pcm*/
+                           "GPIOAO_8","GPIOAO_9","GPIOAO_10","GPIOAO_11";  /*external audio codec*/
         };
 
+//$$ MATCH "Audio_pin_0_match" = "&audio_spdif_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+//$$ L2 PROP_STR 1 = "amlogic,pins"
+        audio_spdif_pins:audio_pin1{
+            amlogic,setmask=<1 0x80>;         /*spdif_out*/
+            amlogic,clrmask=<1 0x10000>;      /*spdif_out*/
+            amlogic,pins ="GPIOY_3";          /*spdif_out*/
+        };
+        
 //$$ MATCH "Spi_pin_0_match" = "&aml_spi_nor_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
 //$$ L2 PROP_U32 2 = "amlogic,clrmask"
