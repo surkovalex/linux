@@ -36,7 +36,6 @@
 #include "atbm886x.h"
 #include "../aml_fe.h"
 
-#include <mach/i2c_aml.h>
 #if 1
 #define pr_dbg(args...) printk("ATBM: " args)
 #else
@@ -110,9 +109,10 @@ static int atbm8869_read_ucblocks(struct dvb_frontend *fe, u32 * ucblocks)
 	*ucblocks=0;
 	return 0;
 }
-extern int aml_fe_analog_set_frontend(struct dvb_frontend* fe, struct dvb_frontend_parameters* params);
-static int atbm8869_set_frontend(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
+extern int aml_fe_analog_set_frontend(struct dvb_frontend* fe);
+static int atbm8869_set_frontend(struct dvb_frontend *fe)
 {
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 	struct aml_fe *afe = fe->demodulator_priv;
 	struct aml_fe_dev *dev = afe->dtv_demod;
 	int times,error;
@@ -125,7 +125,7 @@ static int atbm8869_set_frontend(struct dvb_frontend *fe, struct dvb_frontend_pa
 retry:
 
 	mutex_lock(&atbm_lock);
-	aml_fe_analog_set_frontend(fe,p);   //666000Khz  set tuner
+	aml_fe_analog_set_frontend(fe);   //666000Khz  set tuner
 	mutex_unlock(&atbm_lock);
 //	Delayms(50);
 //	ATBMStartDSP();
@@ -145,17 +145,18 @@ retry:
 
 
 	aml_dmx_after_retune(afe->ts, fe);
-	afe->params = *p;
+	afe->params = *c;
 	msleep(200);
 	return  0;
 }
 
-static int atbm8869_get_frontend(struct dvb_frontend *fe, struct dvb_frontend_parameters *p)
+static int atbm8869_get_frontend(struct dvb_frontend *fe)
 {//these content will be writed into eeprom .
 
 	struct aml_fe *afe = fe->demodulator_priv;
+	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 
-	*p = afe->params;
+	*c = afe->params;
 	return 0;
 }
 
@@ -199,8 +200,8 @@ static int atbm8869_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 static int atbm8869_fe_enter_mode(struct aml_fe *fe, int mode)
 {
 	struct aml_fe_dev *dev = fe->dtv_demod;
+/*
 	struct m6tv_dtmb_platform_data *patbm_op = NULL;
-
 	patbm_op = (struct m6tv_dtmb_platform_data*)fe->dtv_demod->frontend_opration;
 
 	if(NULL != patbm_op)
@@ -210,7 +211,7 @@ static int atbm8869_fe_enter_mode(struct aml_fe *fe, int mode)
 			patbm_op->atbm_device_reset();
 		}
 	}
-
+*/
 	pr_dbg("=========================atbm8869_fe_enter_modet\r\n");
 
 	ATBMPowerOnInit();
@@ -224,6 +225,7 @@ static int atbm8869_fe_enter_mode(struct aml_fe *fe, int mode)
 static int atbm8869_fe_resume(struct aml_fe_dev *dev)
 {
 	printk("atbm8869_fe_resume\n");
+/*
 	struct m6tv_dtmb_platform_data *patbm_op = NULL;
 	patbm_op = (struct m6tv_dtmb_platform_data*)dev->frontend_opration;
 	if(NULL != patbm_op)
@@ -240,6 +242,7 @@ static int atbm8869_fe_resume(struct aml_fe_dev *dev)
 			patbm_op->atbm_device_reset();
 		}
 	}
+*/
 	i2c_adap_atbm=dev->i2c_adap;
 	ATBMPowerOnInit();
 	ATBMSetDTMBMode();

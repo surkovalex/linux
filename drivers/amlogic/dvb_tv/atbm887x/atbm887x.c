@@ -78,7 +78,7 @@ For more information, please refer to the complete SDK user manual.
 
 #include <linux/dvb/frontend.h>
 #include <linux/i2c.h>
-#include "../../../media/dvb/dvb-core/dvb_frontend.h"
+#include "../../../media/dvb-core/dvb_frontend.h"
 #include "../aml_dvb.h"
 #include "atbm887x.h"
 extern struct i2c_adapter *i2c_adap_atbm;
@@ -140,7 +140,7 @@ extern ATBM_I2CREADWRITE_STATUS I2CWrite(uint8 ui8I2CSlaveAddr, uint8 *ui8pData,
 	msg[1].len = 1;
 #endif
 	struct i2c_adapter *i2c_adap;
-	i2c_adap = i2c_get_adapter(0);
+	i2c_adap = i2c_get_adapter(1);
 	if(!i2c_adap){
 		printk("i2c_adap is null\n");
 		return;
@@ -176,7 +176,7 @@ extern ATBM_I2CREADWRITE_STATUS I2CRead(uint8 ui8I2CSlaveAddr, uint8 *ui8pData, 
 		 msg[0].len = i32Length;
 		 msg[0].buf = ui8pData;
 		 struct i2c_adapter *i2c_adap;
-		i2c_adap = i2c_get_adapter(0);
+		i2c_adap = i2c_get_adapter(1);
 		if(!i2c_adap){
 		printk("i2c_adap is null\n");
 		return;

@@ -80,7 +80,8 @@ typedef enum{
 	AM_DTV_DEMOD_SI2168 = 5,
 	AM_DTV_DEMOD_ITE9133 = 6,
 	AM_DTV_DEMOD_ITE9173 = 7,
-	AM_DTV_DEMOD_DIB8096 = 8
+	AM_DTV_DEMOD_DIB8096 = 8,
+	AM_DTV_DEMOD_ATBM8869 = 9
 }aml_dtv_demod_type_t;
 
 typedef enum{

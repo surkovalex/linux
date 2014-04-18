@@ -47,7 +47,7 @@
 #define pr_error(fmt, args...) printk("FE: " fmt, ## args)
 
 MODULE_PARM_DESC(debug_fe, "\n\t\t Enable frontend debug information");
-static int debug_fe = 1;
+static int debug_fe = 0;
 module_param(debug_fe, int, 0644);
 
 #define AFC_BEST_LOCK      50

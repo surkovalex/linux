@@ -248,7 +248,7 @@ static void dvb_frontend_add_event(struct dvb_frontend *fe, fe_status_t status)
 		if (/*(status & FE_HAS_LOCK) && */has_get_frontend(fe))
 			dtv_get_frontend(fe, &fepriv->parameters_out);
 	}
-	
+
 	mutex_lock(&events->mtx);
 
 	wp = (events->eventw + 1) % MAX_EVENT;

@@ -37,7 +37,7 @@
 #define ERROR                           1
 #endif
 #define CVD_SI2177_RSSI
-static int si2177_debug = 1;
+static int si2177_debug = 0;
 module_param(si2177_debug, int, 0644);
 MODULE_PARM_DESC(si2177_debug, "\n si2177_debug \n");
 
