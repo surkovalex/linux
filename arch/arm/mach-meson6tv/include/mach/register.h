@@ -6,7 +6,6 @@
 #ifndef __MACH_MESON6TV_REG_ADDR_H_
 #define __MACH_MESON6TV_REG_ADDR_H_
 
-#include "io.h"
 
 #define SECOND_DEMUX_OFFSET_0 0x50 	///../ucode/register.h
 #define P_SECOND_DEMUX_OFFSET_0 		CBUS_REG_ADDR(SECOND_DEMUX_OFFSET_0) 	///../ucode/register.h
@@ -3510,6 +3509,10 @@
 #define P_VPP_VE_DEMO_LEFT_TOP_SCREEN_WIDTH 		CBUS_REG_ADDR(VPP_VE_DEMO_LEFT_TOP_SCREEN_WIDTH) 	///../ucode/register.h
 #define VPP_VE_DEMO_CENTER_BAR 0x1da3 	///../ucode/register.h
 #define P_VPP_VE_DEMO_CENTER_BAR 		CBUS_REG_ADDR(VPP_VE_DEMO_CENTER_BAR) 	///../ucode/register.h
+
+#define VPP_VE_H_V_SIZE 0x1da4 	///../ucode/register.h:7519
+#define P_VPP_VE_H_V_SIZE 		CBUS_REG_ADDR(VPP_VE_H_V_SIZE)
+
 #define VPP_VDO_MEAS_CTRL 0x1da8 	///../ucode/register.h
 #define P_VPP_VDO_MEAS_CTRL 		CBUS_REG_ADDR(VPP_VDO_MEAS_CTRL) 	///../ucode/register.h
 #define VPP_VDO_MEAS_VS_COUNT_HI 0x1da9 	///../ucode/register.h
