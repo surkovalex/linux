@@ -1079,6 +1079,7 @@ static ssize_t show_vframe_status(struct device *dev, struct device_attribute* a
 
     return ret;
 }
+
 #ifdef NEW_DI_V1
 static ssize_t store_dump_mem(struct device * dev, struct device_attribute *attr, const char * buf, size_t len);
 #endif
@@ -1091,7 +1092,6 @@ static DEVICE_ATTR(dump_pic, 0664, NULL, store_dump_mem);
 static DEVICE_ATTR(log, 0664, show_log, store_log);
 static DEVICE_ATTR(status, 0664, show_status, NULL);
 static DEVICE_ATTR(provider_vframe_status, 0664, show_vframe_status, NULL);
-
 /***************************
 * di buffer management
 ***************************/
@@ -6762,6 +6762,18 @@ const static struct file_operations di_fops = {
 #endif
 };
 
+static ssize_t show_frame_format(struct device *dev, struct device_attribute* attr, char* buf)
+{
+    int ret = 0;
+    if(init_flag){
+	ret += sprintf(buf + ret, "%s\n", di_pre_stru.cur_prog_flag?"progressive":"interlace");
+    }else{
+	ret += sprintf(buf + ret, "%s\n", "null");
+    }
+    return ret;
+}
+static DEVICE_ATTR(frame_format, 0664, show_frame_format, NULL);
+
 static struct resource memobj;
 static int di_probe(struct platform_device *pdev)
 {
@@ -6850,7 +6862,7 @@ static int di_probe(struct platform_device *pdev)
     device_create_file(di_device.dev, &dev_attr_parameters);
     device_create_file(di_device.dev, &dev_attr_status);
     device_create_file(di_device.dev, &dev_attr_provider_vframe_status);
-
+    device_create_file(di_device.dev, &dev_attr_frame_format);
     mem = &memobj;
     r = find_reserve_block(pdev->dev.of_node->name,0);
     if(r < 0){
