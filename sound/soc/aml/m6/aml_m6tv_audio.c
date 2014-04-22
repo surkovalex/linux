@@ -30,7 +30,7 @@
 #include "aml_pcm.h"
 #include "aml_audio_hw.h"
 #include <sound/aml_m6tv_audio.h>
-#include <aml_audio_codec_probe.h>
+#include "aml_audio_codec_probe.h"
 
 #ifdef CONFIG_USE_OF
 #include <linux/of.h>
