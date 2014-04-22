@@ -1421,7 +1421,7 @@ static int aml1212_update_status(struct aml_charger *charger)
     return 0;
 }
 
-void dump_pmu_register(char *buf)
+int dump_pmu_register(char *buf)
 {
     uint8_t val[16];
     int     i;
