@@ -33,6 +33,7 @@ extern unsigned sdio_debug;
 #define AMLSD_DBG_IOS		(1<<9)
 #define AMLSD_DBG_IRQ		(1<<10)
 #define AMLSD_DBG_CLKC		(1<<11)
+#define AMLSD_DBG_TUNING	(1<<12)
 
 #define     DETECT_CARD_IN          1
 #define     DETECT_CARD_OUT         2

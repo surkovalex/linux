@@ -31,7 +31,7 @@
 #include <mach/mod_gate.h>
 #include "amlsd.h"
 
-unsigned int rx_clk_phase_set=10;
+unsigned int rx_clk_phase_set=1;
 unsigned int sd_clk_phase_set=1;
 unsigned int rx_endian=7;
 unsigned int tx_endian=7;
@@ -39,6 +39,41 @@ unsigned int val1=0;
 
 static void aml_sdhc_clk_switch (struct amlsd_platform* pdata, int clk_div, int clk_src_sel);
 static int aml_sdhc_status (struct amlsd_host* host);
+
+static const u8 tuning_blk_pattern_4bit[] = {
+	0xff, 0x0f, 0xff, 0x00, 0xff, 0xcc, 0xc3, 0xcc,
+	0xc3, 0x3c, 0xcc, 0xff, 0xfe, 0xff, 0xfe, 0xef,
+	0xff, 0xdf, 0xff, 0xdd, 0xff, 0xfb, 0xff, 0xfb,
+	0xbf, 0xff, 0x7f, 0xff, 0x77, 0xf7, 0xbd, 0xef,
+	0xff, 0xf0, 0xff, 0xf0, 0x0f, 0xfc, 0xcc, 0x3c,
+	0xcc, 0x33, 0xcc, 0xcf, 0xff, 0xef, 0xff, 0xee,
+	0xff, 0xfd, 0xff, 0xfd, 0xdf, 0xff, 0xbf, 0xff,
+	0xbb, 0xff, 0xf7, 0xff, 0xf7, 0x7f, 0x7b, 0xde,
+};
+
+static const u8 tuning_blk_pattern_8bit[] = {
+	0xff, 0xff, 0x00, 0xff, 0xff, 0xff, 0x00, 0x00,
+	0xff, 0xff, 0xcc, 0xcc, 0xcc, 0x33, 0xcc, 0xcc,
+	0xcc, 0x33, 0x33, 0xcc, 0xcc, 0xcc, 0xff, 0xff,
+	0xff, 0xee, 0xff, 0xff, 0xff, 0xee, 0xee, 0xff,
+	0xff, 0xff, 0xdd, 0xff, 0xff, 0xff, 0xdd, 0xdd,
+	0xff, 0xff, 0xff, 0xbb, 0xff, 0xff, 0xff, 0xbb,
+	0xbb, 0xff, 0xff, 0xff, 0x77, 0xff, 0xff, 0xff,
+	0x77, 0x77, 0xff, 0x77, 0xbb, 0xdd, 0xee, 0xff,
+	0xff, 0xff, 0xff, 0x00, 0xff, 0xff, 0xff, 0x00,
+	0x00, 0xff, 0xff, 0xcc, 0xcc, 0xcc, 0x33, 0xcc,
+	0xcc, 0xcc, 0x33, 0x33, 0xcc, 0xcc, 0xcc, 0xff,
+	0xff, 0xff, 0xee, 0xff, 0xff, 0xff, 0xee, 0xee,
+	0xff, 0xff, 0xff, 0xdd, 0xff, 0xff, 0xff, 0xdd,
+	0xdd, 0xff, 0xff, 0xff, 0xbb, 0xff, 0xff, 0xff,
+	0xbb, 0xbb, 0xff, 0xff, 0xff, 0x77, 0xff, 0xff,
+	0xff, 0x77, 0x77, 0xff, 0x77, 0xbb, 0xdd, 0xee,
+};
+
+struct aml_tuning_data {
+	const u8 *blk_pattern;
+	unsigned int blksz;
+};
 
 #if 0
 //NAND RB pin
@@ -107,6 +142,239 @@ int aml_buf_verify (int *buf, int blocks, int lba)
     }
 
     return 0;
+}
+
+static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
+					struct aml_tuning_data *tuning_data)
+{
+	struct amlsd_platform *pdata = mmc_priv(mmc);
+	struct amlsd_host *host = pdata->host;
+	struct sdhc_clkc *clkc = (struct sdhc_clkc *)&(pdata->clkc);
+	u32 vclk2, vclk2_bak;
+	struct sdhc_clk2 *clk2 = (struct sdhc_clk2 *)&vclk2;
+	const u8 *blk_pattern = tuning_data->blk_pattern;
+	u8 *blk_test;
+	unsigned int blksz = tuning_data->blksz;
+	int ret = 0;
+
+	int n, nmatch, ntries = 10;
+	int rx_phase = 0;
+	int wrap_win_start = -1, wrap_win_size = 0;
+	int best_win_start = -1, best_win_size = -1;
+	int curr_win_start = -1, curr_win_size = -1;
+
+	u8 rx_tuning_result[20] = { 0 };
+
+    vclk2_bak = readl(host->base + SDHC_CLK2);
+
+	blk_test = kmalloc(blksz, GFP_KERNEL);
+	if (!blk_test)
+		return -ENOMEM;
+
+	for (rx_phase = 0; rx_phase <= clkc->clk_div; rx_phase++) {
+		// Perform tuning ntries times per clk_div increment
+		for (n = 0, nmatch = 0; n < ntries; n++) {
+			struct mmc_request mrq = {NULL};
+			struct mmc_command cmd = {0};
+			struct mmc_command stop = {0};
+			struct mmc_data data = {0};
+			struct scatterlist sg;
+
+			cmd.opcode = opcode;
+			cmd.arg = 0;
+			cmd.flags = MMC_RSP_R1 | MMC_CMD_ADTC;
+
+			stop.opcode = MMC_STOP_TRANSMISSION;
+			stop.arg = 0;
+			stop.flags = MMC_RSP_R1B | MMC_CMD_AC;
+
+			data.blksz = blksz;
+			data.blocks = 1;
+			data.flags = MMC_DATA_READ;
+			data.sg = &sg;
+			data.sg_len = 1;
+
+			memset(blk_test, 0, blksz);
+			sg_init_one(&sg, blk_test, blksz);
+
+			mrq.cmd = &cmd;
+			mrq.stop = &stop;
+			mrq.data = &data;
+			host->mrq = &mrq;
+
+			vclk2 = readl(host->base + SDHC_CLK2);
+			//clk2->sd_clk_phase = sd_clk_phase_set;
+			clk2->rx_clk_phase = rx_phase;
+			writel(vclk2, host->base + SDHC_CLK2);
+			pdata->clk2 = vclk2;
+
+			mmc_wait_for_req(mmc, &mrq);
+
+			if (!cmd.error && !data.error) {
+				if (!memcmp(blk_pattern, blk_test, blksz)) {
+					nmatch++;
+				}
+				else {
+                    sdhc_dbg(AMLSD_DBG_TUNING, "Tuning pattern mismatch: rx_phase=%d nmatch=%d\n", rx_phase, nmatch);
+				}
+			}
+			else {
+                sdhc_dbg(AMLSD_DBG_TUNING, "Tuning transfer error: rx_phase=%d nmatch=%d cmd.error=%d data.error=%d\n", 
+                        rx_phase, nmatch, cmd.error, data.error);
+			}
+		}
+
+		if (rx_phase < sizeof(rx_tuning_result) / sizeof (rx_tuning_result[0]))
+			rx_tuning_result[rx_phase] = nmatch;
+
+		if (nmatch == ntries) {
+			if (rx_phase == 0)
+				wrap_win_start = rx_phase;
+
+			if (wrap_win_start >= 0)
+				wrap_win_size++;
+
+			if (curr_win_start < 0)
+				curr_win_start = rx_phase;
+
+			curr_win_size++;
+		} else {
+			if (curr_win_start >= 0) {
+				if (best_win_start < 0) {
+					best_win_start = curr_win_start;
+					best_win_size = curr_win_size;
+				}
+				else {
+					if (best_win_size < curr_win_size) {
+						best_win_start = curr_win_start;
+						best_win_size = curr_win_size;
+					}
+				}
+
+				wrap_win_start = -1;
+				curr_win_start = -1;
+				curr_win_size = 0;
+			}
+		}
+	}
+
+    sdhc_dbg(AMLSD_DBG_TUNING, "RX Tuning Result\n");
+	for (n = 0; n <= clkc->clk_div; n++) {
+		if (n < sizeof(rx_tuning_result) / sizeof (rx_tuning_result[0]))
+            sdhc_dbg(AMLSD_DBG_TUNING, "RX[%d]=%d\n", n, rx_tuning_result[n]);
+	}
+
+    sdhc_dbg(AMLSD_DBG_TUNING, "curr_win_start=%d\n", curr_win_start);
+	sdhc_dbg(AMLSD_DBG_TUNING, "curr_win_size=%d\n", curr_win_size);
+	sdhc_dbg(AMLSD_DBG_TUNING, "best_win_start=%d\n", best_win_start);
+	sdhc_dbg(AMLSD_DBG_TUNING, "best_win_size=%d\n", best_win_size);
+	sdhc_dbg(AMLSD_DBG_TUNING, "wrap_win_start=%d\n", wrap_win_start);
+	sdhc_dbg(AMLSD_DBG_TUNING, "wrap_win_size=%d\n", wrap_win_size);
+
+	if (curr_win_start >= 0) {
+		if (best_win_start < 0) {
+			best_win_start = curr_win_start;
+			best_win_size = curr_win_size;
+		}
+		else if (wrap_win_size > 0) {
+			// Wrap around case
+			if (curr_win_size + wrap_win_size > best_win_size) {
+				best_win_start = curr_win_start;
+				best_win_size = curr_win_size + wrap_win_size;
+			}
+		}
+		else if (best_win_size < curr_win_size) {
+			best_win_start = curr_win_start;
+			best_win_size = curr_win_size;
+		}
+
+		curr_win_start = -1;
+		curr_win_size = 0;
+	}
+
+
+	if (best_win_start < 0) {
+		sdhc_err("Tuning failed to find a valid window, using default rx phase\n");
+		ret = -EIO;
+        writel(vclk2_bak, host->base + SDHC_CLK2);
+        pdata->clk2 = vclk2_bak;
+		// rx_phase = rx_clk_phase_set;
+	}
+    else {
+        pdata->is_tuned = true;
+
+        rx_phase = best_win_start + (best_win_size / 2);
+
+        if (rx_phase > clkc->clk_div)
+            rx_phase -= (clkc->clk_div + 1);
+
+        vclk2 = readl(host->base + SDHC_CLK2);
+        //clk2->sd_clk_phase = sd_clk_phase_set;
+        clk2->rx_clk_phase = rx_phase;
+        writel(vclk2, host->base + SDHC_CLK2);
+        pdata->clk2 = vclk2;
+        pdata->tune_phase = vclk2;
+
+        printk("Tuning result: rx_phase=%d\n", rx_phase);
+    }
+
+	sdhc_dbg(AMLSD_DBG_TUNING, "Final Result\n");
+	sdhc_dbg(AMLSD_DBG_TUNING, "curr_win_start=%d\n", curr_win_start);
+	sdhc_dbg(AMLSD_DBG_TUNING, "curr_win_size=%d\n", curr_win_size);
+	sdhc_dbg(AMLSD_DBG_TUNING, "best_win_start=%d\n", best_win_start);
+	sdhc_dbg(AMLSD_DBG_TUNING, "best_win_size=%d\n", best_win_size);
+	sdhc_dbg(AMLSD_DBG_TUNING, "wrap_win_start=%d\n", wrap_win_start);
+	sdhc_dbg(AMLSD_DBG_TUNING, "wrap_win_size=%d\n", wrap_win_size);
+
+	kfree(blk_test);
+
+    // writel(vclk2_bak, host->base + SDHC_CLK2);
+    // pdata->clk2 = vclk2_bak;
+    // sdhc_err("vclk2_bak=%#x\n", vclk2_bak);
+
+	return ret;
+}
+
+static int aml_sdhc_execute_tuning (struct mmc_host *mmc, u32 opcode)
+{
+	struct amlsd_platform *pdata = mmc_priv(mmc);
+	struct amlsd_host *host = pdata->host;
+	struct aml_tuning_data tuning_data;
+	int err = -ENOSYS;
+
+    if (pdata->port != PORT_SDHC_A) { // debug
+        return 0;
+    }
+
+    if (pdata->is_tuned) { // have been tuned
+        writel(pdata->tune_phase, host->base + SDHC_CLK2);
+        pdata->clk2 = pdata->tune_phase;
+
+        printk("Tuning already, tune_phase=0x%x \n", pdata->tune_phase);
+        return 0;
+    }
+
+	// if (opcode == MMC_SEND_TUNING_BLOCK_HS200) {
+		// if (mmc->ios.bus_width == MMC_BUS_WIDTH_8) {
+			// tuning_data.blk_pattern = tuning_blk_pattern_8bit;
+			// tuning_data.blksz = sizeof(tuning_blk_pattern_8bit);
+		// } else if (mmc->ios.bus_width == MMC_BUS_WIDTH_4) {
+			// tuning_data.blk_pattern = tuning_blk_pattern_4bit;
+			// tuning_data.blksz = sizeof(tuning_blk_pattern_4bit);
+		// } else {
+			// return -EINVAL;
+		// }
+	// } else 
+    if (opcode == MMC_SEND_TUNING_BLOCK) {
+		tuning_data.blk_pattern = tuning_blk_pattern_4bit;
+		tuning_data.blksz = sizeof(tuning_blk_pattern_4bit);
+	} else {
+        sdhc_err("Undefined command(%d) for tuning\n", opcode);
+		return -EINVAL;
+	}
+
+    err = aml_sdhc_execute_tuning_(mmc, opcode, &tuning_data);
+	return err;
 }
 
 /*soft reset after errors*/
@@ -390,7 +658,7 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
     ictl.data_err_crc = 1;
     ictl.rxfifo_full = 1;
     ictl.txfifo_empty = 1;
-    // ictl.resp_timeout = 1; // try
+    ictl.resp_timeout = 1; // try
     ictl.resp_err_crc = 1; // try
 
     /*Response with busy*/
@@ -588,6 +856,11 @@ static void aml_sdhc_print_err (struct amlsd_host *host)
     struct sdhc_ctrl* ctrl = (struct sdhc_ctrl*)&vctrl;
     u32 clk_rate;
     unsigned long flags;
+
+    if ((host->mrq->cmd->opcode == MMC_SEND_TUNING_BLOCK) 
+            || (host->mrq->cmd->opcode == MMC_SEND_TUNING_BLOCK_HS200)) { // not print err msg for tuning cmd
+        return ;
+    }
 
     spin_lock_irqsave(&host->mrq_lock, flags);
     xfer_step = host->xfer_step;
@@ -1258,41 +1531,6 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
 
     /*0: dont set it, 1:div2, 2:div3, 3:div4...*/
     clk_div = clk_rate / clk_ios - !(clk_rate%clk_ios);
-    // sdhc_err("clk_rate=%d, clk_ios=%d, clk_div=%d\n",
-        // clk_rate, clk_ios, clk_div);
-
-    /*Turn off Clock*/
-    // clkc->tx_clk_on = 0;
-    // clkc->rx_clk_on = 0;
-    // clkc->sd_clk_on = 0;
-    // writel(vclkc, host->base+SDHC_CLKC);
-    // clkc->mod_clk_on = 0;
-    // writel(vclkc, host->base+SDHC_CLKC);
-
-    // mdelay(1);
-
-    /*Set clock divide*/
-    // clkc->clk_div = clk_div;
-    // writel(vclkc, host->base+SDHC_CLKC);
-
-    // mdelay(1);
-
-    /*Turn on Clock*/
-    // clkc->mod_clk_on = 1;
-    // writel(vclkc, host->base+SDHC_CLKC);
-
-    // clkc->tx_clk_on = 1;
-    // clkc->rx_clk_on = 1;
-    // clkc->sd_clk_on = 1;
-    // clkc->clk_src_sel = clk_src_sel;
-    // clkc->mem_pwr_off = 0;
-    // writel(*(u32*)&clk2, host->base+SDHC_CLK2); // ???? can be deleted?
-
-    /*Set to platform data*/
-    // pdata->clock = clk_ios;
-    // printk("%s pdata->clkc %x, clk_div %d, vclkc %x\n", pdata->pinname,
-        // pdata->clkc, clkc->clk_div, vclkc);
-    // writel(vclkc, host->base+SDHC_CLKC);
 
     aml_sdhc_clk_switch(pdata, clk_div, clk_src_sel);
     pdata->clkc = readl(host->base+SDHC_CLKC);
@@ -1300,9 +1538,12 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
     pdata->mmc->actual_clock = clk_rate / (clk_div + 1);
 
     vclk2 = readl(host->base+SDHC_CLK2);
-    if (pdata->mmc->actual_clock > 5000000) { // if > 50M
-        clk2->rx_clk_phase = 8;
-        clk2->sd_clk_phase = 1; // sd_clk_phase_set
+    if (pdata->mmc->actual_clock > 100000000) { // if > 100M
+        clk2->rx_clk_phase = rx_clk_phase_set;
+        clk2->sd_clk_phase = sd_clk_phase_set; // 1
+    } else if (pdata->mmc->actual_clock > 50000000) { // if > 50M
+        clk2->rx_clk_phase = 1; // rx_clk_phase_set;
+        clk2->sd_clk_phase = 1; // sd_clk_phase_set; // 1
     } else if (pdata->mmc->actual_clock > 25000000) { // if > 25M
         clk2->rx_clk_phase = 10;
         clk2->sd_clk_phase = 1; // sd_clk_phase_set
@@ -1517,6 +1758,7 @@ static const struct mmc_host_ops aml_sdhc_ops = {
     .get_ro = aml_sdhc_get_ro,
     .start_signal_voltage_switch = aml_signal_voltage_switch,
     .card_busy = aml_sdhc_card_busy,
+    .execute_tuning = aml_sdhc_execute_tuning,
 };
 
 /*for multi host claim host*/
@@ -1631,6 +1873,7 @@ static int aml_sdhc_probe(struct platform_device *pdev)
         pdata->host = host;
         pdata->mmc = mmc;
         pdata->is_fir_init = true;
+        pdata->is_tuned = false;
         pdata->signal_voltage = 0xff; // init as an invalid value
 
         mmc->index = i;

@@ -1284,6 +1284,10 @@ int sdio_reset_comm(struct mmc_card *card)
 		goto err;
 	}
 
+    if (mmc_host_uhs(host))
+        /* to query card if 1.8V signalling is supported */
+        host->ocr |= R4_18V_PRESENT;
+
 	err = mmc_sdio_init_card(host, host->ocr, card, 0);
 	if (err)
 		goto err;

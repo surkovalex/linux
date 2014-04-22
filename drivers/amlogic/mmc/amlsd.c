@@ -1100,6 +1100,7 @@ void aml_sd_uart_detect (struct amlsd_platform* pdata)
         /* } */
 
         pdata->is_in = false;
+        pdata->is_tuned = false;
         aml_uart_switch(pdata, 0);
         aml_jtag_gpioao();
         aml_sd_voltage_switch(pdata, MMC_SIGNAL_VOLTAGE_330); // switch to 3.3V
