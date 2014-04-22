@@ -1021,28 +1021,44 @@ static ssize_t clear_rtc_mem_store(struct device *dev, struct device_attribute *
     return count; 
 }
 
-void aml1218_dump_all_register(void)
+int aml1218_dump_all_register(char *buf)
 {
     uint8_t val[16];
-    int     i;
+    int     i, size = 0;
     int     addr_table[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 
                             17, 18, 19, 20, 21, 22, 23, 24, 34, 35, 36, 37};
 
-    printk("[AML1218] DUMP ALL REGISTERS:\n");
+    if (!buf) {
+        printk("[AML1218] DUMP ALL REGISTERS:\n");
+        for (i = 0; i < ARRAY_SIZE(addr_table); i++) {
+            aml1218_reads(addr_table[i] * 16, val, 16);
+            printk("0x%03x - %03x: ", addr_table[i] * 16, addr_table[i] * 16 + 15);
+            printk("%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
+            printk("%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
+            printk("%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
+            printk("%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
+        }
+        return 0;
+    }
+
+    size += sprintf(buf + size, "%s", "[AML1218] DUMP ALL REGISTERS:\n");
     for (i = 0; i < ARRAY_SIZE(addr_table); i++) {
         aml1218_reads(addr_table[i] * 16, val, 16);
-        printk("0x%03x - %03x: ", addr_table[i] * 16, addr_table[i] * 16 + 15);
-        printk("%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
-        printk("%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
-        printk("%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
-        printk("%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
+        size += sprintf(buf + size, "0x%03x - %03x: ", addr_table[i] * 16, addr_table[i] * 16 + 15);
+        size += sprintf(buf + size, "%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
+        size += sprintf(buf + size, "%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
+        size += sprintf(buf + size, "%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
+        size += sprintf(buf + size, "%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
     }
+    return size;
 }
 
 static ssize_t dump_pmu_regs_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-    aml1218_dump_all_register();
-    return sprintf(buf, "[AML1218] DUMP ALL REGISTERS OVER!\n"); 
+    int size;
+    size = aml1218_dump_all_register(buf);
+    size += sprintf(buf + size, "%s", "[AML1218] DUMP ALL REGISTERS OVER!\n"); 
+    return size;
 }
 static ssize_t dump_pmu_regs_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -1503,7 +1519,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
         power_supply_changed(&supply->batt);                    // update battery status
     }
     
-    aml1218_dump_all_register();
+    aml1218_dump_all_register(NULL);
 	AML1218_DBG("call %s exit, ret:%d", __func__, ret);
     return ret;
 

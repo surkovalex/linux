@@ -989,25 +989,42 @@ static ssize_t charge_timeout_store(struct device *dev, struct device_attribute 
     return count; 
 }
 
-void rn5t618_dump_all_register(void)
+int rn5t618_dump_all_register(char *buf)
 {
     uint8_t val[16];
     int     i;
-    printk("[RN5T618] DUMP ALL REGISTERS:\n");
+    int     size = 0;
+
+    if (!buf) {
+        printk("[RN5T618] DUMP ALL REGISTERS:\n");
+        for (i = 0; i < 16; i++) {
+            rn5t618_reads(i*16, val, 16);
+            printk("0x%02x - %02x: ", i * 16, i * 16 + 15);
+            printk("%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
+            printk("%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
+            printk("%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
+            printk("%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
+        }
+        return 0;
+    }
+    size += sprintf(buf + size, "%s", "[RN5T618] DUMP ALL REGISTERS:\n");
     for (i = 0; i < 16; i++) {
         rn5t618_reads(i*16, val, 16);
-        printk("0x%02x - %02x: ", i * 16, i * 16 + 15);
-        printk("%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
-        printk("%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
-        printk("%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
-        printk("%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
+        size += sprintf(buf + size, "0x%02x - %02x: ", i * 16, i * 16 + 15);
+        size += sprintf(buf + size, "%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
+        size += sprintf(buf + size, "%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
+        size += sprintf(buf + size, "%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
+        size += sprintf(buf + size, "%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
     }
+    return size;
 }
 
 static ssize_t dump_pmu_regs_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-    rn5t618_dump_all_register();
-    return sprintf(buf, "[RN5T618] DUMP ALL REGISTERS OVER!\n"); 
+    int size;
+    size = rn5t618_dump_all_register(buf);
+    size += sprintf(buf + size, "%s", "[RN5T618] DUMP ALL REGISTERS OVER!\n"); 
+    return size;
 }
 static ssize_t dump_pmu_regs_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -1608,7 +1625,7 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
     rn5t618_set_bits(0x0012, 0x40, 0x40);                       // enable watchdog
     rn5t618_feed_watchdog();
 #endif
-    rn5t618_dump_all_register();
+    rn5t618_dump_all_register(NULL);
 	RICOH_DBG("call %s exit, ret:%d", __func__, ret);
     return ret;
 
