@@ -405,13 +405,13 @@ static s32 goodix_tool_write(struct file *filp, const char __user *buff, unsigne
     }
     else if (7 == cmd_head.wr)//disable irq!
     {
-        gtp_irq_disable(i2c_get_clientdata(gt_client));
+        gt811_irq_disable(i2c_get_clientdata(gt_client));
 
         return CMD_HEAD_LENGTH;
     }
     else if (9 == cmd_head.wr) //enable irq!
     {
-        gtp_irq_enable(i2c_get_clientdata(gt_client));
+        gt811_irq_enable(i2c_get_clientdata(gt_client));
 
         return CMD_HEAD_LENGTH;
     }

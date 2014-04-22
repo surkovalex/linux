@@ -25,9 +25,9 @@
 extern struct touch_pdata *ts_com;
 
 extern s32 gup_update_proc(void*);
-extern struct i2c_client * i2c_connect_client;
-extern s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len);
-extern s32 gtp_i2c_write(struct i2c_client *client,u8 *data,s32 len);
+//extern struct i2c_client * i2c_connect_client;
+extern s32 gt811_i2c_read(struct i2c_client *client, u8 *buf, s32 len);
+extern s32 gt811_i2c_write(struct i2c_client *client,u8 *data,s32 len);
 extern u16 show_len;
 extern u16 total_len;
 
@@ -51,11 +51,11 @@ struct goodix_ts_data {
     u8  gtp_is_suspend;
 };
 
-extern s32 gtp_read_version(struct goodix_ts_data *ts);
+extern s32 gt811_read_version(struct goodix_ts_data *ts);
 extern s32 gup_downloader( struct goodix_ts_data *ts, u8 *data);
 extern s32 gtp_init_panel(struct goodix_ts_data *ts);
-extern void gtp_irq_disable(struct goodix_ts_data *ts);
-extern void gtp_irq_enable(struct goodix_ts_data *ts);
+extern void gt811_irq_disable(struct goodix_ts_data *ts);
+extern void gt811_irq_enable(struct goodix_ts_data *ts);
 
 //***************************PART1:ON/OFF define*******************************
 #define GTP_DEBUG_ON          0

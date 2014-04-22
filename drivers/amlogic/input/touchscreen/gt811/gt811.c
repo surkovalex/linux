@@ -36,7 +36,7 @@
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 static struct workqueue_struct *goodix_wq;
-struct i2c_client * i2c_connect_client = NULL;
+static struct i2c_client * i2c_connect_client = NULL;
 static u8 config[GTP_CONFIG_LENGTH + GTP_ADDR_LENGTH]
                 = {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 
@@ -82,7 +82,7 @@ Input:
 Output:
 	numbers of i2c_msgs to transfer
 *********************************************************/
-s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
+s32 gt811_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 {
     struct i2c_msg msgs[2];
     s32 ret=-1;
@@ -122,7 +122,7 @@ Input:
 Output:
 	numbers of i2c_msgs to transfer.
 *********************************************************/
-s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
+s32 gt811_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 {
     struct i2c_msg msg;
     s32 ret=-1;
@@ -161,7 +161,7 @@ s32 gtp_i2c_end_cmd(struct i2c_client *client)
 
     GTP_DEBUG_FUNC();
 
-    ret = gtp_i2c_write(client, end_cmd_data, 2);
+    ret = gt811_i2c_write(client, end_cmd_data, 2);
 
     return ret;
 }
@@ -176,7 +176,7 @@ Input:
 Output:
 	Executive outcomes.0--success,non-0--fail.
 *******************************************************/
-s32 gtp_send_cfg(struct i2c_client *client)
+s32 gt811_send_cfg(struct i2c_client *client)
 {
     s32 ret = -1;
 #if GTP_DRIVER_SEND_CFG
@@ -184,7 +184,7 @@ s32 gtp_send_cfg(struct i2c_client *client)
 
     for (retry = 0; retry < 5; retry++)
     {
-        ret = gtp_i2c_write(client, config , GTP_CONFIG_LENGTH + GTP_ADDR_LENGTH);
+        ret = gt811_i2c_write(client, config , GTP_CONFIG_LENGTH + GTP_ADDR_LENGTH);
         gtp_i2c_end_cmd(client);
 
         if (ret > 0)
@@ -207,7 +207,7 @@ Input:
 Output:
 	None.
 *******************************************************/
-void gtp_irq_disable(struct goodix_ts_data *ts)
+void gt811_irq_disable(struct goodix_ts_data *ts)
 {
     unsigned long irqflags;
 
@@ -232,7 +232,7 @@ Input:
 Output:
 	None.
 *******************************************************/
-void gtp_irq_enable(struct goodix_ts_data *ts)
+void gt811_irq_enable(struct goodix_ts_data *ts)
 {
     unsigned long irqflags;
 
@@ -412,7 +412,7 @@ static void goodix_ts_work_func(struct work_struct *work)
     {
         goto exit_work_func;
     }
-    ret = gtp_i2c_read(ts->client, point_data, sizeof(point_data)/sizeof(point_data[0]));
+    ret = gt811_i2c_read(ts->client, point_data, sizeof(point_data)/sizeof(point_data[0]));
     if (ret < 0)
     {
         goto exit_work_func;
@@ -423,7 +423,7 @@ static void goodix_ts_work_func(struct work_struct *work)
         if(point_data[3]==0xF0)
         {
             GTP_DEBUG("Reload config!");
-            ret = gtp_send_cfg(ts->client);
+            ret = gt811_send_cfg(ts->client);
             if (ret < 0)
             {
                 GTP_ERROR("Send config error.");
@@ -576,7 +576,7 @@ static void goodix_ts_work_func(struct work_struct *work)
 exit_work_func:
     if (ts->use_irq)
     {
-        gtp_irq_enable(ts);
+        gt811_irq_enable(ts);
     }
 }
 
@@ -618,7 +618,7 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 
     GTP_DEBUG_FUNC();
 
-    gtp_irq_disable(ts);
+    gt811_irq_disable(ts);
     queue_work(goodix_wq, &ts->work);
 
     return IRQ_HANDLED;
@@ -634,7 +634,7 @@ Input:
 Output:
 	None.
 *******************************************************/
-void gtp_reset_guitar(s32 ms)
+void gt811_reset_guitar(s32 ms)
 {
     GTP_DEBUG_FUNC();
     GTP_GPIO_OUTPUT(gtp_gpio_rst, 0);
@@ -667,7 +667,7 @@ static s8 gtp_enter_sleep(struct goodix_ts_data * ts)
 
     while(retry++ < 5)
     {
-        ret = gtp_i2c_write(ts->client, i2c_control_buf, 3);
+        ret = gt811_i2c_write(ts->client, i2c_control_buf, 3);
         gtp_i2c_end_cmd(ts->client);
         if (ret > 0)
         {
@@ -700,8 +700,8 @@ static s8 gtp_wakeup_sleep(struct goodix_ts_data * ts)
 #if GTP_POWER_CTRL_SLEEP
     while(retry++ < 5)
     {
-        gtp_reset_guitar(20);
-        ret = gtp_send_cfg(ts->client);
+        gt811_reset_guitar(20);
+        ret = gt811_send_cfg(ts->client);
         if (ret > 0)
         {
             GTP_DEBUG("Wakeup sleep send config success.");
@@ -723,7 +723,7 @@ static s8 gtp_wakeup_sleep(struct goodix_ts_data * ts)
         if (ret > 0)
         {
             GTP_DEBUG("GTP wakeup sleep.");
-            ret = gtp_send_cfg(ts->client);
+            ret = gt811_send_cfg(ts->client);
             if (ret > 0)
             {
                 GTP_DEBUG("Wakeup sleep send config success.");
@@ -731,7 +731,7 @@ static s8 gtp_wakeup_sleep(struct goodix_ts_data * ts)
             }
             return ret;
         }
-        gtp_reset_guitar(20);
+        gt811_reset_guitar(20);
     }
 #endif
 
@@ -772,7 +772,7 @@ s32 gtp_init_panel(struct goodix_ts_data *ts)
     {
         rd_cfg_buf[0] = GTP_REG_SENSOR_ID >> 8;
         rd_cfg_buf[1] = GTP_REG_SENSOR_ID & 0xff;
-        ret = gtp_i2c_read(ts->client, rd_cfg_buf, 3);
+        ret = gt811_i2c_read(ts->client, rd_cfg_buf, 3);
         gtp_i2c_end_cmd(ts->client);
         if (ret < 0)
         {
@@ -803,7 +803,7 @@ s32 gtp_init_panel(struct goodix_ts_data *ts)
 
 #else //else DRIVER NEED NOT SEND CONFIG
 
-    ret = gtp_i2c_read(ts->client, config, GTP_CONFIG_LENGTH + GTP_ADDR_LENGTH);
+    ret = gt811_i2c_read(ts->client, config, GTP_CONFIG_LENGTH + GTP_ADDR_LENGTH);
     gtp_i2c_end_cmd(ts->client);
     if (ret < 0)
     {
@@ -826,7 +826,7 @@ s32 gtp_init_panel(struct goodix_ts_data *ts)
         ts->abs_y_max = GTP_MAX_HEIGHT;
     }
 
-    ret = gtp_send_cfg(ts->client);
+    ret = gt811_send_cfg(ts->client);
     if (ret < 0)
     {
         GTP_ERROR("Send config error. ret = %d", ret);
@@ -851,7 +851,7 @@ Input:
 Output:
 	Executive outcomes.0---succeed.
 *******************************************************/
-s32 gtp_read_version(struct goodix_ts_data *ts)
+s32 gt811_read_version(struct goodix_ts_data *ts)
 {
     s32 ret = -1;
     s32 count = 0;
@@ -860,7 +860,7 @@ s32 gtp_read_version(struct goodix_ts_data *ts)
 
     GTP_DEBUG_FUNC();
 
-    ret = gtp_i2c_read(ts->client,version_data, 6);
+    ret = gt811_i2c_read(ts->client,version_data, 6);
     if (ret < 0)
     {
         GTP_ERROR("GTP read version failed");
@@ -870,7 +870,7 @@ s32 gtp_read_version(struct goodix_ts_data *ts)
 
     while(count++ < 10)
     {
-        gtp_i2c_read(ts->client, version_comfirm, 6);
+        gt811_i2c_read(ts->client, version_comfirm, 6);
         if((version_data[4] !=version_comfirm[4])||(version_data[5] != version_comfirm[5]))
         {
             GTP_DEBUG("Comfirm version:%02x%02x", version_comfirm[4], version_comfirm[5]);
@@ -954,7 +954,7 @@ static s8 gtp_request_io_port(struct goodix_ts_data *ts)
     }
 
     GTP_GPIO_AS_INPUT(gtp_gpio_rst);
-    gtp_reset_guitar(20);
+    gt811_reset_guitar(20);
 
     if(ret < 0)
     {
@@ -1000,7 +1000,7 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
     }
     else
     {
-        gtp_irq_disable(ts);
+        gt811_irq_disable(ts);
         ts->use_irq = 1;
         return 0;
     }
@@ -1199,13 +1199,13 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
         GTP_INFO("GTP works in interrupt mode.");
     }
 
-    ret = gtp_read_version(ts);
+    ret = gt811_read_version(ts);
     if (ret < 0)
     {
         GTP_ERROR("Read version failed.");
     }
 
-    gtp_irq_enable(ts);
+    gt811_irq_enable(ts);
 
 #if GTP_CREATE_WR_NODE
     init_wr_node(client);
@@ -1306,7 +1306,7 @@ static void goodix_ts_early_suspend(struct early_suspend *h)
 
     if (ts->use_irq)
     {
-        gtp_irq_disable(ts);
+        gt811_irq_disable(ts);
     }
     else
     {
@@ -1345,7 +1345,7 @@ static void goodix_ts_late_resume(struct early_suspend *h)
 
     if (ts->use_irq)
     {
-        gtp_irq_enable(ts);
+        gt811_irq_enable(ts);
     }
     else
     {
@@ -1386,7 +1386,7 @@ static void gtp_esd_check_func(struct work_struct *work)
 
     if (i >= 3)
     {
-        gtp_reset_guitar(50);
+        gt811_reset_guitar(50);
     }
 
     if(!ts->gtp_is_suspend)
