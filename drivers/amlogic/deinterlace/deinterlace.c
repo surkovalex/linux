@@ -177,7 +177,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-04-16a";
+static char version_s[] = "2014-04-18a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -1079,6 +1079,7 @@ static ssize_t show_vframe_status(struct device *dev, struct device_attribute* a
 
     return ret;
 }
+
 #ifdef NEW_DI_V1
 static ssize_t store_dump_mem(struct device * dev, struct device_attribute *attr, const char * buf, size_t len);
 #endif
@@ -1091,7 +1092,6 @@ static DEVICE_ATTR(dump_pic, 0664, NULL, store_dump_mem);
 static DEVICE_ATTR(log, 0664, show_log, store_log);
 static DEVICE_ATTR(status, 0664, show_status, NULL);
 static DEVICE_ATTR(provider_vframe_status, 0664, show_vframe_status, NULL);
-
 /***************************
 * di buffer management
 ***************************/
@@ -3897,11 +3897,11 @@ static unsigned char pre_de_buf_config(void)
             	di_pre_stru.di_chan2_buf_dup_p->pre_ref_count = 0;
                 di_pre_stru.di_chan2_buf_dup_p = NULL;
             }
-#ifdef DI_DEBUG
+//#ifdef DI_DEBUG
             printk("%s: source change: 0x%x/%d/%d/%d=>0x%x/%d/%d/%d\n", __func__,
                 di_pre_stru.cur_inp_type, di_pre_stru.cur_width, di_pre_stru.cur_height, di_pre_stru.cur_source_type,
                 di_buf->vframe->type, di_buf->vframe->width, di_buf->vframe->height, di_buf->vframe->source_type);
-#endif
+//#endif
             di_pre_stru.cur_width = di_buf->vframe->width;
             di_pre_stru.cur_height= di_buf->vframe->height;
             di_pre_stru.cur_prog_flag = is_progressive(di_buf->vframe);
@@ -5353,7 +5353,9 @@ static void force_bob_vframe(di_buf_t* di_buf)
     di_buf->di_buf[0] = di_buf->di_buf_dup_p[0];
     di_buf->di_buf[1] = NULL;
     queue_out(di_buf->di_buf[0]);
-
+    if(frame_count == 0){
+        di_post_stru.start_pts = di_buf->vframe->pts;      
+    }
     di_lock_irqfiq_save(irq_flag2, fiq_flag);
     if((frame_count<start_frame_drop_count) ||
        (((di_buf->di_buf_dup_p[1]->vframe->type & VIDTYPE_TYPEMASK)==VIDTYPE_INTERLACE_TOP)
@@ -5367,6 +5369,11 @@ static void force_bob_vframe(di_buf_t* di_buf)
         recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
 #endif
     } else {
+    	if(frame_count == start_frame_drop_count){ 
+            if((di_post_stru.start_pts != 0) && (di_buf->vframe->pts == 0))
+                di_buf->vframe->pts = di_post_stru.start_pts;
+            di_post_stru.start_pts = 0;
+        }
         queue_in(di_buf, QUEUE_POST_READY);
     }
     di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
@@ -5524,7 +5531,9 @@ static int process_post_vframe(void)
                         di_buf->di_buf[0] = di_buf->di_buf_dup_p[0];
                         di_buf->di_buf[1] = NULL;
                         queue_out(di_buf->di_buf[0]);
-
+			if(frame_count == 0){
+                            di_post_stru.start_pts = di_buf->vframe->pts;      
+                    	}
                         di_lock_irqfiq_save(irq_flag2, fiq_flag);
                         if((frame_count<start_frame_drop_count)||
                             (di_buf->di_buf_dup_p[0]->throw_flag)||(di_buf->di_buf_dup_p[1]->throw_flag)||
@@ -5536,6 +5545,11 @@ static int process_post_vframe(void)
 #endif
                         }
                         else{
+			    if(frame_count == start_frame_drop_count){ 
+                                if((di_post_stru.start_pts != 0) && (di_buf->vframe->pts == 0))
+                                    di_buf->vframe->pts = di_post_stru.start_pts;
+                                di_post_stru.start_pts = 0;
+                            }
                             queue_in(di_buf, QUEUE_POST_READY);
                         }
                         frame_count++;
@@ -6748,6 +6762,18 @@ const static struct file_operations di_fops = {
 #endif
 };
 
+static ssize_t show_frame_format(struct device *dev, struct device_attribute* attr, char* buf)
+{
+    int ret = 0;
+    if(init_flag){
+	ret += sprintf(buf + ret, "%s\n", di_pre_stru.cur_prog_flag?"progressive":"interlace");
+    }else{
+	ret += sprintf(buf + ret, "%s\n", "null");
+    }
+    return ret;
+}
+static DEVICE_ATTR(frame_format, 0664, show_frame_format, NULL);
+
 static struct resource memobj;
 static int di_probe(struct platform_device *pdev)
 {
@@ -6836,7 +6862,7 @@ static int di_probe(struct platform_device *pdev)
     device_create_file(di_device.dev, &dev_attr_parameters);
     device_create_file(di_device.dev, &dev_attr_status);
     device_create_file(di_device.dev, &dev_attr_provider_vframe_status);
-
+    device_create_file(di_device.dev, &dev_attr_frame_format);
     mem = &memobj;
     r = find_reserve_block(pdev->dev.of_node->name,0);
     if(r < 0){
