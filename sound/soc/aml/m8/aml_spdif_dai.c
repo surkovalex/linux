@@ -41,6 +41,47 @@
 extern int aout_notifier_call_chain(unsigned long val, void *v);
 static  unsigned  playback_substream_handle = 0 ;
 extern unsigned int IEC958_mode_codec;
+static int iec958buf[4096+16];
+static void  aml_spdif_play()
+{
+   	 _aiu_958_raw_setting_t set;
+   	 _aiu_958_channel_status_t chstat;	 
+	struct snd_pcm_substream substream;
+	struct snd_pcm_runtime runtime;
+	substream.runtime = &	runtime;
+	runtime.rate	 = 48000;
+	runtime.format = SNDRV_PCM_FORMAT_S16_LE;
+	runtime.channels  = 2;
+	runtime.sample_bits = 16;
+	memset((void*)(&set), 0, sizeof(set));
+	memset((void*)(&chstat), 0, sizeof(chstat));
+	set.chan_stat = &chstat;
+	set.chan_stat->chstat0_l = 0x0100;
+	set.chan_stat->chstat0_r = 0x0100;
+	set.chan_stat->chstat1_l = 0X200;
+	set.chan_stat->chstat1_r = 0X200;	
+	audio_hw_958_enable(0);
+	audio_set_958_clk(AUDIO_CLK_FREQ_48,AUDIO_CLK_256FS);
+	audio_util_set_dac_958_format(AUDIO_ALGOUT_DAC_FORMAT_DSP);
+	memset(iec958buf,0,sizeof(iec958buf));
+	audio_set_958outbuf((virt_to_phys(iec958buf)+63)&(~63),16*1024,0);
+	audio_set_958_mode(AIU_958_MODE_PCM16, &set);	
+#if OVERCLOCK == 1 || IEC958_OVERCLOCK == 1	
+	WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 3, 4, 2);//512fs divide 4 == 128fs
+#else
+	WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 1, 4, 2); //256fs divide 2 == 128fs
+#endif
+	aout_notifier_call_chain(AOUT_EVENT_IEC_60958_PCM,&substream);
+	audio_spdifout_pg_enable(1);
+	audio_hw_958_enable(1);
+
+	
+}
+static void  aml_spdif_play_stop()
+{
+	audio_hw_958_enable(0);
+}
+
 static int aml_dai_spdif_set_sysclk(struct snd_soc_dai *cpu_dai,
 				int clk_id, unsigned int freq, int dir)
 {
@@ -308,6 +349,7 @@ static int aml_dai_spdif_startup(struct snd_pcm_substream *substream,
 	if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 		s->device_type = AML_AUDIO_SPDIFOUT;
 		audio_spdifout_pg_enable(1);
+		aml_spdif_play_stop();
 	}	
 	else{
 		s->device_type = AML_AUDIO_SPDIFIN;
@@ -326,8 +368,10 @@ static void aml_dai_spdif_shutdown(struct snd_pcm_substream *substream,
 		ALSA_TRACE();
 	if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 		memset((void*)runtime->dma_area,0,snd_pcm_lib_buffer_bytes(substream));
+		aml_spdif_play();
 
-		audio_spdifout_pg_enable(0);	
+
+	//	audio_spdifout_pg_enable(0);	
 	}
 	
 }
@@ -378,12 +422,14 @@ static int aml_dai_spdif_hw_params(struct snd_pcm_substream *substream,
 static int aml_dai_spdif_suspend(struct snd_soc_dai *cpu_dai)
 {
 	ALSA_TRACE();
+	aml_spdif_play_stop();
 	return 0;
 }
 
 static int aml_dai_spdif_resume(struct snd_soc_dai *cpu_dai)
 {
 	ALSA_TRACE();
+	aml_spdif_play();
 	return 0;
 }
 #else
@@ -465,6 +511,7 @@ static struct platform_driver aml_spdif_dai_driver = {
 static int __init aml_dai_spdif_init(void)
 {
 	ALSA_PRINT("enter aml_dai_spdif_init \n");
+	aml_spdif_play();
 	return platform_driver_register(&aml_spdif_dai_driver);
 }
 module_init(aml_dai_spdif_init);
