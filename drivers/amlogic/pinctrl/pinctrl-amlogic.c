@@ -471,7 +471,7 @@ static int amlogic_pinctrl_parse_group(struct platform_device *pdev,
 			ret=amlogic_gpio_name_map_num(gpioname);
 			if(ret<0){
 				ret= -EINVAL;
-				dev_err(&pdev->dev, "change name to num  error\n");
+				dev_err(&pdev->dev, "%s change name to num  error\n",gpioname);
 				goto err;
 			}
 			g->pins[i]=ret;
