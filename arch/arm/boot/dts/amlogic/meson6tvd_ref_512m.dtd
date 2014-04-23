@@ -259,7 +259,6 @@
 
 //$$ DEVICE = "meson_vcck_dvfs_driver"
 //$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 = "default_uV"
 //$$ L2 PROP_STR = "pinctrl-names"
 //$$ L2 PROP_CHOICE "meson_vcck_dvfs_pin_0_match" = "pinctrl-0"
 //$$ L2 PROP_U32 = "use_pwm"
@@ -269,7 +268,6 @@
 		compatible = "amlogic, meson_vcck_dvfs";
 		dev_name = "meson_vcck_dvfs_driver";
 		status = "ok";
-		default_uV = <1280000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&aml_pwm_pins>;
 		use_pwm = <1>;
