@@ -80,6 +80,7 @@ uint field_22lvl;
 pd_detect_threshold_t field_pd_th;
 pd_detect_threshold_t win_pd_th[MAX_WIN_NUM];
 pd_win_prop_t pd_win_prop[MAX_WIN_NUM];
+extern int mpeg2vdin_en;
 
 static bool frame_dynamic = 0;
 MODULE_PARM_DESC(frame_dynamic, "\n frame_dynamic \n");
@@ -352,9 +353,9 @@ void di_hw_init(void)
 
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-        //need not set DI_CLKG_CTRL, hardware default value of this register is already 0 
+        //need not set DI_CLKG_CTRL, hardware default value of this register is already 0
     //Wr_reg_bits(DI_CLKG_CTRL, 0x0, 0, 2);    // bit 0: 1, no clock; bit 1: 0, auto clock gate
-#endif    
+#endif
 }
 
 void di_hw_uninit(void)
@@ -514,7 +515,10 @@ void enable_di_pre_aml (
                     (0x1 << 30 )      								// pre soft rst, pre frame rst.
                    );
 #endif
-
+#ifdef SUPPORT_MPEG_TO_VDIN
+	if(mpeg2vdin_en)
+		WRITE_MPEG_REG_BITS(DI_PRE_CTRL,1,13,1);// pre sync with vdin vsync
+#endif
 #ifdef DET3D
     if(det3d_en && (!det3d_cfg)) {
         det3d_enable(1);
@@ -1497,7 +1501,10 @@ void initial_di_pre_aml ( int hsize_pre, int vsize_pre, int hold_line )
                     (0 << 29) |        			// pre field number.
                     (0x3 << 30)      			// pre soft rst, pre frame rst.
            	);
-
+#ifdef SUPPORT_MPEG_TO_VDIN
+	if(mpeg2vdin_en)
+		WRITE_MPEG_REG_BITS(DI_PRE_CTRL,1,13,1);// pre sync with vdin vsync
+#endif
     Wr(DI_MC_22LVL0, (Rd(DI_MC_22LVL0) & 0xffff0000 ) | 256);                //   field 22 level
     Wr(DI_MC_32LVL0, (Rd(DI_MC_32LVL0) & 0xffffff00 ) | 16);       				// field 32 level
 }
@@ -2132,9 +2139,9 @@ void di_set_power_control(unsigned char type, unsigned char enable)
         post_power_on = enable;
 #else
 //let video.c handle it
-#endif            
+#endif
     }
-#endif    
+#endif
 }
 
 unsigned char di_get_power_control(unsigned char type)
@@ -2146,12 +2153,12 @@ unsigned char di_get_power_control(unsigned char type)
 #if 1
 //let video.c handle it
         return 1;
-#else        
+#else
         return post_power_on;
-#endif        
+#endif
     }
-    
-}    
+
+}
 
 #ifdef DI_POST_SKIP_LINE
 MODULE_PARM_DESC(di_vscale_skip_mode, "\n di_vscale_skip_mode\n");
