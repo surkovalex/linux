@@ -1195,11 +1195,14 @@ static	int aml_i2c_suspend(struct device *dev)
 	BUG_ON(!adapter);
 	i2c = i2c_get_adapdata(adapter);
 	BUG_ON(!i2c);
-	i2c->state = I2C_STATE_SUSPEND;
 	if (i2c->mode == I2C_INTERRUPT_MODE) {
+  	mutex_lock(i2c->lock);
+  	i2c->state = I2C_STATE_SUSPEND;
 		disable_irq(i2c->irq);
+	  mutex_unlock(i2c->lock);
 	  printk("%s: disable #%d irq\n", __func__, i2c->irq);
 	}
+
 	return 0;
 }
 
@@ -1215,9 +1218,11 @@ static	int aml_i2c_resume(struct device *dev)
 	BUG_ON(!adapter);
 	i2c = i2c_get_adapdata(adapter);
 	BUG_ON(!i2c);
-	i2c->state = I2C_STATE_IDLE;
 	if (i2c->mode == I2C_INTERRUPT_MODE) {
+    mutex_lock(i2c->lock);
+    i2c->state = I2C_STATE_IDLE;
 		enable_irq(i2c->irq);
+	  mutex_unlock(i2c->lock);
 	  printk("%s: enable #%d irq\n", __func__, i2c->irq);
 	}
 	return 0;
