@@ -703,7 +703,7 @@
 		};
 
 		aml_i2s_pins:aml_i2s_pins {
-			amlogic,setmask = <8 0x6A00000
+			amlogic,setmask = <8 0x6800000
 					   3 0x800000>;
 			amlogic,clrmask = <8 0x1461000
 					   1 0x1
