@@ -812,7 +812,7 @@ int rn5t618_otg_change(struct notifier_block *nb, unsigned long value, void *pda
     printk("register 0xB3:%02x\n", val);
     rn5t618_update_state(&g_rn5t618_supply->aml_charger);
     power_supply_changed(&g_rn5t618_supply->batt);
-    msleep(100);
+    mdelay(100);
     return 0;
 }
 
