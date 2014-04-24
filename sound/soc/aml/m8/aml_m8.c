@@ -99,7 +99,7 @@ static int hp_det_adc_value(struct aml_audio_private_data *p_aml_audio)
         }
         hp_val_sum += hp_value;
         loop_num ++;
-        msleep(15);
+        msleep_interruptible(15);
     }
     hp_val_sum = hp_val_sum >> 3;
 	//printk("00000000000hp_val_sum = %hx\n",hp_val_sum);
@@ -138,14 +138,14 @@ static int aml_audio_hp_detect(struct aml_audio_private_data *p_aml_audio)
         ret = hp_det_adc_value(p_aml_audio);
         if(p_aml_audio->hp_last_state != ret){
             loop_num = 0;
-            msleep(50);
+            msleep_interruptible(50);
             if(ret < 0){
                 ret = p_aml_audio->hp_last_state;
             }else {
                 p_aml_audio->hp_last_state = ret;
             }
         }else{
-            msleep(50);
+            msleep_interruptible(50);
             loop_num = loop_num + 1;
         }
     }
@@ -293,11 +293,11 @@ static int aml_m8_set_spk(struct snd_kcontrol *kcontrol,
     aml_m8_spk_enabled = ucontrol->value.integer.value[0];
     printk(KERN_INFO "aml_m8_set_spk: aml_m8_spk_enabled=%d\n",aml_m8_spk_enabled);
 
-    msleep(10);
+    msleep_interruptible(10);
     amlogic_set_value(p_audio->gpio_mute, aml_m8_spk_enabled, "mute_spk");
 
     if(aml_m8_spk_enabled ==1)
-        msleep(100);
+        msleep_interruptible(100);
 
     return 0;
 }

@@ -1204,7 +1204,7 @@ edid_op:
             hdmitx_device->vic_count = 0;
         }
 next:
-        msleep(100);
+        msleep_interruptible(100);
     }
     return 0;
 }

@@ -125,7 +125,7 @@ static int hdmitx_hdcp_task(void *data)
             hdmitx_device->audio_step = 1;
 #endif
         }
-        msleep(100);
+        msleep_interruptible(100);
     }
 
     return 0;
