@@ -668,9 +668,6 @@ static  int amstream_port_release(stream_port_t *port)
         psparser_release();
     }
 
-    if (port->type & PORT_TYPE_RM) {
-        rmparser_release();
-    }
 
     if (port->type & PORT_TYPE_VIDEO) {
         video_port_release(port, pvbuf, 0);

@@ -256,7 +256,8 @@ s32 esparser_init(struct stream_buf_s *buf)
 
         if (fetchbuf == 0) {
             printk("%s: no fetchbuf\n", __FUNCTION__);
-            return -ENOMEM;
+            r = -ENOMEM;
+            goto Err_1;
         }
 
         if (search_pattern == NULL) {
@@ -264,7 +265,8 @@ s32 esparser_init(struct stream_buf_s *buf)
 
             if (search_pattern == NULL) {
                 printk("%s: no search_pattern\n", __FUNCTION__);
-                return -ENOMEM;
+                r = -ENOMEM;
+                goto Err_1;
             }
 
             /* build a fake start code to get parser interrupt */
@@ -384,6 +386,7 @@ Err_2:
     pts_stop(pts_type);
 
 Err_1:
+    atomic_dec(&esparser_use_count);
     buf->flag &= ~BUF_FLAG_PARSER;
     return r;
 }

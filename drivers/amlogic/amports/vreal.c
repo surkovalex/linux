@@ -845,7 +845,8 @@ static int amvdec_real_remove(struct platform_device *pdev)
     if (pic_sz_tbl_map != 0) {
         dma_unmap_single(NULL, pic_sz_tbl_map, sizeof(pic_sz_tbl), DMA_TO_DEVICE);
     }
-
+    rmparser_release();
+	
     amvdec_disable();
 
     printk("frame duration %d, frames %d\n", frame_dur, frame_count);
