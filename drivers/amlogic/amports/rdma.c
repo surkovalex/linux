@@ -86,7 +86,7 @@ static int rdma_done_line_max = 0;
 
 static int enable = 0;
 
-static int enable_mask = 0xff;
+static int enable_mask = 0x400ff;
 
 static int pre_enable_ = 0;
 

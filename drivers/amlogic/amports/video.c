@@ -1693,6 +1693,14 @@ static int detect_vout_type(void)
             default:
                 break;
         }
+#ifdef CONFIG_VSYNC_RDMA    
+        if (is_vsync_rdma_enable()){        
+            if(vout_type == VOUT_TYPE_TOP_FIELD)            
+                vout_type = VOUT_TYPE_BOT_FIELD;        
+            else if(vout_type == VOUT_TYPE_BOT_FIELD)           
+                vout_type = VOUT_TYPE_TOP_FIELD;    
+        }
+#endif
     }
 
     return vout_type;

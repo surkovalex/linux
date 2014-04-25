@@ -630,7 +630,7 @@ static int __init di_read_canvas_reverse(char *str)
 }
 __setup("panel_reverse=",di_read_canvas_reverse);
 #endif
-unsigned int di_debug_flag = 0;
+unsigned int di_debug_flag = 0x10;//enable rdma even di bypassed
 static unsigned char* di_log_buf=NULL;
 static unsigned int di_log_wr_pos=0;
 static unsigned int di_log_rd_pos=0;
