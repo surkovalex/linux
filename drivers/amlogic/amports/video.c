@@ -3872,8 +3872,7 @@ static ssize_t video_crop_show(struct class *cla, struct class_attribute *attr, 
 {
     u32 t, l, b, r;
 
-    vpp_get_video_layer_position(&t, &l, &b, &r);
-
+    vpp_get_video_source_crop(&t, &l, &b, &r);
     return snprintf(buf, 40, "%d %d %d %d\n", t, l, b, r);
 }
 
