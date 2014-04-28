@@ -816,6 +816,11 @@ int pts_start(u8 type)
         return -EINVAL;
     }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    if (type == PTS_TYPE_HEVC) {
+        pTable = &pts_table[PTS_TYPE_VIDEO];
+    } else
+#endif
     pTable = &pts_table[type];
 
     spin_lock_irqsave(&lock, flags);
@@ -826,9 +831,21 @@ int pts_start(u8 type)
         spin_unlock_irqrestore(&lock, flags);
 
         if(alloc_pts_list(pTable)!=0){
-			return -ENOMEM;
+            return -ENOMEM;
         }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+        if (type == PTS_TYPE_HEVC) {
+            pTable->buf_start = READ_VREG(HEVC_STREAM_START_ADDR);
+            pTable->buf_size = READ_VREG(HEVC_STREAM_END_ADDR)
+                               - pTable->buf_start + 8;
+            WRITE_MPEG_REG(VIDEO_PTS, 0);
+            timestamp_pcrscr_set(0);//video always need the pcrscr,Clear it to use later
+            pTable->first_checkin_pts = -1;
+            pTable->first_lookup_ok = 0;
+            pTable->first_lookup_is_fail = 0;
+        } else
+#endif
         if (type == PTS_TYPE_VIDEO) {
             pTable->buf_start = READ_VREG(VLD_MEM_VIFIFO_START_PTR);
             pTable->buf_size = READ_VREG(VLD_MEM_VIFIFO_END_PTR)
@@ -845,7 +862,7 @@ int pts_start(u8 type)
             timestamp_pcrscr_set(0);//video always need the pcrscr,Clear it to use later
             pTable->first_checkin_pts = -1;
             pTable->first_lookup_ok = 0;
-	     pTable->first_lookup_is_fail = 0;
+            pTable->first_lookup_is_fail = 0;
         } else if (type == PTS_TYPE_AUDIO) {
             pTable->buf_start = READ_MPEG_REG(AIU_MEM_AIFIFO_START_PTR);
             pTable->buf_size = READ_MPEG_REG(AIU_MEM_AIFIFO_END_PTR)
@@ -892,6 +909,11 @@ int pts_stop(u8 type)
         return -EINVAL;
     }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    if (type == PTS_TYPE_HEVC) {
+        pTable = &pts_table[PTS_TYPE_VIDEO];
+    } else
+#endif
     pTable = &pts_table[type];
 
     spin_lock_irqsave(&lock, flags);

@@ -43,7 +43,90 @@
 
 static DEFINE_SPINLOCK(lock);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+/*
+HHI_VDEC_CLK_CNTL
+0x1078[11:9] (fclk = 2550MHz)
+    0: fclk_div4
+    1: fclk_div3
+    2: fclk_div5
+    3: fclk_div7
+    4: mpll_clk_out1
+    5: mpll_clk_out2
+0x1078[6:0]
+    devider
+0x1078[8]
+    enable
+*/
+//182.14M <-- (2550/7)/2
+#define VDEC1_182M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  (3 << 9) | (1), 0, 16);
+#define VDEC2_182M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (3 << 9) | (1));
+//212.50M <-- (2550/3)/4
+#define VDEC1_212M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  (1 << 9) | (3), 0, 16);
+#define VDEC2_212M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (1 << 9) | (3));
+//255.00M <-- (2550/5)/2
+#define VDEC1_255M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  (2 << 9) | (1), 0, 16);
+#define VDEC2_255M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (2 << 9) | (1));
+#define HCODEC_255M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, (2 << 9) | (1), 16, 16);
+#define HEVC_255M()  WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, (2 << 9) | (1), 16, 16);
+//283.33M <-- (2550/3)/3
+#define VDEC1_283M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  (1 << 9) | (2), 0, 16);
+#define VDEC2_283M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (1 << 9) | (2));
+//318.75M <-- (2550/4)/2
+#define VDEC1_319M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  (0 << 9) | (1), 0, 16);
+#define VDEC2_319M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (0 << 9) | (1));
+//364.29M <-- (2550/7)/1 -- over limit, do not use
+#define VDEC1_364M() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  (3 << 9) | (0), 0, 16);
+#define VDEC2_364M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (3 << 9) | (0));
+
+#define VDEC1_CLOCK_ON()   WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 1, 8, 1); \
+                           WRITE_VREG_BITS(DOS_GCLK_EN0, 0x3ff,0,10)
+#define VDEC2_CLOCK_ON()   WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 1, 8, 1); \
+                           WRITE_VREG(DOS_GCLK_EN1, 0x3ff)
+#define HCODEC_CLOCK_ON()  WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 1, 24, 1); \
+                           WRITE_VREG_BITS(DOS_GCLK_EN0, 0x7fff, 12, 15)
+#define HEVC_CLOCK_ON()  WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 1, 24, 1); \
+                           WRITE_VREG(DOS_GCLK_EN3, 0xffffffff)
+#define VDEC1_CLOCK_OFF()  WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  0, 8, 1)
+#define VDEC2_CLOCK_OFF()  WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 0, 8, 1)
+#define HCODEC_CLOCK_OFF() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 0, 24, 1)
+#define HEVC_CLOCK_OFF()   WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 0, 24, 1)
+
+#define vdec_clock_enable() \
+    VDEC1_CLOCK_OFF(); \
+    VDEC1_255M(); \
+    VDEC1_CLOCK_ON(); \
+    clock_level = 0; 
+
+#define vdec_clock_hi_enable() \
+    VDEC1_CLOCK_OFF(); \
+    VDEC1_319M(); \
+    VDEC1_CLOCK_ON(); \
+    clock_level = 1;
+
+#define vdec2_clock_enable() \
+    VDEC2_CLOCK_OFF(); \
+    VDEC2_255M(); \
+    VDEC2_CLOCK_ON(); \
+    clock_level2 = 0; 
+
+#define vdec2_clock_hi_enable() \
+    VDEC2_CLOCK_OFF(); \
+    VDEC2_319M(); \
+    VDEC2_CLOCK_ON(); \
+    clock_level2 = 1;
+
+#define hcodec_clock_enable() \
+    HCODEC_CLOCK_OFF(); \
+    HCODEC_255M(); \
+    HCODEC_CLOCK_ON();
+
+#define hevc_clock_enable() \
+    HEVC_CLOCK_OFF(); \
+    HEVC_255M(); \
+    HEVC_CLOCK_ON(); 
+
+#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 /*
 HHI_VDEC_CLK_CNTL
 0x1078[11:9] (fclk = 2550MHz)
@@ -301,7 +384,8 @@ static const char *vdec_device_name[] = {
     "amvdec_avs",
     "amvdec_yuv",
     "amvdec_h264mvc",
-    "amvdec_h264_4k2k"
+    "amvdec_h264_4k2k",
+    "amvdec_h265"
 };
 
 void vdec_set_decinfo(void *p)
@@ -438,7 +522,7 @@ void vdec_poweron(vdec_type_t core)
 #endif
     } else if (core == VDEC_HCODEC) {
 #if HAS_HDEC
-        // hcodec poer on
+        // hcodec power on
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0x3);
         // wait 10uS
         udelay(10);
@@ -451,8 +535,25 @@ void vdec_poweron(vdec_type_t core)
         WRITE_VREG(DOS_MEM_PD_HCODEC, 0);
         // remove hcodec isolation
         WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0x30);
-#endif  
-  }
+#endif		
+    }
+    else if (core == VDEC_HEVC) {
+#if  HAS_HEVC_VDEC
+        // hevc power on
+        WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0xc0);
+        // wait 10uS
+        udelay(10);
+        // hevc soft reset
+        WRITE_VREG(DOS_SW_RESET3, 0xffffffff);
+        WRITE_VREG(DOS_SW_RESET3, 0);
+        // enable hevc clock
+        hevc_clock_enable();
+        // power up hevc memories
+        WRITE_VREG(DOS_MEM_PD_HEVC, 0);
+        // remove hevc isolation
+        WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0xc00);
+#endif
+    }
 
     spin_unlock_irqrestore(&lock, flags);
 }
@@ -473,6 +574,7 @@ void vdec_poweroff(vdec_type_t core)
         // vdec1 power off
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0xc);
     } else if (core == VDEC_2) {
+#if  HAS_VDEC2   
         // enable vdec2 isolation
         WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0x300);
         // power off vdec2 memories
@@ -481,7 +583,9 @@ void vdec_poweroff(vdec_type_t core)
         VDEC2_CLOCK_OFF();
         // vdec2 power off
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0x30);
+#endif
     } else if (core == VDEC_HCODEC) {
+#if  HAS_HDEC    
         // enable hcodec isolation
         WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0x30);
         // power off hcodec memories
@@ -490,6 +594,18 @@ void vdec_poweroff(vdec_type_t core)
         HCODEC_CLOCK_OFF();
         // hcodec power off
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 3);
+#endif
+    } else if (core == VDEC_HEVC) {
+#if  HAS_HEVC_VDEC
+        // enable hevc isolation
+        WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0xc00);
+        // power off hevc memories
+        WRITE_VREG(DOS_MEM_PD_HEVC, 0xffffffffUL);
+        // disable hevc clock
+        HEVC_CLOCK_OFF();
+        // hevc power off
+        WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0xc0);
+#endif        
     }
 
     spin_unlock_irqrestore(&lock, flags);
@@ -505,15 +621,26 @@ bool vdec_on(vdec_type_t core)
             ret = true;
         }
     } else if (core == VDEC_2) {
+#if HAS_VDEC2
         if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0x30) == 0) &&
             (READ_MPEG_REG(HHI_VDEC2_CLK_CNTL) & 0x100)) {
             ret = true;
         }
+#endif
     } else if (core == VDEC_HCODEC) {
+#if  HAS_HDEC 
         if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0x3) == 0) &&
             (READ_MPEG_REG(HHI_VDEC_CLK_CNTL) & 0x1000000)) {
             ret = true;
         }
+#endif
+    } else if (core == VDEC_HEVC) {
+#if  HAS_HEVC_VDEC 
+        if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0xc0) == 0) &&
+            (READ_MPEG_REG(HHI_VDEC2_CLK_CNTL) & 0x1000000)) {
+            ret = true;
+        }
+#endif
     }
 
     return ret;

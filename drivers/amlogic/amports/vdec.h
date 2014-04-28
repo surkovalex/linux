@@ -42,7 +42,8 @@ void vdec_power_mode(int level);
 typedef enum {
     VDEC_1,
     VDEC_HCODEC,
-    VDEC_2
+    VDEC_2,
+    VDEC_HEVC
 } vdec_type_t;
 
 extern void vdec2_power_mode(int level);
