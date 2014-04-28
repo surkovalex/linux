@@ -38,8 +38,9 @@
 #define ALSA_DEBUG(fmt,args...) 
 #define ALSA_TRACE()   
 #endif
+static unsigned last_iec_clock =  -1;
 extern int aout_notifier_call_chain(unsigned long val, void *v);
-static  unsigned  playback_substream_handle = 0 ;
+//static  unsigned  playback_substream_handle = 0 ;
 extern unsigned int IEC958_mode_codec;
 static int iec958buf[4096+16];
 static void  aml_spdif_play()
@@ -61,7 +62,11 @@ static void  aml_spdif_play()
 	set.chan_stat->chstat1_l = 0X200;
 	set.chan_stat->chstat1_r = 0X200;	
 	audio_hw_958_enable(0);
-	audio_set_958_clk(AUDIO_CLK_FREQ_48,AUDIO_CLK_256FS);
+	if(last_iec_clock != AUDIO_CLK_FREQ_48){
+		ALSA_PRINT("enterd %s,set_clock:%d,sample_rate=%d\n",__func__,last_iec_clock,AUDIO_CLK_FREQ_48);
+		last_iec_clock = AUDIO_CLK_FREQ_48;		
+		audio_set_958_clk(AUDIO_CLK_FREQ_48,AUDIO_CLK_256FS);
+	}	
 	audio_util_set_dac_958_format(AUDIO_ALGOUT_DAC_FORMAT_DSP);
 	memset(iec958buf,0,sizeof(iec958buf));
 	audio_set_958outbuf((virt_to_phys(iec958buf)+63)&(~63),16*1024,0);
@@ -135,7 +140,6 @@ special call by the audiodsp,add these code,as there are three cases for 958 s/p
 2)PCM  output for  all audio, when pcm mode is selected by user .
 3)PCM  output for audios except ac3/dts,when raw output mode is selected by user
 */
-static unsigned set_clock =  -1;
 static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 {
     _aiu_958_raw_setting_t set;
@@ -199,9 +203,9 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 			sample_rate	=	AUDIO_CLK_FREQ_441;
 			break;
 	};		
-    if(set_clock != sample_rate){
-    	ALSA_PRINT("enterd %s,set_clock:%d,sample_rate=%d\n",__func__,set_clock,sample_rate);
-        set_clock = sample_rate;
+    if(last_iec_clock != sample_rate){
+    	ALSA_PRINT("enterd %s,set_clock:%d,sample_rate=%d\n",__func__,last_iec_clock,sample_rate);
+        last_iec_clock = sample_rate;
         audio_set_958_clk(sample_rate, AUDIO_CLK_256FS);
     }
 	audio_util_set_dac_958_format(AUDIO_ALGOUT_DAC_FORMAT_DSP);
@@ -320,10 +324,13 @@ special call by the audiodsp,add these code,as there are three cases for 958 s/p
 void	aml_alsa_hw_reprepare(void)
 {
     ALSA_TRACE();
+ //M8 disable it	
+#if 0	
 	/* diable 958 module before call initiation */
 	audio_hw_958_enable(0);
    if(playback_substream_handle!=0)
   	aml_hw_iec958_init((struct snd_pcm_substream *)playback_substream_handle);
+#endif   
 }
 static int aml_dai_spdif_startup(struct snd_pcm_substream *substream,
 					struct snd_soc_dai *dai)
@@ -386,11 +393,9 @@ static int aml_dai_spdif_prepare(struct snd_pcm_substream *substream,
     //	struct aml_runtime_data *prtd = runtime->private_data;
 	//audio_stream_t *s = &prtd->s;
 
-    ALSA_TRACE();
+      ALSA_TRACE();
 	if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
-		if(playback_substream_handle != (unsigned)substream)
-			playback_substream_handle = (unsigned)substream;
-		aml_hw_iec958_init((struct snd_pcm_substream *)playback_substream_handle);		
+		aml_hw_iec958_init(substream);		
 	}	
 	else{
 		audio_in_spdif_set_buf(runtime->dma_addr, runtime->dma_bytes*2);
