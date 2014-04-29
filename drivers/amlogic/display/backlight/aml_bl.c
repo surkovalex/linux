@@ -41,6 +41,7 @@
 #include <linux/delay.h>
 #ifdef CONFIG_AML_LCD_BACKLIGHT_SUPPORT
 #include <linux/amlogic/aml_lcd_bl.h>
+#include <linux/amlogic/aml_bl_extern.h>
 #endif
 
 //#define MESON_BACKLIGHT_DEBUG
@@ -68,7 +69,8 @@ typedef enum {
     BL_CTL_PWM_NEGATIVE = 1,
     BL_CTL_PWM_POSITIVE = 2,
     BL_CTL_PWM_COMBO = 3,
-    BL_CTL_MAX = 4,
+    BL_CTL_EXTERN = 4,
+    BL_CTL_MAX = 5,
 } BL_Ctrl_Method_t;
 
 static const char* bl_ctrl_method_table[]={
@@ -76,6 +78,7 @@ static const char* bl_ctrl_method_table[]={
     "pwm_negative",
     "pwm_positive",
     "pwm_combo",
+    "extern",
     "null"
 };
 
@@ -140,10 +143,17 @@ static int bl_real_status = 1;
 
 #define FIN_FREQ				(24 * 1000)
 
+void get_bl_ext_level(struct bl_extern_config_t *bl_ext_cfg)
+{
+    bl_ext_cfg->level_min = bl_config.level_min;
+    bl_ext_cfg->level_max = bl_config.level_max;
+}
+
 static DEFINE_MUTEX(bl_power_mutex);
 static void power_on_bl(void)
 {
     struct pinctrl_state *s;
+    struct aml_bl_extern_driver_t *bl_extern_driver;
     int ret;
 
     mutex_lock(&bl_power_mutex);
@@ -288,6 +298,24 @@ static void power_on_bl(void)
                 goto exit_power_on_bl;
             }
             break;
+        case BL_CTL_EXTERN:
+            bl_extern_driver = aml_bl_extern_get_driver();
+            if (bl_extern_driver == NULL) {
+                printk("no bl_extern driver\n");
+            }
+            else {
+                if (bl_extern_driver->power_on) {
+                    ret = bl_extern_driver->power_on();
+                    if (ret) {
+                        printk("[bl_extern] power on error\n");
+                        goto exit_power_on_bl;
+                    }
+                }
+                else {
+                    printk("[bl_extern] power on is null\n");
+                }
+            }
+            break;
         default:
             printk("wrong backlight control method\n");
             goto exit_power_on_bl;
@@ -332,6 +360,7 @@ void bl_power_on(int bl_flag)
 
 void bl_power_off(int bl_flag)
 {
+    struct aml_bl_extern_driver_t *bl_extern_driver;
     int ret;
 
     mutex_lock(&bl_power_mutex);
@@ -406,6 +435,22 @@ void bl_power_off(int bl_flag)
                     break;
             }
             break;
+        case BL_CTL_EXTERN:
+            bl_extern_driver = aml_bl_extern_get_driver();
+            if (bl_extern_driver == NULL) {
+                printk("no bl_extern driver\n");
+            }
+            else {
+                if (bl_extern_driver->power_off) {
+                    ret = bl_extern_driver->power_off();
+                    if (ret)
+                        printk("[bl_extern] power off error\n");
+                }
+                else {
+                    printk("[bl_extern] power off is null\n");
+                }
+            }
+            break;
         default:
             break;
     }
@@ -418,11 +463,12 @@ static DEFINE_MUTEX(bl_level_mutex);
 static void set_backlight_level(unsigned level)
 {
     unsigned pwm_hi = 0, pwm_lo = 0;
+    struct aml_bl_extern_driver_t *bl_extern_driver;
     int ret;
 
     mutex_lock(&bl_level_mutex);
 
-    DPRINT("set_backlight_level: %u, last level: %u\n", level, bl_level);
+    DPRINT("set_backlight_level: %u, last level: %u, bl_status: %u, bl_real_status: %u\n", level, bl_level, bl_status, bl_real_status);
     level = (level > bl_config.level_max ? bl_config.level_max : (level < bl_config.level_min ? (level < BL_LEVEL_OFF ? 0 : bl_config.level_min) : level));
     bl_level = level;
 
@@ -581,6 +627,22 @@ static void set_backlight_level(unsigned level)
                     }
                 }
                 break;
+            case BL_CTL_EXTERN:
+                bl_extern_driver = aml_bl_extern_get_driver();
+                if (bl_extern_driver == NULL) {
+                    printk("no bl_extern driver\n");
+                }
+                else {
+                    if (bl_extern_driver->set_level) {
+                        ret = bl_extern_driver->set_level(level);
+                        if (ret)
+                            printk("[bl_extern] set_level error\n");
+                    }
+                    else {
+                        printk("[bl_extern] set_level is null\n");
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -590,7 +652,7 @@ static void set_backlight_level(unsigned level)
     mutex_unlock(&bl_level_mutex);
 }
 
-static unsigned get_backlight_level(void)
+unsigned get_backlight_level(void)
 {
     DPRINT("%s: %d\n", __FUNCTION__, bl_level);
     return bl_level;

@@ -97,6 +97,8 @@ typedef struct {
 static lcd_dev_t *pDev = NULL;
 static spinlock_t gamma_write_lock;
 static spinlock_t lcd_clk_lock;
+static Bool_t data_status = ON;
+static int bl_status = 0;
 
 static inline void lcd_mdelay(int n)
 {
@@ -104,9 +106,6 @@ static inline void lcd_mdelay(int n)
 }
 
 #ifdef CONFIG_USE_OF
-static Bool_t data_status = ON;
-int bl_status = 1;
-
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 static DSI_Config_t lcd_mipi_config = {
     .lane_num = 4,
@@ -430,7 +429,6 @@ static void lcd_ports_ctrl(Bool_t status)
 
 static void backlight_power_ctrl(Bool_t status)
 {
-	DBG_PRINT("%s(): bl_status=%s, data_status=%s\n", __FUNCTION__, (bl_status ? "ON" : "OFF"), (data_status ? "ON" : "OFF"));
 	if( status == ON ){
 		if ((data_status == OFF) || (bl_status == ON))
 			return;
@@ -441,6 +439,7 @@ static void backlight_power_ctrl(Bool_t status)
 			return;
 		bl_power_off(LCD_BL_FLAG);
 	}
+	DBG_PRINT("%s(%s): bl_status=%s, data_status=%s\n", __FUNCTION__, (status ? "ON" : "OFF"), (bl_status ? "ON" : "OFF"), (data_status ? "ON" : "OFF"));
 	bl_status = status;
 }
 
