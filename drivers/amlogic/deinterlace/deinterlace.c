@@ -189,7 +189,11 @@ static unsigned char new_keep_last_frame_enable = 0;
 static int bypass_state = 1;
 static int bypass_prog = 0;
 static int bypass_hd_prog = 0;
+#if MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8
+static int bypass_interlace_output = 0;
+#else
 static int bypass_interlace_output = 1;
+#endif
 #ifdef CONFIG_AM_DEINTERLACE_SD_ONLY
 static int bypass_hd = 1;
 #else
@@ -204,7 +208,11 @@ static int invert_top_bot = 0;
 static int skip_top_bot = 0;
 static char interlace_output_flag = 0;
 static int bypass_get_buf_threshold = 4;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+static int post_hold_line = 17;//for m8 1080i/50 output
+static int force_update_post_reg = 0x10;
+#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 static int post_hold_line = 20;
 static int force_update_post_reg = 0x10;/* bit[4], 1 call process_fun every vsync; 0 call process_fun when toggle frame (early_process_fun is called)
                                         bit[3:0] set force_update_post_reg = 1: only update post reg in vsync for one time
