@@ -723,7 +723,7 @@ static void vmpeg4_prot_init(void)
     SET_VREG_MASK(MDEC_PIC_DC_CTRL, 1<<17);
 #endif
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     printk("mpeg4 meson8 prot init\n");
     WRITE_VREG(MDEC_PIC_DC_THRESH, 0x404038aa);
 #endif

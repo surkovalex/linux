@@ -38,6 +38,9 @@
 #include <asm/atomic.h>
 #include <plat/io.h>
 #include <linux/module.h>
+#include <linux/slab.h>
+#include "amports_priv.h"
+
 
 #include "vdec.h"
 #include "vdec_reg.h"
@@ -73,15 +76,15 @@ static DEFINE_MUTEX(vh264_mutex);
 #define DEFAULT_MEM_SIZE        (32*1024*1024)
 #define AVIL_DPB_BUFF_SIZE      0x01ec2000
 
-#define DEF_BUF_START_ADDR            0x81000000
-#define DEF_BUF_START_BASE            (0x81000000 + buf_offset)
-#define MEM_HEADER_CPU_BASE           (0x81110000 + buf_offset)
-#define MEM_DATA_CPU_BASE             (0x81111000 + buf_offset)
-#define MEM_MMCO_CPU_BASE             (0x81112000 + buf_offset)
-#define MEM_LIST_CPU_BASE             (0x81113000 + buf_offset)
-#define MEM_SLICE_CPU_BASE            (0x81114000 + buf_offset)
+
+#define DEF_BUF_START_ADDR            0x1000000
+#define MEM_HEADER_CPU_OFFSET         (0x110000)
+#define MEM_DATA_CPU_OFFSET           (0x111000)
+#define MEM_MMCO_CPU_OFFSET           (0x112000)
+#define MEM_LIST_CPU_OFFSET           (0x113000)
+#define MEM_SLICE_CPU_OFFSET          (0x114000)
 #define MEM_SWAP_SIZE                 (0x5000*4)
-#define V_BUF_ADDR_START              0x8113e000
+#define V_BUF_ADDR_OFFSET             (0x13e000)
 
 #define PIC_SINGLE_FRAME        0
 #define PIC_TOP_BOT_TOP         1
@@ -168,6 +171,7 @@ static struct timer_list recycle_timer;
 static u32 stat;
 static u32 buf_start, buf_size;
 static s32 buf_offset;
+static u32 ucode_map_start;
 static u32 pts_outside = 0;
 static u32 sync_outside = 0;
 static u32 dec_control = 0;
@@ -1470,12 +1474,12 @@ static void vh264_local_init(void)
     return;
 }
 
+
 static s32 vh264_init(void)
 {
     int trickmode_fffb = 0;
-    void __iomem *p = ioremap_nocache(DEF_BUF_START_BASE, V_BUF_ADDR_START - DEF_BUF_START_ADDR);
-    void __iomem *p1 = (void __iomem *)((ulong)(p) + MEM_HEADER_CPU_BASE - DEF_BUF_START_BASE);
-
+    void __iomem *p = ioremap_nocache(ucode_map_start, V_BUF_ADDR_OFFSET);
+    void __iomem *p1 = (void __iomem *)((ulong)(p) + MEM_HEADER_CPU_OFFSET);
     if (!p) {
         printk("\nvh264_init: Cannot remap ucode swapping memory\n");
         return -ENOMEM;
@@ -1494,12 +1498,12 @@ static s32 vh264_init(void)
     query_video_status(0, &trickmode_fffb);
 
     if (!trickmode_fffb) {
-        memset(p, 0, V_BUF_ADDR_START - DEF_BUF_START_ADDR);
+        memset(p, 0, V_BUF_ADDR_OFFSET);
     }
 
     amvdec_enable();
-
-    if (amvdec_loadmc(vh264_mc) < 0) {
+	
+    if (amvdec_loadmc(vh264_mc) < 0) { 
         amvdec_disable();
         return -EBUSY;
     }
@@ -1769,7 +1773,7 @@ static int amvdec_h264_probe(struct platform_device *pdev)
         mutex_unlock(&vh264_mutex);
         return -EFAULT;
     }
-
+    ucode_map_start=mem->start;
     buf_size = mem->end - mem->start + 1;
     if (buf_size < DEFAULT_MEM_SIZE) {
         printk("\namvdec_h264 memory size not enough.\n");
@@ -1777,8 +1781,8 @@ static int amvdec_h264_probe(struct platform_device *pdev)
     }
 
     buf_offset = mem->start - DEF_BUF_START_ADDR;
-    buf_start = V_BUF_ADDR_START + buf_offset;
-
+    buf_start = V_BUF_ADDR_OFFSET + mem->start;
+    printk("mem-addr=%x,buff_offset=%x,buf_start=%x\n",mem->start,buf_offset,buf_start);
     memcpy(&vh264_amstream_dec_info, (void *)mem[1].start, sizeof(vh264_amstream_dec_info));
 
     if (vh264_init() < 0) {

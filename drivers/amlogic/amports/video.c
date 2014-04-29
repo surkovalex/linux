@@ -63,7 +63,9 @@
 #include <asm/fiq.h>
 #include <asm/uaccess.h>
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#include "amports_config.h"
+
+#if HAS_VPU_PROT
 #include <mach/vpu.h>
 #endif
 
@@ -151,7 +153,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
 #define RESERVE_CLR_FRAME
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 #define VD1_MEM_POWER_ON() \
     do { \
         unsigned long flags; \
@@ -227,7 +229,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
         video_onoff_state = VIDEO_ENABLE_STATE_OFF_REQ; \
         spin_unlock_irqrestore(&video_onoff_lock, flags); \
     } while (0)
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 #define EnableVideoLayer()  \
     do { \
         if(get_vpu_mem_pd_vmod(VPU_VIU_VD1) == VPU_MEM_POWER_DOWN || \
@@ -275,7 +277,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
          } \
     } while (0)
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 #define DisableVideoLayer_NoDelay() \
     do { \
          CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, \
@@ -321,7 +323,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
 #define MAX_ZOOM_RATIO 300
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 #define VPP_PREBLEND_VD_V_END_LIMIT 2304
 #else
 #define VPP_PREBLEND_VD_V_END_LIMIT 1080
@@ -389,7 +391,7 @@ static int cur_dev_idx = 0;
 typedef struct {
     int event;
     u32 vpp_misc;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     int mem_pd_vd1;
     int mem_pd_vd2;
     int mem_pd_di_post;
@@ -417,7 +419,7 @@ static int scaler_pos_changed = 0;
 static struct amvideocap_req *capture_frame_req=NULL;
 static video_prot_t video_prot;
 static u32 video_angle = 0;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 static u32 use_prot = 0;
 u32 get_prot_status(void) { return video_prot.status; }
 EXPORT_SYMBOL(get_prot_status);
@@ -635,7 +637,7 @@ static const u8 skip_tab[6] = { 0x24, 0x04, 0x68, 0x48, 0x28, 0x08 };
 /* wait queue for poll */
 static wait_queue_head_t amvideo_trick_wait;
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 #define VPU_DELAYWORK_VPU_CLK            1
 #define VPU_DELAYWORK_MEM_POWER_OFF_VD1  2
 #define VPU_DELAYWORK_MEM_POWER_OFF_VD2  4
@@ -1234,13 +1236,13 @@ static void vsync_toggle_frame(vframe_t *vf)
 #endif
 	VSYNC_WR_MPEG_REG(VD2_IF0_CANVAS1, disp_canvas[rdma_canvas_id][1]);
         next_rdma_canvas_id = rdma_canvas_id?0:1;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         if (use_prot) {
             video_prot.prot2_canvas = disp_canvas[rdma_canvas_id][0] & 0xff;
             video_prot.prot3_canvas = (disp_canvas[rdma_canvas_id][0] >> 8) & 0xff;
              VSYNC_WR_MPEG_REG_BITS(VPU_PROT2_DDR, video_prot.prot2_canvas, 0, 8);
              VSYNC_WR_MPEG_REG_BITS(VPU_PROT3_DDR, video_prot.prot3_canvas, 0, 8);
-        }
+        }	 
 #endif
 #else
         canvas_copy(vf->canvas0Addr & 0xff, disp_canvas_index[0]);
@@ -1263,7 +1265,7 @@ static void vsync_toggle_frame(vframe_t *vf)
 	VSYNC_WR_MPEG_REG(VD2_IF0_CANVAS0, disp_canvas[0]);
 	VSYNC_WR_MPEG_REG(VD2_IF0_CANVAS1, disp_canvas[1]);
 #endif
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         if (use_prot) {
             video_prot.prot2_canvas = disp_canvas_index[0];
             video_prot.prot3_canvas = disp_canvas_index[1];
@@ -1319,7 +1321,7 @@ static void vsync_toggle_frame(vframe_t *vf)
         ((cur_dispbuf->type_backup & VIDTYPE_INTERLACE) !=
          (vf->type_backup & VIDTYPE_INTERLACE)) ||
          (cur_dispbuf->type != vf->type)
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
          || video_prot.angle_changed
 #endif
          ) {
@@ -1342,7 +1344,7 @@ amlog_mask(LOG_MASK_FRAMEINFO,
 #endif
         next_frame_par = (&frame_parms[0] == next_frame_par) ?
                          &frame_parms[1] : &frame_parms[0];
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         if (use_prot) {
             vframe_t tmp_vf = *vf;
             if (video_prot.angle_changed || cur_dispbuf->width != vf->width || cur_dispbuf->height != vf->height) {
@@ -1386,7 +1388,7 @@ amlog_mask(LOG_MASK_FRAMEINFO,
         /* apply new vpp settings */
         frame_par_ready_to_set = 1;
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         if ((vf->width > 1920) && (vf->height > 1088)) {
             if (vpu_clk_level == 0) {
                 vpu_clk_level = 1;
@@ -1453,7 +1455,7 @@ static void viu_set_dcu(vpp_frame_par_t *frame_par, vframe_t *vf)
             r |= VDIF_FORMAT_RGB888_YUV444 | VDIF_DEMUX_MODE_RGB_444;
         }
     }
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if (video_prot.status && use_prot) {
         r |= VDIF_DEMUX_MODE | VDIF_LAST_LINE | 3 << VDIF_BURSTSIZE_Y_BIT | 1 << VDIF_BURSTSIZE_CB_BIT | 1 << VDIF_BURSTSIZE_CR_BIT;
         r &= 0xffffffbf;
@@ -1472,7 +1474,7 @@ static void viu_set_dcu(vpp_frame_par_t *frame_par, vframe_t *vf)
     } else {
         VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2 + cur_dev->viu_off, 0,0,1);
     }
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if (use_prot) {
         if (video_prot.angle == 2) {
             VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2 + cur_dev->viu_off, 0xf, 2, 4);
@@ -1547,7 +1549,7 @@ static void viu_set_dcu(vpp_frame_par_t *frame_par, vframe_t *vf)
                        (((vf->type & VIDTYPE_VIU_422) ? 0x10 : 0x08) << VFORMATTER_PHASE_BIT) |
                        VFORMATTER_EN);
     }
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if (video_prot.status && use_prot) {
         VSYNC_WR_MPEG_REG_BITS(VIU_VD1_FMT_CTRL + cur_dev->viu_off, 0, VFORMATTER_INIPHASE_BIT, 4);
         VSYNC_WR_MPEG_REG_BITS(VIU_VD1_FMT_CTRL + cur_dev->viu_off, 0, 16, 1);
@@ -2164,7 +2166,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 	/* amvecm video latch function */
 	amvecm_video_latch();
 #endif
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     vdin_ops=get_vdin_v4l2_ops();
     if(vdin_ops){
 	arg.cmd = VDIN_CMD_ISR;
@@ -2239,7 +2241,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
         dispbuf_to_put_num = 0;
     }
 #endif
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     use_prot = get_use_prot();
     if (video_prot.video_started) {
         video_prot.video_started = 0;
@@ -2536,7 +2538,7 @@ SET_FILTER:
                             VPP_SC_HBANK_LENGTH_BIT,
                             VPP_SC_BANK_LENGTH_WID);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         VSYNC_WR_MPEG_REG_BITS(VPP_VSC_PHASE_CTRL + cur_dev->vpp_off,
                             (vpp_filter->vpp_vert_coeff[0] == 2) ? 1 : 0,
                             VPP_PHASECTL_DOUBLELINE_BIT,
@@ -2699,7 +2701,7 @@ exit:
     if (video_notify_flag)
         vsync_notify();
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if (vpu_delay_work_flag) {
         schedule_work(&vpu_delay_work);
     }
@@ -2961,7 +2963,7 @@ static void video_vf_light_unreg_provider(void)
         vf_local = *cur_dispbuf;
         cur_dispbuf = &vf_local;
     }
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if(get_vpu_mem_pd_vmod(VPU_VIU_VD1) == VPU_MEM_POWER_DOWN ||
             get_vpu_mem_pd_vmod(VPU_PIC_ROT2) == VPU_MEM_POWER_DOWN ||
             aml_read_reg32(P_VPU_PROT3_CLK_GATE) == 0) {
@@ -4685,7 +4687,7 @@ static int amvideo_class_suspend(struct device *dev, pm_message_t state)
     if (state.event == PM_EVENT_SUSPEND) {
         pm_state.vpp_misc = READ_VCBUS_REG(VPP_MISC + cur_dev->vpp_off);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         pm_state.mem_pd_vd1 = get_vpu_mem_pd_vmod(VPU_VIU_VD1);
         pm_state.mem_pd_vd2 = get_vpu_mem_pd_vmod(VPU_VIU_VD2);
         pm_state.mem_pd_di_post = get_vpu_mem_pd_vmod(VPU_DI_POST);
@@ -4697,7 +4699,7 @@ static int amvideo_class_suspend(struct device *dev, pm_message_t state)
 
         msleep(50);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         switch_vpu_mem_pd_vmod(VPU_VIU_VD1, VPU_MEM_POWER_DOWN);
         switch_vpu_mem_pd_vmod(VPU_VIU_VD2, VPU_MEM_POWER_DOWN);
         switch_vpu_mem_pd_vmod(VPU_DI_POST, VPU_MEM_POWER_DOWN);
@@ -4724,7 +4726,7 @@ static int amvideo_class_resume(struct device *dev)
   ((VPP_VD2_ALPHA_MASK << VPP_VD2_ALPHA_BIT) | VPP_VD2_PREBLEND | VPP_VD1_PREBLEND | VPP_VD2_POSTBLEND | VPP_VD1_POSTBLEND | VPP_POSTBLEND_EN)
 
     if (pm_state.event == PM_EVENT_SUSPEND) {
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
         switch_vpu_mem_pd_vmod(VPU_VIU_VD1, pm_state.mem_pd_vd1);
         switch_vpu_mem_pd_vmod(VPU_VIU_VD2, pm_state.mem_pd_vd2);
         switch_vpu_mem_pd_vmod(VPU_DI_POST, pm_state.mem_pd_di_post);
@@ -4874,7 +4876,7 @@ static void vout_hook(void)
 #endif
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 static void do_vpu_delay_work(struct work_struct *work)
 {
     unsigned long flags;
@@ -4936,7 +4938,7 @@ static int __init video_early_init(void)
 {
     logo_object_t  *init_logo_obj=NULL;
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     /* todo: move this to clock tree, enable VPU clock */
     //WRITE_CBUS_REG(HHI_VPU_CLK_CNTL, (1<<9) | (1<<8) | (3)); // fclk_div3/4 = ~200M
     //WRITE_CBUS_REG(HHI_VPU_CLK_CNTL, (3<<9) | (1<<8) | (0)); // fclk_div7/1 = 364M	//moved to vpu.c, default config by dts
@@ -4952,7 +4954,7 @@ static int __init video_early_init(void)
 #endif // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     WRITE_VCBUS_REG(VPP_PREBLEND_VD1_H_START_END, 4096);
 #endif
 
@@ -4974,7 +4976,7 @@ static int __init video_early_init(void)
     	WRITE_VCBUS_REG(VPP2_HOLD_LINES, 0x08080808);
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
    	WRITE_VCBUS_REG_BITS(VPP2_OFIFO_SIZE, 0x800,
                         VPP_OFIFO_SIZE_BIT, VPP_OFIFO_SIZE_WID);
 #else
@@ -5078,7 +5080,7 @@ static int __init video_init(void)
 
     init_waitqueue_head(&amvideo_trick_wait);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     INIT_WORK(&vpu_delay_work, do_vpu_delay_work);
 #endif
 

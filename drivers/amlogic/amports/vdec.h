@@ -21,6 +21,7 @@
 
 #ifndef VDEC_H
 #define VDEC_H
+#include <mach/cpu.h>
 
 #include <linux/platform_device.h>
 

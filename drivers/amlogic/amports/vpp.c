@@ -23,9 +23,13 @@
 #include <linux/err.h>
 #include <linux/amlogic/vout/vinfo.h>
 #include <mach/am_regs.h>
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#include "amports_config.h"
+
+
+#if HAS_VPU_PROT
 #include <mach/vpu.h>
 #endif
+
 #include <linux/amlogic/amports/vframe.h>
 #include "video.h"
 #include "vpp.h"
@@ -289,7 +293,7 @@ vpp_process_speed_check(s32 width_in,
                         vpp_frame_par_t *next_frame_par,
                         const vinfo_t *vinfo)
 {
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if ((width_in <= 0) || (height_in <= 0) || (height_out <= 0) || (height_screen <= 0)) {
         return SPEED_CHECK_DONE;
     }
@@ -686,7 +690,7 @@ RESTART:
     }
 
     next_frame_par->VPP_hf_ini_phase_ = vpp_zoom_center_x & 0xff;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
     if (get_prot_status()){
         s32 tmp_height = (((s32)next_frame_par->VPP_vd_end_lines_ + 1) << 18) / tmp_ratio_y;
         s32 tmp_top = 0;
@@ -942,7 +946,7 @@ vpp_set_filters(u32 process_3d_type,u32 wide_mode,
     vpp_set_filters2(src_width, src_height, vinfo, vpp_flags, next_frame_par);
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if HAS_VPU_PROT
 void
 prot_get_parameter(u32 wide_mode,
                 vframe_t *vf,

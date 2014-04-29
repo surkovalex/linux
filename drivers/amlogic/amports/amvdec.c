@@ -43,6 +43,7 @@
 #include <mach/power_gate.h>
 #include "vdec_reg.h"
 #include "amvdec.h"
+#include "amports_config.h"
 
 #define MC_SIZE (4096 * 4)
 
@@ -134,7 +135,7 @@ static void amvdec_pg_enable(bool enable)
     }
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 static void amvdec2_pg_enable(bool enable)
 {
     ulong timeout;
@@ -250,7 +251,7 @@ s32 amvdec_loadmc(const u32 *p)
     return ret;
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 s32 amvdec2_loadmc(const u32 *p)
 {
     ulong timeout;
@@ -305,7 +306,7 @@ s32 amvdec2_loadmc(const u32 *p)
 }
 #endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_HDEC
 void amhcodec_loadmc(const u32 *p)
 {
 #ifdef AMVDEC_USE_STATIC_MEMORY
@@ -373,7 +374,7 @@ void amvdec_start(void)
     WRITE_VREG(MPSR, 0x0001);
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 void amvdec2_start(void)
 {
 #ifdef CONFIG_WAKELOCK
@@ -395,7 +396,7 @@ void amvdec2_start(void)
 }
 #endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_HDEC
 void amhcodec_start(void)
 {
     WRITE_VREG(HCODEC_MPSR, 0x0001);
@@ -441,7 +442,7 @@ void amvdec_stop(void)
 #endif
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 void amvdec2_stop(void)
 {
     ulong timeout = jiffies + HZ;
@@ -465,7 +466,7 @@ void amvdec2_stop(void)
 }
 #endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_HDEC
 void amhcodec_stop(void)
 {
     WRITE_VREG(HCODEC_MPSR, 0);
@@ -482,7 +483,7 @@ void amvdec_disable(void)
     amvdec_pg_enable(false);
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 void amvdec2_enable(void)
 {
     amvdec2_pg_enable(true);
@@ -499,7 +500,7 @@ int amvdec_suspend(struct platform_device *dev, pm_message_t event)
 {
     amvdec_pg_enable(false);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
     amvdec2_pg_enable(false);
 #endif
 
@@ -510,7 +511,7 @@ int amvdec_resume(struct platform_device *dev)
 {
     amvdec_pg_enable(true);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD 
+#if HAS_VDEC2
     amvdec2_pg_enable(true);
 #endif
 

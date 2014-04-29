@@ -38,9 +38,8 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD
+#include "amports_config.h"
 #include "amvdec.h"
-#endif
 
 static DEFINE_SPINLOCK(lock);
 
@@ -420,6 +419,7 @@ void vdec_poweron(vdec_type_t core)
         // reset DOS top registers
         WRITE_VREG(DOS_VDEC_MCRCC_STALL_CTRL, 0);
     } else if (core == VDEC_2) {
+#if HAS_VDEC2
         // vdec2 power on
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0x30);
         // wait 10uS
@@ -435,7 +435,9 @@ void vdec_poweron(vdec_type_t core)
         WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0x300);
         // reset DOS top registers
         WRITE_VREG(DOS_VDEC2_MCRCC_STALL_CTRL, 0);
+#endif
     } else if (core == VDEC_HCODEC) {
+#if HAS_HDEC
         // hcodec poer on
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0x3);
         // wait 10uS
@@ -449,7 +451,8 @@ void vdec_poweron(vdec_type_t core)
         WRITE_VREG(DOS_MEM_PD_HCODEC, 0);
         // remove hcodec isolation
         WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0x30);
-    }
+#endif  
+  }
 
     spin_unlock_irqrestore(&lock, flags);
 }
@@ -618,7 +621,7 @@ void vdec_power_mode(int level)
     spin_unlock_irqrestore(&lock, flags);
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 void vdec2_power_mode(int level)
 {
     /* todo: add level routines for clock adjustment per chips */
