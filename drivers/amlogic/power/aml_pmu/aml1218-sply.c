@@ -1221,11 +1221,11 @@ static int aml1218_update_state(struct aml_charger *charger)
     charger->vbat = aml1218_get_battery_voltage();
     charger->ocv  = aml1218_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);
 
-    if (val & 0x40) {
+    if (chg_status & 0x00004000) {
         AML1218_DBG("%s, charge timeout, val:0x%02x, reset charger now\n", __func__, val);
-        aml1216_set_charge_enable(0);
+        aml1218_set_charge_enable(0);
         msleep(1000);
-        aml1216_set_charge_enable(1);
+        aml1218_set_charge_enable(1);
     }
 
     return 0;
