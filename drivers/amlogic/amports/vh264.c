@@ -1479,6 +1479,7 @@ static void vh264_local_init(void)
 static s32 vh264_init(void)
 {
     int trickmode_fffb = 0;
+    int firmwareloaded=0;
     void __iomem *p = ioremap_nocache(ucode_map_start, V_BUF_ADDR_OFFSET);
     void __iomem *p1 = (void __iomem *)((ulong)(p) + MEM_HEADER_CPU_OFFSET);
     if (!p) {
@@ -1503,26 +1504,33 @@ static s32 vh264_init(void)
     }
 
     amvdec_enable();
-    if(debugfirmware){
+
+	/*while for easy break out, always  run once.*/
+    while(debugfirmware){
+		int size;
         printk("start debug load firmware ...\n");
         char *mbuf=kmalloc(4096 * 4*6, GFP_KERNEL);
         if (!mbuf) {
-            printk("\nvh264_init: Cannot malloc mbuf  memory\n");
-            return -ENOMEM;
+            printk("vh264_init: Cannot malloc mbuf  memory1\n");
+            break;
         }
         memset(mbuf,0,4096 * 4*6);
-        request_video_firmware("vh264_mc",mbuf,4096 * 4*6);
+        size=request_video_firmware("vh264_mc",mbuf,4096 * 4*6);
+        if(size<0 || size < (0x800 + 0x400*4)*4){
+            printk("vh264_init: not valied ucode for vh264");
+            kfree(mbuf);
+            break;
+        }
         const char *pvh264_header_mc=mbuf+(0x800 + 0x400*2)*4;
         const char *pvh264_data_mc=mbuf+(0x800 + 0x400*1)*4;
         const char *pvh264_mmco_mc=mbuf+(0x800 + 0x400*4)*4;
         const char *pvh264_list_mc=mbuf+(0x800 + 0x400*3)*4;
         const char *pvh264_slice_mc=mbuf+(0x800 + 0x400*0)*4;
-        
         char *mc=kmalloc(4096 * 4, GFP_KERNEL);
         if (!mc) {
             kfree(mbuf);
-            printk("\nvh264_init: Cannot malloc mbuf  memory\n");
-            return -ENOMEM;
+            printk("vh264_init: Cannot malloc mbuf  memory3\n");
+            break;
         }
         memcpy(mc,mbuf,0x800*4);
         memcpy(mc+0x800*4,pvh264_data_mc,0x400*4);
@@ -1530,8 +1538,7 @@ static s32 vh264_init(void)
         if (amvdec_loadmc(mc) < 0) {
             kfree(mbuf);
             kfree(mc);
-            amvdec_disable();
-            return -EBUSY;
+            break;
         }
         memcpy(p1,
         pvh264_header_mc, 0x400*4);//vh264_header_mc   //0x4000
@@ -1545,10 +1552,15 @@ static s32 vh264_init(void)
         pvh264_slice_mc, 0x400*4);//vh264_slice_mc //0x2000
         kfree(mbuf);
         kfree(mc);
-    }else{
-        printk("start load firmware ...\n");
+		firmwareloaded=1;
+		break;
+    };
+	
+	if(!firmwareloaded){
+        printk("start load orignal firmware ...\n");
         if (amvdec_loadmc(vh264_mc) < 0) {
             amvdec_disable();
+            iounmap(p);
             return -EBUSY;
         }
         
@@ -1567,26 +1579,6 @@ static s32 vh264_init(void)
         memcpy((void *)((ulong)p1 + 0x4000),
         vh264_slice_mc, sizeof(vh264_slice_mc));
     }	
-    if (amvdec_loadmc(vh264_mc) < 0) { 
-        amvdec_disable();
-        return -EBUSY;
-    }
-
-    memcpy(p1,
-           vh264_header_mc, sizeof(vh264_header_mc));
-
-    memcpy((void *)((ulong)p1 + 0x1000),
-           vh264_data_mc, sizeof(vh264_data_mc));
-
-    memcpy((void *)((ulong)p1 + 0x2000),
-           vh264_mmco_mc, sizeof(vh264_mmco_mc));
-
-    memcpy((void *)((ulong)p1 + 0x3000),
-           vh264_list_mc, sizeof(vh264_list_mc));
-
-    memcpy((void *)((ulong)p1 + 0x4000),
-           vh264_slice_mc, sizeof(vh264_slice_mc));
-
     iounmap(p);
 
     stat |= STAT_MC_LOAD;

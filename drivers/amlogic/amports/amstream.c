@@ -1849,7 +1849,7 @@ int request_video_firmware(const char * file_name,char *buf,int size)
 	if(firmware->size>size)
 	{
 		printk("not enough memory size for audiodsp code\n");
-		err=ENOMEM;
+		err=-ENOMEM;
 		goto release;
 	}
 
