@@ -262,6 +262,19 @@ int gc2035_v4l2_probe(struct i2c_adapter *adapter)
 }
 #endif
 
+#ifdef CONFIG_VIDEO_AMLOGIC_CAPTURE_GC2155
+int gc2155_v4l2_probe(struct i2c_adapter *adapter)
+{
+	int ret = 0;
+	unsigned char reg[2];  
+	reg[0] = aml_i2c_get_byte_add8(adapter, 0x3c, 0xf0);
+	reg[1] = aml_i2c_get_byte_add8(adapter, 0x3c, 0xf1);
+	if (reg[0] == 0x21 && reg[1] == 0x55)
+		ret = 1;
+	return ret;
+}
+#endif
+
 #ifdef CONFIG_VIDEO_AMLOGIC_CAPTURE_GT2005
 int gt2005_v4l2_probe(struct i2c_adapter *adapter)
 {
@@ -566,6 +579,17 @@ static aml_cam_dev_info_t cam_devs[] = {
 		.probe_func = gc2035_v4l2_probe,
 	},
 #endif
+
+#ifdef CONFIG_VIDEO_AMLOGIC_CAPTURE_GC2155
+	{
+		.addr = 0x3c,
+		.name = "gc2155",
+		.pwdn = 1,
+		.max_cap_size = SIZE_1600X1200,
+		.probe_func = gc2155_v4l2_probe,
+	},
+#endif
+
 #ifdef CONFIG_VIDEO_AMLOGIC_CAPTURE_GT2005
 	{
 		.addr = 0x3c,
@@ -835,14 +859,23 @@ static inline void cam_disable_clk(void)
 #elif defined CONFIG_ARCH_MESON8
 static inline void cam_enable_clk(int clk)
 {
-	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 11, 5);
-	if (clk == 12000)
+	if (clk == 12000) {
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 12, 4);
 		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 0, 7);
+	} else if (clk == 18000) {
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0xd, 12, 4);
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0x13, 0, 7);
+	} else { //default
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 12, 4);
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 0, 7);
+	}
+	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 11, 1);
 }
 
 static inline void cam_disable_clk(void)
 {
 	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 11, 5); //close clock
+	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 0, 7);
 }
 #elif defined CONFIG_ARCH_MESON6
 static inline void cam_enable_clk(int clk)
