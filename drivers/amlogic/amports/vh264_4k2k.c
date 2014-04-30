@@ -1361,8 +1361,7 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
 
 static int amvdec_h264_4k2k_remove(struct platform_device *pdev)
 {
-    printk("amvdec_h264_4k2k_remove\n");
-
+    cancel_work_sync(&alloc_work);
     mutex_lock(&vh264_4k2k_mutex);
 
     vh264_4k2k_stop();
@@ -1380,6 +1379,7 @@ static int amvdec_h264_4k2k_remove(struct platform_device *pdev)
 
     mutex_unlock(&vh264_4k2k_mutex);
     
+    printk("amvdec_h264_4k2k_remove\n");
     return 0;
 }
 
