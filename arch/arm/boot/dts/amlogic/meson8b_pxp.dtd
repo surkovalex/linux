@@ -158,13 +158,13 @@ void root_func(){
 // DEVICE="vdec"
 // L2 PROP_STR = "status"
 // L3 PROP_U32 4 ="reg"
-//        vdec{
-//                compatible = "amlogic,vdec";
-//                dev_name = "vdec.0";
-//                status = "okay";
-//                reserve-memory = <0x10000000>;
-//                reserve-iomap = "true";
-//        };
+        vdec{
+                compatible = "amlogic,vdec";
+                dev_name = "vdec.0";
+                status = "okay";
+                reserve-memory = <0x04000000>;
+                reserve-iomap = "true";
+        };
 
 /// ***************************************************************************************
 ///	-	DISP&MM-PostProcess
