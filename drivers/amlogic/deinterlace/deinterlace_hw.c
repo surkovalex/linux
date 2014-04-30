@@ -2094,6 +2094,7 @@ void read_mtn_info(unsigned long* mtn_info, unsigned long * reg_mtn_info)
 }
 void di_post_read_reverse(bool reverse)
 {
+#if ((MESON_CPU_TYPE ==  MESON_CPU_TYPE_MESON6TV)||	(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD	))
     if(reverse) {
         Wr_reg_bits(DI_IF1_GEN_REG2,    3, 2, 2);
         Wr_reg_bits(VD1_IF0_GEN_REG2, 0xf, 2, 4);
@@ -2103,9 +2104,11 @@ void di_post_read_reverse(bool reverse)
 	Wr_reg_bits(VD1_IF0_GEN_REG2, 0, 2, 4);
 	Wr_reg_bits(VD2_IF0_GEN_REG2, 0, 2, 4);
     }
+#endif    
 }
 void di_post_read_reverse_irq(bool reverse)
 {
+#if ((MESON_CPU_TYPE ==  MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD	))
     if(reverse) {
         VSYNC_WR_MPEG_REG_BITS(DI_IF1_GEN_REG2,    3, 2, 2);
         VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2, 0xf, 2, 4);
@@ -2117,6 +2120,7 @@ void di_post_read_reverse_irq(bool reverse)
 	VSYNC_WR_MPEG_REG_BITS(VD2_IF0_GEN_REG2, 0, 2, 4);
 	VSYNC_WR_MPEG_REG_BITS(DI_MTNRD_CTRL, 0, 17,4);
     }
+#endif    
 }
 
 static unsigned char pre_power_on = 0;

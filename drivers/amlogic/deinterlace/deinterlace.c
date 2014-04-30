@@ -2331,6 +2331,11 @@ static unsigned char is_bypass_post(void)
         return (di_debug_flag>>19)&0x1;
     }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+/*prot is conflict with di post*/
+    if(di_pre_stru.orientation)
+	return 1;
+#endif
     if((bypass_post)||(bypass_dynamic_flag&1)){
         return 1;
     }
