@@ -5924,7 +5924,7 @@ static void di_unreg_process(void)
                 di_pre_stru.disable_req_flag = 0;
                 recovery_flag = 0;
                 di_pre_stru.unreg_req_flag = 0;
-                di_pre_stru.unreg_req_flag2 = 0;
+                //di_pre_stru.unreg_req_flag2 = 0; clear in timer irq
             }
 #else
 /* !RUN_REG_IN_IRQ*/
