@@ -1577,7 +1577,7 @@ static void sii5293_start_vdin_mode(unsigned int mode)
 	switch(mode)
 	{
 		case CEA_480I60:
-			width = 1440;	height = 480;	frame_rate = 60;	field_flag = 1;		
+			width = 720;	height = 240;	frame_rate = 60;	field_flag = 1;		
 			break;
 		
 		case CEA_480P60:
@@ -1585,7 +1585,7 @@ static void sii5293_start_vdin_mode(unsigned int mode)
 			break;
 		
 		case CEA_576I50:
-			width = 1440;	height = 576;	frame_rate = 50;	field_flag = 1;		
+			width = 720;	height = 288;	frame_rate = 50;	field_flag = 1;		
 			break;
 		
 		case CEA_576P50:
