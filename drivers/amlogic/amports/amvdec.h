@@ -48,7 +48,7 @@ extern  s32 amhevc_loadmc(const u32 *p);
 extern void amhevc_start(void);
 extern void amhevc_stop(void);
 extern void amhevc_enable(void);
-extern void amvdec_disable(void);
+extern void amhevc_disable(void);
 #endif
 
 #if HAS_HDEC

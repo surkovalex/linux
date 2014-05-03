@@ -93,6 +93,14 @@ config AM_VDEC_H264_4K2K
         help
           Driver for h264 4Kx2K video decoder.
 
+config AM_VDEC_H265
+        tristate "Amlogic H265 Video Decoder"
+        default y
+
+        select AM_PTSSERVER
+        help
+          Driver for h265 video decoder.
+
 config AM_VDEC_MJPEG
 	tristate "Amlogic Motion JPEG Video Decoder"
 	default y

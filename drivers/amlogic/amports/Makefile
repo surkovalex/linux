@@ -85,6 +85,10 @@ obj-$(CONFIG_AM_VDEC_H264_4K2K) += amvdec_h264_4k2k.o
 amvdec_h264_4k2k-objs := vh264_4k2k.o
 amvdec_h264_4k2k-y    := vh264_4k2k.o
 
+obj-$(CONFIG_AM_VDEC_H265) += amvdec_h265.o
+amvdec_h265-objs := vh265.o
+amvdec_h265-y    := vh265.o
+
 obj-$(CONFIG_AM_VDEC_MJPEG) += amvdec_mjpeg.o
 amvdec_mjpeg-objs := vmjpeg.o
 amvdec_mjpeg-y    := vmjpeg.o

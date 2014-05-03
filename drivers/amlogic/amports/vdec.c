@@ -346,7 +346,7 @@ bit8: vdec.gate
 static int inited_vcodec_num = 0;
 static int clock_level;
 static unsigned int debug_trace_num = 16*20;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#if HAS_VDEC2
 static int clock_level2;
 #endif
 static struct platform_device *vdec_device = NULL;
@@ -827,8 +827,9 @@ static ssize_t dump_trace_show(struct class *class, struct class_attribute *attr
 {
 	int i;
 	char *pbuf = buf;
-	u32 pc,oldpc=0;
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
 	unsigned long flags;
+#endif
 	u16 *trace_buf=kmalloc(debug_trace_num*2,GFP_KERNEL);
 	if(!trace_buf){
 		pbuf += sprintf(pbuf, "No Memory bug\n");
