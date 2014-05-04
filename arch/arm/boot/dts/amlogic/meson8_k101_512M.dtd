@@ -987,9 +987,7 @@ sdio{
  		lcd_bits_user=<6>;	/** user defined lcd bits(6 or 8, decided by hardware design; only valid when lcd_bits_option=1) */
 
 		/* below configs are decided by hardware design, you can modify them if needed. */
-		//ttl config
 		ttl_rb_bit_swap=<0 0>;	/** ttl rb_swap, bit_swap : (0=normal, 1=swap) */
-		//lvds config
 		lvds_channel_pn_swap=<0>;	/** lvds channel pn swap(0=normal, 1=swap) */
 
 		/* recommend settings, you can modify them if needed. */
@@ -1097,7 +1095,8 @@ sdio{
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
 //$$ L2 PROP_U32 = "dsi_lane_num"
 //$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
-//$$ L2 PROP_U32 2 = "dsi_sleep_out_display_on_delay"
+//$$ L2 PROP_U32 12 = "dsi_init_on"
+//$$ L2 PROP_U32 12 = "dsi_init_off"
 	lcd_B080XAN01:lcd_B080XAN01{	//k101
 		model_name="B080XAN01";	/** lcd model name */
 		interface="mipi";		/** lcd_interface(mipi, lvds, edp, ttl) */
@@ -1112,9 +1111,18 @@ sdio{
 		vsync_width_backporch=<50 80>;	/** vsync_width, vsync_backporch(include vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
-        dsi_lane_num=<4>;/** mipi dsi data lane number */
-        dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-        dsi_sleep_out_display_on_delay=<20 20>; /** mipi dsi basic delay: (unit: ms) */
+		dsi_lane_num=<4>;/** mipi dsi data lane number */
+		dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+		dsi_init_on=<0x05 0x11 0 //sleep out
+					0xff 20      //delay 20ms
+					0x05 0x29 0  //display on
+					0xff 20      //delay 20ms
+					0xff 0xff>;/** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
+		dsi_init_off=<0x05 0x28 0 //display off
+					0xff 10       //delay 10ms
+					0x05 0x10 0   //sleep in
+					0xff 10       //delay 10ms
+					0xff 0xff>;/** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
 	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_CLAP070NJ02>
@@ -1207,10 +1215,11 @@ sdio{
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
 //$$ L2 PROP_U32 = "dsi_lane_num"
-//$$ L2 PROP_U32 = "dsi_transfer_ctrl"
 //$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
 //$$ L2 PROP_U32 = "pclk_lanebyteclk_factor"
-//$$ L2 PROP_U32 2 = "dsi_sleep_out_display_on_delay"
+//$$ L2 PROP_U32 2 = "dsi_transfer_ctrl"
+//$$ L2 PROP_U32 12 = "dsi_init_on"
+//$$ L2 PROP_U32 12 = "dsi_init_off"
 //	lcd_CLAA101FP05XG:lcd_CLAA101FP05XG{
 //		model_name="CLAA101FP05XG";	/** lcd model name */
 //		interface="mipi";		/** lcd_interface(mipi, lvds, edp, ttl) */
@@ -1225,11 +1234,20 @@ sdio{
 //		vsync_width_backporch=<6 26>;	/** vsync_width, vsync_backporch(include vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
-//        dsi_lane_num=<4>;/** mipi dsi data lane number */
-//        dsi_transfer_ctrl=<1>;/** auto stop clk lane in LP mode : (0=disable, 1=enable), default is 0 */
-//        dsi_bit_rate_min_max=<900 1000>;/** range of mipi dsi data lane bit rate(unit: MHz) */
-//        pclk_lanebyteclk_factor =<15>;/** special adjust, default is 0 */
-//        dsi_sleep_out_display_on_delay=<100 100>; /** mipi dsi basic delay: (unit: ms) */
+//		dsi_lane_num=<4>;/** mipi dsi data lane number */
+//		dsi_bit_rate_min_max=<900 1000>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+//		pclk_lanebyteclk_factor =<15>;/** special adjust, default is 0 */
+//		dsi_transfer_ctrl=<1 0>; /** clk_lane auto stop in LP mode: (0=disable, 1=enable), transfer switch between LP and HS: (0=auto, 1=standard, 2=slow). default is <0 0> */
+//		dsi_init_on=<0x05 0x11 0 //sleep out
+//				0xff 100     //delay 100ms
+//				0x05 0x29 0  //display on
+//				0xff 100     //delay 100ms
+//				0xff 0xff>;  /** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
+//		dsi_init_off=<0x05 0x28 0 //display off
+//				0xff 10       //delay 10ms
+//				0x05 0x10 0   //sleep in
+//				0xff 10       //delay 10ms
+//				0xff 0xff>;   /** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
 //	};
 
 //******************************************************************************
@@ -1267,12 +1285,12 @@ sdio{
 		gpio_spi_data="GPIODV_17";
 	};
 
-//$$ DEVICE = "lcd_extern_mipi_LD070WX4"
+//$$ DEVICE = "lcd_extern_mipi_N070ICN"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "type"
-	lcd_extern_mipi_LD070WX4{
-		compatible = "amlogic,lcd_mipi_LD070WX4";
-		dev_name ="lcd_mipi_LD070WX4";
+	lcd_extern_mipi_N070ICN{
+		compatible = "amlogic,lcd_mipi_N070ICN";
+		dev_name ="lcd_mipi_N070ICN";
 		status = "disabled";
 
 		type = <2>;	/** lcd_extern_driver type: 0=i2c, 1=spi, 2=mipi */

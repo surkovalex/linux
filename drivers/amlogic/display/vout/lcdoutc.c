@@ -59,9 +59,7 @@
 #include "edp_drv.h"
 #include "mipi_dsi_util.h"
 #endif
-#ifdef CONFIG_AML_LCD_EXTERN
 #include <linux/amlogic/vout/aml_lcd_extern.h>
-#endif
 #ifdef CONFIG_AMLOGIC_BOARD_HAS_PMU
 #include <linux/amlogic/aml_pmu_common.h>
 #endif
@@ -76,7 +74,7 @@
 #else
 #define DRV_TYPE "c8"
 #endif
-#define DRIVER_DATE		"20140415"
+#define DRIVER_DATE		"20140429"
 
 //#define LCD_DEBUG_INFO
 #ifdef LCD_DEBUG_INFO
@@ -112,10 +110,9 @@ static DSI_Config_t lcd_mipi_config = {
     .bit_rate_min = 0,
     .bit_rate_max = 0,
     .transfer_ctrl = 0,
-    .init_on_flag = 0,
-    .init_off_flag = 0,
-    .sleep_out_delay = 10,
-    .display_on_delay = 10,
+    .dsi_init_on = NULL,
+    .dsi_init_off = NULL,
+    .lcd_extern_init = 0,
 };
 
 static EDP_Config_t lcd_edp_config = {
@@ -443,6 +440,7 @@ static void backlight_power_ctrl(Bool_t status)
 	bl_status = status;
 }
 
+static void set_control_mipi(Lcd_Config_t *pConf);
 static int set_control_edp(Lcd_Config_t *pConf);
 static int lcd_power_ctrl_video(Bool_t status) //for special interface
 {
@@ -452,7 +450,7 @@ static int lcd_power_ctrl_video(Bool_t status) //for special interface
         switch(pDev->pConf->lcd_basic.lcd_type) {
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
             case LCD_DIGITAL_MIPI:
-                mipi_dsi_link_on(pDev->pConf);
+                set_control_mipi(pDev->pConf);
                 break;
             case LCD_DIGITAL_EDP:
                 ret = set_control_edp(pDev->pConf);
@@ -487,9 +485,7 @@ static int lcd_power_ctrl(Bool_t status)
 #ifdef CONFIG_AMLOGIC_BOARD_HAS_PMU
 	struct aml_pmu_driver *pmu_driver;
 #endif
-#ifdef CONFIG_AML_LCD_EXTERN
 	struct aml_lcd_extern_driver_t *lcd_extern_driver;
-#endif
 
 	DBG_PRINT("%s(): %s\n", __FUNCTION__, (status ? "ON" : "OFF"));
 	if (status) {
@@ -527,7 +523,6 @@ static int lcd_power_ctrl(Bool_t status)
 					lcd_ports_ctrl(ON);
 					break;
 				case LCD_POWER_TYPE_INITIAL:
-#ifdef CONFIG_AML_LCD_EXTERN
 					lcd_extern_driver = aml_lcd_extern_get_driver();
 					if (lcd_extern_driver == NULL) {
 						printk("no lcd_extern driver\n");
@@ -538,7 +533,6 @@ static int lcd_power_ctrl(Bool_t status)
 							printk("%s power on init\n", lcd_extern_driver->name);
 						}
 					}
-#endif
 					break;
 				default:
 					printk("lcd power ctrl ON step %d is null.\n", i+1);
@@ -586,7 +580,6 @@ static int lcd_power_ctrl(Bool_t status)
 					lcd_ports_ctrl(OFF);
 					break;
 				case LCD_POWER_TYPE_INITIAL:
-#ifdef CONFIG_AML_LCD_EXTERN
 					lcd_extern_driver = aml_lcd_extern_get_driver();
 					if (lcd_extern_driver == NULL) {
 						printk("no lcd_extern driver\n");
@@ -597,7 +590,6 @@ static int lcd_power_ctrl(Bool_t status)
 							printk("%s power off init\n", lcd_extern_driver->name);
 						}
 					}
-#endif
 					break;
 				default:
 					printk("lcd power ctrl OFF step %d is null.\n", i+1);
@@ -2734,8 +2726,8 @@ static void lcd_sync_duration(Lcd_Config_t *pConf)
 	
 	pConf->lcd_timing.sync_duration_num = sync_duration;
 	pConf->lcd_timing.sync_duration_den = 10;
-	printk("lcd_clk=%u.%03uMHz, frame_rate=%u.%uHz.\n\n",
-                (lcd_clk / 1000000), ((lcd_clk / 1000) % 1000), (sync_duration / pConf->lcd_timing.sync_duration_den), ((sync_duration * 10 / pConf->lcd_timing.sync_duration_den) % 10));
+	printk("lcd_clk=%u.%03uMHz, frame_rate=%u.%uHz.\n\n", (lcd_clk / 1000000), ((lcd_clk / 1000) % 1000), 
+			(sync_duration / pConf->lcd_timing.sync_duration_den), ((sync_duration * 10 / pConf->lcd_timing.sync_duration_den) % 10));
 }
 
 static void lcd_tcon_config(Lcd_Config_t *pConf)
@@ -2909,7 +2901,6 @@ static void select_edp_link_config(Lcd_Config_t *pConf)
 static void lcd_control_config_pre(Lcd_Config_t *pConf) //before generate_clk_parameter
 {
     unsigned vclk_sel, ss_level;
-    unsigned int bit_rate;
 
     vclk_sel = 1;
     ss_level = (pConf->lcd_timing.clk_ctrl >> CLK_CTRL_SS) & 0xf;
@@ -2918,16 +2909,7 @@ static void lcd_control_config_pre(Lcd_Config_t *pConf) //before generate_clk_pa
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
         case LCD_DIGITAL_MIPI:
             ss_level = ((ss_level > 0) ? 1 : 0);
-            if (pConf->lcd_control.mipi_config->bit_rate_max == 0) {
-                bit_rate = ((pConf->lcd_timing.lcd_clk / 1000) * 3 * 8) / pConf->lcd_control.mipi_config->lane_num;
-                pConf->lcd_control.mipi_config->bit_rate_min = bit_rate;
-                pConf->lcd_control.mipi_config->bit_rate_max = bit_rate + (pConf->lcd_timing.lcd_clk / 1000) + 10000;
-                printk("mipi dsi bit_rate min=%dMHz, max=%dMHz\n", (pConf->lcd_control.mipi_config->bit_rate_min / 1000), (pConf->lcd_control.mipi_config->bit_rate_max / 1000));
-            }
-            if (pConf->lcd_control.mipi_config->bit_rate_max > MIPI_PHY_MAX_CLK_IN) {
-                pConf->lcd_control.mipi_config->bit_rate_max = MIPI_PHY_MAX_CLK_IN;
-                printk("mipi dsi bit_rate_max is out of support, adjust to %dMHz\n", (MIPI_PHY_MAX_CLK_IN / 1000));
-            }
+            set_mipi_dsi_control_config(pConf);
             break;
         case LCD_DIGITAL_EDP:
             ss_level = ((ss_level > 0) ? 1 : 0);
@@ -2961,35 +2943,12 @@ static void lcd_control_config_pre(Lcd_Config_t *pConf) //before generate_clk_pa
     pConf->lcd_timing.clk_ctrl |= ((vclk_sel << CLK_CTRL_VCLK_SEL) | (ss_level << CLK_CTRL_SS));
 }
 
-static void lcd_control_config_post(Lcd_Config_t *pConf) //before generate_clk_parameter
+static void lcd_control_config_post(Lcd_Config_t *pConf) //after generate_clk_parameter
 {
-    unsigned pre_div, post_div, xd;
-    unsigned pclk, lanebyteclk;
-
     switch (pConf->lcd_basic.lcd_type) {
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
         case LCD_DIGITAL_MIPI:
-            post_div = 1;//(((pConf->lcd_timing.div_ctrl) >> DIV_CTRL_DIV_POST) & 0x7) + 1;
-            pre_div = ((pConf->lcd_timing.div_ctrl) >> DIV_CTRL_DIV_PRE) & 0x7;
-            pre_div = div_pre_table[pre_div];
-            xd = ((pConf->lcd_timing.clk_ctrl) >> CLK_CTRL_XD) & 0xf;
-
-            pclk = pConf->lcd_timing.lcd_clk;
-            pConf->lcd_control.mipi_config->bit_rate = pclk * pre_div * post_div * xd;
-
-            if (pConf->lcd_control.mipi_config->factor_numerator == 0) {
-                pclk = pConf->lcd_timing.lcd_clk;
-                lanebyteclk = pConf->lcd_control.mipi_config->bit_rate / 8;
-                DBG_PRINT("pixel_clk = %d.%03dMHz, bit_rate = %d.%03dMHz, lanebyteclk = %d.%03dMHz\n", (pclk / 1000000), ((pclk / 1000) % 1000), 
-                        (pConf->lcd_control.mipi_config->bit_rate / 1000000), ((pConf->lcd_control.mipi_config->bit_rate / 1000) % 1000), (lanebyteclk / 1000000), ((lanebyteclk / 1000) % 1000));
-
-                pConf->lcd_control.mipi_config->factor_denominator = lanebyteclk/1000;
-                pConf->lcd_control.mipi_config->factor_numerator = pclk/1000;
-                //cfg->factor_denominator = 10;
-            }
-            DBG_PRINT("d=%d, n=%d, factor=%d.%02d\n", pConf->lcd_control.mipi_config->factor_denominator, pConf->lcd_control.mipi_config->factor_numerator, 
-                    (pConf->lcd_control.mipi_config->factor_denominator/pConf->lcd_control.mipi_config->factor_numerator), 
-                    ((pConf->lcd_control.mipi_config->factor_denominator % pConf->lcd_control.mipi_config->factor_numerator) * 100 / pConf->lcd_control.mipi_config->factor_numerator));
+            set_mipi_dsi_control_config_post(pConf);
             break;
         case LCD_DIGITAL_EDP:
             break;
@@ -3075,7 +3034,6 @@ static void _init_lcd_driver(Lcd_Config_t *pConf)	//before power on lcd
             set_pll_lcd(pConf);
             set_venc_lcd(pConf);
             set_tcon_lcd(pConf);
-            set_control_mipi(pConf);
             init_dphy(pConf);
             break;
         case LCD_DIGITAL_EDP:
@@ -3373,7 +3331,7 @@ static vout_server_t lcd_vout2_server={
 };
 #endif
 static void _init_vout(lcd_dev_t *pDev)
-{	
+{
     pDev->lcd_info.name = PANEL_NAME;
     pDev->lcd_info.mode = VMODE_LCD;
     pDev->lcd_info.width = pDev->pConf->lcd_basic.h_active;
@@ -3385,7 +3343,7 @@ static void _init_vout(lcd_dev_t *pDev)
     pDev->lcd_info.screen_real_height= pDev->pConf->lcd_basic.v_active_area;
     pDev->lcd_info.sync_duration_num = pDev->pConf->lcd_timing.sync_duration_num;
     pDev->lcd_info.sync_duration_den = pDev->pConf->lcd_timing.sync_duration_den;
-	pDev->lcd_info.video_clk = pDev->pConf->lcd_timing.lcd_clk;
+    pDev->lcd_info.video_clk = pDev->pConf->lcd_timing.lcd_clk;
        
     //add lcd actual active area size
     printk("lcd actual active area size: %d %d (mm).\n", pDev->pConf->lcd_basic.h_active_area, pDev->pConf->lcd_basic.v_active_area);
@@ -3821,12 +3779,13 @@ static void read_current_lcd_config(Lcd_Config_t *pConf)
         case LCD_DIGITAL_MIPI:
             printk("dsi_lane_num      %u\n"
                    "dsi_bit_rate      %u.%03uMHz\n"
-                   "operation_mode    %u(%s)\n"
-                   "transfer_ctrl     %u\n\n",
+                   "operation_mode    %u(%s), %u(%s)\n"
+                   "transfer_ctrl     %u, %u\n\n",
                    pDev->pConf->lcd_control.mipi_config->lane_num,
                    (pDev->pConf->lcd_control.mipi_config->bit_rate / 1000000), ((pDev->pConf->lcd_control.mipi_config->bit_rate % 1000000) / 1000),
-                   pDev->pConf->lcd_control.mipi_config->operation_mode, ((pDev->pConf->lcd_control.mipi_config->operation_mode) ? "COMMAND" : "VIDEO"),
-                   pDev->pConf->lcd_control.mipi_config->transfer_ctrl);
+                   ((pDev->pConf->lcd_control.mipi_config->operation_mode>>BIT_OPERATION_MODE_INIT) &1), (((pDev->pConf->lcd_control.mipi_config->operation_mode>>BIT_OPERATION_MODE_INIT) & 1) ? "COMMAND" : "VIDEO"),
+                   ((pDev->pConf->lcd_control.mipi_config->operation_mode>>BIT_OPERATION_MODE_DISP) & 1), (((pDev->pConf->lcd_control.mipi_config->operation_mode>>BIT_OPERATION_MODE_DISP) & 1) ? "COMMAND" : "VIDEO"),
+                   ((pDev->pConf->lcd_control.mipi_config->transfer_ctrl>>BIT_TRANS_CTRL_CLK) & 1), ((pDev->pConf->lcd_control.mipi_config->transfer_ctrl>>BIT_TRANS_CTRL_SWITCH) & 3));
             break;
         case LCD_DIGITAL_EDP:
             printk("link_rate         %s\n"
@@ -4358,8 +4317,8 @@ static inline int _get_lcd_model_timing(struct platform_device *pdev)
 	int ret=0;
 	const char *str;
 	unsigned int val;
-	unsigned int lcd_para[20];
-	int i;
+	unsigned int lcd_para[DSI_INIT_ON_MAX];
+	int i, j;
 	struct device_node *lcd_model_node;
 	phandle fhandle;
 	
@@ -4485,8 +4444,8 @@ static inline int _get_lcd_model_timing(struct platform_device *pdev)
                 lcd_para[0] = 0;
                 lcd_para[1] = 0;
             }
-            pDev->pConf->lcd_control.mipi_config->bit_rate_min = lcd_para[0]*1000;
-            pDev->pConf->lcd_control.mipi_config->bit_rate_max = lcd_para[1]*1000;
+            pDev->pConf->lcd_control.mipi_config->bit_rate_min = lcd_para[0];
+            pDev->pConf->lcd_control.mipi_config->bit_rate_max = lcd_para[1];
             DBG_PRINT("dsi_bit_rate_min= %dMHz max=%dMHz\n", lcd_para[0], lcd_para[1]);
             ret = of_property_read_u32(lcd_model_node,"pclk_lanebyteclk_factor",&val);
             if(ret){
@@ -4498,44 +4457,100 @@ static inline int _get_lcd_model_timing(struct platform_device *pdev)
             }
             pDev->pConf->lcd_control.mipi_config->factor_denominator = 10;
             DBG_PRINT("pclk_lanebyteclk factor= %d\n", pDev->pConf->lcd_control.mipi_config->factor_numerator);
-            ret = of_property_read_u32(lcd_model_node,"dsi_operation_mode",&val);
+            ret = of_property_read_u32_array(lcd_model_node,"dsi_operation_mode",&lcd_para[0], 2);
             if(ret){
                 printk("faild to get dsi_operation_mode\n");
-                pDev->pConf->lcd_control.mipi_config->operation_mode = OPERATION_COMMAND_MODE;
+                pDev->pConf->lcd_control.mipi_config->operation_mode = ((OPERATION_COMMAND_MODE << BIT_OPERATION_MODE_INIT) | (OPERATION_VIDEO_MODE << BIT_OPERATION_MODE_DISP));
             }
             else {
-                pDev->pConf->lcd_control.mipi_config->operation_mode = (unsigned char)val;
+                pDev->pConf->lcd_control.mipi_config->operation_mode = ((lcd_para[0] << BIT_OPERATION_MODE_INIT) | (lcd_para[1] << BIT_OPERATION_MODE_DISP));
             }
-            DBG_PRINT("dsi_operation_mode = %s(%d)\n", (pDev->pConf->lcd_control.mipi_config->operation_mode ? "command":"video"), pDev->pConf->lcd_control.mipi_config->operation_mode);
-            ret = of_property_read_u32(lcd_model_node,"dsi_transfer_ctrl",&val);
+            DBG_PRINT("dsi_operation_mode init=%d, display=%d\n", (pDev->pConf->lcd_control.mipi_config->operation_mode >> BIT_OPERATION_MODE_INIT) & 1, (pDev->pConf->lcd_control.mipi_config->operation_mode >> BIT_OPERATION_MODE_DISP) & 1);
+            ret = of_property_read_u32_array(lcd_model_node,"dsi_transfer_ctrl",&lcd_para[0], 2);
             if(ret){
                 printk("faild to get dsi_transfer_ctrl\n");
-                pDev->pConf->lcd_control.mipi_config->transfer_ctrl = 0;
+                pDev->pConf->lcd_control.mipi_config->transfer_ctrl = ((0 << BIT_TRANS_CTRL_CLK) | (0 << BIT_TRANS_CTRL_SWITCH));
             }
             else {
-                pDev->pConf->lcd_control.mipi_config->transfer_ctrl = (unsigned char)val;
+                pDev->pConf->lcd_control.mipi_config->transfer_ctrl = ((lcd_para[0] << BIT_TRANS_CTRL_CLK) | (lcd_para[1] << BIT_TRANS_CTRL_SWITCH));
             }
-            DBG_PRINT("dsi_transfer_ctrl = %d\n", pDev->pConf->lcd_control.mipi_config->transfer_ctrl);
-            ret = of_property_read_u32_array(lcd_model_node,"dsi_on_off_init",&lcd_para[0], 2);
+            DBG_PRINT("dsi_transfer_ctrl clk=%d, switch=%d\n", (pDev->pConf->lcd_control.mipi_config->transfer_ctrl >> BIT_TRANS_CTRL_CLK) & 1, (pDev->pConf->lcd_control.mipi_config->transfer_ctrl >> BIT_TRANS_CTRL_SWITCH) & 3);
+            //detect dsi init on table
+            pDev->pConf->lcd_control.mipi_config->dsi_init_on = get_dsi_init_table(1);//dsi_init_on
+            ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", 0, &lcd_para[0]);
+            if (ret) {
+                printk("faild to get dsi_init_on\n");
+            }
+            else {
+                i = 0;
+                while (i < DSI_INIT_ON_MAX) {
+                    ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", i, &val);
+                    if (val == 0xff) {
+                        ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", (i+1), &val);
+                        i += 2;
+                        if (val == 0xff)
+                            break;
+                    }
+                    else {
+                        ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", (i+2), &val);
+                        i = i + 3 + val;
+                    }
+                }
+                ret = of_property_read_u32_array(lcd_model_node,"dsi_init_on", &lcd_para[0], i);
+                if(ret){
+                    printk("faild to get dsi_init_on\n");
+                }
+                else {
+                    DBG_PRINT("dsi_init_on: ");
+                    for (j=0; j<i; j++) {
+                        pDev->pConf->lcd_control.mipi_config->dsi_init_on[j] = (unsigned char)(lcd_para[j] & 0xff);
+                        DBG_PRINT("0x%02x ", pDev->pConf->lcd_control.mipi_config->dsi_init_on[j]);
+                    }
+                    DBG_PRINT("\n");
+                }
+            }
+            //detect dsi init off table
+            pDev->pConf->lcd_control.mipi_config->dsi_init_off = get_dsi_init_table(0);//dsi_init_off
+            ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", 0, &lcd_para[0]);
+            if (ret) {
+                printk("faild to get dsi_init_off\n");
+            }
+            else {
+                i = 0;
+                while (i < DSI_INIT_OFF_MAX) {
+                    ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", i, &val);
+                    if (val == 0xff) {
+                        ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", (i+1), &val);
+                        i += 2;
+                        if (val == 0xff)
+                            break;
+                    }
+                    else {
+                        ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", (i+2), &val);
+                        i = i + 3 + val;
+                    }
+                }
+                ret = of_property_read_u32_array(lcd_model_node,"dsi_init_off", &lcd_para[0], i);
+                if(ret){
+                    printk("faild to get dsi_init_off\n");
+                }
+                else {
+                    DBG_PRINT("dsi_init_off: ");
+                    for (j=0; j<i; j++) {
+                        pDev->pConf->lcd_control.mipi_config->dsi_init_off[j] = (unsigned char)(lcd_para[j] & 0xff);
+                        DBG_PRINT("0x%02x ", pDev->pConf->lcd_control.mipi_config->dsi_init_off[j]);
+                    }
+                    DBG_PRINT("\n");
+                }
+            }
+            ret = of_property_read_u32(lcd_model_node,"lcd_extern_init",&val);
             if(ret){
-                printk("faild to get dsi_on_off_init\n");
-                pDev->pConf->lcd_control.mipi_config->init_on_flag =0; 
-                pDev->pConf->lcd_control.mipi_config->init_off_flag =0;
+                printk("faild to get lcd_extern_init\n");
+                pDev->pConf->lcd_control.mipi_config->lcd_extern_init =0;
             } else {
-                pDev->pConf->lcd_control.mipi_config->init_on_flag =(unsigned char)(lcd_para[0]); 
-                pDev->pConf->lcd_control.mipi_config->init_off_flag =(unsigned char)(lcd_para[1]);
+                pDev->pConf->lcd_control.mipi_config->lcd_extern_init =(unsigned char)(val);
             }
-            DBG_PRINT("dsi_on_init= %d, dsi_off_init=%d\n",  pDev->pConf->lcd_control.mipi_config->init_on_flag, pDev->pConf->lcd_control.mipi_config->init_off_flag);
-            ret = of_property_read_u32_array(lcd_model_node,"dsi_sleep_out_display_on_delay",&lcd_para[0], 2);
-            if(ret){
-                printk("faild to get dsi_sleep_out_display_on_delay\n");
-                pDev->pConf->lcd_control.mipi_config->sleep_out_delay =10; 
-                pDev->pConf->lcd_control.mipi_config->display_on_delay =10;
-            } else {
-                pDev->pConf->lcd_control.mipi_config->sleep_out_delay =lcd_para[0]; 
-                pDev->pConf->lcd_control.mipi_config->display_on_delay =lcd_para[1];
-            }
-            DBG_PRINT("sleep_out_delay= %d, display_on_delay=%d\n",  pDev->pConf->lcd_control.mipi_config->sleep_out_delay, pDev->pConf->lcd_control.mipi_config->display_on_delay);
+            DBG_PRINT("lcd_extern_init = %d\n",  pDev->pConf->lcd_control.mipi_config->lcd_extern_init);
         }
 #endif
     }

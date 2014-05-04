@@ -1,6 +1,6 @@
-#ifdef CONFIG_AML_LCD_EXTERN
+#ifdef CONFIG_AM_LCD_OUTPUT
 //******************************************************************************
-//lcd extern
+//lcd extern 
 //Notice: only one dev support
 //******************************************************************************
 //$$ DEVICE = "lcd_extern_i2c_tc101"
@@ -32,17 +32,6 @@
 		gpio_spi_cs="GPIODV_1";
 		gpio_spi_clk="GPIODV_16";
 		gpio_spi_data="GPIODV_17";
-	};
-
-//$$ DEVICE = "lcd_extern_mipi_LD070WX4"
-//$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 = "type"
-	lcd_extern_mipi_LD070WX4{
-		compatible = "amlogic,lcd_mipi_LD070WX4";
-		dev_name ="lcd_mipi_LD070WX4";
-		status = "disabled";
-
-		type = <2>;	/** lcd_extern_driver type: 0=i2c, 1=spi, 2=mipi */
 	};
 
 //$$ DEVICE = "lcd_extern_mipi_N070ICN"

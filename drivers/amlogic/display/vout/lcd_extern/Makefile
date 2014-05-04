@@ -1,7 +1,6 @@
 
-obj-$(CONFIG_AML_LCD_EXTERN)	+= lcd_extern.o
-obj-$(CONFIG_AML_LCD_EXTERN)	+= i2c_tc101.o
-obj-$(CONFIG_AML_LCD_EXTERN)	+= mipi_LD070WX4.o
-obj-$(CONFIG_AML_LCD_EXTERN)	+= mipi_N070ICN.o
-obj-$(CONFIG_AML_LCD_EXTERN)	+= spi_LD070WS2.o
+obj-y	+= lcd_extern.o
+obj-y	+= i2c_tc101.o
+obj-y	+= mipi_N070ICN.o
+obj-y	+= spi_LD070WS2.o
 
