@@ -16,3 +16,6 @@ config SND_AML_M8_PCM
 	depends on SND_AML_M8_SOC
 	select SND_SOC_PCM2BT if SND_AML_M8_PCM
 	
+config SND_AML_M_DUMMY_CODEC
+    tristate "AML M series board with DUMMY_CODEC"
+    select SND_SOC_DUMMY_CODEC
