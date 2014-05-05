@@ -201,6 +201,8 @@ static int  create_vout_attr(void)
 {
 	//create base class for display
 	int  i;
+    extern const vinfo_t *get_current_vinfo(void);
+    vinfo_t * init_mode;
 
 	vout_info.base_class=class_create(THIS_MODULE,VOUT_CLASS_NAME);
 	if(IS_ERR(vout_info.base_class))
@@ -216,6 +218,12 @@ static int  create_vout_attr(void)
 			amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"create disp attribute %s fail\r\n",vout_attr[i]->attr.name);
 		}
 	}
+
+    // Init /sys/class/display/mode value
+    init_mode = get_current_vinfo();
+    if(init_mode)
+        strcpy(mode, init_mode->name);
+
 	return   0;
 }
 
