@@ -79,10 +79,11 @@ static unsigned int g_rx_cnt = 0;
 static int g_mdcclk = 2;
 static int g_rxnum = 64;
 static int g_txnum = 64;
-
+static int new_maclogic = 0;
 static unsigned int ethbaseaddr = ETHBASE;
 static unsigned int savepowermode = 0;
 static int interruptnum = ETH_INTERRUPT;
+static int phy_interface = 1;
 static int reset_delay = 0;
 static int reset_pin_num = 0;
 static int reset_pin_enable = 0;
@@ -989,17 +990,20 @@ static void aml_adjust_link(struct net_device *dev)
 
 		if (phydev->speed != priv->speed) {
 			new_state = 1;
-			PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, 1);
+			if(new_maclogic ==0)
+				PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, 1);
 			switch (phydev->speed) {
 				case 1000:
 					break;
 				case 100:
 					ctrl |= (1 << 14);
-					PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
+					if(new_maclogic ==0)
+						PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					break;
 				case 10:
 					ctrl &= ~((1 << 14)|(3 << 5));//10m half backoff = 00
-					PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
+					if(new_maclogic ==0)
+						PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					if(phydev->phy_id == INTERNALPHY_ID){
 						val =0x4100b040;
 						WRITE_CBUS_REG(P_PREG_ETHERNET_ADDR0, val);
@@ -1010,7 +1014,8 @@ static void aml_adjust_link(struct net_device *dev)
 								" or 100!\n", dev->name, phydev->speed);
 					break;
 			}
-			PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, 1);
+			if(new_maclogic ==0)
+				PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, 1);
 			priv->speed = phydev->speed;
 		}
 
@@ -1052,7 +1057,10 @@ static int aml_phy_init(struct net_device *dev)
         priv->oldlink = 0;
         priv->speed = 0;
         priv->oldduplex = -1;
-	priv->phy_interface = PHY_INTERFACE_MODE_RMII;
+		if(phy_interface == 1)
+			priv->phy_interface = PHY_INTERFACE_MODE_RMII;
+		else
+			priv->phy_interface = PHY_INTERFACE_MODE_RGMII;
 
         if (priv->phy_addr == -1) {
                 /* We don't have a PHY, so do nothing */
@@ -1801,6 +1809,23 @@ static int setup_net_device(struct net_device *dev)
 	return res;
 }
 
+/*
+M6TV
+ 23
+M6TVlite
+ 24
+M8
+ 25
+M6TVd
+ 26
+M8baby
+ 27
+G9TV
+ 28
+*/
+static unsigned int get_cpuid(){
+	return READ_CBUS_REG(0x1f53)&0xff;
+}
 /* --------------------------------------------------------------------------*/
 /**
  * @brief  probe_init
@@ -1824,7 +1849,8 @@ static int probe_init(struct net_device *ndev)
 	if (g_debug > 0) {
 		printk("ethernet base addr is %x\n", (unsigned int)ndev->base_addr);
 	}
-
+	if(get_cpuid() == 0x1B)
+	 	new_maclogic=1;
 	res = setup_net_device(ndev);
 	if (res != 0) {
 		printk("setup net device error !\n");
@@ -2745,6 +2771,10 @@ static int ethernet_probe(struct platform_device *pdev)
 	if (ret) {
 		printk("Please config interruptnum.\n");
 		return -1;
+	}
+	ret = of_property_read_u32(pdev->dev.of_node,"phy_interface",&phy_interface); // 0 rgmii 1: RMII
+	if (ret) {
+		printk("Please config phy  interface.\n");
 	}
 	ret = of_property_read_u32(pdev->dev.of_node,"savepowermode",&savepowermode);
 	if (ret) {

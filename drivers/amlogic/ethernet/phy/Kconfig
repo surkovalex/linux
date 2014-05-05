@@ -31,6 +31,11 @@ config AML_KSZ8091
 	tristate "Driver for Micrel KSZ8091 PHYs"
 	---help---
 	  Supports the KSZ9021, VSC8201, KS8001 PHYs.
+config AML_RTL8211F
+	tristate "Drivers for RTL8211F"
+	default n
+	---help---
+	  Currently supports the RTL8211F
 
 endif # PHYLIB
 
