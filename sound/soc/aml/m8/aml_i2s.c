@@ -666,6 +666,9 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
     return res;
 }
 
+static unsigned int aml_get_in_wr_ptr(){
+	return (audio_in_i2s_wr_ptr() - aml_i2s_capture_phy_start_addr);
+}
 
 static int aml_i2s_copy_capture(struct snd_pcm_runtime *runtime, int channel,
 		    snd_pcm_uframes_t pos,
@@ -680,6 +683,10 @@ static int aml_i2s_copy_capture(struct snd_pcm_runtime *runtime, int channel,
 	struct aml_runtime_data *prtd = runtime->private_data;
 	audio_stream_t *s = &prtd->s;
     char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos)*2;
+	unsigned int buffersize = (unsigned int)runtime->buffer_size*8;  //512*4*4*2
+	unsigned int hw_ptr = aml_get_in_wr_ptr();
+	unsigned int alsa_read_ptr = frames_to_bytes(runtime, pos)*2;
+	int size = (buffersize + hw_ptr - alsa_read_ptr)%buffersize;
     unsigned char r_shift = 8;
 	if(s->device_type == AML_AUDIO_SPDIFIN) //spdif in
     {
@@ -692,6 +699,10 @@ static int aml_i2s_copy_capture(struct snd_pcm_runtime *runtime, int channel,
 		printk("Too many datas to read,please enlarge the snd_i2s_tmp buffer size\n");
       return -EINVAL;
     }
+	if(size < 2*n){
+		printk(KERN_DEBUG "~~~Reset ALSA!~~~\n");
+		return -EPIPE;
+	}
 	if(access_ok(VERIFY_WRITE, buf, frames_to_bytes(runtime, count)))
 	{
 		if(runtime->channels == 2){

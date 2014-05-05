@@ -1138,6 +1138,9 @@ static int aml_pcm_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 	return res;
 }
 
+static unsigned int aml_get_in_wr_ptr(){
+	return (audio_in_i2s_wr_ptr() - aml_i2s_capture_phy_start_addr);
+}
 
 static int aml_pcm_copy_capture(struct snd_pcm_runtime *runtime, int channel,
 		    snd_pcm_uframes_t pos,
@@ -1150,6 +1153,10 @@ static int aml_pcm_copy_capture(struct snd_pcm_runtime *runtime, int channel,
     int i = 0, j = 0;
     unsigned int t1, t2;
     char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos)*2;
+    unsigned int buffersize = (unsigned int)runtime->buffer_size*8;  //512*4*4*2
+    unsigned int hw_ptr = aml_get_in_wr_ptr();
+    unsigned int alsa_read_ptr = frames_to_bytes(runtime, pos)*2;
+    int size = (buffersize + hw_ptr - alsa_read_ptr)%buffersize;
     unsigned char r_shift = 8;
     if(audioin_mode&SPDIFIN_MODE) //spdif in
     {
@@ -1162,7 +1169,10 @@ static int aml_pcm_copy_capture(struct snd_pcm_runtime *runtime, int channel,
       printk("Too many datas to read\n");
       return -EINVAL;
     }
-
+	if(size < 2*n){
+		printk(KERN_DEBUG "~~~Reset ALSA!~~~\n");
+		return -EPIPE;
+	}
 		if(access_ok(VERIFY_WRITE, buf, frames_to_bytes(runtime, count))){
 				left = tfrom;
 		    right = tfrom + 8;
