@@ -181,7 +181,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-04-23a";
+static char version_s[] = "2014-05-05a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -5658,8 +5658,10 @@ static int process_post_vframe(void)
                     i = 0;
                     queue_for_each_entry(p, ptmp, QUEUE_PRE_READY, list) {
                         di_buf->di_buf_dup_p[i++] = p;
-                        if(i>=vframe_process_count)
+                        if(i>=vframe_process_count) {
+                       	    di_buf->di_buf_dup_p[i] = NULL;
                             break;
+                        }
                     }
                     if(i<vframe_process_count){
 #ifdef DI_DEBUG
@@ -5768,8 +5770,10 @@ static int process_post_vframe(void)
                 i = 0;
                 queue_for_each_entry(p, ptmp, QUEUE_PRE_READY, list) {
                     di_buf->di_buf_dup_p[i++] = p;
-                    if(i>=2)
+                    if(i>=2) {
+                    	di_buf->di_buf_dup_p[i] = NULL;
                         break;
+                    }
                 }
                 if(i<2){
 #ifdef DI_DEBUG
