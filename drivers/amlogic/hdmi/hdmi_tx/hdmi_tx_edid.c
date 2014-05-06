@@ -1257,7 +1257,11 @@ int hdmitx_edid_parse(hdmitx_dev_t* hdmitx_device)
 
     if(hdmitx_edid_search_IEEEOUI(&EDID_buf[128])) {
         pRXCap->IEEEOUI = 0x0c03;
-        printk("hdmitx: edid: found IEEEOUT\n");
+        printk("hdmitx: edid: find IEEEOUT\n");
+    }
+    else {
+        pRXCap->IEEEOUI = 0x0;
+        printk("hdmitx: edid: not find IEEEOUT\n");
     }
 
     if((pRXCap->IEEEOUI != 0x0c03) || (pRXCap->IEEEOUI == 0x0)|| (pRXCap->VIC_count == 0)){

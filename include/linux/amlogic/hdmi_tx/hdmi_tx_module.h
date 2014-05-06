@@ -210,7 +210,7 @@ typedef struct hdmi_tx_dev_s {
 #define HDMI_PROCESS_DELAY  msleep(10)
 #define AUTH_PROCESS_TIME   (1000/100)       // reduce a little time, previous setting is 4000/10
 
-#define HDMITX_VER "2014Jan5a"
+#define HDMITX_VER "2014May6"
 
 /***********************************************************************
 *    hdmitx protocol level interface
