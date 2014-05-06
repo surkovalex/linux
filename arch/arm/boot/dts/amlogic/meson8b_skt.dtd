@@ -381,20 +381,6 @@ void root_func(){
         pinctrl-5 = <&sdio_all_pins>;
         pinctrl-6 = <&sd_1bit_pins>;
 
-    sdio{
-          status = "okay";
-          port = <0>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
-          pinname = "sdio";
-          ocr_avail = <0x200000>;
-          caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED", "MMC_CAP_NONREMOVABLE";
-          f_min = <300000>;
-          f_max = <50000000>;
-          max_req_size = <0x20000>;          /**128KB*/
-          card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-        };
-
-
-
 //$$ DEVICE="sd"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 = "port"
@@ -412,24 +398,24 @@ void root_func(){
 //$$ L2 PROP_U32 = "irq_in"
 //$$ L2 PROP_U32 = "irq_out"
 //$$ L2 PROP_U32 = "card_type"
-        // sd{
-            // status = "okay";
-            // port = <1>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
-            // pinname = "sd";
-            // ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
-            // caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED";
-            // f_min = <300000>;
-            // f_max = <50000000>;
-            // f_max_w = <50000000>;
-            // max_req_size = <0x20000>;          /**128KB*/
-            // gpio_dat3 = "CARD_4";
-            // jtag_pin = "CARD_0";
-            // gpio_cd = "CARD_6";
-            // gpio_ro = "GPIOZ_0";
-            // irq_in = <3>;
-            // irq_out = <5>;
-            // card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-        // };
+        sd{
+            status = "okay";
+            port = <1>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+            pinname = "sd";
+            ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
+            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED";
+            f_min = <300000>;
+            f_max = <50000000>;
+            f_max_w = <50000000>;
+            max_req_size = <0x20000>;          /**128KB*/
+            gpio_dat3 = "CARD_4";
+            jtag_pin = "CARD_0";
+            gpio_cd = "CARD_6";
+            gpio_ro = "GPIODV_25";
+            irq_in = <3>;
+            irq_out = <5>;
+            card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+        };
 
 //$$ DEVICE="emmc"
 //$$ L2 PROP_STR = "status"
@@ -443,19 +429,19 @@ void root_func(){
 //$$ L3 PROP_U32 = "max_req_size"
 //$$ L2 PROP_STR = "gpio_dat3"
 //$$ L2 PROP_U32 = "card_type"
-         emmc{
-             status = "ok";
-             port = <2>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
-             pinname = "emmc";
-             ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
-             caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
-             f_min = <300000>;
-             f_max = <50000000>;
-             f_max_w = <50000000>;
-             max_req_size = <0x20000>;          /**128KB*/
-             gpio_dat3 = "BOOT_3";
-             card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-         };
+        emmc{
+            status = "ok";
+            port = <2>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+            pinname = "emmc";
+            ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
+            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
+            f_min = <300000>;
+            f_max = <50000000>;
+            f_max_w = <50000000>;
+            max_req_size = <0x20000>;          /**128KB*/
+            gpio_dat3 = "BOOT_3";
+            card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+        };
     };
 
 /// ***************************************************************************************
@@ -492,6 +478,7 @@ void root_func(){
 		reg = <0xc1108500 0x20>;
 		device_id = <1>;
 		pinctrl-names="default";
+		pinctrl-0=<&a_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		use_pio = <0>;
@@ -510,6 +497,7 @@ void root_func(){
 		reg = <0xc11087c0 0x20>;
 		device_id = <2>;
 		pinctrl-names="default";
+		pinctrl-0=<&b_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		use_pio = <0>;
@@ -546,7 +534,7 @@ void root_func(){
 		reg = <0xc1108d20 0x20>;
 		device_id = <4>;
 		pinctrl-names="default";
-		pinctrl-0=<&d_i2c_master>;
+//		pinctrl-0=<&d_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		use_pio = <0>;
@@ -815,7 +803,7 @@ void root_func(){
 			port-config = <0>; /** 0: default */
 			port-dma = <0>; /** 0: default, 1: single, 2: incr, 3: incr4, 4: incr8, 5: incr16, 6: disable*/
 			port-id-mode = <0>; /** 0: hardware, 1: sw_host, 2: sw_slave*/
-			gpio-vbus-power = "GPIOZ_1";
+//			gpio-vbus-power = "GPIOZ_1";
 			gpio-work-mask	= <1>; /**0: work on pulldown,1:work on pullup*/
 			status = "okay";
 		};
@@ -1212,11 +1200,12 @@ void root_func(){
 //$$ L2 PROP_U32 = "idle_interval"
 	thermal{
 		compatible = "amlogic-thermal";
-		#thermal-cells=<3>;
+		#thermal-cells=<7>;
 		dev_name = "aml_thermal";
-		trip_point=<50 1200000 1200000
-			    70  800000 800000
-			    110 0xffffffff 0xffffffff>;
+		trip_point=<60 1608001 1608001 511 511 2 3
+			    70 1200001 1200001 435 435 2 3
+			    80  800001 800001  328 328 1 1
+			    110 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff>;
 		cpu_cali_a=<0>;
 		idle_interval=<1000>;
 
@@ -1605,15 +1594,38 @@ void root_func(){
 			amlogic,clrmask=<10 0x1800006>;
 			amlogic,pins="GPIOAO_4","GPIOAO_5";
 		};
-		
 
-//$$ MATCH "I2C_D_pin_match" = "&d_i2c_master"
+//$$ MATCH "I2C_A_pin_match" = "&a_i2c_master"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 6 = "amlogic,clrmask"
 //$$ L2 PROP_STR 2 = "amlogic,pins"
-		d_i2c_master:d_i2c{
-			amlogic,setmask=<4 0xc>;
-			amlogic,pins="GPIOH_7","GPIOH_8";
+		a_i2c_master:a_i2c{
+			amlogic,setmask=<9 0xC0000000>;
+			amlogic,clrmask=<0 0x3C0300 
+			                 6 0xC00000
+			                 8 0x1800000>;
+			amlogic,pins="GPIODV_24","GPIODV_25";
 		};
+
+//$$ MATCH "I2C_B_pin_match" = "&b_i2c_master"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 6 = "amlogic,clrmask"
+//$$ L2 PROP_STR 2 = "amlogic,pins"
+		b_i2c_master:b_i2c{
+			amlogic,setmask=<9 0x30000000>;
+			amlogic,clrmask=<0 0x480 
+			                 6 0x300000
+			                 8 0x10780000>;
+			amlogic,pins="GPIODV_26","GPIODV_27";
+		};
+		
+// MATCH "I2C_D_pin_match" = "&d_i2c_master"
+// L2 PROP_U32 2 = "amlogic,setmask"
+// L2 PROP_STR 2 = "amlogic,pins"
+//		d_i2c_master:d_i2c{
+//			amlogic,setmask=<4 0xc>;
+//			amlogic,pins="GPIOH_7","GPIOH_8";
+//		};
 
 //$$ MATCH "remote_pin_0_match" = "&remote_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
