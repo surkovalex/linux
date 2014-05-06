@@ -682,12 +682,13 @@ static int aml_i2s_copy_capture(struct snd_pcm_runtime *runtime, int channel,
     unsigned int t1, t2;
 	struct aml_runtime_data *prtd = runtime->private_data;
 	audio_stream_t *s = &prtd->s;
+	char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos)*2;
+	int size = 0;
 	if(s->device_type == AML_AUDIO_I2SIN){
-		char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos)*2;
 		unsigned int buffersize = (unsigned int)runtime->buffer_size*8;  //512*4*4*2
 		unsigned int hw_ptr = aml_get_in_wr_ptr();
 		unsigned int alsa_read_ptr = frames_to_bytes(runtime, pos)*2;
-		int size = (buffersize + hw_ptr - alsa_read_ptr)%buffersize;
+		size = (buffersize + hw_ptr - alsa_read_ptr)%buffersize;
 	}
     unsigned char r_shift = 8;
 	if(s->device_type == AML_AUDIO_SPDIFIN) //spdif in
