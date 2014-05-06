@@ -3042,6 +3042,7 @@ void HDMITX_Meson_Init(hdmitx_dev_t* hdmitx_device)
     hdmitx_device->HWOp.CntlPacket = hdmitx_cntl;
     hdmitx_device->HWOp.CntlConfig = hdmitx_cntl_config;
     hdmitx_device->HWOp.CntlMisc = hdmitx_cntl_misc;
+printk("%s[%d]\n", __func__, __LINE__);
                                                                   //     1=Map data pins from Venc to Hdmi Tx as RGB mode.
     // --------------------------------------------------------
     // Configure HDMI TX analog, and use HDMI PLL to generate TMDS clock
@@ -3049,13 +3050,48 @@ void HDMITX_Meson_Init(hdmitx_dev_t* hdmitx_device)
     // Enable APB3 fail on error
 //    WRITE_APB_REG(HDMI_CNTL_PORT, READ_APB_REG(HDMI_CNTL_PORT)|(1<<15)); //APB3 err_en
 //\\ TODO
-    aml_set_reg32_bits(P_PAD_PULL_UP_EN_REG1, 0, 16, 1);       // Disable GPIOH_0 internal pull-up register
-    aml_write_reg32(P_HHI_HDMI_CLK_CNTL, aml_read_reg32(P_HHI_HDMI_CLK_CNTL)| (1 << 8));
-    aml_write_reg32(P_HDMI_CTRL_PORT, aml_read_reg32(P_HDMI_CTRL_PORT)|(1<<15)); //APB3 err_en
-    hdmi_wr_reg(0x10, 0xff);
+    //aml_set_reg32_bits(P_PAD_PULL_UP_EN_REG1, 0, 16, 1);       // Disable GPIOH_0 internal pull-up register
+    //aml_write_reg32(P_HHI_HDMI_CLK_CNTL, aml_read_reg32(P_HHI_HDMI_CLK_CNTL)| (1 << 8));
+    //aml_write_reg32(P_HDMI_CTRL_PORT, aml_read_reg32(P_HDMI_CTRL_PORT)|(1<<15)); //APB3 err_en
+//    hdmi_wr_reg(0x10, 0xff);
+printk("%s[%d]\n", __func__, __LINE__);
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 0x0, 9, 2);
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 0x0, 0, 6);
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 0x1, 8, 1);
+    aml_set_reg32_bits(P_HHI_GCLK_MPEG2, 0x3, 3, 2);
+    aml_set_reg32_bits(P_HHI_MEM_PD_REG0, 0x0, 8, 8);
+    aml_set_reg32_bits(P_HHI_VPU_MEM_PD_REG0, 0x0, 0, 32);
+    aml_set_reg32_bits(P_HHI_VPU_MEM_PD_REG1, 0x0, 0, 32);
+// Powerup VPU_HDMI
+    aml_write_reg32(P_AO_RTI_GEN_PWR_SLEEP0, aml_read_reg32(P_AO_RTI_GEN_PWR_SLEEP0) & (~(0x1<<8))); // [8] power on
+    aml_write_reg32(P_HHI_VPU_MEM_PD_REG0, 0x00000000 );
+    aml_write_reg32(P_HHI_VPU_MEM_PD_REG1, 0x00000000 );
+    aml_write_reg32(P_HHI_MEM_PD_REG0, aml_read_reg32(P_HHI_MEM_PD_REG0) & (~(0xff << 8))); // MEM-PD
+     
+    // Wait some time
+    msleep(2);
+
+    // Reset VIU + VENC
+    // Reset VENCI + VENCP + VDAC + VENCL
+    // Reset HDMI-APB + HDMI-SYS + HDMI-TX + HDMI-CEC
+    aml_write_reg32(P_RESET0_MASK, aml_read_reg32(P_RESET0_MASK) & (~((0x1 << 5) | (0x1<<10))));
+    aml_write_reg32(P_RESET4_MASK, aml_read_reg32(P_RESET4_MASK) & (~((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13))));
+    aml_write_reg32(P_RESET2_MASK, aml_read_reg32(P_RESET2_MASK) & (~((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15))));
+    aml_write_reg32(P_RESET2_REGISTER, ((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15)));
+    aml_write_reg32(P_RESET4_REGISTER, ((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13)));
+    aml_write_reg32(P_RESET0_REGISTER, ((0x1 << 5) | (0x1<<10)));
+    aml_write_reg32(P_RESET4_REGISTER, ((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13)));
+    aml_write_reg32(P_RESET2_REGISTER, ((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15)));
+    aml_write_reg32(P_RESET0_MASK, aml_read_reg32(P_RESET0_MASK) | ((0x1 << 5) | (0x1<<10)));
+    aml_write_reg32(P_RESET4_MASK, aml_read_reg32(P_RESET4_MASK) | ((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13)));
+    aml_write_reg32(P_RESET2_MASK, aml_read_reg32(P_RESET2_MASK) | ((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15)));
+
+    // Remove VPU_HDMI ISO
+    aml_write_reg32(P_AO_RTI_GEN_PWR_SLEEP0, aml_read_reg32(P_AO_RTI_GEN_PWR_SLEEP0) & (~(0x1<<9))); // [9] VPU_HDMI
 
     /**/    
     hdmi_hw_init(hdmitx_device);
+printk("%s[%d]\n", __func__, __LINE__);
 }    
 
 void hdmi_set_audio_para(int para)
