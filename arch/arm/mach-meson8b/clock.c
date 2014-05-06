@@ -855,6 +855,8 @@ void meson_set_cpu_power_ctrl(uint32_t cpu,int is_power_on)
 		/* Reset enable*/
 		aml_set_reg32_bits(P_HHI_SYS_CPU_CLK_CNTL, 1 , (cpu + 24), 1);
 		/* Power on*/
+
+		aml_set_reg32_bits(P_AO_RTI_PWR_A9_MEM_PD0, 0, (32 - cpu * 4) ,4);
 		aml_set_reg32_bits(P_AO_RTI_PWR_A9_CNTL1, 0x0, ((cpu +1) << 1 ), 2);
 		udelay(10);
 		/* Isolation disable */
@@ -871,6 +873,7 @@ void meson_set_cpu_power_ctrl(uint32_t cpu,int is_power_on)
 		udelay(10);
 		/* Power off */
 		aml_set_reg32_bits(P_AO_RTI_PWR_A9_CNTL1, 0x3, ((cpu +1) << 1 ), 2);
+		aml_set_reg32_bits(P_AO_RTI_PWR_A9_MEM_PD0, 0xf , (32 - cpu * 4) ,4);
 #endif
 	}
 	dsb();
