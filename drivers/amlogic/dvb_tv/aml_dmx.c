@@ -1047,7 +1047,7 @@ static int dmx_alloc_sub_buffer(struct aml_dmx *dmx)
 
 	addr = virt_to_phys((void*)dmx->sub_pages);
 	DMX_WRITE_REG(dmx->id, SB_START, addr>>12);
-	DMX_WRITE_REG(dmx->id, SB_LAST_ADDR, (dmx->sub_buf_len>>3));
+	DMX_WRITE_REG(dmx->id, SB_LAST_ADDR, (dmx->sub_buf_len>>3)-1);
 	return 0;
 }
 #endif /*NO_SUB*/
@@ -1070,7 +1070,7 @@ static int dmx_alloc_pes_buffer(struct aml_dmx *dmx)
 
 	addr = virt_to_phys((void*)dmx->pes_pages);
 	DMX_WRITE_REG(dmx->id, OB_START, addr>>12);
-	DMX_WRITE_REG(dmx->id, OB_LAST_ADDR, (dmx->pes_buf_len>>3));
+	DMX_WRITE_REG(dmx->id, OB_LAST_ADDR, (dmx->pes_buf_len>>3)-1);
 	return 0;
 }
 
@@ -1953,13 +1953,13 @@ void dmx_reset_hw_ex(struct aml_dvb *dvb, int reset_irq)
 		if(dmx->sub_pages) {
 			addr = virt_to_phys((void*)dmx->sub_pages);
 			DMX_WRITE_REG(dmx->id, SB_START, addr>>12);
-			DMX_WRITE_REG(dmx->id, SB_LAST_ADDR, (dmx->sub_buf_len>>3));
+			DMX_WRITE_REG(dmx->id, SB_LAST_ADDR, (dmx->sub_buf_len>>3)-1);
 		}
 
 		if(dmx->pes_pages) {
 			addr = virt_to_phys((void*)dmx->pes_pages);
 			DMX_WRITE_REG(dmx->id, OB_START, addr>>12);
-			DMX_WRITE_REG(dmx->id, OB_LAST_ADDR, (dmx->pes_buf_len>>3));
+			DMX_WRITE_REG(dmx->id, OB_LAST_ADDR, (dmx->pes_buf_len>>3)-1);
 		}
 
 		for(n=0; n<CHANNEL_COUNT; n++)
