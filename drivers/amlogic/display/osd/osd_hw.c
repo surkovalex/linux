@@ -1799,7 +1799,8 @@ static   void  osd2_update_enable(void)
     if (osd_hw.free_scale_mode[OSD2]){
         spin_lock_irqsave(&osd_onoff_lock, flags);
         if (osd_hw.enable[OSD2] == ENABLE){
-            aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
+            // osd1 and osd2 share the only one freescale, so set  VPP_OSD1_POSTBLEND here.
+            aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
             aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
         }else{
             if (osd_hw.enable[OSD1] == ENABLE){
