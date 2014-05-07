@@ -104,7 +104,7 @@ static int cpucore_get_max_state(struct thermal_cooling_device *cdev,
 {
 	struct cpucore_cooling_device *cpucore_device = cdev->devdata;
 	*state=cpucore_device->max_cpu_core_num;
-	printk(KERN_DEBUG "max cpu core=%d\n",*state);
+	pr_debug( "max cpu core=%d\n",*state);
 	return 0;
 }
 
@@ -123,7 +123,7 @@ static int cpucore_get_cur_state(struct thermal_cooling_device *cdev,
 {
 	struct cpucore_cooling_device *cpucore_device = cdev->devdata;
 	*state=cpucore_device->cpucore_state;
-	printk(KERN_DEBUG "current state=%d\n",*state);
+	pr_debug( "current state=%d\n",*state);
 	return 0;
 }
 
@@ -144,7 +144,7 @@ static int cpucore_set_cur_state(struct thermal_cooling_device *cdev,
 	int set_max_num;
 	cpucore_device->cpucore_state=state;
 	set_max_num=cpucore_device->max_cpu_core_num-state;
-	printk(KERN_DEBUG "need set max cpu num=%d,state=%d\n",set_max_num,state);
+	pr_debug( "need set max cpu num=%d,state=%d\n",set_max_num,state);
 	cpufreq_set_max_cpu_num(set_max_num);
 	return 0;
 }

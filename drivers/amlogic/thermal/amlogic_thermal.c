@@ -352,7 +352,7 @@ static int amlogic_get_temp(struct thermal_zone_device *thermal,
 	*temp=aa;
 #else
 	*temp = (unsigned long)get_cpu_temp();
-	printk(KERN_DEBUG "========  temp=%ld\n",*temp);
+	pr_debug( "========  temp=%ld\n",*temp);
 #endif
 	return 0;
 }

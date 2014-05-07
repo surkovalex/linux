@@ -91,7 +91,7 @@ static int gpufreq_get_max_state(struct thermal_cooling_device *cdev,
 	struct gpufreq_cooling_device *gpufreq_device = cdev->devdata;
 	if(gpufreq_device->get_gpu_max_level)
 		*state = (unsigned long)(gpufreq_device->get_gpu_max_level());
-	printk(KERN_DEBUG "default max state=%ld\n",*state);
+	pr_debug( "default max state=%ld\n",*state);
 	return 0;
 }
 
@@ -112,7 +112,7 @@ static int gpufreq_get_cur_state(struct thermal_cooling_device *cdev,
 	//*state = gpufreq_device->gpufreq_state;
 	if(gpufreq_device->get_gpu_current_max_level)
 		*state = gpufreq_device->get_gpu_current_max_level();
-	printk(KERN_DEBUG "current max state=%ld\n",*state);
+	pr_debug( "current max state=%ld\n",*state);
 	return 0;
 }
 
@@ -132,14 +132,14 @@ static int gpufreq_set_cur_state(struct thermal_cooling_device *cdev,
 	struct gpufreq_cooling_device *gpufreq_device = cdev->devdata;
 	unsigned long max_state;
 	int ret;
-	printk(KERN_DEBUG "state=%ld,gpufreq_device->gpufreq_state=%d\n",state,gpufreq_device->gpufreq_state);
+	pr_debug( "state=%ld,gpufreq_device->gpufreq_state=%d\n",state,gpufreq_device->gpufreq_state);
 	//if (gpufreq_device->gpufreq_state == state)
 		//return 0;
 	gpufreq_device->gpufreq_state = state;
 	ret=gpufreq_get_max_state(cdev,&max_state);
 	state=max_state-1-state;
 	
-	printk(KERN_DEBUG "state=%ld,gpufreq_device->gpufreq_state=%d\n",state,gpufreq_device->gpufreq_state);
+	pr_debug( "state=%ld,gpufreq_device->gpufreq_state=%d\n",state,gpufreq_device->gpufreq_state);
 	if(state>=0 && state<=max_state){
 		if (gpufreq_device->set_gpu_freq_idx)
 			gpufreq_device->set_gpu_freq_idx((unsigned int)state);

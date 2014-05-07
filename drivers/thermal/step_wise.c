@@ -95,7 +95,7 @@ static unsigned long get_target_state(struct thermal_instance *instance,
 		break;
 	}
 
-	printk(KERN_DEBUG "instance:%s,trend=%d,throttle=%d,instace->target=%ld,cur_state=%d,next_target=%d\n",
+	pr_debug( "instance:%s,trend=%d,throttle=%d,instace->target=%ld,cur_state=%d,next_target=%d\n",
 		instance->name,
 		trend,
 		throttle,
