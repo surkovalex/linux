@@ -5120,7 +5120,11 @@ static int de_post_process_force_bob(void* arg, unsigned zoom_start_x_lines,
      unsigned zoom_end_x_lines, unsigned zoom_start_y_lines, unsigned zoom_end_y_lines, vframe_t* disp_vf)
 {
     de_post_process(arg, zoom_start_x_lines, zoom_end_x_lines, zoom_start_y_lines, zoom_end_y_lines, disp_vf);
-    Wr(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)&0xffefffff);
+    #ifdef NEW_DI_V1
+    VSYNC_WR_MPEG_REG_BITS(DI_POST_CTRL, 0, 5, 1);
+    #else
+    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, 0, 20, 1);
+    #endif
     return 0;
 }
 #endif
@@ -5472,7 +5476,7 @@ static int process_post_vframe(void)
             i = 0;
             queue_for_each_entry(p, ptmp, QUEUE_PRE_READY, list) {
                 //if(p->post_proc_flag == 0){
-                if((p->type == VFRAME_TYPE_IN)||((p->post_proc_flag == 0) && use_2_interlace_buff)){
+                if(p->type == VFRAME_TYPE_IN){
                     ready_di_buf->post_proc_flag = -1;
                     ready_di_buf->new_format_flag = 1;
                 }
@@ -5701,7 +5705,7 @@ static int process_post_vframe(void)
                     }
 #endif
 
-                    if(ready_di_buf->new_format_flag){
+                    if(ready_di_buf->new_format_flag && (ready_di_buf->type == VFRAME_TYPE_IN)){
                         di_buf->vframe->early_process_fun = de_post_disable_fun;
                     }
                     else{
