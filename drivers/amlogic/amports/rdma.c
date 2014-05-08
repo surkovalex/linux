@@ -609,8 +609,8 @@ EXPORT_SYMBOL(enable_rdma);
 static int  __init rdma_init(void)
 {
 #if 1 // MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
-    set_output_mode_rdma();
-
+    //set_output_mode_rdma();
+    enable = 1;
     vout_register_client(&display_mode_notifier_nb_v);
 #endif    
     return 0;
