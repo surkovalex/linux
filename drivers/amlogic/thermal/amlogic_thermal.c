@@ -607,11 +607,21 @@ static int amlogic_thermal_probe(struct platform_device *pdev)
 	int ret;
 	struct amlogic_thermal_platform_data *pdata=NULL;
 	//pdata = amlogic_get_driver_data(pdev);
-	ret=get_cpu_temp();
-	if(NOT_WRITE_EFUSE==ret){
-		printk("cpu sensor not ready!!!!!!\n");
+	ret=read_efuse_flag();
+	printk("thermal efuse version 0x%x\n",ret);
+	if(ret<0){
+		printk("read efuse error or adc error ret=%d\n",ret);
 		return -1;
 	}
+	if(NOT_WRITE_EFUSE==ret){
+		printk("this chip do not write efuse  so do not enable  thermal driver\n");
+		return -1;
+	}
+	if(EFUSE_MIGHT_WRONG==ret){
+		printk("this chip efuse data might wrong  so do not enable  thermal driver\n");
+		return -1;
+	}
+	
 	dev_info(&pdev->dev, "amlogic thermal probe start\n");
 	pdata = amlogic_thermal_initialize(pdev);
 	if (!pdata) {

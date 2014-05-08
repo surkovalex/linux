@@ -25,6 +25,7 @@ struct saradc {
 	int flag;
 	int trimming;
 	int adc_efuse;
+	int efuse_flag;
 #endif
 };
 
@@ -416,6 +417,21 @@ static struct class saradc_class = {
     .name = "saradc",
     .class_attrs = saradc_class_attrs,
 };
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+int read_efuse_flag()
+{
+	if(gp_saradc)
+		return gp_saradc->efuse_flag;
+	else 
+		return -2;
+}
+#else
+int read_efuse_flag()
+{
+	printk("read_efuse_flag() function is not implement! \n");
+	return -2;
+}
+#endif
 
 int get_cpu_temp(void)
 {
@@ -427,9 +443,6 @@ int get_cpu_temp(void)
 			tempa=(18*(ret-gp_saradc->adc_efuse)*10000)/1024/10/85+27;
 			ret=tempa;
 		}
-	}else
-		{
-		ret=NOT_WRITE_EFUSE;
 	}
 	return ret;
 #else
@@ -454,9 +467,9 @@ static int saradc_probe(struct platform_device *pdev)
   saradc_internal_cal(saradc);
 #endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-	char buf[2]={0};
+	char buf[4]={0};
 	int temp=-1,TS_C=-1,flag=0;
-	err=efuse_read_intlItem("temperature",buf,2);
+	err=efuse_read_intlItem("temper_cvbs",buf,4);
 	if(err>=0){
 		printk("buf[0]=%x,buf[1]=%x,err=%d\n",buf[0],buf[1],err);
 		temp=0;TS_C=0;
@@ -470,11 +483,20 @@ static int saradc_probe(struct platform_device *pdev)
 		saradc->flag=flag;
 		saradc->trimming=TS_C;
 		saradc->adc_efuse=temp;
+		saradc->efuse_flag=buf[3]>>4;
+		if(saradc->efuse_flag==EFUEE_MUST_RIGHT ||saradc->efuse_flag==EFUSE_FIXED){
+			if(saradc->flag){
+				saradc->flag=1;
+			}
+		}else{
+			saradc->flag=0;
+		}
 	}
 	else{
 		saradc->flag=flag;
 		saradc->trimming=TS_C;
 		saradc->adc_efuse=temp;
+		saradc->efuse_flag=-1;
 	}
 	if(gp_saradc->flag){
 		select_temp();

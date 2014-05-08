@@ -585,7 +585,7 @@ static int __init vdac_config_bootargs_setup(char* line)
     printk("cvbs trimming line = %s\n", line);
     cfg = simple_strtoul(line, NULL, 16);
 
-    cvbs_config_vdac(cfg&0xff, (cfg&0xff00)>>8);
+    cvbs_config_vdac((cfg&0xff00)>>8, cfg&0xff);
 
     return 1;
 }
