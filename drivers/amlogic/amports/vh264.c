@@ -1859,6 +1859,8 @@ static int amvdec_h264_probe(struct platform_device *pdev)
 
 static int amvdec_h264_remove(struct platform_device *pdev)
 {
+     cancel_work_sync(&error_wd_work);
+     cancel_work_sync(&stream_switching_work);
     mutex_lock(&vh264_mutex);
     vh264_stop();
 
