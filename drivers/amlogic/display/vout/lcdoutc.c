@@ -4317,7 +4317,7 @@ static inline int _get_lcd_model_timing(struct platform_device *pdev)
 	int ret=0;
 	const char *str;
 	unsigned int val;
-	unsigned int lcd_para[DSI_INIT_ON_MAX];
+	unsigned int lcd_para[100];
 	int i, j;
 	struct device_node *lcd_model_node;
 	phandle fhandle;
