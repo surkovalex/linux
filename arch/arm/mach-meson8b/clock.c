@@ -1755,7 +1755,6 @@ static int __init meson_clock_init(void)
 				"pll_sys",
 				"pll_fixed",
 				"pll_vid",
-				"pll_hpll",
 				"pll_ddr",
 				"a9_clk",
 				"clk81",
