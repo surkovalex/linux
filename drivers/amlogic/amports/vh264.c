@@ -572,15 +572,21 @@ static void vh264_set_params(void)
     if (max_dpb_size > 5) {
         if (actual_dpb_size < max_dpb_size + 3) {
             actual_dpb_size = max_dpb_size + 3;
+        if (actual_dpb_size > 24) {    
+            actual_dpb_size = 24;
+        }            
             max_reference_size = (frame_buffer_size - mb_total * 384 * actual_dpb_size) / (mb_total * mb_mv_byte);
         }
     } else {
         if (actual_dpb_size < max_dpb_size + 4) {
             actual_dpb_size = max_dpb_size + 4;
+        if (actual_dpb_size > 24) {
+            actual_dpb_size = 24;
+        }            
             max_reference_size = (frame_buffer_size - mb_total * 384 * actual_dpb_size) / (mb_total * mb_mv_byte);
         }
     }
-
+ 
     if (!(READ_VREG(AV_SCRATCH_F) & 0x1)) {
         addr = buf_start;
 
