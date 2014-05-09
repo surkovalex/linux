@@ -122,7 +122,7 @@ void root_func(){
 		compatible = "amlogic,mesonfb";
 		dev_name = "mesonfb";
 		status = "okay";
-	   	reserve-memory = <0x01000000  0x00100000>;
+	   	reserve-memory = <0x01800000  0x00100000>;
 	   	reserve-iomap = "true";
         vmode = <3>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
  		display_size_default = <1920 1080 1920 2160 32>;
@@ -135,8 +135,7 @@ void root_func(){
 		compatible = "amlogic,deinterlace";
 		dev_name = "deinterlace";
 		status = "ok";
-		reserve-memory = <0x02300000>; 	 
-
+		reserve-memory = <0x01800000>; //8x1920x1088x3/2=24M
 	};
 
 /// ***************************************************************************************
@@ -149,7 +148,7 @@ void root_func(){
 		compatible = "amlogic,mesonstream";
 		dev_name = "mesonstream.0";
 		status = "okay";
-		reserve-memory = <0x02000000>;
+		reserve-memory = <0x02000000>; // 32M
 		reserve-iomap = "true";
 	};
 
@@ -163,7 +162,7 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-                reserve-memory = <0x10000000>;
+                reserve-memory = <0x04000000>; // 64M
                 reserve-iomap = "true";
         };
 
@@ -177,7 +176,7 @@ void root_func(){
 		compatible = "amlogic,ppmgr";
 		dev_name = "ppmgr";
 		status = "okay";
-		reserve-memory = <0x03000000>;
+		reserve-memory = <0x01000000>; // 16M
 	};
 
 /// ***************************************************************************************
@@ -204,7 +203,7 @@ void root_func(){
 //		compatible = "amlogic,amvdec_656in";
 //		dev_name = "amvdec_656in";
 //		status = "ok";
-//		reg = <0x1a600000 0x00100000>;
+//		reg = <0x1e400000 0x00100000>;
 //	};
 //	
 /// ***************************************************************************************
@@ -215,28 +214,30 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "reg"
 //$$ L2 PROP_U32 = "irq"
 //$$ L2 PROP_U32 = "vdin_id"
-    vdin0{
-        compatible = "amlogic,vdin";
-        dev_name = "vdin0";
-        status = "ok";
-	 reserve-memory = <0x04000000>;
-        irq = <115>;
-        vdin_id = <0>;
-	};
+//    vdin0{
+//       compatible = "amlogic,vdin";
+//        dev_name = "vdin0";
+//        status = "ok";
+//	 reserve-memory = <0x04000000>;
+//        irq = <115>;
+//        vdin_id = <0>;
+//	};
 	
 //$$ DEVICE="vdin1"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 2 = "reg"
 //$$ L2 PROP_U32 = "irq"
 //$$ L2 PROP_U32 = "vdin_id"
-    vdin1{
-        compatible = "amlogic,vdin";
-        dev_name = "vdin1";
-        status = "ok";
-	 reserve-memory = <0x04000000>;
-        irq = <117>;
-        vdin_id = <1>;
-	};
+//    vdin1{
+//        compatible = "amlogic,vdin";
+//       dev_name = "vdin1";
+//        status = "ok";
+//        reserve-memory = <0x01000000>;
+//	  miracast_size = <1920 1080>;//1920x1080x2x4=17M
+//	  reserve-iomap = "true";
+//        irq = <117>;
+//        vdin_id = <1>;
+//	};
 
 /// ***************************************************************************************
 ///	-	DISP&MM-AMLVIDEO2
@@ -244,26 +245,26 @@ void root_func(){
 //$$ DEVICE="amlvideo2"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-    amlvideo2{
-		compatible = "amlogic,amlvideo2";
-		dev_name = "amlvideo2.0";
-		status = "okay";
-		reserve-memory = <0x01800000>;
-		reserve-iomap = "true";
-	};
+//    amlvideo2{
+//		compatible = "amlogic,amlvideo2";
+//		dev_name = "amlvideo2.0";
+//		status = "okay";
+//		reserve-memory = <0x01800000>;
+//		reserve-iomap = "true";
+//	};
 
 /// ***************************************************************************************
 ///	-	DISP&MM-Video Input Manager
 //$$ MODULE = "DISP&MM-Video Input Manager"
 //$$ DEVICE="vm"
 //$$ L2 PROP_STR = "status"
-    vm{
-		compatible = "amlogic,vm";
-		dev_name = "vm.0";
-		status = "okay";
-		reserve-memory = <0x01800000>;
-		reserve-iomap = "true";
-	};
+//    vm{
+//		compatible = "amlogic,vm";
+//		dev_name = "vm.0";
+//		status = "okay";
+//		reserve-memory = <0x01800000>;
+//		reserve-iomap = "true";
+//	};
 
 /// ***************************************************************************************
 ///	-	ION
@@ -276,7 +277,7 @@ void root_func(){
         status = "ok";
         share-memory-name = "ppmgr0";
         share-memory-offset = <0>;
-        share-memory-size = <0x03000000>;
+        share-memory-size = <0x01000000>; //16M
     };
 /// ***************************************************************************************
 ///	-	DISP&MM-Vout
