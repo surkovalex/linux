@@ -189,7 +189,7 @@ static unsigned char new_keep_last_frame_enable = 0;
 static int bypass_state = 1;
 static int bypass_prog = 0;
 static int bypass_hd_prog = 0;
-#if MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8
+#if (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESON8) 
 static int bypass_interlace_output = 0;
 #else
 static int bypass_interlace_output = 1;
@@ -209,7 +209,7 @@ static int skip_top_bot = 0;
 static char interlace_output_flag = 0;
 static int bypass_get_buf_threshold = 4;
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 static int post_hold_line = 17;//for m8 1080i/50 output
 static int force_update_post_reg = 0x10;
 #elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
@@ -274,6 +274,12 @@ static int input2pre_throw_count = 6;
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
 #else
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
+#endif
+#else
+#ifdef NEW_DI_TV
+static bool use_2_interlace_buff = true;/*false:process progress by field;true: process progress by frame with 2 interlace buffer*/
+#else
+static bool use_2_interlace_buff = false;
 #endif
 #endif
     /* prog_proc_config,
@@ -6914,7 +6920,7 @@ static int di_probe(struct platform_device *pdev)
 
     device_create_file(di_device.dev, &dev_attr_config);
     device_create_file(di_device.dev, &dev_attr_debug);
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 	 device_create_file(di_device.dev, &dev_attr_dump_pic);
 #endif
     device_create_file(di_device.dev, &dev_attr_log);
@@ -7040,7 +7046,7 @@ static int di_remove(struct platform_device *pdev)
     device_remove_file(di_device.dev, &dev_attr_config);
     device_remove_file(di_device.dev, &dev_attr_debug);
     device_remove_file(di_device.dev, &dev_attr_log);
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
+#ifdef NEW_DI_V1
 	device_remove_file(di_device.dev, &dev_attr_dump_pic);
 #endif
     device_remove_file(di_device.dev, &dev_attr_parameters);
