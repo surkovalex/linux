@@ -26,9 +26,7 @@
 #include "amports_config.h"
 
 
-#if HAS_VPU_PROT
 #include <mach/vpu.h>
-#endif
 
 #include <linux/amlogic/amports/vframe.h>
 #include "video.h"
@@ -293,7 +291,7 @@ vpp_process_speed_check(s32 width_in,
                         vpp_frame_par_t *next_frame_par,
                         const vinfo_t *vinfo)
 {
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     if ((width_in <= 0) || (height_in <= 0) || (height_out <= 0) || (height_screen <= 0)) {
         return SPEED_CHECK_DONE;
     }

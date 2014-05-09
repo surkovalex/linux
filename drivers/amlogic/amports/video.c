@@ -65,9 +65,7 @@
 
 #include "amports_config.h"
 
-#if HAS_VPU_PROT
 #include <mach/vpu.h>
-#endif
 
 #include "videolog.h"
 #include "amvideocap_priv.h"
@@ -153,7 +151,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
 #define RESERVE_CLR_FRAME
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define VD1_MEM_POWER_ON() \
     do { \
         unsigned long flags; \
@@ -187,6 +185,8 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
         vpu_mem_power_off_count = VPU_MEM_POWEROFF_DELAY; \
         spin_unlock_irqrestore(&delay_work_lock, flags); \
     } while (0)
+
+#if HAS_VPU_PROT
 #define PROT_MEM_POWER_ON() \
     do { \
         unsigned long flags; \
@@ -205,6 +205,10 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
         vpu_mem_power_off_count = VPU_MEM_POWEROFF_DELAY; \
         spin_unlock_irqrestore(&delay_work_lock, flags); \
     } while (0)
+#else
+#define PROT_MEM_POWER_ON() 
+#define PROT_MEM_POWER_OFF()
+#endif
 #else
 #define VD1_MEM_POWER_ON()
 #define VD2_MEM_POWER_ON()
@@ -277,7 +281,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
          } \
     } while (0)
 
-#if HAS_VPU_PROT
+#if  MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define DisableVideoLayer_NoDelay() \
     do { \
          CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, \
@@ -323,7 +327,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
 #define MAX_ZOOM_RATIO 300
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define VPP_PREBLEND_VD_V_END_LIMIT 2304
 #else
 #define VPP_PREBLEND_VD_V_END_LIMIT 1080
@@ -637,7 +641,7 @@ static const u8 skip_tab[6] = { 0x24, 0x04, 0x68, 0x48, 0x28, 0x08 };
 /* wait queue for poll */
 static wait_queue_head_t amvideo_trick_wait;
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define VPU_DELAYWORK_VPU_CLK            1
 #define VPU_DELAYWORK_MEM_POWER_OFF_VD1  2
 #define VPU_DELAYWORK_MEM_POWER_OFF_VD2  4
@@ -1388,7 +1392,7 @@ amlog_mask(LOG_MASK_FRAMEINFO,
         /* apply new vpp settings */
         frame_par_ready_to_set = 1;
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
         if ((vf->width > 1920) && (vf->height > 1088)) {
             if (vpu_clk_level == 0) {
                 vpu_clk_level = 1;
@@ -2174,7 +2178,9 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 	/* amvecm video latch function */
 	amvecm_video_latch();
 #endif
-#if HAS_VPU_PROT
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+
     vdin_ops=get_vdin_v4l2_ops();
     if(vdin_ops){
 	arg.cmd = VDIN_CMD_ISR;
@@ -2546,7 +2552,7 @@ SET_FILTER:
                             VPP_SC_HBANK_LENGTH_BIT,
                             VPP_SC_BANK_LENGTH_WID);
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
         VSYNC_WR_MPEG_REG_BITS(VPP_VSC_PHASE_CTRL + cur_dev->vpp_off,
                             (vpp_filter->vpp_vert_coeff[0] == 2) ? 1 : 0,
                             VPP_PHASECTL_DOUBLELINE_BIT,
@@ -2709,7 +2715,7 @@ exit:
     if (video_notify_flag)
         vsync_notify();
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     if (vpu_delay_work_flag) {
         schedule_work(&vpu_delay_work);
     }
@@ -4884,7 +4890,7 @@ static void vout_hook(void)
 #endif
 }
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static void do_vpu_delay_work(struct work_struct *work)
 {
     unsigned long flags;
@@ -4946,11 +4952,9 @@ static int __init video_early_init(void)
 {
     logo_object_t  *init_logo_obj=NULL;
 
-#if HAS_VPU_PROT
     /* todo: move this to clock tree, enable VPU clock */
     //WRITE_CBUS_REG(HHI_VPU_CLK_CNTL, (1<<9) | (1<<8) | (3)); // fclk_div3/4 = ~200M
     //WRITE_CBUS_REG(HHI_VPU_CLK_CNTL, (3<<9) | (1<<8) | (0)); // fclk_div7/1 = 364M	//moved to vpu.c, default config by dts
-#endif
 
 #ifdef CONFIG_AM_LOGO
     init_logo_obj = get_current_logo_obj();
@@ -4962,7 +4966,7 @@ static int __init video_early_init(void)
 #endif // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     }
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_VCBUS_REG(VPP_PREBLEND_VD1_H_START_END, 4096);
 #endif
 
@@ -4984,7 +4988,7 @@ static int __init video_early_init(void)
     	WRITE_VCBUS_REG(VPP2_HOLD_LINES, 0x08080808);
     }
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
    	WRITE_VCBUS_REG_BITS(VPP2_OFIFO_SIZE, 0x800,
                         VPP_OFIFO_SIZE_BIT, VPP_OFIFO_SIZE_WID);
 #else
@@ -5088,7 +5092,7 @@ static int __init video_init(void)
 
     init_waitqueue_head(&amvideo_trick_wait);
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     INIT_WORK(&vpu_delay_work, do_vpu_delay_work);
 #endif
 
