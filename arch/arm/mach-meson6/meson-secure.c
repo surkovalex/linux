@@ -143,6 +143,7 @@ int meson_trustzone_efuse(struct efuse_hal_api_arg* arg)
 	}
 	outer_inv_range((arg->retcnt_phy), (arg->retcnt_phy + sizeof(unsigned int)));
 	dmac_unmap_area(__va(arg->buffer_phy), arg->size, DMA_FROM_DEVICE);
+	set_cpus_allowed_ptr(current, cpu_all_mask);
 
 	return ret;
 }
