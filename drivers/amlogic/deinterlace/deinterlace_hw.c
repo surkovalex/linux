@@ -1823,7 +1823,9 @@ void di_post_switch_buffer_pd (
                       );
 #endif
     }
-
+#ifdef NEW_DI_V1
+    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)|(1<<31));
+#endif
     VSYNC_WR_MPEG_REG_BITS(DI_POST_CTRL, post_field_num, 29, 1);
 }
 
@@ -1940,6 +1942,9 @@ void enable_di_post_pd(
                    (post_field_num << 29) |                      // post field number.
                    (0x1 << 30)                                   // post soft rst  post frame rst.
                   );
+#endif
+#ifdef NEW_DI_V1
+    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)|(1<<31));
 #endif
 }
 
