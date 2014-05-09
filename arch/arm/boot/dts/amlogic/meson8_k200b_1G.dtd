@@ -186,6 +186,19 @@ void root_func(){
 //		reserve-iomap = "true";
 		linux,contiguous-region = <&mem_4k2k_decoder>;
         };
+///	-	picture decoder
+//$$ MODULE="picture decoder"
+//$$ DEVICE="picdec"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 2 ="reg"
+    picdec{
+		compatible = "amlogic,picdec";
+		dev_name = "picdec";								
+		status = "okay";
+        share-memory-name = "vdec0";
+        share-memory-offset = <0>;
+        share-memory-size = <0x04000000>; //64M
+	}; 
 
 /// ***************************************************************************************
 ///	-	DISP&MM-PostProcess
