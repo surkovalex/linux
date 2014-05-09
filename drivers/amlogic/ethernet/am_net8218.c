@@ -880,6 +880,7 @@ static int mac_pmt_enable(unsigned int enable)
  * @return
  */
 /* --------------------------------------------------------------------------*/
+#undef CONFIG_AML_NAND_KEY
 #ifdef CONFIG_AML_NAND_KEY
 extern int get_aml_key_kernel(const char* key_name, unsigned char* data, int ascii_flag);
 extern int extenal_api_key_set_version(char *devvesion);
@@ -2681,6 +2682,77 @@ static int eth_pwol_store(struct class *class, struct class_attribute *attr, con
 	}
 	return count;
 }
+#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8
+
+static int am_net_cali(int argc, char **argv,int gate)
+{
+	int cali_rise = 0;
+	int cali_sel = 0;
+	int cali_start;
+	int cali_time;
+	int ii=0;
+	cali_start = gate;
+	unsigned int val;
+	if ((argc < 4) || (argv == NULL) || (argv[0] == NULL)
+			|| (argv[1] == NULL) || (argv[2] == NULL)|| (argv[3] == NULL)) {
+		printk("Invalid syntax\n");
+		return -1;
+	}
+	cali_rise = simple_strtol(argv[1], NULL, 16);
+	cali_sel = simple_strtol(argv[2], NULL, 16);
+	cali_time = simple_strtol(argv[3], NULL, 16);
+	aml_write_reg32((aml_read_reg32(P_PREG_ETH_REG0)|(cali_start << 25)|(cali_rise << 26)|(cali_sel << 27)),P_PREG_ETH_REG0);
+	for(ii=0;ii < cali_time;ii++){
+		if(aml_read_reg32(P_PREG_ETH_REG1)>>15 & 0x1){
+			printk("cali back: %d\n", aml_read_reg32(P_PREG_ETH_REG1));
+			break;
+		}
+	}
+
+	return 0;
+}
+static ssize_t eth_cali_store(struct class *class, struct class_attribute *attr,
+		const char *buf, size_t count)
+{
+	int argc;
+	char *buff, *p, *para;
+	char *argv[4];
+	char cmd;
+
+	buff = kstrdup(buf, GFP_KERNEL);
+	p = buff;
+	for (argc = 0; argc < 5; argc++) {
+		para = strsep(&p, " ");
+		if (para == NULL)
+			break;
+		argv[argc] = para;
+	}
+	if (argc < 1 || argc > 4)
+		goto end;
+
+	cmd = argv[0][0];
+		switch (cmd) {
+		case 'e':
+		case 'E':
+			am_net_cali(argc, argv,1);
+			break;
+		case 'd':
+		case 'D':
+			am_net_cali(argc, argv,0);
+			break;
+
+		default:
+			goto end;
+		}
+	
+		return count;
+	
+	end:
+		kfree(buff);
+		return 0;
+
+}
+#endif
 static struct class *eth_sys_class;
 static CLASS_ATTR(mdcclk, S_IWUSR | S_IRUGO, eth_mdcclk_show, eth_mdcclk_store);
 static CLASS_ATTR(debug, S_IWUSR | S_IRUGO, eth_debug_show, eth_debug_store);
@@ -2690,6 +2762,9 @@ static CLASS_ATTR(macreg, S_IWUSR | S_IRUGO, eth_macreg_help, eth_macreg_func);
 static CLASS_ATTR(wol, S_IWUSR | S_IRUGO, eth_wol_show, eth_wol_store);
 static CLASS_ATTR(pwol, S_IWUSR | S_IRUGO, eth_pwol_show, eth_pwol_store);
 static CLASS_ATTR(linkspeed, S_IWUSR | S_IRUGO, eth_linkspeed_show, NULL);
+#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8
+static CLASS_ATTR(cali, S_IWUSR | S_IRUGO, NULL,eth_cali_store);
+#endif
 
 /* --------------------------------------------------------------------------*/
 /**
@@ -2712,6 +2787,9 @@ static int __init am_eth_class_init(void)
 	ret = class_create_file(eth_sys_class, &class_attr_wol);
 	ret = class_create_file(eth_sys_class, &class_attr_pwol);
 	ret = class_create_file(eth_sys_class, &class_attr_linkspeed);
+#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8
+	ret = class_create_file(eth_sys_class, &class_attr_cali);
+#endif
 
 	return ret;
 }
