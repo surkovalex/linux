@@ -1069,7 +1069,7 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "key_chan"
 //$$ L2 PROP_U32 2 = "key_val"
 //$$ L2 PROP_U32 2 = "key_tolerance"
-    adc_keypad{
+/*    adc_keypad{
 		compatible = "amlogic,adc_keypad";
 		status = "okay";
 		key_name = "menu", "vol-","vol+", "esc", "home";
@@ -1079,6 +1079,7 @@ void root_func(){
 		key_val = <0 143 271 393 468>; //voltage=0/252/478/692/824mV, val=voltage/1800mV*1023
 		key_tolerance = <40 40 40 40 40>;
 	};
+*/
 
 //$$ DEVICE="meson-remote"
 //$$ L2 PROP_STR = "status"
