@@ -65,8 +65,9 @@
 
 #include "amports_config.h"
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <mach/vpu.h>
-
+#endif
 #include "videolog.h"
 #include "amvideocap_priv.h"
 

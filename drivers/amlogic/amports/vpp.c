@@ -25,8 +25,9 @@
 #include <mach/am_regs.h>
 #include "amports_config.h"
 
-
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <mach/vpu.h>
+#endif
 
 #include <linux/amlogic/amports/vframe.h>
 #include "video.h"
