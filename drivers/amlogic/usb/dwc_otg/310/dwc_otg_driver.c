@@ -169,6 +169,7 @@ struct dwc_otg_driver_module_params {
 	int32_t ahb_single;
 	int32_t otg_ver;
 	int32_t adp_enable;
+	int32_t host_only;
 };
 
 static struct dwc_otg_driver_module_params dwc_otg_module_params = {
@@ -181,11 +182,7 @@ static struct dwc_otg_driver_module_params dwc_otg_module_params = {
 	.host_support_fs_ls_low_power = -1,
 	.host_ls_low_power_phy_clk = -1,
 	.enable_dynamic_fifo = 1,
-	#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON6TV
-	.data_fifo_size = 1900,
-	#else
-	.data_fifo_size = 1024,
-	#endif
+	.data_fifo_size = 1024, /* will be overrided by platform setting */
 	.dev_endpoints = -1,
 	.en_multiple_tx_fifo = -1,
 	.dev_rx_fifo_size = 256,
@@ -228,16 +225,12 @@ static struct dwc_otg_driver_module_params dwc_otg_module_params = {
 				   -1
 				   /* 15 */
 				   },
-	#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON6TV
-	.host_rx_fifo_size = 1024,
-	#else 
-	.host_rx_fifo_size = 512,
-	#endif
+	.host_rx_fifo_size = 512, /* will be overrided by platform setting */
 	.host_nperio_tx_fifo_size = 500,
-	.host_perio_tx_fifo_size = -1,
+	.host_perio_tx_fifo_size = 500,
 	.max_transfer_size = -1,
 	.max_packet_count = -1,
-	.host_channels = -1,
+	.host_channels = 16,
 	.phy_type = -1,
 	.phy_utmi_width = -1,
 	.phy_ulpi_ddr = -1,
@@ -476,22 +469,24 @@ static int set_parameters(dwc_otg_core_if_t * core_if)
 							  dwc_otg_module_params.
 							  en_multiple_tx_fifo);
 	}
-	for (i = 0; i < 15; i++) {
-		if (dwc_otg_module_params.dev_perio_tx_fifo_size[i] != -1) {
-			retval +=
-			    dwc_otg_set_param_dev_perio_tx_fifo_size(core_if,
-								     dwc_otg_module_params.
-								     dev_perio_tx_fifo_size
-								     [i], i);
+	if(!dwc_otg_module_params.host_only){
+		for (i = 0; i < 15; i++) {
+			if (dwc_otg_module_params.dev_perio_tx_fifo_size[i] != -1) {
+				retval +=
+				    dwc_otg_set_param_dev_perio_tx_fifo_size(core_if,
+									     dwc_otg_module_params.
+									     dev_perio_tx_fifo_size
+									     [i], i);
+			}
 		}
-	}
 
-	for (i = 0; i < 15; i++) {
-		if (dwc_otg_module_params.dev_tx_fifo_size[i] != -1) {
-			retval += dwc_otg_set_param_dev_tx_fifo_size(core_if,
-								     dwc_otg_module_params.
-								     dev_tx_fifo_size
-								     [i], i);
+		for (i = 0; i < 15; i++) {
+			if (dwc_otg_module_params.dev_tx_fifo_size[i] != -1) {
+				retval += dwc_otg_set_param_dev_tx_fifo_size(core_if,
+									     dwc_otg_module_params.
+									     dev_tx_fifo_size
+									     [i], i);
+			}
 		}
 	}
 	if (dwc_otg_module_params.thr_ctl != -1) {
@@ -970,6 +965,8 @@ static int dwc_otg_driver_probe(
 			ctrl_reg_addr = (unsigned long)usb_platform_data.ctrl_regaddr[port_index];
 			phy_reg_addr = (unsigned long)usb_platform_data.phy_regaddr[port_index];
 			_dev->irq = usb_platform_data.irq_no[port_index];
+			dwc_otg_module_params.data_fifo_size = usb_platform_data.fifo_size[port_index];
+			dwc_otg_module_params.host_rx_fifo_size = dwc_otg_module_params.data_fifo_size / 2;
 			printk(KERN_INFO"%s: type: %d, speed: %d, config: %d, dma: %d, id: %d, phy: %x, ctrl: %x\n",
 				s_clock_name,port_type,port_speed,port_config,dma_config,id_mode,phy_reg_addr,ctrl_reg_addr);
 
@@ -1084,9 +1081,15 @@ static int dwc_otg_driver_probe(
 
 	pcore_para = &dwc_otg_module_params;
 
+	if(port_type == USB_PORT_TYPE_HOST)
+		pcore_para->host_only = 1;
+	else
+		pcore_para->host_only = 0;
+
 	dev_dbg(&_dev->dev, "dwc_otg_device=0x%p\n", dwc_otg_device);
 
-	dwc_otg_device->core_if = dwc_otg_cil_init(dwc_otg_device->os_dep.base);
+	dwc_otg_device->core_if = dwc_otg_cil_init(dwc_otg_device->os_dep.base,
+		pcore_para->host_only);
 	if (!dwc_otg_device->core_if) {
 		dev_err(&_dev->dev, "CIL initialization failed!\n");
 		retval = -ENOMEM;
