@@ -150,15 +150,18 @@ void get_bl_ext_level(struct bl_extern_config_t *bl_ext_cfg)
 }
 
 static DEFINE_MUTEX(bl_power_mutex);
-static void power_on_bl(void)
+static void power_on_bl(int bl_flag)
 {
     struct pinctrl_state *s;
     struct aml_bl_extern_driver_t *bl_extern_driver;
     int ret;
 
     mutex_lock(&bl_power_mutex);
-    DPRINT("%s: bl_level=%u, bl_status=%s, bl_real_status=%s\n", __FUNCTION__, bl_level, (bl_status ? "ON" : "OFF"), (bl_real_status ? "ON" : "OFF"));
-    if ((bl_level == 0) || (bl_status == 0)) {
+    if (bl_flag == LCD_BL_FLAG)
+        bl_status = 1;
+
+    DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%s, bl_real_status=%s\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, (bl_status ? "ON" : "OFF"), (bl_real_status ? "ON" : "OFF"));
+    if ((bl_level == 0) || (bl_status == 0) || (bl_real_status == 1)) {
         goto exit_power_on_bl;
     }
 
@@ -328,31 +331,31 @@ exit_power_on_bl:
     mutex_unlock(&bl_power_mutex);
 }
 
+static void bl_delayd_on(void) //bl_delayed_work for LCD_BL_FLAG control
+{
+    power_on_bl(LCD_BL_FLAG);
+}
+
 void bl_power_on(int bl_flag)
 {
-    mutex_lock(&bl_power_mutex);
-    if (bl_flag == LCD_BL_FLAG)
-        bl_status = 1;
-
     DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%s, bl_real_status=%s\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, (bl_status ? "ON" : "OFF"), (bl_real_status ? "ON" : "OFF"));
-    if ((bl_level == 0) || (bl_real_status == 1)) {
-        mutex_unlock(&bl_power_mutex);
-        return;
-    }
-
-    mutex_unlock(&bl_power_mutex);
-    if (bl_config.method == BL_CTL_MAX) {
-        printk("wrong backlight control method\n");
-    }
-    else {
-        if (bl_config.workqueue) {
-            queue_delayed_work(bl_config.workqueue, &bl_config.bl_delayed_work, msecs_to_jiffies(bl_config.power_on_delay));
+    if (bl_config.method < BL_CTL_MAX) {
+        if (bl_flag == LCD_BL_FLAG) {
+            if (bl_config.workqueue) {
+                queue_delayed_work(bl_config.workqueue, &bl_config.bl_delayed_work, msecs_to_jiffies(bl_config.power_on_delay));
+            }
+            else {
+                printk("[Warning]: no bl workqueue\n");
+                msleep(bl_config.power_on_delay);
+                power_on_bl(bl_flag);
+            }
         }
         else {
-            printk("[Warning]: no bl workqueue\n");
-            msleep(bl_config.power_on_delay);
-            power_on_bl();
+            power_on_bl(bl_flag);
         }
+    }
+    else {
+        printk("wrong backlight control method\n");
     }
 
     DPRINT("bl_power_on...\n");
@@ -1116,7 +1119,7 @@ static int aml_bl_probe(struct platform_device *pdev)
 #endif
 
     //init workqueue
-    INIT_DELAYED_WORK(&bl_config.bl_delayed_work, power_on_bl);
+    INIT_DELAYED_WORK(&bl_config.bl_delayed_work, bl_delayd_on);
     //bl_config.workqueue = create_singlethread_workqueue("bl_power_on_queue");
     bl_config.workqueue = create_workqueue("bl_power_on_queue");
     if (bl_config.workqueue == NULL) {
