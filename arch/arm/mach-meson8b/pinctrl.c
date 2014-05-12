@@ -191,6 +191,8 @@ const static struct pinctrl_pin_desc m8b_pads[] = {
 	PINCTRL_PIN(HDMI_TTL_2_N,"HDMI_TTL_2_N"),
 	PINCTRL_PIN(HDMI_TTL_CK_P,"HDMI_TTL_CK_P"),
 	PINCTRL_PIN(HDMI_TTL_CK_N,"HDMI_TTL_CK_N"),
+	PINCTRL_PIN(GPIO_BSD_EN,"GPIO_BSD_EN"),
+	PINCTRL_PIN(GPIO_TEST_N,"GPIO_TEST_N"),
 
 };
 int m8b_pin_to_pullup(unsigned int pin ,unsigned int *reg,unsigned int *bit,unsigned int *bit_en)
