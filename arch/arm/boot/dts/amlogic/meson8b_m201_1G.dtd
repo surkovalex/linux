@@ -124,8 +124,8 @@ void root_func(){
 		status = "okay";
 	   	reserve-memory = <0x01800000  0x00100000>;
 	   	reserve-iomap = "true";
-        vmode = <3>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
- 		display_size_default = <1920 1080 1920 2160 32>;
+		vmode = <3>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
+ 		display_size_default = <1920 1080 1920 3240 32>; //1920*1080*4*3 = 0x17BB000
 	};
 
 //$$ DEVICE="deinterlace"
