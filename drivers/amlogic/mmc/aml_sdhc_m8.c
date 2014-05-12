@@ -1531,6 +1531,8 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
 
     /*0: dont set it, 1:div2, 2:div3, 3:div4...*/
     clk_div = clk_rate / clk_ios - !(clk_rate%clk_ios);
+    if (!(clk_div & 0x01)) // if even number, turn it to an odd one
+        clk_div++;
 
     aml_sdhc_clk_switch(pdata, clk_div, clk_src_sel);
     pdata->clkc = readl(host->base+SDHC_CLKC);
@@ -1538,19 +1540,23 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
     pdata->mmc->actual_clock = clk_rate / (clk_div + 1);
 
     vclk2 = readl(host->base+SDHC_CLK2);
+    clk2->sd_clk_phase = 1; // 1
     if (pdata->mmc->actual_clock > 100000000) { // if > 100M
         clk2->rx_clk_phase = rx_clk_phase_set;
-        clk2->sd_clk_phase = sd_clk_phase_set; // 1
-    } else if (pdata->mmc->actual_clock > 50000000) { // if > 50M
-        clk2->rx_clk_phase = 1; // rx_clk_phase_set;
-        clk2->sd_clk_phase = 1; // sd_clk_phase_set; // 1
-    } else if (pdata->mmc->actual_clock > 25000000) { // if > 25M
-        clk2->rx_clk_phase = 10;
-        clk2->sd_clk_phase = 1; // sd_clk_phase_set
+        // clk2->sd_clk_phase = sd_clk_phase_set; // 1
+    } else if (pdata->mmc->actual_clock > 45000000) { // if > 45M
+        if (mmc->ios.signal_voltage == MMC_SIGNAL_VOLTAGE_330) // 3.3V
+            clk2->rx_clk_phase = 15;
+        else
+            clk2->rx_clk_phase = 11;
+    } else if (pdata->mmc->actual_clock >= 25000000) { // if >= 25M
+        clk2->rx_clk_phase = 15; // 10
+    } else if (pdata->mmc->actual_clock > 5000000) { // if > 5M
+        clk2->rx_clk_phase = 23;
+    } else if (pdata->mmc->actual_clock > 1000000) { // if > 1M
+        clk2->rx_clk_phase = 55;
     } else {
-        clk2->rx_clk_phase = 24;
-        clk2->sd_clk_phase = 0;
-        // clk2->sd_clk_phase = sd_clk_phase_set;
+        clk2->rx_clk_phase = 1061; // 63; // 24;
     }
     writel(vclk2, host->base+SDHC_CLK2);
     pdata->clk2 = vclk2;
