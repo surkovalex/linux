@@ -396,10 +396,10 @@ static int cur_dev_idx = 0;
 typedef struct {
     int event;
     u32 vpp_misc;
-#if HAS_VPU_PROT
     int mem_pd_vd1;
     int mem_pd_vd2;
     int mem_pd_di_post;
+#if HAS_VPU_PROT
     int mem_pd_prot2;
     int mem_pd_prot3;
 #endif
@@ -4702,27 +4702,32 @@ static int amvideo_class_suspend(struct device *dev, pm_message_t state)
     if (state.event == PM_EVENT_SUSPEND) {
         pm_state.vpp_misc = READ_VCBUS_REG(VPP_MISC + cur_dev->vpp_off);
 
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+
         pm_state.mem_pd_vd1 = get_vpu_mem_pd_vmod(VPU_VIU_VD1);
         pm_state.mem_pd_vd2 = get_vpu_mem_pd_vmod(VPU_VIU_VD2);
         pm_state.mem_pd_di_post = get_vpu_mem_pd_vmod(VPU_DI_POST);
+#if HAS_VPU_PROT
         pm_state.mem_pd_prot2 = get_vpu_mem_pd_vmod(VPU_PIC_ROT2);
         pm_state.mem_pd_prot3 = get_vpu_mem_pd_vmod(VPU_PIC_ROT3);
 #endif
-
+#endif
         DisableVideoLayer_NoDelay();
 
         msleep(50);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 
-#if HAS_VPU_PROT
         switch_vpu_mem_pd_vmod(VPU_VIU_VD1, VPU_MEM_POWER_DOWN);
         switch_vpu_mem_pd_vmod(VPU_VIU_VD2, VPU_MEM_POWER_DOWN);
         switch_vpu_mem_pd_vmod(VPU_DI_POST, VPU_MEM_POWER_DOWN);
+#if HAS_VPU_PROT
         switch_vpu_mem_pd_vmod(VPU_PIC_ROT2, VPU_MEM_POWER_DOWN);
         switch_vpu_mem_pd_vmod(VPU_PIC_ROT3, VPU_MEM_POWER_DOWN);
+#endif
 
         vpu_delay_work_flag = 0;
 #endif
+
     }
 
     return 0;
@@ -4741,18 +4746,19 @@ static int amvideo_class_resume(struct device *dev)
   ((VPP_VD2_ALPHA_MASK << VPP_VD2_ALPHA_BIT) | VPP_VD2_PREBLEND | VPP_VD1_PREBLEND | VPP_VD2_POSTBLEND | VPP_VD1_POSTBLEND | VPP_POSTBLEND_EN)
 
     if (pm_state.event == PM_EVENT_SUSPEND) {
-#if HAS_VPU_PROT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8		
         switch_vpu_mem_pd_vmod(VPU_VIU_VD1, pm_state.mem_pd_vd1);
         switch_vpu_mem_pd_vmod(VPU_VIU_VD2, pm_state.mem_pd_vd2);
         switch_vpu_mem_pd_vmod(VPU_DI_POST, pm_state.mem_pd_di_post);
+#if HAS_VPU_PROT
         switch_vpu_mem_pd_vmod(VPU_PIC_ROT2, pm_state.mem_pd_prot2);
         switch_vpu_mem_pd_vmod(VPU_PIC_ROT3, pm_state.mem_pd_prot3);
-
+#endif
+#endif
         WRITE_VCBUS_REG(VPP_MISC + cur_dev->vpp_off,
             (READ_VCBUS_REG(VPP_MISC + cur_dev->vpp_off) & (~VPP_MISC_VIDEO_BITS_MASK)) | (pm_state.vpp_misc & VPP_MISC_VIDEO_BITS_MASK));
-#else
         WRITE_VCBUS_REG(VPP_MISC + cur_dev->vpp_off, pm_state.vpp_misc);
-#endif
+
         pm_state.event = -1;
         if(debug_flag& DEBUG_FLAG_BLACKOUT){
             printk("%s write(VPP_MISC,%x)\n",__func__, pm_state.vpp_misc);
