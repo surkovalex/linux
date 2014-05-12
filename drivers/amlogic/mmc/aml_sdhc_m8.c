@@ -342,9 +342,9 @@ static int aml_sdhc_execute_tuning (struct mmc_host *mmc, u32 opcode)
 	struct aml_tuning_data tuning_data;
 	int err = -ENOSYS;
 
-    if (pdata->port != PORT_SDHC_A) { // debug
-        return 0;
-    }
+    // if ((pdata->port != PORT_SDHC_A) && (pdata->port != PORT_SDHC_C)) { // debug
+        // return 0;
+    // }
 
     if (pdata->is_tuned) { // have been tuned
         writel(pdata->tune_phase, host->base + SDHC_CLK2);
@@ -354,18 +354,17 @@ static int aml_sdhc_execute_tuning (struct mmc_host *mmc, u32 opcode)
         return 0;
     }
 
-	// if (opcode == MMC_SEND_TUNING_BLOCK_HS200) {
-		// if (mmc->ios.bus_width == MMC_BUS_WIDTH_8) {
-			// tuning_data.blk_pattern = tuning_blk_pattern_8bit;
-			// tuning_data.blksz = sizeof(tuning_blk_pattern_8bit);
-		// } else if (mmc->ios.bus_width == MMC_BUS_WIDTH_4) {
-			// tuning_data.blk_pattern = tuning_blk_pattern_4bit;
-			// tuning_data.blksz = sizeof(tuning_blk_pattern_4bit);
-		// } else {
-			// return -EINVAL;
-		// }
-	// } else 
-    if (opcode == MMC_SEND_TUNING_BLOCK) {
+    if (opcode == MMC_SEND_TUNING_BLOCK_HS200) {
+        if (mmc->ios.bus_width == MMC_BUS_WIDTH_8) {
+            tuning_data.blk_pattern = tuning_blk_pattern_8bit;
+            tuning_data.blksz = sizeof(tuning_blk_pattern_8bit);
+        } else if (mmc->ios.bus_width == MMC_BUS_WIDTH_4) {
+            tuning_data.blk_pattern = tuning_blk_pattern_4bit;
+            tuning_data.blksz = sizeof(tuning_blk_pattern_4bit);
+        } else {
+            return -EINVAL;
+        }
+    } else if (opcode == MMC_SEND_TUNING_BLOCK) {
 		tuning_data.blk_pattern = tuning_blk_pattern_4bit;
 		tuning_data.blksz = sizeof(tuning_blk_pattern_4bit);
 	} else {
