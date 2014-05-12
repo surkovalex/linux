@@ -70,7 +70,7 @@
 #include <mach/usb.h>
 
 
-#define DWC_DRIVER_VERSION	"3.10a 21-DEC-2012"
+#define DWC_DRIVER_VERSION	"3.10a 12-MAY-2014"
 #define DWC_DRIVER_DESC		"HS OTG USB Controller driver"
 
 static const char dwc_driver_name[] = "dwc_otg";
