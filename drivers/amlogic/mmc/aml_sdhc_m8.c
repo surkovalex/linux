@@ -36,6 +36,10 @@ unsigned int sd_clk_phase_set=1;
 unsigned int rx_endian=7;
 unsigned int tx_endian=7;
 unsigned int val1=0;
+unsigned int cmd25_cnt=0;
+unsigned int fifo_empty_cnt=0;
+unsigned int fifo_full_cnt=0;
+unsigned int timeout_cnt=0;
 
 static void aml_sdhc_clk_switch (struct amlsd_platform* pdata, int clk_div, int clk_src_sel);
 static int aml_sdhc_status (struct amlsd_host* host);
@@ -422,7 +426,7 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
     pdma->dma_urgent = 1;
     pdma->wr_burst = 3; // means 4
     pdma->txfifo_th = 49; // means 49
-    pdma->rd_burst = 7; // means 8
+    pdma->rd_burst = 15; // means 8
     pdma->rxfifo_th = 8; // means 8
     // pdma->rd_burst = 3;
     // pdma->wr_burst = 3;
@@ -431,9 +435,11 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
     writel(vpdma, host->base+SDHC_PDMA);
 
     /*Send Stop Cmd automatically*/
+    misc.reserved2 = 7; // [29:31] = 7
     misc.manual_stop = 0;
-    //writel(*(u32*)&misc, host->base + SDHC_MISC);
-    writel(0x80000150, host->base + SDHC_MISC);
+    misc.wcrc_err_patt = 5;
+    misc.wcrc_ok_patt = 2;
+    writel(*(u32*)&misc, host->base + SDHC_MISC);
 
     venhc = readl(host->base+SDHC_ENHC);
     enhc->rxfifo_th = 60;
@@ -459,7 +465,9 @@ int aml_sdhc_wait_ready(struct amlsd_host* host, u32 timeout)
     for(i=0; i< timeout; i++){
         vstat = readl(host->base + SDHC_STAT);
         stat = (struct sdhc_stat*)&vstat;
-        if(!stat->cmd_busy)
+        u32 esta = readl(host->base + SDHC_ESTA);
+        if(!stat->cmd_busy && (!((esta << 11) & 7)))
+        //if(!stat->cmd_busy)
             return 0;
         udelay(1);
     }
@@ -540,12 +548,11 @@ void aml_sdhc_set_pdma(struct amlsd_platform* pdata, struct mmc_request* mrq)
     pdma->dma_mode = 1;
     if(mrq->data->flags & MMC_DATA_WRITE){
         /*self-clear-fill, recommend to write before sd send*/
+        //init sets rd_burst to 15
+        pdma->rd_burst = 31;
         pdma->txfifo_fill = 1;
-        // pdma->dma_urgent = 1;
-        // pdma->wr_burst = 3; // means 4
-        // pdma->txfifo_th = 49; // means 49
         writel(*(u32*)pdma, host->base+SDHC_PDMA);
-        
+        pdma->txfifo_fill = 1;
     }
     // else{
         // pdma->txfifo_fill = 0;
@@ -588,6 +595,12 @@ void aml_sdhc_set_pdma(struct amlsd_platform* pdata, struct mmc_request* mrq)
 #endif
     
     writel(*(u32*)pdma, host->base+SDHC_PDMA);
+    if(mrq->data->flags & MMC_DATA_WRITE){
+        //init sets rd_burst to 15
+        //change back to 15 after fill
+        pdma->rd_burst = 15;
+        writel(*(u32*)pdma, host->base+SDHC_PDMA);
+    }
 }
 
 /*copy buffer from data->sg to dma buffer, set dma addr to reg*/
@@ -682,6 +695,7 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
             // sdhc_err("cmd%d: txfifo_cnt:%d, rxfifo_cnt:%d\n", 
                 // mrq->cmd->opcode, stat->txfifo_cnt, stat->rxfifo_cnt);
 
+            aml_sdhc_wait_ready(host, STAT_POLL_TIMEOUT); /*Wait command busy*/
             vsrst = readl(host->base + SDHC_SRST);        
             srst->rxfifo = 1;
             srst->txfifo = 1;
@@ -721,6 +735,11 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
         ictl.dma_done = 1;
     }else
         ictl.resp_ok = 1;
+
+    if (mrq->cmd->opcode == MMC_STOP_TRANSMISSION) {
+        send.data_stop = 1;
+    }
+
 
     /*Set Bus Width*/
     ctrl->dat_type = pdata->width;
@@ -890,7 +909,7 @@ static void aml_sdhc_print_err (struct amlsd_host *host)
         }
     }
 
-    aml_snprint(&p, &left_size, "%s: %s%s error, port=%d, Cmd%d Arg %08x, xfer_step=%d, status=%d, ",
+    aml_snprint(&p, &left_size, "%s: %s%s error, port=%d, Cmd%d Arg %08x, xfer_step=%d, status=%d, cmd25=%d, fifo_empty=%d, fifo_full=%d, timeout=%d, ",
             mmc_hostname(host->mmc), 
             msg_timer,
             msg,
@@ -898,7 +917,11 @@ static void aml_sdhc_print_err (struct amlsd_host *host)
             host->mrq->cmd->opcode,
             host->mrq->cmd->arg,
             xfer_step,
-            status);
+            status,
+            cmd25_cnt,
+            fifo_empty_cnt,
+            fifo_full_cnt,
+            timeout_cnt);
 
     switch (status) // more to print for different error cases
     {
@@ -1099,6 +1122,15 @@ void aml_sdhc_request(struct mmc_host *mmc, struct mmc_request *mrq)
     }
 #endif
 
+    if (mrq->cmd->opcode == 0) {
+        cmd25_cnt = 0;
+        fifo_empty_cnt = 0;
+        fifo_full_cnt = 0;
+        timeout_cnt = 0;
+    }
+    if (mrq->cmd->opcode == 25)
+        cmd25_cnt++;
+
     /*setup reg  especially for cmd with transfering data*/
     if(mrq->data) {
         /*Copy data to dma buffer for write request*/
@@ -1230,11 +1262,14 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
         return IRQ_HANDLED;
     }
 
-    if (host->xfer_step != XFER_AFTER_START) {
+    if ((host->xfer_step != XFER_AFTER_START) && (!host->cmd_is_stop)) {
         sdhc_err("host->xfer_step=%d\n", host->xfer_step);
     }
 
-    host->xfer_step = XFER_IRQ_OCCUR;
+    if(host->cmd_is_stop)
+        host->xfer_step = XFER_IRQ_TASKLET_BUSY;
+    else
+        host->xfer_step = XFER_IRQ_OCCUR;
 
     if (victl & vista) {
         spin_unlock_irqrestore(&host->mrq_lock, flags);
@@ -1244,9 +1279,11 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
         {
             case HOST_RX_FIFO_FULL:
                 mrq->cmd->error = -HOST_RX_FIFO_FULL;
+                fifo_full_cnt++;
                 break;
             case HOST_TX_FIFO_EMPTY:
                 mrq->cmd->error = -HOST_TX_FIFO_EMPTY;
+                fifo_empty_cnt++;
                 break;
             case HOST_RSP_CRC_ERR:
             case HOST_DAT_CRC_ERR:
@@ -1254,6 +1291,8 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
                 break;
             case HOST_RSP_TIMEOUT_ERR:
             case HOST_DAT_TIMEOUT_ERR:
+                if (!host->cmd_is_stop)
+                    timeout_cnt++;
                 mrq->cmd->error = -ETIMEDOUT;
                 break;
             case HOST_TASKLET_DATA:
@@ -1300,6 +1339,31 @@ static void aml_sdhc_not_timeout_err_handler (struct amlsd_host* host)
     aml_sdhc_com_err_handler(host);
 }
 
+struct mmc_command aml_sdhc_cmd = {
+    .opcode = MMC_STOP_TRANSMISSION,
+    .flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC,
+};
+struct mmc_request aml_sdhc_stop = {
+    .cmd = &aml_sdhc_cmd,
+};
+
+int err_bak;
+void aml_sdhc_send_stop(struct amlsd_host* host)
+{
+    struct amlsd_platform * pdata = mmc_priv(host->mmc);
+    unsigned long flags;
+
+    // sdhc_err("before cmd12\n");
+    
+    /*Already in mrq_lock*/
+    spin_lock_irqsave(&host->mrq_lock, flags);
+    err_bak = host->mrq->cmd->error;
+    host->mrq->cmd->error = 0;
+    host->cmd_is_stop = 1;
+    spin_unlock_irqrestore(&host->mrq_lock, flags);
+    aml_sdhc_start_cmd(pdata, &aml_sdhc_stop);
+}
+
 irqreturn_t aml_sdhc_data_thread(int irq, void *data)
 {
     struct amlsd_host* host = data;
@@ -1312,7 +1376,7 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
     
 
     spin_lock_irqsave(&host->mrq_lock, flags);
-    if (host->xfer_step != XFER_IRQ_OCCUR) {
+    if ((host->xfer_step != XFER_IRQ_OCCUR) && (host->xfer_step != XFER_IRQ_TASKLET_BUSY)) {
         sdhc_err("host->xfer_step=%d\n", host->xfer_step);
     }
 
@@ -1333,6 +1397,18 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
             return IRQ_HANDLED;
         }
         BUG();
+    }
+    if(host->cmd_is_stop){
+        int delay = 1;
+        if (mrq->cmd->error)
+            sdhc_err("cmd12 error %d\n", mrq->cmd->error);
+        host->cmd_is_stop = 0;
+        mrq->cmd->error = err_bak;
+        spin_unlock_irqrestore(&host->mrq_lock, flags);
+        msleep(delay);
+        sdhc_err("delay %dms\n", delay);
+        aml_sdhc_request_done(host->mmc, host->mrq);
+        return IRQ_HANDLED;
     }
     spin_unlock_irqrestore(&host->mrq_lock, flags);
 
@@ -1391,8 +1467,16 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
                 sdhc_err("xfer_step is HOST_TASKLET_CMD, while host->mrq->data is not NULL\n");
             }
             break;
-        case HOST_RX_FIFO_FULL:
         case HOST_TX_FIFO_EMPTY:
+            aml_sdhc_wait_ready(host, STAT_POLL_TIMEOUT);
+            aml_sdhc_read_response(host->mmc, host->mrq->cmd);
+            cancel_delayed_work(&host->timeout);
+            aml_sdhc_print_err(host);
+            aml_sdhc_host_reset(host);
+            writel(SDHC_ISTA_W1C_ALL, host->base+SDHC_ISTA);
+            aml_sdhc_send_stop(host);
+            break;
+        case HOST_RX_FIFO_FULL:
         case HOST_RSP_CRC_ERR:
         case HOST_DAT_CRC_ERR:
             aml_sdhc_not_timeout_err_handler(host);
@@ -1886,8 +1970,8 @@ static int aml_sdhc_probe(struct platform_device *pdev)
         mmc->alldev_claim = &aml_sdhc_claim;
         mmc->ios.clock = 400000;
         mmc->ios.bus_width = MMC_BUS_WIDTH_1;
-        mmc->max_blk_count = 4095;
-        mmc->max_blk_size = 4095;
+        mmc->max_blk_count = 4095; //
+        mmc->max_blk_size = 4095; //
         mmc->max_req_size = pdata->max_req_size;
         mmc->max_seg_size = mmc->max_req_size;
         mmc->max_segs = 1024;
