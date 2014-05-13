@@ -488,11 +488,11 @@ static struct snd_soc_jack_pin jack_pins[] = {
 static const struct snd_kcontrol_new aml_m8_controls[] = {
 	SOC_DAPM_PIN_SWITCH("Ext Spk"),
 
-/*
+
 	SOC_SINGLE_BOOL_EXT("Amp Spk enable", 0,
 		aml_m8_get_spk,
 		aml_m8_set_spk),
-
+   /*
     SOC_SINGLE_BOOL_EXT("Audio MPLL9 Switch", 0,
     aml_m8_get_MPLL9,
     aml_m8_set_MPLL9),

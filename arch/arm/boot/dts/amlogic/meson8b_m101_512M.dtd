@@ -847,16 +847,6 @@ void root_func(){
 
 
 /// ***************************************************************************************
-/// -   Audio
-//$$ MODULE="Audio"
-//$$ DEVICE="audio_i2s"
-//$$ L2 PROP_STR = "status"
-    audio_platform{
-        compatible = "amlogic,aml-i2s";
-        dev_name = "aml-i2s.0";
-        status = "okay";
-    };
-
 ///	-	LCD
 //$$ MODULE="LCD"
 //$$ DEVICE="backlight"
@@ -1113,6 +1103,16 @@ void root_func(){
    };
 
 
+/// ***************************************************************************************
+/// -   Audio
+//$$ MODULE="Audio"
+//$$ DEVICE="audio_i2s"
+//$$ L2 PROP_STR = "status"
+    audio_platform{
+        compatible = "amlogic,aml-i2s";
+        dev_name = "aml-i2s.0";
+        status = "okay";
+    };
 
 //$$ DEVICE="audio_i2s_dai"
 //$$ L2 PROP_STR = "status"
@@ -1162,6 +1162,11 @@ void root_func(){
     audio_m8_audio{
         compatible = "amlogic,m8_audio_codec";
         dev_name = "aml_m8_codec.0";
+        status = "disable";
+    };
+    audio_pmu3_audio{
+        compatible = "amlogic,aml_pmu3_codec";
+        dev_name = "aml_pmu3_codec.0";
         status = "okay";
     };
 
@@ -1192,6 +1197,10 @@ void root_func(){
             capless = <1>;
 	    status = "disable";
         };
+        pmu3:pmu3{
+        	codec_name = "amlpmu3";
+			status = "okay";
+        };
     };
 
 //$$ DEVICE="aml_m8_sound_card"
@@ -1206,7 +1215,7 @@ void root_func(){
     aml_m8_sound_card{
         compatible = "sound_card, aml_snd_m8";
         aml,sound_card = "AML-M8AUDIO";
-        aml,codec_dai = "AML-M8","rt5616-aif1","rt5631-hifi","wm8960-hifi";
+        aml,codec_dai = "AML-M8","rt5616-aif1","rt5631-hifi","wm8960-hifi","pmu3-hifi";
         //aml,codec_name = "aml_m8_codec.0","rt5616.4-001b";
         //aml,audio-codec = <&rt5616>;
         aml,audio-routing-rt5616 = 
@@ -1223,8 +1232,19 @@ void root_func(){
             "HP","HP_R",
             "MICBIAS","MAIN MIC",
             "LINPUT1","MICBIAS";
+        aml,audio-routing-amlpmu3 = 
+            "Ext Spk","LINEOUTL1",
+            "Ext Spk","LINEOUTR1",
+            "HP","HP_L",
+            "HP","HP_R",
+            "Mic Bias1","MAIN MIC",
+            "LINEINLP","Mic Bias1";
+        sleep_time = <130>;
         mute_gpio = "GPIO_BSD_EN";
-        //mute_inv;
+        I2S_MCLK = "GPIOAO_8";
+        I2S_SCLK = "GPIOAO_9";
+        I2S_LRCLK = "GPIOAO_10";
+        I2S_ODAT = "GPIOAO_11";
         hp_paraments = <800 300 0 5 1>;
         pinctrl-names = "aml_snd_m8";
         pinctrl-0 = <&audio_pins>;
@@ -1812,14 +1832,10 @@ void root_func(){
 //$$ L2 PROP_U32 10 = "amlogic,clrmask"
 //$$ L2 PROP_STR 6 = "amlogic,pins"
         audio_pins:audio_pin{
-            amlogic,setmask=<1 0x80
-                             1 0x75>;
-            amlogic,clrmask=<1 0x10000
-                             1 0x0a
-                             3 0x389
-                             4 0x3c00000
-                             9 0xd>;
-            amlogic,pins = "GPIOY_3","GPIOY_4","GPIOY_5","GPIOY_6","GPIOY_7","GPIOY_8";
+            amlogic,setmask=<10 0x78000000
+                              1 0x2000>;   // I2s_in
+            amlogic,clrmask=<10 0x80018000>;
+            amlogic,pins = "GPIOAO_8","GPIOAO_9","GPIOAO_10","GPIOAO_11","GPIOAO_6";
         };
 
 //$$ MATCH "Spi_pin_0_match" = "&aml_spi_nor_pins"
