@@ -1041,16 +1041,29 @@ void root_func(){
 		compatible = "amlogic,aml_sensor";
 		status = "okay";
 
-//$$ DEVICE="stk831x"
+//$$ DEVICE="mc32x0"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "address"
 //$$ L2 PROP_STR = "i2c_bus"
-        stk831x{
-            dev_name = "stk831x";
+        mc32x0{
+            dev_name = "mc32x0";
             status = "okay";
-            address = <0x3d>;
+            address = <0x4c>;
             i2c_bus = "i2c_bus_b";
+            acc_dir = <0x0010>;
         };
+//$$ DEVICE="mma7660"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "address"
+//$$ L2 PROP_STR = "i2c_bus"
+//        mma7660{
+//            dev_name = "mma7660";
+//            status = "okay";
+//            address = <0x4c>;
+//            i2c_bus = "i2c_bus_b";
+//       };
+
+
 	};
 
 
