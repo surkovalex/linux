@@ -21,7 +21,7 @@ struct saradc {
 	int ref_nominal;
 	int coef;
 #endif
-#ifdef CONFIG_ARCH_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	int flag;
 	int trimming;
 	int adc_efuse;
@@ -48,7 +48,7 @@ static void saradc_reset(void)
 	set_clock_divider(20);
 	enable_clock();
 	enable_adc();
-#ifdef CONFIG_ARCH_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	enable_bandgap();
 #endif
 	set_sample_mode(DIFF_MODE);
@@ -304,7 +304,7 @@ static ssize_t saradc_temperature_store(struct class *cla, struct class_attribut
 		u8 tempsen;
 		sscanf(buf, "%d", (int*)&tempsen);
 		if (tempsen) {
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
       select_temp();
       set_trimming((tempsen-1)&0xf);
       enable_temp();
@@ -316,7 +316,7 @@ static ssize_t saradc_temperature_store(struct class *cla, struct class_attribut
     	printk("enter temperature mode(trimming=%d),please get the value from chan6\n",(tempsen-1)&0xf);
 		}
 		else {
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
       disable_temp__();
       disable_temp();
       unselect_temp();
@@ -419,7 +419,7 @@ static struct class saradc_class = {
 
 int get_cpu_temp(void)
 {
-#ifdef CONFIG_ARCH_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	int ret=-1,tempa;
 	if(gp_saradc->flag){
 		ret=get_adc_sample(6);
@@ -453,7 +453,7 @@ static int saradc_probe(struct platform_device *pdev)
 	saradc->coef = 0;
   saradc_internal_cal(saradc);
 #endif
-#ifdef CONFIG_ARCH_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	char buf[2]={0};
 	int temp=-1,TS_C=-1,flag=0;
 	err=efuse_read_intlItem("temperature",buf,2);
