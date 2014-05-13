@@ -171,7 +171,7 @@ static void _stbuf_timer_func(unsigned long arg)
 u32 stbuf_level(struct stream_buf_s *buf)
 {
     return 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
     (buf->type == BUF_TYPE_HEVC) ? READ_VREG(HEVC_STREAM_LEVEL) :
 #endif
     _READ_ST_REG(LEVEL);
@@ -180,7 +180,7 @@ u32 stbuf_level(struct stream_buf_s *buf)
 u32 stbuf_rp(struct stream_buf_s *buf)
 {
     return
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
     (buf->type == BUF_TYPE_HEVC) ? READ_VREG(HEVC_STREAM_RD_PTR) :
 #endif
     _READ_ST_REG(RP);
