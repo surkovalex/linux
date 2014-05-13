@@ -857,7 +857,6 @@ void root_func(){
         status = "okay";
     };
 
-	/// ***************************************************************************************
 ///	-	LCD
 //$$ MODULE="LCD"
 //$$ DEVICE="backlight"
@@ -884,14 +883,16 @@ void root_func(){
 		dev_name = "backlight";
 		status = "okay";
 		pinctrl-names = "default","pwm_combo";
+		pinctrl-0 = <&lcd_backlight_pins>;	/** pwm_default pinmux */
+		pinctrl-1 = <&lcd_backlight_combo_pins>;	/** pwm_combo pinmux */
 		
 		bl_level_default_uboot_kernel=<10 102>;	/** default brightness level for uboot & kernel */
 		bl_level_middle_mapping=<128 102>;	/** brightness middle level mapping to a new level*/
 		bl_level_max_min=<255 10>;	/** brightness level max & min, must match the rootfs setting*/
 		
 		/* backlight power ctrl */
-		bl_power_on_delay=<100>; /** delay time before backlight power on(unit: ms) */
-		bl_ctrl_method=<3>;	/** backlight control method(0=gpio, 1=pwm_negative, 2=pwm_positive, 3=pwm_combo. 4=extern. decided by hardware design) */
+		bl_power_on_delay=<200>; /** delay time before backlight power on(unit: ms) */
+		bl_ctrl_method=<4>;	/** backlight control method(0=gpio, 1=pwm_negative, 2=pwm_positive, 3=pwm_combo. 4=extern. decided by hardware design) */
 		
 		bl_gpio_port="GPIODV_28";	/** backlight control gpio port */
 		bl_gpio_dim_max_min=<0x0 0xf>;	/** brightness diming level_max, level_min : (0x0~0xf, negative logic, only for gpio control method) */
@@ -905,6 +906,25 @@ void root_func(){
 		bl_pwm_combo_low_port_method="PWM_D","2";	/** backlight pwm_combo low port name, pwm control method(1=pwm_negative, 2=pwm_positive) */
 		bl_pwm_combo_high_freq_duty_max_min=<300000 96 89>;	/** backlight pwm_combo level_high port frequency(unit: Hz), duty_max, duty_min : (unit: %, positive logic) */
 		bl_pwm_combo_low_freq_duty_max_min=<10000 100 10>;	/** backlight pwm_combo level_low port frequency(unit: Hz), duty_max, duty_min : (unit: %, positive logic) */
+	};
+
+//******************************************************************************
+//bl extern
+//Notice: only one dev support
+//******************************************************************************
+//$$ DEVICE = "bl_extern_pmu_aml1218"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_STR 2 = "gpio_enable"
+//$$ L2 PROP_U32 = "type"
+//$$ L2 PROP_U32 2 = "dim_max_min"
+	bl_extern_pmu_aml1218{
+		compatible = "amlogic,bl_pmu_aml1218";
+		dev_name ="bl_pmu_aml1218";
+		status = "okay"; /** "disabled" or "okay" */
+
+		gpio_enable = "GPIODV_28"; /** "n" for none */
+		type = <2>;	/** bl_extern_driver type: 0=i2c, 1=spi, 2=other */
+		dim_max_min = <0x1 0x1b>;
 	};
 
 
@@ -1030,6 +1050,15 @@ void root_func(){
 			amlogic,setmask=<2 0x8>;
 			amlogic,clrmask=<1 0x10000000>;
 			amlogic,pins = "GPIOD_1";
+		};
+//$$ MATCH "Bl_pin_1_match" = "&lcd_backlight_combo_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 4 = "amlogic,clrmask"
+//$$ L2 PROP_STR 2 = "amlogic,pins"
+		lcd_backlight_combo_pins:lcd_backlight_combo{
+			amlogic,setmask=<3 0x5000000>;
+			amlogic,clrmask=<0 0x48 7 0x18000200>;
+			amlogic,pins = "GPIODV_9","GPIODV_28";
 		};
 		lcd_ttl_hvsync_pins_on:lcd_ttl_hvsync_on{
 			amlogic,setmask=<1 0xc0000>;
