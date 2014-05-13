@@ -1033,6 +1033,28 @@ void root_func(){
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 
+///     -       Sensors
+//$$ MODULE="Sensors"
+//$$ DEVICE="sensor"
+//$$ L2 PROP_STR = "status"
+    sensor{
+		compatible = "amlogic,aml_sensor";
+		status = "okay";
+
+//$$ DEVICE="stk831x"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "address"
+//$$ L2 PROP_STR = "i2c_bus"
+        stk831x{
+            dev_name = "stk831x";
+            status = "okay";
+            address = <0x3d>;
+            i2c_bus = "i2c_bus_b";
+        };
+	};
+
+
+
 /// ***************************************************************************************
 ///	-	Touch
 //$$ MODULE="Touch"
