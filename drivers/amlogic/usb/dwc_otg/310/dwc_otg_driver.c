@@ -688,11 +688,13 @@ void set_usb_vbus_power(int pin,char is_power_on)
 	    dwc_otg_power_notifier_call(is_power_on);		//notify pmu off vbus first
 
         printk( "set usb port power on (board gpio %d)!\n",pin);
-        amlogic_gpio_direction_output(pin,is_power_on,VBUS_POWER_GPIO_OWNER);		//set vbus on by gpio	 
+	 if(pin!=-2)
+        	amlogic_gpio_direction_output(pin,is_power_on,VBUS_POWER_GPIO_OWNER);		//set vbus on by gpio	 
     }
     else    {
         printk("set usb port power off (board gpio %d)!\n",pin);
-	    amlogic_gpio_direction_output(pin,is_power_on,VBUS_POWER_GPIO_OWNER);		//set vbus off by gpio first
+	 if(pin!=-2)
+	     amlogic_gpio_direction_output(pin,is_power_on,VBUS_POWER_GPIO_OWNER);		//set vbus off by gpio first
 
         dwc_otg_power_notifier_call(is_power_on);		//notify pmu on vbus
     }
@@ -795,7 +797,8 @@ static void dwc_otg_driver_remove(
 	}
 
 	if (otg_dev->core_if) {
-		amlogic_gpio_free(otg_dev->core_if->vbus_power_pin,VBUS_POWER_GPIO_OWNER);
+		if(otg_dev->core_if->vbus_power_pin!=-2)
+			amlogic_gpio_free(otg_dev->core_if->vbus_power_pin,VBUS_POWER_GPIO_OWNER);
 		dwc_otg_cil_remove(otg_dev->core_if);
 	} else {
 		DWC_DEBUGPL(DBG_ANY, "%s: otg_dev->core_if NULL!\n", __func__);
@@ -954,9 +957,13 @@ static int dwc_otg_driver_probe(
 			gpio_name = of_get_property(of_node, "gpio-vbus-power", NULL);
 			if(gpio_name)
 			{
-				gpio_vbus_power_pin= amlogic_gpio_name_map_num(gpio_name);
-				amlogic_gpio_request(gpio_vbus_power_pin,VBUS_POWER_GPIO_OWNER);
-				
+				if(strcmp(gpio_name,"PMU")==0)
+					gpio_vbus_power_pin = -2;
+				else
+				{
+					gpio_vbus_power_pin= amlogic_gpio_name_map_num(gpio_name);
+					amlogic_gpio_request(gpio_vbus_power_pin,VBUS_POWER_GPIO_OWNER);
+				}
 				prop = of_get_property(of_node, "gpio-work-mask", NULL);
 				if(prop)
 					gpio_work_mask = of_read_ulong(prop,1);	
