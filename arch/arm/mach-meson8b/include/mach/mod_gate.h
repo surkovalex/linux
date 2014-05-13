@@ -51,5 +51,6 @@ typedef enum {
 extern void switch_mod_gate_by_type(mod_type_t type, int flag);
 extern void switch_mod_gate_by_name(const char* mod_name, int flag);
 extern void power_gate_init(void);
+extern void switch_lcd_mod_gate(int flag);
 
 #endif /* __MOD_GATE_H */
