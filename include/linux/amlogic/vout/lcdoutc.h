@@ -139,7 +139,7 @@
 	#define PLL_CTRL_PD				30
 	#define PLL_CTRL_OD				16	//[17:16]
 	#define PLL_CTRL_N				9	//[13:9]
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 	#define PLL_CTRL_EN				30
 	#define PLL_CTRL_OD				9	//[10:9]
 	#define PLL_CTRL_N				24	//[28:24]
@@ -178,7 +178,7 @@
 	#define PLL_FREF_MAX			(30 * 1000)
 	#define PLL_VCO_MIN				(750 * 1000)
 	#define PLL_VCO_MAX				(1500 * 1000)
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 	#define PLL_M_MIN				2
 	#define PLL_M_MAX				511
 	#define PLL_N_MIN				1
@@ -194,7 +194,7 @@
 	#define DIV_POST_MAX_CLK_IN		(800 * 1000)
 	#define CRT_VID_MAX_CLK_IN		(600 * 1000)
 	#define LCD_VENC_MAX_CLK_IN		(208 * 1000)
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 	#define MIPI_PHY_MAX_CLK_IN		(1000 * 1000)
 	#define DIV_PRE_MAX_CLK_IN		(1500 * 1000)
 	#define DIV_POST_MAX_CLK_IN		(1000 * 1000)
@@ -214,8 +214,8 @@
 #define CRT_VID_DIV_MAX				15
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
 #define OD_SEL_MAX					2
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
-#define OD_SEL_MAX					4
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
+#define OD_SEL_MAX					3
 #endif
 #define DIV_PRE_SEL_MAX				6
 #define EDP_DIV0_SEL_MAX			15
@@ -298,7 +298,7 @@ static const char *lcd_ss_level_table[]={
 	"4%",
 	"5%",
 };
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
 #define SS_LEVEL_MAX	5
 static const char *lcd_ss_level_table[]={
 	"0",
@@ -430,7 +430,7 @@ typedef struct {
 } MLVDS_Config_t;
 #endif
 
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 #define DSI_INIT_ON_MAX              100
 #define DSI_INIT_OFF_MAX             30
 
@@ -489,7 +489,7 @@ typedef struct {
 } TTL_Config_t;
 
 typedef struct {
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 	DSI_Config_t *mipi_config;
 	EDP_Config_t *edp_config;
 #endif
