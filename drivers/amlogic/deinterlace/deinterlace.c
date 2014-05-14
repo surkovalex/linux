@@ -4751,7 +4751,8 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    else
 	        di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
 	    di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
-      di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+    if(di_buf->di_buf_dup_p[2])
+        di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
 
 
     	post_blend_en = 1;
@@ -4925,7 +4926,8 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
 	    else
 	        di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
 	    di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
-      di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+      if(di_buf->di_buf_dup_p[2])
+          di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
 
       if((di_post_stru.update_post_reg_flag)&&((force_update_post_reg&0x80)==0))
   	    enable_di_post_pd (
