@@ -88,8 +88,9 @@ static u32 error_watchdog_count;
 
 #define H265_DEBUG_POC          1
 #define H265_DEBUG_BUFMGR       2
-#define H265_DEBUG_UCODE        4
+#define H265_DEBUG_PARAM        4
 #define H265_DEBUG_REG          8
+#define H265_DEBUG_UCODE        0x10
 #define H265_DEBUG_DIS_ERROR_PROC       0x10000
 #define H265_DEBUG_DIS_SYS_ERROR_PROC   0x20000
 
@@ -324,6 +325,9 @@ h265 buffer management
 #define HEVC_STREAM_SWAP_TEST     HEVC_ASSIST_SCRATCH_L
 #define HEVC_DECODE_PIC_BEGIN_REG HEVC_ASSIST_SCRATCH_M
 #define HEVC_DECODE_PIC_NUM_REG   HEVC_ASSIST_SCRATCH_N
+
+#define DEBUG_REG1              HEVC_ASSIST_SCRATCH_G
+#define DEBUG_REG2              HEVC_ASSIST_SCRATCH_H
 
 #define MAX_INT 0x7FFFFFFF
 
@@ -664,6 +668,7 @@ typedef struct hevc_state_{
     PIC_t* col_pic;
     int skip_flag;
     int decode_idx;
+    unsigned char skip_p_b_flag;
     unsigned char wait_buf;
     unsigned char error_flag;
 }hevc_stru_t;
@@ -701,6 +706,7 @@ static void hevc_init_stru(hevc_stru_t* hevc, BuffInfo_t* buf_spec_i, buff_t* mc
     hevc->col_pic = NULL;
     hevc->wait_buf = 0;
     hevc->error_flag = 0;
+    hevc->skip_p_b_flag = 1;
     
     for(i=0; i<MAX_REF_PIC_NUM; i++){
         m_PIC[i].index = -1;
@@ -2072,6 +2078,18 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
     int     lcu_y_num_div;
     int     Col_ref         ;
     if(hevc->wait_buf == 0){
+        if(hevc->skip_p_b_flag && 
+            (rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR) &&
+            (rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR_N_LP)&&
+            ( rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA) &&
+            ( rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLA) && 
+            ( rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLANT) &&
+            (rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLA_N_LP )
+            ){
+            printk("%s: skip nal %d\n", __func__, rpm_param->p.m_nalUnitType);
+            return 4;
+        }
+        hevc->skip_p_b_flag = 0;    
         hevc->m_temporalId = rpm_param->p.m_temporalId;
         hevc->m_nalUnitType = rpm_param->p.m_nalUnitType;
         if(hevc->m_nalUnitType == NAL_UNIT_EOS){ 
@@ -2477,7 +2495,7 @@ static int init_buf_spec(hevc_stru_t* hevc)
 {
     int i;
     int canvas_width = (hevc->pic_w + 63) / 64 * 64;
-    int canvas_height = hevc->pic_h;
+    int canvas_height = (hevc->pic_h + 15) / 16 * 16;
 	  for(i=0; i<MAX_REF_PIC_NUM; i++){ 
 	      if(m_PIC[i].index == -1){
 	          break;
@@ -2621,6 +2639,15 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
     if(debug&H265_DEBUG_BUFMGR){
         printk("265 isr dec status = %d\n", dec_status);
     }
+
+   if(debug&H265_DEBUG_UCODE){
+       if(READ_HREG(DEBUG_REG1)!=0){
+            printk("dbg%x: %x\n",  READ_HREG(DEBUG_REG1), READ_HREG(DEBUG_REG2));
+            WRITE_HREG(DEBUG_REG1, 0);
+            	return IRQ_HANDLED;
+       }
+   }
+    
     if(hevc->error_flag){
         //reset
         amhevc_stop();
@@ -2647,7 +2674,7 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
     else if(dec_status == HEVC_SLICE_SEGMENT_DONE){
         if(hevc->wait_buf == 0){
             get_rpm_param(&rpm_param);      
-            if(debug&H265_DEBUG_UCODE){
+            if(debug&H265_DEBUG_PARAM){
                 printk("rpm_param:\n");
                 for(i=0; i<0x80; i++){
                     printk("%04x ", rpm_param.l.data[i]);
@@ -2784,7 +2811,13 @@ static void vh265_prot_init(void)
 
     /* disable PSCALE for hardware sharing */
     WRITE_VREG(HEVC_PSCALE_CTRL, 0);
-
+    
+    if(debug&H265_DEBUG_UCODE){
+        WRITE_VREG(DEBUG_REG1, 0x1);
+    }
+    else{
+        WRITE_VREG(DEBUG_REG1, 0x0);
+    }
 
 }
 
