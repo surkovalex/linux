@@ -139,10 +139,14 @@
 	#define PLL_CTRL_PD				30
 	#define PLL_CTRL_OD				16	//[17:16]
 	#define PLL_CTRL_N				9	//[13:9]
-#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
+#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	#define PLL_CTRL_EN				30
 	#define PLL_CTRL_OD				9	//[10:9]
 	#define PLL_CTRL_N				24	//[28:24]
+#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
+	#define PLL_CTRL_EN				30
+	#define PLL_CTRL_OD				16	//[17:16]
+	#define PLL_CTRL_N				10	//[14:10]
 #endif
 	#define PLL_CTRL_M				0	//[8:0]
 
@@ -256,7 +260,7 @@ static const char* lcd_power_type_table[]={
 	"pmu",
 	"signal",
 	"init",
-	"null"
+	"null",
 };
 
 static const char* lcd_power_pmu_gpio_table[]={
@@ -265,7 +269,7 @@ static const char* lcd_power_pmu_gpio_table[]={
 	"GPIO2",
 	"GPIO3",
 	"GPIO4",
-	"null"
+	"null",
 }; 
 
 typedef enum
@@ -464,7 +468,8 @@ typedef struct DSI_Config_s{
     unsigned char *dsi_init_off;
     unsigned char lcd_extern_init;
 }DSI_Config_t;
-
+#endif
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 typedef struct {
 	unsigned char link_user;
 	unsigned char lane_count;
@@ -491,6 +496,8 @@ typedef struct {
 typedef struct {
 #if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 	DSI_Config_t *mipi_config;
+#endif
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
 	EDP_Config_t *edp_config;
 #endif
 	LVDS_Config_t *lvds_config;
