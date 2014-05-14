@@ -175,56 +175,85 @@ EXPORT_SYMBOL(pts_cached_time);
 int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
 {
     pts_table_t *pTable;
-	u32 timestampe_delayed=0;
-	u32 outtime;
+    u32 timestampe_delayed=0;
+    u32 outtime;
 	
     if (type >= PTS_TYPE_MAX) {
         return 0;
     }
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    if (type == PTS_TYPE_HEVC) {
+        pTable = &pts_table[PTS_TYPE_VIDEO];
+    } else
+#endif
     pTable = &pts_table[type];
 
-    if((pTable->last_checkin_pts==-1) || (pTable->last_checkout_pts==-1))
-	    return 0;
-	if(type == PTS_TYPE_VIDEO)
-		outtime=timestamp_vpts_get();
-	else if(type ==PTS_TYPE_AUDIO)
-		outtime=timestamp_apts_get();
-	else 
-		outtime=timestamp_pcrscr_get();
-    timestampe_delayed=(pTable->last_checkin_pts-outtime)/90;
-	if((timestampe_delayed<0 ||timestampe_delayed>5*1000) && pTable->last_avg_bitrate>0){
-		int diff=pTable->last_checkin_offset-pTable->last_checkout_offset;
-		int diff2=stbuf_level(get_buf_by_type(type));
-		if((diff-diff2)> (pTable->last_avg_bitrate/8/10) || (diff-diff2*10))
-			diff =diff2;
-		int delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
-		if(timestampe_delayed< 0 ||abs(timestampe_delayed-delay_ms)>3*1000){
-			timestampe_delayed=delay_ms;
-			///printk("..recalculated %d ms delay,diff=%d\n",timestampe_delayed,diff);
-		}
-	}
-	if(latestbitrate)
-		*latestbitrate=pTable->last_bitrate;
-	if(avg_bitare)
-		*avg_bitare=pTable->last_avg_bitrate;
-	return timestampe_delayed;
-}
-EXPORT_SYMBOL(calculation_stream_delayed_ms);
-int calculation_stream_ext_delayed_ms(u8 type)
-{
-       pts_table_t *pTable;
-       int extdelay_ms;
-       if (type >= PTS_TYPE_MAX) {
+    if((pTable->last_checkin_pts==-1) || (pTable->last_checkout_pts==-1)) {
         return 0;
     }
-       pTable = &pts_table[type];
-       extdelay_ms=jiffies-pTable->last_checkin_jiffies;
-       if(extdelay_ms<0)
-               extdelay_ms=0;
-       return extdelay_ms*1000/HZ;
-}
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    if (type == PTS_TYPE_HEVC) {
+        outtime = timestamp_vpts_get();
+    } else
+#endif
+    if (type == PTS_TYPE_VIDEO) {
+        outtime = timestamp_vpts_get();
+    } else if (type ==PTS_TYPE_AUDIO) {
+        outtime = timestamp_apts_get();
+    } else {
+        outtime = timestamp_pcrscr_get();
+    }
+
+    timestampe_delayed = (pTable->last_checkin_pts-outtime)/90;
+
+    if ((timestampe_delayed<0 ||timestampe_delayed>5*1000) && pTable->last_avg_bitrate>0) {
+        int diff = pTable->last_checkin_offset-pTable->last_checkout_offset;
+        int diff2 = stbuf_level(get_buf_by_type(type));
+
+        if ((diff-diff2) > (pTable->last_avg_bitrate/8/10) || (diff-diff2*10)) {
+            int delay_ms;
+            diff = diff2;
+            delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
+
+            if (timestampe_delayed< 0 ||abs(timestampe_delayed-delay_ms)>3*1000) {
+                timestampe_delayed=delay_ms;
+                ///printk("..recalculated %d ms delay,diff=%d\n",timestampe_delayed,diff);
+            }
+	}
+    }
+
+    if (latestbitrate) {
+        *latestbitrate=pTable->last_bitrate;
+    }
+
+    if (avg_bitare) {
+        *avg_bitare=pTable->last_avg_bitrate;
+    }
+
+    return timestampe_delayed;
+}
+EXPORT_SYMBOL(calculation_stream_delayed_ms);
+
+int calculation_stream_ext_delayed_ms(u8 type)
+{
+    pts_table_t *pTable;
+    int extdelay_ms;
+
+    if (type >= PTS_TYPE_MAX) {
+         return 0;
+    }
+
+    pTable = &pts_table[type];
+    extdelay_ms = jiffies-pTable->last_checkin_jiffies;
+
+    if (extdelay_ms < 0) {
+        extdelay_ms=0;
+    }
+
+    return extdelay_ms*1000/HZ;
+}
 #endif
 
 static int pts_checkin_offset_inline(u8 type, u32 offset, u32 val,u64 uS64)
