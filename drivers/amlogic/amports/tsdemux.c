@@ -503,7 +503,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid)
         WRITE_MPEG_REG(PARSER_VIDEO_START_PTR,
                        READ_VREG(HEVC_STREAM_START_ADDR));
         WRITE_MPEG_REG(PARSER_VIDEO_END_PTR,
-                       READ_VREG(HEVC_STREAM_END_ADDR));
+                       READ_VREG(HEVC_STREAM_END_ADDR) - 8);
 
         CLEAR_MPEG_REG_MASK(PARSER_ES_CONTROL, ES_VID_MAN_RD_PTR);
 

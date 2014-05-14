@@ -838,7 +838,7 @@ int pts_start(u8 type)
         if (type == PTS_TYPE_HEVC) {
             pTable->buf_start = READ_VREG(HEVC_STREAM_START_ADDR);
             pTable->buf_size = READ_VREG(HEVC_STREAM_END_ADDR)
-                               - pTable->buf_start + 8;
+                               - pTable->buf_start;
             WRITE_MPEG_REG(VIDEO_PTS, 0);
             timestamp_pcrscr_set(0);//video always need the pcrscr,Clear it to use later
             pTable->first_checkin_pts = -1;

@@ -254,7 +254,7 @@ s32 stbuf_init(struct stream_buf_s *buf)
     if (buf->type == BUF_TYPE_HEVC) {
         CLEAR_VREG_MASK(HEVC_STREAM_CONTROL, 1);
         WRITE_VREG(HEVC_STREAM_START_ADDR, phy_addr);
-        WRITE_VREG(HEVC_STREAM_END_ADDR, phy_addr + buf->buf_size - 8);
+        WRITE_VREG(HEVC_STREAM_END_ADDR, phy_addr + buf->buf_size);
         WRITE_VREG(HEVC_STREAM_RD_PTR, phy_addr);
         WRITE_VREG(HEVC_STREAM_WR_PTR, phy_addr);
 
