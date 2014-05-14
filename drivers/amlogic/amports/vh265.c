@@ -91,7 +91,8 @@ static u32 error_watchdog_count;
 #define H265_DEBUG_PARAM        4
 #define H265_DEBUG_REG          8
 #define H265_DEBUG_UCODE        0x10
-#define H265_DEBUG_DIS_ERROR_PROC       0x10000
+#define H265_DEBUG_USE_AUTO_SKIP        0x20
+#define H265_DEBUG_ENA_LOC_ERROR_PROC       0x10000
 #define H265_DEBUG_DIS_SYS_ERROR_PROC   0x20000
 
 #define DEBUG_PTS
@@ -237,6 +238,7 @@ static int m_temporalId;
 #define HEVC_CODED_SLICE_SEGMENT_DAT         5
 #define HEVC_DUMP_LMEM				7
 #define HEVC_SLICE_SEGMENT_DONE  		8
+#define HEVC_NAL_SEARCH_DONE			9
 
 #define HEVC_DISCARD_NAL         0xf0
 #define HEVC_ACTION_ERROR        0xfe
@@ -330,6 +332,14 @@ h265 buffer management
 
 #define DEBUG_REG1              HEVC_ASSIST_SCRATCH_G
 #define DEBUG_REG2              HEVC_ASSIST_SCRATCH_H
+/* 
+ucode parser/search control
+bit 0:  0, header auto parse; 1, header manual parse
+bit 1:  0, auto skip for noneseamless stream; 1, no skip
+bit 2: valid when bit1==0;  0, auto skip nal before first vps/sps/pps/idr; 1, auto skip nal before first vps
+*/
+#define NAL_SEARCH_CTL		      HEVC_ASSIST_SCRATCH_I
+#define CUR_NAL_UNIT_TYPE       HEVC_ASSIST_SCRATCH_J
 
 #define MAX_INT 0x7FFFFFFF
 
@@ -670,7 +680,10 @@ typedef struct hevc_state_{
     PIC_t* col_pic;
     int skip_flag;
     int decode_idx;
-    unsigned char skip_p_b_flag;
+    unsigned char have_vps;
+    unsigned char have_sps;
+    unsigned char have_pps;
+    unsigned char have_valid_start_slice;
     unsigned char wait_buf;
     unsigned char error_flag;
 }hevc_stru_t;
@@ -708,7 +721,10 @@ static void hevc_init_stru(hevc_stru_t* hevc, BuffInfo_t* buf_spec_i, buff_t* mc
     hevc->col_pic = NULL;
     hevc->wait_buf = 0;
     hevc->error_flag = 0;
-    hevc->skip_p_b_flag = 1;
+    hevc->have_vps = 0;
+    hevc->have_sps = 0;
+    hevc->have_pps = 0;
+    hevc->have_valid_start_slice = 0;
     
     for(i=0; i<MAX_REF_PIC_NUM; i++){
         m_PIC[i].index = -1;
@@ -2080,18 +2096,6 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
     int     lcu_y_num_div;
     int     Col_ref         ;
     if(hevc->wait_buf == 0){
-        if(hevc->skip_p_b_flag && 
-            (rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR) &&
-            (rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR_N_LP)&&
-            ( rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA) &&
-            ( rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLA) && 
-            ( rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLANT) &&
-            (rpm_param->p.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLA_N_LP )
-            ){
-            printk("%s: skip nal %d\n", __func__, rpm_param->p.m_nalUnitType);
-            return 4;
-        }
-        hevc->skip_p_b_flag = 0;    
         hevc->m_temporalId = rpm_param->p.m_temporalId;
         hevc->m_nalUnitType = rpm_param->p.m_nalUnitType;
         if(hevc->m_nalUnitType == NAL_UNIT_EOS){ 
@@ -2682,6 +2686,54 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
         printk("%s: error handle\n", __func__);
         hevc->error_flag = 0;
     }
+    else if(dec_status == HEVC_NAL_SEARCH_DONE){
+        int naltype = READ_HREG(CUR_NAL_UNIT_TYPE);
+        int parse_type = HEVC_DISCARD_NAL;
+        if(naltype == NAL_UNIT_VPS){
+            parse_type = HEVC_NAL_UNIT_VPS;
+            hevc->have_vps = 1;
+        }
+        else if(hevc->have_vps){
+            if(naltype == NAL_UNIT_SPS){
+                parse_type = HEVC_NAL_UNIT_SPS;
+                hevc->have_sps = 1;
+            }
+            else if(naltype == NAL_UNIT_PPS){
+                parse_type = HEVC_NAL_UNIT_PPS;
+                hevc->have_pps = 1;
+            }
+            else if(hevc->have_sps && hevc->have_pps){
+                if(
+                    (naltype == NAL_UNIT_CODED_SLICE_IDR) ||
+                    (naltype == NAL_UNIT_CODED_SLICE_IDR_N_LP)||
+                    ( naltype == NAL_UNIT_CODED_SLICE_CRA) ||
+                    ( naltype == NAL_UNIT_CODED_SLICE_BLA) || 
+                    ( naltype == NAL_UNIT_CODED_SLICE_BLANT) ||
+                    (naltype == NAL_UNIT_CODED_SLICE_BLA_N_LP )
+                 ){
+                    parse_type = HEVC_NAL_UNIT_CODED_SLICE_SEGMENT;
+                    hevc->have_valid_start_slice = 1;
+                }
+                else if(hevc->have_valid_start_slice&&(naltype<= NAL_UNIT_CODED_SLICE_CRA)) {
+                    parse_type = HEVC_NAL_UNIT_CODED_SLICE_SEGMENT;
+                }
+            }
+        }
+        if(hevc->have_vps && hevc->have_sps && hevc->have_pps && hevc->have_valid_start_slice){
+            WRITE_VREG(NAL_SEARCH_CTL, 0x2); //auot parser NAL; do not check vps/sps/pps/idr
+        }
+        
+        if(debug&H265_DEBUG_PARAM){
+            printk("naltype = %d  parse_type %d\n %d %d %d %d \n", naltype, parse_type,
+                hevc->have_vps ,hevc->have_sps, hevc->have_pps ,hevc->have_valid_start_slice);
+        }
+
+        WRITE_VREG(HEVC_DEC_STATUS_REG, parse_type);
+        // Interrupt Amrisc to excute 
+        WRITE_VREG(HEVC_MCPU_INTR_REQ, AMRISC_MAIN_REQ);
+            
+    
+    }
     else if(dec_status == HEVC_SLICE_SEGMENT_DONE){
         if(hevc->wait_buf == 0){
             get_rpm_param(&rpm_param);      
@@ -2744,7 +2796,7 @@ static void vh265_put_timer_func(unsigned long arg)
         ) {                        // no buffer to recycle
         error_watchdog_count++;
         if (error_watchdog_count == ERROR_LOCAL_RESET_COUNT) {    
-            if((debug&H265_DEBUG_DIS_ERROR_PROC)==0){
+            if((debug&H265_DEBUG_ENA_LOC_ERROR_PROC)!=0){
                 printk("H265 decoder error local reset.\n");
                 gHevc.error_flag = 1;
                 WRITE_VREG(HEVC_ASSIST_MBOX1_IRQ_REG, 0x1); 
@@ -2829,6 +2881,11 @@ static void vh265_prot_init(void)
     else{
         WRITE_VREG(DEBUG_REG1, 0x0);
     }
+    
+    if(debug&H265_DEBUG_USE_AUTO_SKIP)
+        WRITE_VREG(NAL_SEARCH_CTL, 0x0); //auto parser NAL and skip
+    else    
+        WRITE_VREG(NAL_SEARCH_CTL, 0x1); //manual parser NAL
 
 }
 
