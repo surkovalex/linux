@@ -1,3 +1,4 @@
+#include <linux/delay.h>
 #include <linux/kernel.h>
 #include <linux/amlogic/vout/vinfo.h>
 #include <linux/amlogic/vout/enc_clk_config.h>
@@ -31,8 +32,8 @@
 
 static void set_hpll_clk_out(unsigned clk)
 {
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
     printk("config HPLL\n");
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c88000);
     aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xca563823);
     aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x40238100);
@@ -41,7 +42,7 @@ static void set_hpll_clk_out(unsigned clk)
     aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x08c31e8b);
 #endif
     switch(clk){
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#ifdef CONFIG_ARCH_MESON8
         case 2970:
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c84e00);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xce49c822);
@@ -60,15 +61,30 @@ static void set_hpll_clk_out(unsigned clk)
             break;
 #endif
         case 1488:
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
-    aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
-    aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
-    printk("waiting HPLL lock[%d]\n", __LINE__);
-    while(!(aml_read_reg32(P_HHI_VID_PLL_CNTL) & (1 << 31))) {
-        ;
-    }
-    aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
-    aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x08c31e8b);
+#ifdef CONFIG_ARCH_MESON8B
+            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x40238100);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x12385);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
+            while(!(aml_read_reg32(P_HHI_VID_PLL_CNTL) & (1 << 31))) {
+                ;
+            }
+            msleep(1);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c80e00);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x0e79c822);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x400121ef);
+            break;
+#endif
+#ifdef ONFIG_ARCH_MESON8
+            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
+            printk("waiting HPLL lock[%d]\n", __LINE__);
+            while(!(aml_read_reg32(P_HHI_VID_PLL_CNTL) & (1 << 31))) {
+                ;
+            }
+            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
+            aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x08c31e8b);
 #endif
 #ifdef CONFIG_ARCH_MESON6
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x43e);
@@ -118,6 +134,7 @@ static void set_hpll_clk_out(unsigned clk)
     RESET_HDMI_PHY();
     RESET_HDMI_PHY();
 #endif
+    printk("config HPLL done\n");
 }
 
 static void set_hpll_hdmi_od(unsigned div)
