@@ -4746,12 +4746,12 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
      	di_post_stru.next_canvas_id = di_post_stru.canvas_id?0:1;
 #endif
 	    di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
-	    if ( post_blend_mode == 1 )
+	    if (post_blend_mode == 1 && di_buf->di_buf_dup_p[2])
 	        di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[2]->nr_canvas_idx;
 	    else
 	        di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
 	    di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
-    if(di_buf->di_buf_dup_p[2])
+        if(di_buf->di_buf_dup_p[2])
         di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
 
 
@@ -4910,7 +4910,7 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
 #endif
 
       config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
-	    if ( post_blend_mode == 1 )
+      if (post_blend_mode == 1)
           config_canvas_idx(di_buf->di_buf_dup_p[2], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
       else
         config_canvas_idx(di_buf->di_buf_dup_p[0], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
@@ -4921,9 +4921,9 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
 #endif
 
 	    di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
-	    if ( post_blend_mode == 1 )
+	    if (post_blend_mode == 1 && di_buf->di_buf_dup_p[2]){
 	        di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[2]->nr_canvas_idx;
-	    else
+	    }else
 	        di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
 	    di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
       if(di_buf->di_buf_dup_p[2])
