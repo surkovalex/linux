@@ -1825,8 +1825,12 @@ void root_func(){
 //$$ L2 PROP_STR 10 = "amlogic,pins"	
         aml_cam_gpio_pins: aml_cam_gpio_pins{
 			amlogic,setmask=<3 0x40000
-					         9 0x7c>;
-			amlogic,pins = "GPIOY_3","GPIOY_6","GPIOY_7","GPIOY_8","GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14";
+					         9 0x37c>;
+			amlogic,clrmask=<1 0x10080
+					 3 0x37
+					 5 0xc0>;
+			amlogic,pins = "GPIOY_0","GPIOY_1","GPIOY_3","GPIOY_6","GPIOY_7","GPIOY_8","GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14";
+
 		};
 
 //$$ MATCH "I2C_AO_pin_match" = "&ao_i2c_master"
