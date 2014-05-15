@@ -1059,7 +1059,7 @@ void root_func(){
             status = "okay";
             address = <0x4c>;
             i2c_bus = "i2c_bus_b";
-            acc_dir = <0x0001>;
+            acc_dir = <0x0010>;
         };
 //$$ DEVICE="mma7660"
 //$$ L2 PROP_STR = "status"
