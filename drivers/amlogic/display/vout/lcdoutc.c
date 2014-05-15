@@ -100,7 +100,7 @@ static lcd_dev_t *pDev = NULL;
 static spinlock_t gamma_write_lock;
 static spinlock_t lcd_clk_lock;
 static Bool_t data_status = ON;
-static int bl_status = 0;
+static int bl_status = ON;
 
 static inline void lcd_mdelay(int n)
 {
@@ -3355,20 +3355,21 @@ static int lcd_set_current_vmode(vmode_t mode)
 		mutex_unlock(&lcd_vout_mutex);
 		return -EINVAL;
 	}
-	_disable_backlight();
-	vpp2_sel = 0;
 
+	vpp2_sel = 0;
 	WRITE_LCD_REG(VPP_POSTBLEND_H_SIZE, pDev->lcd_info.width);
 
 	if( !(mode&VMODE_LOGO_BIT_MASK) ){
+		_disable_backlight();
 #if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
 		request_vpu_clk_vmod(pDev->lcd_info.video_clk, pDev->lcd_info.mode);
 #endif
 		_lcd_module_enable();
+		_enable_backlight();
 	}
 	if (VMODE_INIT_NULL == pDev->lcd_info.mode)
 		pDev->lcd_info.mode = VMODE_LCD;
-	_enable_backlight();
+	
 	mutex_unlock(&lcd_vout_mutex);
 	return 0;
 }
