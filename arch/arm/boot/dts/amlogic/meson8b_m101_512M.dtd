@@ -849,11 +849,6 @@ void root_func(){
 			status = "okay";
 		};
 	};
-    
-
-
-
-
 
 /// ***************************************************************************************
 ///	-	LCD
@@ -926,7 +921,7 @@ void root_func(){
 		dim_max_min = <0x1 0x1b>;
 	};
 
-
+//******************************************************************************
 	lcd{
 		compatible = "amlogic,lcd";
 		dev_name = "lcd";
@@ -947,9 +942,7 @@ void root_func(){
 		lcd_bits_user=<6>;	/** user defined lcd bits(6 or 8, decided by hardware design; only valid when lcd_bits_option=1) */
 		
 		/* below configs are decided by hardware design, you can modify them if needed. */
-		//ttl config
 		ttl_rb_bit_swap=<0 0>;	/** ttl rb_swap, bit_swap : (0=normal, 1=swap) */
-		//lvds config
 		lvds_channel_pn_swap=<0>;	/** lvds channel pn swap(0=normal, 1=swap) */
 		
 		/* recommend settings, you can modify them if needed. */
@@ -972,9 +965,9 @@ void root_func(){
 				224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255>;
 		
 		/* default settings, don't modify them unless there is display problem */
-		clock_spread_spectrum=<0>;	/** ss_level(0=disable, 1=0.5%, 2=1%, 3=2%, 4=3%, 5=4%, 6=5%) */
+		clock_spread_spectrum=<0>;	/** ss_level(0=disable, 1=0.5%, 2=1%, 3=1.5%, 4=2%) */
 		clock_auto_generation=<1>;	/** clk_auto_generation(0=use customer clock parameters, as clk_pll_div_clk_ctrl defined, 1=auto generate clock parameters by lcd_clock) */
-		clk_pll_div_clk_ctrl=<0x10220 0x18803 0x1111>;	/** pll_ctrl, div_ctrl, clk_ctrl : (only valid when clk_auto_generation=0) */
+		clk_pll_div_clk_ctrl=<0x20445 0x18803 0x02ee1101>;	/** pll_ctrl, div_ctrl, clk_ctrl : (only valid when clk_auto_generation=0) */
 		lvds_vswing=<1>;	/** lvds_vswing_level(default level=1, support level 0,1,2,3,4) */
 		lvds_user_repack=<0 0>;	/** lvds_repack_user(0=auto setting, 1=user define), lvds_repack(0=JEIDA mode data mapping, 1=VESA mode data mapping. only valid when lvds_repack_user=1) */
 		rgb_base_coeff=<0xf0 0x74a>;	/** rgb_base, rgb_coeff */
@@ -983,35 +976,9 @@ void root_func(){
 		power_on_uboot="n","n","n";	/** only for uboot, ahead of lcd_power_on, no need config delay */
 		power_on_step_1="cpu","GPIODV_29","0";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_on_step_2="signal","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_3="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_4="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_5="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_6="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_7="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_8="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_9="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_10="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_11="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_12="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_13="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_14="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_on_step_15="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_on_delay=<50 10 0 0 0 0 0 0 0 0 0 0 0 0 0>;	/** power on delay after each step */
 		power_off_step_1="signal";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_2="cpu","GPIODV_29","0";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_3="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_4="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_5="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_6="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_7="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_8="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_9="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_10="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_11="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_12="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_13="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_14="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
-		power_off_step_15="n","n","n";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
+		power_off_step_2="cpu","GPIODV_29","2";	/** gpio_type(support 3 types: cpu, pmu, signal), gpio_name(upper-case, valid when gpio_type is cpu or pmu), gpio_value(0=output_low, 1=output_high, 2=input. valid when gpio_type is cpu or pmu) */
 		power_off_delay=<50 400 0 0 0 0 0 0 0 0 0 0 0 0 0>;	/** power off delay after each step */
 		power_off_uboot="n","n","n";	/** only for uboot, at the end of lcd_power_off, no need config delay */
 	};
@@ -1027,9 +994,9 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "hsync_width_backporch"
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
-	lcd_CLAP070NJ02:lcd_CLAP070NJ02{	//g33
+	lcd_CLAP070NJ02:lcd_CLAP070NJ02{
 		model_name="CLAP070NJ02";	/** lcd model name */
-		interface="ttl";			/** lcd_interface(mipi, lvds, edp, ttl) */
+		interface="ttl";			/** lcd_interface(mipi, lvds, ttl) */
 		active_area=<154 86>;		/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
 		lcd_bits_option=<8 1>;		/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
 		
@@ -1042,6 +1009,7 @@ void root_func(){
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 
+//******************************************************************************
 ///     -       Sensors
 //$$ MODULE="Sensors"
 //$$ DEVICE="sensor"
@@ -1848,8 +1816,8 @@ void root_func(){
 			amlogic,clrmask=<2 0x380000>;
 			amlogic,pins = "BOOT_11","BOOT_12","BOOT_13","BOOT_18";
 		};
-	};
-	//$$ MATCH "Bl_pin_0_match" = "&lcd_backlight_pins"
+		
+//$$ MATCH "Bl_pin_0_match" = "&lcd_backlight_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
 //$$ L2 PROP_U32 4 = "amlogic,clrmask"
 //$$ L2 PROP_STR = "amlogic,pins"
@@ -1927,5 +1895,6 @@ void root_func(){
 						"HDMI_TTL_2_N","HDMI_TTL_2_P","HDMI_TTL_1_N","HDMI_TTL_1_P","HDMI_TTL_0_N","HDMI_TTL_0_P";	//B2~B7
 			amlogic,enable-output=<1>;
 		};
-
+	};
+	
 }; /* end of / */
