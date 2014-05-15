@@ -55,6 +55,7 @@
 #define DRV_NAME	DRIVER_NAME
 #define DRV_VERSION	"v2.0.0"
 
+#undef CONFIG_HAS_EARLYSUSPEND
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 static struct early_suspend early_suspend;
