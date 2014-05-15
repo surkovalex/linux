@@ -119,6 +119,7 @@ int aml_register_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv)
 
 	return 0;
 }
+EXPORT_SYMBOL(aml_register_fe_drv);
 
 int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv)
 {
@@ -153,6 +154,8 @@ int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv)
 
 	return ret;
 }
+EXPORT_SYMBOL(aml_unregister_fe_drv);
+
 
 int aml_fe_analog_set_frontend(struct dvb_frontend* fe)
 {
@@ -184,6 +187,7 @@ int aml_fe_analog_set_frontend(struct dvb_frontend* fe)
 
 	return ret;
 }
+EXPORT_SYMBOL(aml_fe_analog_set_frontend);
 
 static int aml_fe_analog_get_frontend(struct dvb_frontend* fe)
 {
@@ -1851,6 +1855,7 @@ const char *v4l2_std_to_str(v4l2_std_id std)
     }
 }
 EXPORT_SYMBOL(v4l2_std_to_str);
+
 const char* fe_type_to_str(fe_type_t type)
 {
     switch(type)
@@ -1881,6 +1886,9 @@ const char* fe_type_to_str(fe_type_t type)
             break;
     }
 }
+EXPORT_SYMBOL(fe_type_to_str);
+
+
 static int __init aml_fe_init(void)
 {
 	return platform_driver_register(&aml_fe_driver);
