@@ -642,7 +642,7 @@ void root_func(){
         pmu_battery_name = "PTI PL336078";  /** battery name                         */
         pmu_init_chgvol = <4200000>;        /** target charge voltage                */
         pmu_init_chgend_rate = <10>;        /** set initial charing end current rate */
-        pmu_init_chg_enabled = <0>;         /** set initial charing enabled          */
+        pmu_init_chg_enabled = <1>;         /** set initial charing enabled          */
         pmu_init_adc_freq = <25>;           /** set initial adc frequency            */
         pmu_init_adc_freqc = <100>;         /** set initial coulomb adc coufrequency */
         pmu_init_chg_pretime = <80>;        /** set initial pre-charging time        */
@@ -1316,6 +1316,7 @@ void root_func(){
         key_name = "power";
 		key_code = <116>;
 		key_pin = "GPIOAO_3";
+        gpio_high_z;
         irq_keyup = <6>;
         irq_keydown = <7>;
 	};
