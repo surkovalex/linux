@@ -94,6 +94,8 @@ static u32 error_watchdog_count;
 #define H265_DEBUG_DIS_ERROR_PROC       0x10000
 #define H265_DEBUG_DIS_SYS_ERROR_PROC   0x20000
 
+#define DEBUG_PTS
+
 static u32 debug_decode_idx_start = 0;
 static u32 debug_decode_idx_end = 0;
 static u32 debug = 0;
@@ -2527,7 +2529,7 @@ static void set_frame_info(vframe_t *vf)
     vf->height = frame_height;
     vf->duration = frame_dur;
     vf->duration_pulldown = 0;
-    vf->pts = 0;
+
     ar = min(frame_ar, (u32)DISP_RATIO_ASPECT_RATIO_MAX);
     vf->ratio_control = (ar << DISP_RATIO_ASPECT_RATIO_BIT);
 
@@ -2612,8 +2614,17 @@ static int prepare_display_buf(int display_buff_id, int stream_offset)
         vfbuf_use[display_buff_id]++;
          */
         if (pts_lookup_offset(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0) != 0) {
+#ifdef DEBUG_PTS
+            pts_missed++;
+#endif
             vf->pts = 0;
         }
+#ifdef DEBUG_PTS
+        else {
+            pts_hit++;
+        }
+#endif
+
         vf->index = display_buff_id;
         vf->type = VIDTYPE_PROGRESSIVE | VIDTYPE_VIU_FIELD;
         vf->type |= VIDTYPE_VIU_NV21;
