@@ -2978,6 +2978,7 @@ void aml_dmx_after_retune(aml_ts_source_t src, struct dvb_frontend *fe)
 
 	spin_unlock_irqrestore(&dvb->slock, flags);
 }
+EXPORT_SYMBOL(aml_dmx_after_retune);
 
 void aml_dmx_start_error_check(aml_ts_source_t src, struct dvb_frontend *fe)
 {
@@ -2996,6 +2997,7 @@ void aml_dmx_start_error_check(aml_ts_source_t src, struct dvb_frontend *fe)
 
 	spin_unlock_irqrestore(&dvb->slock, flags);
 }
+EXPORT_SYMBOL(aml_dmx_start_error_check);
 
 int  aml_dmx_stop_error_check(aml_ts_source_t src, struct dvb_frontend *fe)
 {
@@ -3016,4 +3018,5 @@ int  aml_dmx_stop_error_check(aml_ts_source_t src, struct dvb_frontend *fe)
 
 	return ret;
 }
+EXPORT_SYMBOL(aml_dmx_stop_error_check);
 

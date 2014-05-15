@@ -203,5 +203,15 @@ config AM_M6_DEMOD
 	help
 		Select to enable M6 demod driver.
 
+
+isource "../hardware/dvb/altobeam/drivers/atbm887x/Kconfig"
+
+config AM_SI2177
+	tristate "SI2177 tuner"
+	default n
+	depends on AM_DVB
+	help
+		select the 2177 tuner.
+
 endmenu
 
