@@ -1783,11 +1783,12 @@ static ssize_t bufs_show(struct class *class, struct class_attribute *attr, char
         /*buf stats*/
 
         pbuf += sprintf(pbuf, "\tbuf addr:%#x\n", p->buf_start);
-        if (p->type != BUF_TYPE_SUBTITLE) {
 
+        if (p->type != BUF_TYPE_SUBTITLE) {
             pbuf += sprintf(pbuf, "\tbuf size:%#x\n", p->buf_size);
             pbuf += sprintf(pbuf, "\tbuf canusesize:%#x\n", p->canusebuf_size);
             pbuf += sprintf(pbuf, "\tbuf regbase:%#lx\n", p->reg_base);
+
             if (p->reg_base && p->flag & BUF_FLAG_IN_USE) {
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
                 switch_mod_gate_by_name("vdec", 1);
@@ -1798,7 +1799,7 @@ static ssize_t bufs_show(struct class *class, struct class_attribute *attr, char
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
                 switch_mod_gate_by_name("vdec", 0);
 #endif
-            }else {
+            } else {
                 pbuf += sprintf(pbuf, "\tbuf no used.\n");
             }
         } else {
@@ -1820,23 +1821,27 @@ static ssize_t bufs_show(struct class *class, struct class_attribute *attr, char
 
         pbuf += sprintf(pbuf, "\tbuf first_stamp:%#x\n", p->first_tstamp);
         pbuf += sprintf(pbuf, "\tbuf wcnt:%#x\n\n", p->wcnt);
-		
-		pbuf += sprintf(pbuf, "\tbuf max_buffer_delay_ms:%dms\n", p->max_buffer_delay_ms);
-		{
-			int calc_delayms=0;
-			u32 bitrate=0,avg_bitrate=0;
-			calc_delayms=calculation_stream_delayed_ms(p->type,&bitrate,&avg_bitrate);
-			if(calc_delayms>=0){
-		    	pbuf += sprintf(pbuf, "\tbuf current delay:%dms\n",calc_delayms);
-		    	pbuf += sprintf(pbuf, "\tbuf bitrate latest:%dbps,avg:%dbps\n",bitrate,avg_bitrate);
-		    	pbuf += sprintf(pbuf, "\tbuf time after last pts:%d ms\n",
-                      calculation_stream_ext_delayed_ms(p->type));
-				pbuf += sprintf(pbuf, "\tbuf time after last write data :%d ms\n",
-					  (int)(jiffies_64 - p->last_write_jiffies64)*1000/HZ);
+        pbuf += sprintf(pbuf, "\tbuf max_buffer_delay_ms:%dms\n", p->max_buffer_delay_ms);
 
-			}
-		}
+        if (p->reg_base && p->flag & BUF_FLAG_IN_USE) {
+            int calc_delayms=0;
+            u32 bitrate=0,avg_bitrate=0;
+
+            calc_delayms = calculation_stream_delayed_ms(p->type, &bitrate, &avg_bitrate);
+
+            if (calc_delayms>=0) {
+                pbuf += sprintf(pbuf, "\tbuf current delay:%dms\n",calc_delayms);
+                pbuf += sprintf(pbuf, "\tbuf bitrate latest:%dbps,avg:%dbps\n",bitrate,avg_bitrate);
+                pbuf += sprintf(pbuf, "\tbuf time after last pts:%d ms\n",
+
+                calculation_stream_ext_delayed_ms(p->type));
+
+                pbuf += sprintf(pbuf, "\tbuf time after last write data :%d ms\n",
+                                (int)(jiffies_64 - p->last_write_jiffies64)*1000/HZ);
+            }
+        }
     }
+
     return pbuf - buf;
 }
 

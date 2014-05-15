@@ -210,14 +210,17 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "reg"
 //$$ L2 PROP_U32 = "irq"
 //$$ L2 PROP_U32 = "vdin_id"
-//    vdin0{
-//       compatible = "amlogic,vdin";
-//        dev_name = "vdin0";
-//        status = "ok";
-//	 reserve-memory = <0x04000000>;
-//        irq = <115>;
-//        vdin_id = <0>;
-//	};
+    vdin0{
+        compatible = "amlogic,vdin";
+        dev_name = "vdin0";
+        status = "ok";
+	reserve-memory = <0x04000000>;
+	camera_size = <1600 1200>;//camera is gc2035,the picture resolution is 1600x1200;so 1600x1200x2x4=16M
+	 reserve-iomap = "true";
+        irq = <115>;
+        vdin_id = <0>;
+	};
+
 	
 //$$ DEVICE="vdin1"
 //$$ L2 PROP_STR = "status"
@@ -254,13 +257,13 @@ void root_func(){
 //$$ MODULE = "DISP&MM-Video Input Manager"
 //$$ DEVICE="vm"
 //$$ L2 PROP_STR = "status"
-//    vm{
-//		compatible = "amlogic,vm";
-//		dev_name = "vm.0";
-//		status = "okay";
-//		reserve-memory = <0x01800000>;
-//		reserve-iomap = "true";
-//	};
+    vm{
+		compatible = "amlogic,vm";
+		dev_name = "vm.0";
+		status = "okay";
+		reserve-memory = <0x01800000>;
+		reserve-iomap = "true";
+	};
 
 /// ***************************************************************************************
 ///	-	ION
@@ -481,7 +484,13 @@ void root_func(){
 		#size-cells = <0>;
 		use_pio = <0>;
 		master_i2c_speed = <300000>;
+		i2c@40{
+			compatible = "amlogic,gslX680new";
+			status = "okay";
+			reg = <0x40>;
+		};
 	};
+	
 	
 //$$ DEVICE="I2C_B"
 //$$ L2 PROP_STR = "status"
@@ -532,7 +541,7 @@ void root_func(){
 		reg = <0xc1108d20 0x20>;
 		device_id = <4>;
 		pinctrl-names="default";
-//		pinctrl-0=<&d_i2c_master>;
+		pinctrl-0=<&d_i2c_master>;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		use_pio = <0>;
@@ -1072,71 +1081,7 @@ void root_func(){
 ///	-	Touch
 //$$ MODULE="Touch"
 //$$ DEVICE = "touch"
-//$$ L2 PROP_STR = "status"
-    touch{
-        compatible = "amlogic,aml_touch";
-        status = "okay";
-        #address-cells = <1>;
-        #size-cells = <0>;
-	
-//$$ DEVICE = "touch_ft5x06"
-//$$ L2 PROP_STR = "status"
-//$$ L3 PROP_STR = "i2c_bus"
-//$$ L3 PROP_U32 ="reg"
-//$$ L3 PROP_U32 ="ic_type"
-//$$ L3 PROP_U32 ="irq"
-//$$ L3 PROP_STR = "gpio_interrupt"
-//$$ L3 PROP_STR = "gpio_reset"
-//$$ L3 PROP_U32 ="xres"
-//$$ L3 PROP_U32 ="yres"
-//$$ L3 PROP_U32 ="pol"
-//$$ L3 PROP_STR = "fw_file"
-				touch_ft5x06:ft5x06{
-					touch_name = "ft5x06";
-					
-					i2c_bus = "i2c_bus_a";
-					reg = <0x38>;
-					ic_type = <0>;
-					irq = <0>;
-					gpio_interrupt = "GPIOA_16";
-					gpio_reset = "GPIOC_3";
-					xres = <1024>;
-					yres = <600>;
-					pol = <0x1>;
-					fw_file = "/etc/touch/ft5x06.fw";
-				};
-//$$ DEVICE = "touch_gslx680"
-//$$ L2 PROP_STR = "status"
-//$$ L2 PROP_STR = "touch_name"
-//$$ L3 PROP_STR = "i2c_bus"
-//$$ L3 PROP_U32 ="ic_type"
-//$$ L3 PROP_U32 ="irq"
-//$$ L3 PROP_U32 ="irq_edge"
-//$$ L3 PROP_STR = "gpio_interrupt"
-//$$ L3 PROP_STR = "gpio_reset"
-//$$ L3 PROP_U32 ="xres"
-//$$ L3 PROP_U32 ="yres"
-//$$ L3 PROP_U32 ="pol"
-//$$ L3 PROP_U32 ="max_num"
-//$$ L3 PROP_STR = "fw_file"
-				touch_gslx680:gslx680{
-					touch_name = "gslx680";
-					i2c_bus = "i2c_bus_a";
-					status = "okay";
-					reg = <0x40>;
-					ic_type = <0>;
-					irq = <1>;
-					irq_edge = "GPIO_IRQ_RISING";
-					gpio_interrupt = "GPIOA_16";
-					gpio_reset = "GPIOC_3";
-					xres = <1024>;
-					yres = <600>;
-					pol = <0x4>;
-					max_num = <5>;
-					fw_file = "/etc/touch/gslx680.fw";
-				};
-   };
-
+//$$ L2 PROP_STR = "status"	
 
 /// ***************************************************************************************
 /// -   Audio
@@ -1299,12 +1244,10 @@ void root_func(){
 	aml_cams{
 		compatible = "amlogic,cams_prober";
 		status = "okay";
-		pinctrl-names = "gpio","csi";
+		pinctrl-names = "gpio";
 		pinctrl-0 = <&aml_cam_gpio_pins> ;
-		pinctrl-1 = <&aml_cam_csi_pins> ;
-
-///	-	gc2035
-//$$ DEVICE="gc2035"
+///	-	sp0838
+//$$ DEVICE = "sp0838"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "front_back"
 //$$ L2 PROP_STR = "i2c_bus"
@@ -1314,32 +1257,56 @@ void root_func(){
 //$$ L2 PROP_U32 = "vertical_flip"
 //$$ L2 PROP_STR = "bt_path"
         	cam_0{
-			cam_name = "gc2035";
-			front_back = <1>;
+			cam_name = "sp0838";
+			front_back = <0>;
 			i2c_bus = "i2c_bus_d";
-			gpio_pwdn = "GPIOH_5";
+			gpio_pwdn = "GPIOH_6";
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <1>;
 			vertical_flip = <0>;	
-			bt_path = "gpio";
 			status = "okay";
 		};
-		
+///	-	gc0308
+//$$ DEVICE = "gc0308"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
+		cam_1{
+			cam_name = "gc0308";
+			front_back = <0>;
+			i2c_bus = "i2c_bus_d";
+			gpio_pwdn = "GPIOH_6";
+			gpio_rst = "GPIOH_4";
+			mirror_flip = <1>;
+			vertical_flip = <0>;
+			status = "okay";
+		};
+///	-	gc0328
+//$$ DEVICE="gc0328"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
 		cam_2{
-			cam_name = "ar0833";
+			cam_name = "gc0328";
 			front_back = <0>;
 			i2c_bus = "i2c_bus_d";
 			gpio_pwdn = "GPIOH_6";
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <0>;
 			vertical_flip = <0>;
-			config_path = "/system/etc/camera_isp_cfg/ar0833_skt";
-			mclk = <12000>;
-			bt_path = "csi";
-			interface = "mipi";
-			clk_channel = "a";
 			status = "okay";
 		};
+	
 	};	
 
 /// ***************************************************************************************
@@ -1799,17 +1766,13 @@ void root_func(){
 //$$ L2 PROP_U32 4 = "amlogic,setmask"
 //$$ L2 PROP_STR 10 = "amlogic,pins"	
         aml_cam_gpio_pins: aml_cam_gpio_pins{
-			amlogic,setmask=<3 0x80000
+			amlogic,setmask=<3 0x40000
 					         9 0x37c>;
-			amlogic,pins = "GPIOH_9","GPIOY_6","GPIOY_7","GPIOY_8","GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14";
-		};
-		
-//$$ MATCH "Camera_pin_1_match" = "&aml_cam_csi_pins"
-//$$ L2 PROP_U32 2 = "amlogic,setmask"
-//$$ L2 PROP_STR = "amlogic,pins"	
-		aml_cam_csi_pins: aml_cam_csi_pins{
-			amlogic,setmask=<3 0x80000>;
-			amlogic,pins = "GPIOH_9";
+			amlogic,clrmask=<1 0x10080
+					 3 0x37
+					 5 0xc0>;
+			amlogic,pins = "GPIOY_0","GPIOY_1","GPIOY_3","GPIOY_6","GPIOY_7","GPIOY_8","GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14";
+
 		};
 
 //$$ MATCH "I2C_AO_pin_match" = "&ao_i2c_master"
@@ -1849,10 +1812,13 @@ void root_func(){
 // MATCH "I2C_D_pin_match" = "&d_i2c_master"
 // L2 PROP_U32 2 = "amlogic,setmask"
 // L2 PROP_STR 2 = "amlogic,pins"
-//		d_i2c_master:d_i2c{
-//			amlogic,setmask=<4 0xc>;
-//			amlogic,pins="GPIOH_7","GPIOH_8";
-//		};
+		d_i2c_master:d_i2c{
+			amlogic,setmask=<4 0xc>;
+			amlogic,clrmask=<0 0x480 
+			                 6 0x3000
+			                 8 0x30000>;
+			amlogic,pins="GPIOH_7","GPIOH_8";
+		};
 
 //$$ MATCH "remote_pin_0_match" = "&remote_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"

@@ -1016,9 +1016,13 @@ int efuse_write_item(char *buf, size_t count, loff_t *ppos)
 }
 
 /* function: efuse_read_intlItem
- * intl_item: item name,name is [temperature,cvbs_trimming]
+ * intl_item: item name,name is [temperature,cvbs_trimming,temper_cvbs]
+ *            [temperature: 2byte]
+ *            [cvbs_trimming: 2byte]
+ *            [temper_cvbs: 4byte]
  * buf:  output para
  * size: buf size
+ * return: <0 fail, >=0 ok
  * */
 int efuse_read_intlItem(char *intl_item,char *buf,int size)
 {
@@ -1059,6 +1063,19 @@ int efuse_read_intlItem(char *intl_item,char *buf,int size)
 				 * */
 				pos = 504;
 				len = 2;
+				if(size <= 0){
+					printk("%s input size:%d is error\n",intl_item,size);
+					return -1;
+				}
+				if(len > size){
+					len = size;
+				}
+				ret = __efuse_read( buf, len, &pos );
+				return ret;
+			}
+			if(strcasecmp(intl_item,"temper_cvbs") == 0){
+				pos = 502;
+				len = 4;
 				if(size <= 0){
 					printk("%s input size:%d is error\n",intl_item,size);
 					return -1;

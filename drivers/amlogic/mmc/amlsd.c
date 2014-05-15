@@ -953,15 +953,29 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
 #ifdef CONFIG_MESON_CPU_EMULATOR
 	return 0;
 #else
-	int dat3;
+    int dat3, i;
+    int cnt=0;
 
     if(pdata->is_sduart)
         return 1;
 
-    dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
-    if(dat3 == 0){
-        return 1;
+    for (i = 0; i < 10; i++) {
+        dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
+        if(dat3 == 1){
+            // if (cnt)
+                // sdhc_err("cnt=%d\n", cnt);
+            return 0; // NOT uart
+        }
+        cnt++;
+        msleep(10);
     }
+    // sdhc_err("cnt=%d\n", cnt);
+    return 1; // uart in
+
+    // dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
+    // if(dat3 == 0){
+        // return 1;
+    // }
 
     // if (pdata->gpio_dat3 != 0){
         // ret = amlogic_gpio_request_one(pdata->gpio_dat3, GPIOF_IN, MODULE_NAME);
@@ -977,7 +991,7 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
             // return 1;
         // }
     // }
-    return 0;
+    // return 0;
 #endif
 }
 
