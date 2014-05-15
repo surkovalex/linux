@@ -134,7 +134,7 @@ void root_func(){
         reserve-memory = <0x0900000  0x00100000>;//9M+1M=10M
 	   	reserve-iomap = "true";
         vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
-        display_size_default = <768 1024 768 3072 32>;//1024x768x4x3==0x0900000,9MB
+        display_size_default = <1024 600 1024 1800 32>;//1024x600x4x3==0x0900000,9MB
 	};
 
 //$$ DEVICE="deinterlace"
@@ -1059,7 +1059,7 @@ void root_func(){
             status = "okay";
             address = <0x4c>;
             i2c_bus = "i2c_bus_b";
-            acc_dir = <0x0010>;
+            acc_dir = <0x0001>;
         };
 //$$ DEVICE="mma7660"
 //$$ L2 PROP_STR = "status"
