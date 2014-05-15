@@ -978,6 +978,7 @@ void root_func(){
             "MICBIAS","MAIN MIC",
             "LINPUT1","MICBIAS";
         mute_gpio = "GPIO_BSD_EN";
+        hp_disable;
         //mute_inv;
         hp_paraments = <800 300 0 5 1>;
         pinctrl-names = "aml_snd_m8";
