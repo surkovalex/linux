@@ -199,7 +199,7 @@ void root_func(){
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
-        linux,contiguous-region = <&cma_0>;
+		linux,contiguous-region = <&cma_0>;
 		reserve-iomap = "true";
 	};
 /// ***************************************************************************************
@@ -261,8 +261,7 @@ void root_func(){
 		compatible = "amlogic,vm";
 		dev_name = "vm.0";
 		status = "okay";
-		reserve-memory = <0x01800000>;
-		reserve-iomap = "true";
+		linux,contiguous-region = <&cma_0>;
 	};
 
 /// ***************************************************************************************
