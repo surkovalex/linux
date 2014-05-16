@@ -1453,15 +1453,16 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "key_chan"
 //$$ L2 PROP_U32 2 = "key_val"
 //$$ L2 PROP_U32 2 = "key_tolerance"
+
     adc_keypad{
 		compatible = "amlogic,adc_keypad";
 		status = "okay";
-		key_name = "vol-","vol+";
-		key_num = <2>;
-		key_code = <114 115>;
-		key_chan = <0 0>;
-		key_val = <144 267>;
-		key_tolerance = <40 40>;
+		key_name = "back";
+		key_num = <1>;
+		key_code = <158>;
+		key_chan = <0>;
+		key_val = <372>;
+		key_tolerance = <40>;
 	};
 
 /// ***************************************************************************************
