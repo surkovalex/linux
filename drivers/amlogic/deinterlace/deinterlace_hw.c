@@ -1811,7 +1811,11 @@ void di_post_switch_buffer_pd (
                        (blend_mode << 20)                                                            // motion adaptive blend.
                       );
 #else
-        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (post_mb_en << 28) |                                                   // post motion blur enable.
+        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, 
+	#ifdef NEW_DI_V1
+       		       (1<<31) |        //enable new ei(remove from m8b)
+        #endif
+                       (post_mb_en << 28) |                                                   // post motion blur enable.
                        (0 << 27) |                                                                    // mtn3p(l, c, r) max.
                        (0 << 26) |                                                                    // mtn3p(l, c, r) min.
                        (0 << 25) |                                                                    // mtn3p(l, c, r) ave.
@@ -1823,9 +1827,6 @@ void di_post_switch_buffer_pd (
                       );
 #endif
     }
-#ifdef NEW_DI_V1
-    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)|(1<<31));
-#endif
     VSYNC_WR_MPEG_REG_BITS(DI_POST_CTRL, post_field_num, 29, 1);
 }
 
@@ -1887,7 +1888,11 @@ void enable_di_post_pd(
                        (blend_mode << 20)                                                            // motion adaptive blend.
                       );
 #else
-        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (post_mb_en << 28) |                                                   // post motion blur enable.
+        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, 
+     	#ifdef NEW_DI_V1
+       		       (1<<31)   |      //enable new ei(remove from m8b)
+       	#endif
+        	       (post_mb_en << 28) |                                                   // post motion blur enable.
                        (0 << 27) |                                                                    // mtn3p(l, c, r) max.
                        (0 << 26) |                                                                    // mtn3p(l, c, r) min.
                        (0 << 25) |                                                                    // mtn3p(l, c, r) ave.
@@ -1942,9 +1947,6 @@ void enable_di_post_pd(
                    (post_field_num << 29) |                      // post field number.
                    (0x1 << 30)                                   // post soft rst  post frame rst.
                   );
-#endif
-#ifdef NEW_DI_V1
-    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)|(1<<31));
 #endif
 }
 
