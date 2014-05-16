@@ -1196,10 +1196,6 @@ static int dmx_init(struct aml_dmx *dmx)
 
 	memset(dmx->sec_buf_watchdog_count, 0, sizeof(dmx->sec_buf_watchdog_count));
 
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	memset(g_ts_config, 0, sizeof(struct aml_dmx_ts_config) * TS_SRC_MAX);
-#endif
-
 	dmx->init = 1;
 
 	return 0;

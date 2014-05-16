@@ -37,14 +37,6 @@ config AM_IOBUS
 endmenu
 
 if !OF
-config AMLOGIC_DYNAMIC_FEANDDMX_CONFIG
-	bool "Support Dynamic Frontend And Demux Config"
-	default n
-	depends on AM_DVB
-	help
-		Support dynamic frontend and demux config.
-
-if !AMLOGIC_DYNAMIC_FEANDDMX_CONFIG
 
 config AMLOGIC_TS0
 	bool "Enable TS0"
@@ -194,15 +186,15 @@ config AMLOGIC_TS2_INVERT_S2P1_FEC_CLK
 		TS2 FEC_CLK invert
 
 endif
-endif
 
+if ARCH_MESON6TV || ARCH_MESON6TVD
 config AM_M6_DEMOD
 	tristate "M6 demod driver"
 	default n
 	depends on AM_DVB
 	help
 		Select to enable M6 demod driver.
-
+endif
 
 isource "../hardware/dvb/altobeam/drivers/atbm887x/Kconfig"
 
@@ -212,6 +204,13 @@ config AM_SI2177
 	depends on AM_DVB
 	help
 		select the 2177 tuner.
+
+config AM_AVL6211
+	tristate "AVL6211 DVB-S2 demod driver"
+	default n
+	depends on AM_DVB
+	help
+		select the AVL6211 DVB-S2 demod.
 
 endmenu
 

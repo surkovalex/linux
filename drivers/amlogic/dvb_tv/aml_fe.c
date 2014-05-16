@@ -65,14 +65,6 @@ static struct aml_fe_drv *atv_demod_drv_list = NULL;
 static struct aml_fe_drv *dtv_demod_drv_list = NULL;
 static struct aml_fe_man  fe_man;
 
-#ifndef CONFIG_OF
-static struct platform_device *g_aml_fe_pdev = NULL;
-static u32	 aml_fe_num_resources = 0;
-static struct resource aml_fe_resource[AML_FE_MAX_RES];
-static char *aml_fe_buf = NULL;
-static size_t aml_fe_size;
-#endif
-
 static u32 aml_fe_suspended = 0;
 
 static DEFINE_SPINLOCK(lock);
@@ -132,7 +124,7 @@ int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv)
 
 		spin_lock_irqsave(&lock, flags);
 
-		if(drv->ref){
+		if(!drv->ref){
 			for(pprev = NULL, pdrv = *list;
 				pdrv;
 				pprev = pdrv, pdrv = pdrv->next){
@@ -676,6 +668,8 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		for(drv = *list; drv; drv = drv->next){
 			if(!strcmp(drv->name, str)){
 				drv->ref++;
+				if(drv->owner)
+					try_module_get(drv->owner);
 				break;
 			}
 		}
@@ -692,11 +686,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 	}
 
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		struct aml_fe_drv **list = aml_get_fe_drv_list(type);
 		struct aml_fe_drv *drv;
@@ -708,6 +698,8 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		for(drv = *list; drv; drv = drv->next){
 			if(drv->id == type){
 				drv->ref++;
+				if(drv->owner)
+					try_module_get(drv->owner);
 				break;
 			}
 		}
@@ -736,11 +728,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->i2c_adap_id = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int adap = res->start;
 
@@ -761,11 +749,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->i2c_addr = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int addr = res->start;
 
@@ -785,11 +769,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->reset_gpio = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int gpio = res->start;
 
@@ -809,11 +789,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->reset_value = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int v = res->start;
 
@@ -833,11 +809,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->tuner_power_gpio = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int gpio = res->start;
 
@@ -857,11 +829,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->lnb_power_gpio = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int gpio = res->start;
 
@@ -881,11 +849,7 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 		dev->antoverload_gpio = -1;
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int gpio = res->start;
 
@@ -942,6 +906,8 @@ static int aml_fe_dev_init(struct aml_dvb *dvb, struct platform_device *pdev, am
 static int aml_fe_dev_release(struct aml_dvb *dvb, aml_fe_dev_type_t type, struct aml_fe_dev *dev)
 {
 	if(dev->drv && dev->drv->release){
+		if(dev->drv->owner)
+			module_put(dev->drv->owner);
 		dev->drv->ref--;
 		dev->drv->release(dev);
 	}
@@ -950,14 +916,77 @@ static int aml_fe_dev_release(struct aml_dvb *dvb, aml_fe_dev_type_t type, struc
 	return 0;
 }
 
+static void aml_fe_man_run(struct aml_dvb *dvb, struct aml_fe *fe)
+{
+	int tuner_cap = 0xFFFFFFFF;
+	int demod_cap = 0;
+
+	if(fe->init)
+		return;
+
+	if(fe->tuner->drv){
+		tuner_cap = fe->tuner->drv->capability;
+		fe->init = 1;
+	}
+
+	if(fe->atv_demod->drv){
+		demod_cap |= fe->atv_demod->drv->capability;
+		fe->init = 1;
+	}
+	
+	if(fe->dtv_demod->drv){
+		demod_cap |= fe->dtv_demod->drv->capability;
+		fe->init = 1;
+	}
+
+	if(fe->init){
+		int reg = 1;
+		int ret;
+		int id;
+
+		spin_lock_init(&fe->slock);
+		fe->mode = AM_FE_UNKNOWN;
+		fe->capability = (tuner_cap & demod_cap);
+		pr_dbg("fe: %p cap: %x tuner: %x demod: %x\n", fe, fe->capability, tuner_cap, demod_cap);
+
+		for(id = 0; id < FE_DEV_COUNT; id++){
+			struct aml_fe *prev_fe = &fe_man.fe[id];
+
+			if(prev_fe == fe)
+				continue;
+			if(prev_fe->init && (prev_fe->dev_id == fe->dev_id)){
+				reg = 0;
+				break;
+			}
+		}
+		fe->fe = &fe_man.dev[fe->dev_id];
+		if(reg){
+			fe->fe->demodulator_priv = fe;
+			fe->fe->ops.set_mode = aml_fe_set_mode;
+			fe->fe->ops.read_ts  = aml_fe_read_ts;
+
+			ret = dvb_register_frontend(&dvb->dvb_adapter, fe->fe);
+			if(ret){
+				pr_error("register fe%d failed\n", fe->dev_id);
+				return;
+			}
+		}
+
+		if(fe->tuner)
+			fe->tuner->fe = fe;
+		if(fe->atv_demod)
+			fe->atv_demod->fe = fe;
+		if(fe->dtv_demod)
+			fe->dtv_demod->fe = fe;
+	}
+}
+
 static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, struct aml_fe *fe, int id)
 {
 #ifndef CONFIG_OF
 	struct resource *res;
 #endif
 	char buf[32];
-	int tuner_cap = 0xFFFFFFFF;
-	int demod_cap = 0;
 	u32 value;
 	int ret;
 
@@ -974,18 +1003,11 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		}
 
 		fe->tuner = &fe_man.tuner[id];
-		fe->init = 1;
-
-		tuner_cap &= fe->tuner->drv->capability;
 
 		pr_dbg("%s: %d\n", buf, id);
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int id = res->start;
 		if((id < 0) || (id >= FE_DEV_COUNT) || !fe_man.tuner[id].drv){
@@ -994,9 +1016,6 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		}
 
 		fe->tuner = &fe_man.tuner[id];
-		fe->init = 1;
-
-		tuner_cap &= fe->tuner->drv->capability;
 	}
 #endif /*CONFIG_OF*/
 
@@ -1011,17 +1030,10 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		}
 
 		fe->atv_demod = &fe_man.atv_demod[id];
-		fe->init = 1;
-
-		demod_cap |= fe->atv_demod->drv->capability;
 		pr_dbg("%s: %d\n", buf, id);
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int id = res->start;
 		if((id < 0) || (id >= FE_DEV_COUNT) || !fe_man.atv_demod[id].drv){
@@ -1030,9 +1042,6 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		}
 
 		fe->atv_demod = &fe_man.atv_demod[id];
-		fe->init = 1;
-
-		demod_cap |= fe->atv_demod->drv->capability;
 	}
 #endif /*CONFIG_OF*/
 
@@ -1047,17 +1056,10 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		}
 
 		fe->dtv_demod = &fe_man.dtv_demod[id];
-		fe->init = 1;
-
-		demod_cap |= fe->dtv_demod->drv->capability;
 		pr_dbg("%s: %d\n", buf, id);
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int id = res->start;
 
@@ -1068,9 +1070,6 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		}
 
 		fe->dtv_demod = &fe_man.dtv_demod[id];
-		fe->init = 1;
-
-		demod_cap |= fe->dtv_demod->drv->capability;
 	}
 #endif /*CONFIG_OF*/
 
@@ -1099,11 +1098,7 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 		pr_dbg("%s: %d\n", buf, id);
 	}
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int id = res->start;
 		aml_ts_source_t ts = AM_TS_SRC_TS0;
@@ -1141,11 +1136,7 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 	}
 	pr_dbg("%s: %d\n", buf, fe->dev_id);
 #else /*CONFIG_OF*/
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	res = aml_fe_platform_get_resource_byname(buf);
-#else
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, buf);
-#endif
 	if(res){
 		int id = res->start;
 
@@ -1158,45 +1149,7 @@ static int aml_fe_man_init(struct aml_dvb *dvb, struct platform_device *pdev, st
 	}
 #endif /*CONFIG_OF*/
 
-	if(fe->init){
-		int reg = 1;
-		int prev;
-		int ret;
-
-
-		spin_lock_init(&fe->slock);
-		fe->mode = AM_FE_UNKNOWN;
-		fe->capability = (tuner_cap & demod_cap);
-		pr_dbg("fe: %p cap: %x tuner: %x demod: %x\n", fe, fe->capability, tuner_cap, demod_cap);
-
-		for(prev = 0; prev < id; prev++){
-			struct aml_fe *prev_fe = &fe_man.fe[prev];
-
-			if(prev_fe->init && (prev_fe->dev_id == fe->dev_id)){
-				reg = 0;
-				break;
-			}
-		}
-			fe->fe = &fe_man.dev[fe->dev_id];
-		if(reg){
-			fe->fe->demodulator_priv = fe;
-			fe->fe->ops.set_mode = aml_fe_set_mode;
-			fe->fe->ops.read_ts  = aml_fe_read_ts;
-
-			ret = dvb_register_frontend(&dvb->dvb_adapter, fe->fe);
-			if(ret){
-				pr_error("register fe%d failed\n", fe->dev_id);
-				return -1;
-			}
-		}
-
-		if(fe->tuner)
-			fe->tuner->fe = fe;
-		if(fe->atv_demod)
-			fe->atv_demod->fe = fe;
-		if(fe->dtv_demod)
-			fe->dtv_demod->fe = fe;
-	}
+	aml_fe_man_run(dvb, fe);
 
 	return 0;
 }
@@ -1207,6 +1160,7 @@ static int aml_fe_man_release(struct aml_dvb *dvb, struct aml_fe *fe)
 		aml_dmx_register_frontend(fe->ts, NULL);
 		dvb_unregister_frontend(fe->fe);
 		dvb_frontend_detach(fe->fe);
+
 		fe->init = 0;
 	}
 
@@ -1263,7 +1217,7 @@ static ssize_t setting_show(struct class *cls,struct class_attribute *attr,char 
 	int i;
 	struct aml_fe_man *fm = &fe_man;
 
-	r = sprintf(buf, "tuners:\n");
+	r = sprintf(buf, "tuner:\n");
 	buf += r;
 	total += r;
 	for(i=0; i<FE_DEV_COUNT; i++){
@@ -1317,7 +1271,7 @@ static ssize_t setting_show(struct class *cls,struct class_attribute *attr,char 
 		}
 	}
 
-	r = sprintf(buf, "frontends:\n");
+	r = sprintf(buf, "frontend:\n");
 	buf += r;
 	total += r;
 	for(i=0; i<FE_DEV_COUNT; i++){
@@ -1339,118 +1293,136 @@ static ssize_t setting_show(struct class *cls,struct class_attribute *attr,char 
 	return total;
 }
 
-#ifndef CONFIG_OF
-
-static ssize_t aml_fe_show_dynamic_config(struct class *class, struct class_attribute *attr, char *buf)
+static void reset_drv(int id, aml_fe_dev_type_t type, const char *name)
 {
-	ssize_t ret = 0;
-	return ret;
+	struct aml_fe_man *fm = &fe_man;
+    struct aml_fe_drv **list;
+    struct aml_fe_drv **pdrv;
+    struct aml_fe_drv *drv;
+    struct aml_fe_drv *old;
+
+	if((id < 0) || (id >= FE_DEV_COUNT))
+		return;
+
+	if(fm->fe[id].init){
+		pr_error("cannot reset driver when the device is inused\n");
+		return;
+	}
+
+	list = aml_get_fe_drv_list(type);
+	for(drv = *list; drv; drv = drv->next){
+		if(!strcmp(drv->name, name))
+			break;
+	}
+
+	switch(type){
+		case AM_DEV_TUNER:
+			pdrv = &fm->fe[id].tuner->drv;
+			break;
+		case AM_DEV_ATV_DEMOD:
+			pdrv = &fm->fe[id].atv_demod->drv;
+			break;
+		case AM_DEV_DTV_DEMOD:
+			pdrv = &fm->fe[id].dtv_demod->drv;
+			break;
+		default:
+			return;
+	}
+
+	old = *pdrv;
+	if(old == drv)
+		return;
+
+	if(old){
+		old->ref--;
+		if(old->owner)
+			module_put(old->owner);
+	}
+
+	if(drv){
+		drv->ref++;
+		if(drv->owner)
+			try_module_get(drv->owner);
+	}
+
+	*pdrv = drv;
 }
 
-static ssize_t aml_fe_store_dynamic_config(struct class *class, struct class_attribute *attr, const char *buf, size_t size)
+static ssize_t setting_store(struct class *class, struct class_attribute *attr, const char *buf, size_t size)
 {
-	struct aml_fe_man *fe_man_pre = platform_get_drvdata(g_aml_fe_pdev);
-	struct aml_dvb *dvb = aml_get_dvb_device();
-	int i;
-	char *s, *p, *t;
+	struct aml_fe_man *fm = &fe_man;
+	int id, val;
+	char dev_name[32];
+	unsigned long flags;
 
-	/*user not release fe, we can not config fe*/
-	if(aml_fe_buf && (aml_fe_size == size) && !(memcmp(aml_fe_buf, buf, aml_fe_size))){
-		return -1;
+	spin_lock_irqsave(&lock, flags);
+
+	if(sscanf(buf, "tuner %i i2c_id %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->tuner[id].i2c_adap_id = val;
+	}else if(sscanf(buf, "tuner %i i2c_addr %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->tuner[id].i2c_addr = val;
+	}else if(sscanf(buf, "tuner %i reset_gpio %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->tuner[id].reset_gpio = val;
+	}else if(sscanf(buf, "tuner %i reset_level %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->tuner[id].reset_value = val;
+	}else if(sscanf(buf, "atv_demod %i i2c_id %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->atv_demod[id].i2c_adap_id = val;
+	}else if(sscanf(buf, "atv_demod %i i2c_addr %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->atv_demod[id].i2c_addr = val;
+	}else if(sscanf(buf, "atv_demod %i reset_gpio %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->atv_demod[id].reset_gpio = val;
+	}else if(sscanf(buf, "atv_demod %i reset_level %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->atv_demod[id].reset_value = val;
+	}else if(sscanf(buf, "dtv_demod %i i2c_id %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->dtv_demod[id].i2c_adap_id = val;
+	}else if(sscanf(buf, "dtv_demod %i i2c_addr %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->dtv_demod[id].i2c_addr = val;
+	}else if(sscanf(buf, "dtv_demod %i reset_gpio %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->dtv_demod[id].reset_gpio = val;
+	}else if(sscanf(buf, "dtv_demod %i reset_level %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->dtv_demod[id].reset_value = val;
+	}else if(sscanf(buf, "frontend %i device %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->fe[id].dev_id = val;
+	}else if(sscanf(buf, "frontend %i ts %i", &id, &val) == 2){
+		if((id >= 0) && (id < FE_DEV_COUNT))
+			fm->fe[id].ts = val;
+	}else if(sscanf(buf, "frontend %i tuner %s", &id, dev_name) == 2){
+		reset_drv(id, AM_DEV_TUNER, dev_name);
+	}else if(sscanf(buf, "frontend %i atv_demod %s", &id, dev_name) == 2){
+		reset_drv(id, AM_DEV_ATV_DEMOD, dev_name);
+	}else if(sscanf(buf, "frontend %i dtv_demod %s", &id, dev_name) == 2){
+		reset_drv(id, AM_DEV_DTV_DEMOD, dev_name);
 	}
 
-	for(i = 0; i < aml_fe_num_resources; i++){
-		if(aml_fe_resource[i].name){
-			kfree(aml_fe_resource[i].name);
-			aml_fe_resource[i].name = NULL;
+	spin_unlock_irqrestore(&lock, flags);
+
+	if(sscanf(buf, "enable %i", &id) == 1){
+		if((id >= 0) && (id < FE_DEV_COUNT)){
+			struct aml_dvb *dvb = aml_get_dvb_device();
+			aml_fe_man_run(dvb, &fm->fe[id]);
 		}
-	}
-
-	aml_fe_num_resources = 0;
-
-	i = 0;
-	p = (char*)buf;
-	while ((s = strstr(p, "|")) != NULL) {
-		*s = '\0';
-		pr_dbg("%s\n", p);
-		if(i % 2 == 0){
-			aml_fe_resource[aml_fe_num_resources].start = simple_strtol(p, NULL, 0);
+	}else if(sscanf(buf, "disable %i", &id) == 1){
+		if((id >= 0) && (id < FE_DEV_COUNT)){
+			struct aml_dvb *dvb = aml_get_dvb_device();
+			aml_fe_man_release(dvb, &fm->fe[id]);
 		}
-		else{
-			t = kmalloc(strlen(p) + 1, GFP_KERNEL);
-			if(t){
-				memcpy(t, p, strlen(p) + 1);
-				aml_fe_resource[aml_fe_num_resources].name = t;
-
-				aml_fe_num_resources++;
-			}
-			else{
-				pr_error("kmalloc fail\n");
-			}
-		}
-		i++;
-		p = s+1;
-	}
-
-	pr_dbg("num res %d\n", aml_fe_num_resources);
-
-	for (i = 0; i < aml_fe_num_resources; i++) {
-		struct resource *r = &aml_fe_resource[i];
-
-		pr_dbg("%d | %s\n", r->start, r->name);
-	}
-
-	/* release pre aml fe man and dev */
-	if(fe_man_pre){
-		platform_set_drvdata(g_aml_fe_pdev, NULL);
-
-		for(i = 0; i < FE_DEV_COUNT; i++){
-			aml_fe_man_release(dvb, &fe_man_pre->fe[i]);
-		}
-
-		for(i = 0; i < FE_DEV_COUNT; i++){
-			aml_fe_dev_release(dvb, AM_DEV_DTV_DEMOD, &fe_man_pre->dtv_demod[i]);
-			aml_fe_dev_release(dvb, AM_DEV_ATV_DEMOD, &fe_man_pre->atv_demod[i]);
-			aml_fe_dev_release(dvb, AM_DEV_TUNER, &fe_man_pre->tuner[i]);
-		}
-	}
-
-	for(i = 0; i < FE_DEV_COUNT; i++){
-		if(aml_fe_dev_init(dvb, g_aml_fe_pdev, AM_DEV_TUNER, &fe_man.tuner[i], i)<0)
-			return -1;
-		if(aml_fe_dev_init(dvb, g_aml_fe_pdev, AM_DEV_ATV_DEMOD, &fe_man.atv_demod[i], i)<0)
-			return -1;
-		if(aml_fe_dev_init(dvb, g_aml_fe_pdev, AM_DEV_DTV_DEMOD, &fe_man.dtv_demod[i], i)<0)
-			return -1;
-	}
-
-	for(i = 0; i < FE_DEV_COUNT; i++){
-		if(aml_fe_man_init(dvb, g_aml_fe_pdev, &fe_man.fe[i], i)<0)
-			return -1;
-	}
-
-
-
-	platform_set_drvdata(g_aml_fe_pdev, &fe_man);
-
-	/*save config for compare*/
-	if(aml_fe_buf){
-		kfree(aml_fe_buf);
-		aml_fe_buf = NULL;
-	}
-
-	aml_fe_buf = kmalloc(size, GFP_KERNEL);
-	if(aml_fe_buf){
-		aml_fe_size = size;
-	}
-	else{
-		pr_error("kmalloc buf fail\n");
 	}
 
 	return size;
 }
-
-#endif /*CONFIG_OF*/
 
 static ssize_t aml_fe_show_suspended_flag(struct class *class, struct class_attribute *attr, char *buf)
 {
@@ -1472,14 +1444,7 @@ static struct class_attribute aml_fe_cls_attrs[] = {
 	__ATTR(tuner_name,  S_IRUGO | S_IWUSR, tuner_name_show, NULL),
 	__ATTR(atv_demod_name,  S_IRUGO | S_IWUSR, atv_demod_name_show, NULL),
 	__ATTR(dtv_demod_name,  S_IRUGO | S_IWUSR, dtv_demod_name_show, NULL),
-	__ATTR(setting,  S_IRUGO | S_IWUSR, setting_show, NULL),
-
-#ifndef CONFIG_OF
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
-	__ATTR(aml_fe_dynamic_config,  S_IRUGO | S_IWUSR, aml_fe_show_dynamic_config, aml_fe_store_dynamic_config),
-#endif
-#endif
-
+	__ATTR(setting,  S_IRUGO | S_IWUSR, setting_show, setting_store),
 	__ATTR(aml_fe_suspended_flag,  S_IRUGO | S_IWUSR, aml_fe_show_suspended_flag, aml_fe_store_suspended_flag),
 	__ATTR_NULL
 };
@@ -1494,11 +1459,6 @@ static int aml_fe_probe(struct platform_device *pdev)
 	struct aml_dvb *dvb = aml_get_dvb_device();
 	int i;
 
-
-#if defined(CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG) && !defined(CONFIG_OF)
-	platform_set_drvdata(pdev, NULL);
-	g_aml_fe_pdev = pdev;
-#else
 	for(i = 0; i < FE_DEV_COUNT; i++){
 		if(aml_fe_dev_init(dvb, pdev, AM_DEV_TUNER, &fe_man.tuner[i], i)<0)
 			return -1;
@@ -1518,7 +1478,6 @@ static int aml_fe_probe(struct platform_device *pdev)
 #endif
 
 	platform_set_drvdata(pdev, &fe_man);
-#endif
 
 	if(class_register(&aml_fe_class) < 0) {
 		pr_error("[aml_fe..] register class error\n");
@@ -1535,9 +1494,7 @@ static int aml_fe_remove(struct platform_device *pdev)
 	struct aml_dvb *dvb = aml_get_dvb_device();
 	int i;
 
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
 	if(fe_man){
-#endif
 		platform_set_drvdata(pdev, NULL);
 
 		for(i = 0; i < FE_DEV_COUNT; i++){
@@ -1552,10 +1509,7 @@ static int aml_fe_remove(struct platform_device *pdev)
 
 		if(fe_man->pinctrl)
 			devm_pinctrl_put(fe_man->pinctrl);
-
-#if defined (CONFIG_AMLOGIC_DYNAMIC_FEANDDMX_CONFIG)
 	}
-#endif
 
 	class_unregister(&aml_fe_class);
 
