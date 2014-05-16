@@ -93,6 +93,7 @@ typedef enum{
 struct aml_fe_dev;
 struct aml_fe;
 struct aml_fe_drv{
+	struct module        *owner;
 	struct aml_fe_drv    *next;
 	aml_tuner_type_t      id;
 	char    *name;
