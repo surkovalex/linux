@@ -57,6 +57,7 @@ int clk_enable_usb(struct clk *clk)
 	usb_peri_reg_t * peri_a,* peri_b,*peri;
 	usb_config_data_t config;
 	usb_ctrl_data_t control;
+	usb_adp_bc_data_t adp_bc;
 	int clk_sel,clk_div,clk_src;
 	int time_dly = 500; //usec
 	
@@ -72,9 +73,8 @@ int clk_enable_usb(struct clk *clk)
 	}
 	
 	clk_name = (char*)clk->priv;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 	switch_mod_gate_by_name(clk_name, 1);
-#endif	
+
 	peri_a = (usb_peri_reg_t *)P_USB_ADDR0;
 	peri_b = (usb_peri_reg_t *)P_USB_ADDR8;
 
@@ -117,6 +117,12 @@ int clk_enable_usb(struct clk *clk)
 		printk(KERN_ERR"USB (%d) PHY Clock not detected!\n",0);
 	}
 
+	/* force ACA enable */
+	if(port_idx == USB_PORT_IDX_B){
+		adp_bc.d32 = peri->adp_bc;
+		adp_bc.b.aca_enable = 1;
+		peri->adp_bc = adp_bc.d32;
+	}
 	
 	dmb();
 	return 0;
@@ -143,9 +149,9 @@ int clk_disable_usb(struct clk *clk)
 		printk(KERN_ERR "bad usb clk name: %s\n",clk_name);
 		return -1;
 	}
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+
 	switch_mod_gate_by_name(clk_name, 0);
-#endif
+
 	//if(init_count){
 	//	init_count--;
 		//uart.d32 = peri->dbg_uart;
