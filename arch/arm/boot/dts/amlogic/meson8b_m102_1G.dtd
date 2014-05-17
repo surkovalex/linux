@@ -136,15 +136,18 @@ void root_func(){
         vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
         display_size_default = <768 1024 768 3072 32>;//1024x768x4x3==0x0900000,9MB
 	};
-
-//$$ DEVICE="deinterlace"
+//$$ DEVICE = "mesonfb-ext"
 //$$ L2 PROP_STR = "status"
-//$$ L2 PROP_U32 2 = "reg"
-    deinterlace{
-		compatible = "amlogic,deinterlace";
-		dev_name = "deinterlace";
-		status = "disable";
-		reserve-memory = <0x0800000>; //8x1920x1088x3/2=8M
+//$$ L3 PROP_U32 4 ="reg"
+//$$ L2 PROP_U32 5 = "display_size_default"
+	mesonfb-ext{
+		compatible = "amlogic,mesonfb-ext";
+		dev_name = "mesonfb-ext";
+		status = "ok";
+		need-memory = <0>; /*0:no need,1:need*/
+	   	reserve-iomap = "true";
+        display_size_default = <768 1024 768 3072 32>;//1024x768x4x3==0x0900000 < 0x01000000
+	 
 	};
 
 /// ***************************************************************************************
@@ -171,7 +174,7 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-                reserve-memory = <0x02000000>;//32M
+                reserve-memory = <0x04000000>;
 		reserve-iomap = "true";
         };
 
@@ -214,8 +217,8 @@ void root_func(){
         compatible = "amlogic,vdin";
         dev_name = "vdin0";
         status = "ok";
-	reserve-memory = <0x04000000>;
-	camera_size = <1600 1200>;//camera is gc2035,the picture resolution is 1600x1200;so 1600x1200x2x4=16M
+	reserve-memory = <0x02700000>;
+	camera_size = <2592 1944>;//2592x1944x2x4=41M
 	 reserve-iomap = "true";
         irq = <115>;
         vdin_id = <0>;
@@ -227,16 +230,16 @@ void root_func(){
 //$$ L2 PROP_U32 2 = "reg"
 //$$ L2 PROP_U32 = "irq"
 //$$ L2 PROP_U32 = "vdin_id"
-//    vdin1{
-//        compatible = "amlogic,vdin";
-//       dev_name = "vdin1";
-//        status = "ok";
-//        reserve-memory = <0x01000000>;
-//	  miracast_size = <1920 1080>;//1920x1080x2x4=17M
-//	  reserve-iomap = "true";
-//        irq = <117>;
-//        vdin_id = <1>;
-//	};
+    vdin1{
+        compatible = "amlogic,vdin";
+        dev_name = "vdin1";
+        status = "ok";
+        reserve-memory = <0x01000000>;
+	miracast_size = <1920 1080>;//1920x1080x2x4=17M
+	reserve-iomap = "true";
+        irq = <117>;
+        vdin_id = <1>;
+	};
 
 /// ***************************************************************************************
 ///	-	DISP&MM-AMLVIDEO2
@@ -244,24 +247,24 @@ void root_func(){
 //$$ DEVICE="amlvideo2"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-//    amlvideo2{
-//		compatible = "amlogic,amlvideo2";
-//		dev_name = "amlvideo2.0";
-//		status = "okay";
-//		reserve-memory = <0x01800000>;
-//		reserve-iomap = "true";
-//	};
+    amlvideo2{
+		compatible = "amlogic,amlvideo2";
+		dev_name = "amlvideo2.0";
+		status = "okay";
+		reserve-memory = <0x01800000>;
+		reserve-iomap = "true";
+	};
 
 /// ***************************************************************************************
 ///	-	DISP&MM-Video Input Manager
 //$$ MODULE = "DISP&MM-Video Input Manager"
 //$$ DEVICE="vm"
 //$$ L2 PROP_STR = "status"
-	vm{
+    vm{
 		compatible = "amlogic,vm";
 		dev_name = "vm.0";
 		status = "okay";
-		linux,contiguous-region = <&cma_0>;
+        linux,contiguous-region = <&cma_0>;
 	};
 
 /// ***************************************************************************************
@@ -285,6 +288,13 @@ void root_func(){
 	mesonvout{
 		compatible = "amlogic,mesonvout";
 		dev_name = "mesonvout";
+		status = "okay";
+	};
+//$$ DEVICE = "mesonvout2"
+//$$ L2 PROP_STR = "status"
+	mesonvout2{
+		compatible = "amlogic,mesonvout2";
+		dev_name = "mesonvout2";
 		status = "okay";
 	};
 
