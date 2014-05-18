@@ -1088,7 +1088,8 @@ static int amstream_open(struct inode *inode, struct file *file)
         if (this->type & (PORT_TYPE_MPTS | PORT_TYPE_HEVC)) {
             vdec_poweron(VDEC_HEVC);
         }
-        else if ((this->type & PORT_TYPE_HEVC) == 0) {
+
+        if ((this->type & PORT_TYPE_HEVC) == 0) {
             vdec_poweron(VDEC_1);
         }
 #elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
