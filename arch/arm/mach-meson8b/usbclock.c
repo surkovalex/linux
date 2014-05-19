@@ -114,7 +114,7 @@ int clk_enable_usb(struct clk *clk)
 	/* read back clock detected flag*/
 	control.d32 = peri->ctrl;
 	if(!control.b.clk_detected){
-		printk(KERN_ERR"USB (%d) PHY Clock not detected!\n",0);
+		printk(KERN_ERR"USB (%d) PHY Clock not detected!\n",port_idx);
 	}
 
 	/* force ACA enable */
@@ -122,6 +122,13 @@ int clk_enable_usb(struct clk *clk)
 		adp_bc.d32 = peri->adp_bc;
 		adp_bc.b.aca_enable = 1;
 		peri->adp_bc = adp_bc.d32;
+		udelay(50);
+		adp_bc.d32 = peri->adp_bc;
+		if(adp_bc.b.aca_pin_float){
+			printk(KERN_ERR "USB-B ID detect failed!\n");
+			printk(KERN_ERR "Please use the chip after version RevA1!\n");
+			return -1;
+		}
 	}
 	
 	dmb();

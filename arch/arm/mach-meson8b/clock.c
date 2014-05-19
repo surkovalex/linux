@@ -565,9 +565,10 @@ int meson_enable(struct clk *clk)
 			if(ret == 0){	
 				if(clk->enable)
 					ret = clk->enable(clk);
-				else if(clk->clk_gate_reg_adr != 0)
+				else if(clk->clk_gate_reg_adr != 0){
 					aml_set_reg32_mask(clk->clk_gate_reg_adr,clk->clk_gate_reg_mask);
 					ret = 0;
+				}
 			}
 				
 			p = clk->clk_ops;
