@@ -511,6 +511,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid)
 
         SET_VREG_MASK(HEVC_STREAM_CONTROL, (1<<3)|(0<<4)); // set use_parser_vbuf_wp
         SET_VREG_MASK(HEVC_STREAM_CONTROL, 1); // set stream_fetch_enable
+        SET_VREG_MASK(HEVC_STREAM_FIFO_CTL, (1<<29)); // set stream_buffer_hole with 256 bytes
     } else {
 #endif
         WRITE_MPEG_REG(PARSER_VIDEO_START_PTR,
