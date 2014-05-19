@@ -345,7 +345,7 @@ s32 esparser_init(struct stream_buf_s *buf)
         WRITE_MPEG_REG(PARSER_VIDEO_START_PTR,
                        READ_VREG(HEVC_STREAM_START_ADDR));
         WRITE_MPEG_REG(PARSER_VIDEO_END_PTR,
-                       READ_VREG(HEVC_STREAM_END_ADDR) - 8);
+                       READ_VREG(HEVC_STREAM_END_ADDR));
 
         CLEAR_MPEG_REG_MASK(PARSER_ES_CONTROL, ES_VID_MAN_RD_PTR);
 
