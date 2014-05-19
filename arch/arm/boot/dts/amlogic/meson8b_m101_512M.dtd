@@ -1175,7 +1175,7 @@ sdhc{
             status = "okay";
             address = <0x4c>;
             i2c_bus = "i2c_bus_b";
-            acc_dir = <0x0010>;
+            acc_dir = <0x0110>;
         };
 //$$ DEVICE="mma7660"
 //$$ L2 PROP_STR = "status"
