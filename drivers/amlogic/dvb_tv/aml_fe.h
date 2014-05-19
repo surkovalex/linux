@@ -157,6 +157,7 @@ struct aml_fe_man{
 	struct aml_fe_dev   dtv_demod[FE_DEV_COUNT];
 	struct dvb_frontend dev[FE_DEV_COUNT];
 	struct pinctrl     *pinctrl;
+	struct platform_device *pdev;
 };
 
 extern int aml_register_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
