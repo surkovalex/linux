@@ -86,12 +86,13 @@ static struct timer_list recycle_timer;
 static u32 stat;
 static u32 error_watchdog_count;
 
-#define H265_DEBUG_POC          1
-#define H265_DEBUG_BUFMGR       2
-#define H265_DEBUG_PARAM        4
-#define H265_DEBUG_REG          8
-#define H265_DEBUG_UCODE        0x10
-#define H265_DEBUG_USE_AUTO_SKIP        0x20
+#define H265_DEBUG_POC                      0x01
+#define H265_DEBUG_BUFMGR                   0x02
+#define H265_DEBUG_PARAM                    0x04
+#define H265_DEBUG_REG                      0x08
+#define H265_DEBUG_UCODE                    0x10
+#define H265_DEBUG_USE_MAN_SKIP            0x20
+#define H265_DEBUG_DISPLAY_CUR_FRAME   0x40
 #define H265_DEBUG_ENA_LOC_ERROR_PROC       0x10000
 #define H265_DEBUG_DIS_SYS_ERROR_PROC   0x20000
 
@@ -100,6 +101,7 @@ static u32 error_watchdog_count;
 static u32 debug_decode_idx_start = 0;
 static u32 debug_decode_idx_end = 0;
 static u32 debug = 0;
+static u32 decode_stop_pos = 0;
 
 #define DEBUG_REG
 #ifdef DEBUG_REG
@@ -340,6 +342,7 @@ bit 2: valid when bit1==0;  0, auto skip nal before first vps/sps/pps/idr; 1, au
 */
 #define NAL_SEARCH_CTL		      HEVC_ASSIST_SCRATCH_I
 #define CUR_NAL_UNIT_TYPE       HEVC_ASSIST_SCRATCH_J
+#define DECODE_STOP_POS         HEVC_ASSIST_SCRATCH_K
 
 #define MAX_INT 0x7FFFFFFF
 
@@ -1240,11 +1243,17 @@ static void update_tile_info(hevc_stru_t* hevc,  int pic_width_cu, int pic_heigh
 
 static int get_tile_index(hevc_stru_t* hevc, int cu_adr, int pic_width_lcu)
 {
-	int cu_x = cu_adr%pic_width_lcu;
-	int cu_y = cu_adr/pic_width_lcu;
+	int cu_x;
+	int cu_y;
 	int tile_x = 0;
 	int tile_y = 0;
 	int i;
+	if(pic_width_lcu == 0){
+	    printk("%s Error, pic_width_lcu is 0, pic_w %d, pic_h %d\n", __func__, hevc->pic_w, hevc->pic_h);
+	    return -1;
+  }
+	cu_x = cu_adr%pic_width_lcu;
+	cu_y = cu_adr/pic_width_lcu;
 	if(hevc->tile_enabled){	
 		for(i=0;i<hevc->num_tile_col;i++){	
 			if(cu_x>=m_tile[0][i].start_cu_x){
@@ -2069,7 +2078,6 @@ static PIC_t* get_new_pic(hevc_stru_t* hevc, param_t* rpm_param)
         if(new_pic == NULL){
             //printk("Error: Buffer management, no free buffer\n");
             //dump_pic_list(hevc);
-            //hevc->wait_buf = 1;
             return NULL;
         }
     }
@@ -2088,6 +2096,21 @@ static PIC_t* get_new_pic(hevc_stru_t* hevc, param_t* rpm_param)
     return new_pic;
 }
 
+static int get_display_pic_num(hevc_stru_t* hevc)
+{
+    int ii = 0;
+    PIC_t* pic;
+    int num = 0;      
+    while(1){
+        pic = get_pic_by_IDX(hevc, ii++);
+        if(pic == NULL)
+            break;
+        if(pic->output_ready == 1){
+            num++;
+        }
+    }
+    return num;
+}
 
 static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_param)
 {
@@ -2124,6 +2147,10 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
         
         hevc->pic_w           =rpm_param->p.pic_width_in_luma_samples;
         hevc->pic_h           =rpm_param->p.pic_height_in_luma_samples;
+        if(hevc->pic_w == 0 || hevc->pic_h == 0 ){ //it will cause divide 0 error
+            printk("Fatal Error, pic_w = %d, pic_h = %d\n", hevc->pic_w, hevc->pic_h);
+            return 3;
+        }
         hevc->lcu_size        = 1<<(rpm_param->p.log2_min_coding_block_size_minus3+3+rpm_param->p.log2_diff_max_min_coding_block_size);
         hevc->lcu_size_log2   =log2i(hevc->lcu_size);
         lcu_x_num_div   =(hevc->pic_w/ hevc->lcu_size);
@@ -2238,6 +2265,10 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
                                 dump_pic_list(hevc);
                             printk("[Buffer Management] Display: POC %d, decoding index %d\n", pic_display->POC, pic_display->decode_idx);
                         }
+                        if(debug&H265_DEBUG_DISPLAY_CUR_FRAME){
+                       			 pic_display->output_ready = 0;
+                             printk("[Buffer Management] Display: POC %d, decoding index %d ==> In Debug Mode: recycle it\n", pic_display->POC, pic_display->decode_idx);
+                        }
                     }
                 }while(pic_display);
             }
@@ -2267,6 +2298,10 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
                                 dump_pic_list(hevc);
                             printk("[Buffer Management] Display: POC %d, decoding index %d\n", pic_display->POC, pic_display->decode_idx);
                         }
+                        if(debug&H265_DEBUG_DISPLAY_CUR_FRAME){
+                       			 pic_display->output_ready = 0;
+                             printk("[Buffer Management] Display: POC %d, decoding index %d ==> In Debug Mode: recycle it\n", pic_display->POC, pic_display->decode_idx);
+                        }
                     }
                 }while(pic_display);
             }
@@ -2281,6 +2316,12 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
                 hevc->wait_buf = 1;
                 return -1;
             }            
+            if(debug&H265_DEBUG_DISPLAY_CUR_FRAME){
+                hevc->cur_pic->output_ready = 1;
+                prepare_display_buf(hevc->cur_pic->index, READ_VREG(HEVC_SHIFT_BYTE_COUNT));    
+                hevc->wait_buf = 2;
+                return -1;
+            }        
         }
         else{
             hevc->cur_pic->slice_idx++;
@@ -2288,12 +2329,19 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
         }
     }
     else{
-        //wait_buf == 1
-        hevc->cur_pic = get_new_pic(hevc, rpm_param);
-        if(hevc->cur_pic == NULL){
-            return -1;
+        if(hevc->wait_buf == 1){
+            hevc->cur_pic = get_new_pic(hevc, rpm_param);
+            if(hevc->cur_pic == NULL){
+                return -1;
+            }
+            hevc->wait_buf = 0;            
         }
-        hevc->wait_buf = 0;            
+        else if(hevc->wait_buf == 2){ // for case: debug&H265_DEBUG_DISPLAY_CUR_FRAME
+            if(get_display_pic_num(hevc)>1){ //start decoding only when video is displaying cur buf
+                return -1;
+            }
+            hevc->wait_buf = 0;    
+        }
     }
         
     if(hevc->new_pic){
@@ -2302,10 +2350,9 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
         int pic_width_cu = (hevc->pic_w+hevc->lcu_size-1)/hevc->lcu_size;
 		    int sao_vb_size = (sao_mem_unit+(2<<4))*pic_height_cu;
 		    //int sao_abv_size = sao_mem_unit*pic_width_cu;
-        
         hevc->decode_idx++;
         if(debug&H265_DEBUG_BUFMGR){
-            printk("%s decode index %d\n", __func__, hevc->decode_idx);
+            printk("=========>%s decode index %d\n", __func__, hevc->decode_idx);
         }
         update_tile_info(hevc, pic_width_cu , pic_height_cu , sao_mem_unit, rpm_param);
 
@@ -2819,6 +2866,8 @@ static void vh265_put_timer_func(unsigned long arg)
 
     timer->expires = jiffies + PUT_INTERVAL;
 
+    WRITE_VREG(DECODE_STOP_POS, decode_stop_pos);
+    
     add_timer(timer);
 }
 
@@ -2883,10 +2932,12 @@ static void vh265_prot_init(void)
         WRITE_VREG(DEBUG_REG1, 0x0);
     }
     
-    if(debug&H265_DEBUG_USE_AUTO_SKIP)
-        WRITE_VREG(NAL_SEARCH_CTL, 0x0); //auto parser NAL and skip
-    else    
+    if(debug&H265_DEBUG_USE_MAN_SKIP)
         WRITE_VREG(NAL_SEARCH_CTL, 0x1); //manual parser NAL
+    else    
+        WRITE_VREG(NAL_SEARCH_CTL, 0x0); //auto parser NAL and skip
+        
+    WRITE_VREG(DECODE_STOP_POS, decode_stop_pos);
 
 }
 
@@ -3126,6 +3177,9 @@ MODULE_PARM_DESC(stat, "\n amvdec_h265 stat \n");
 
 module_param(debug, uint, 0664);
 MODULE_PARM_DESC(debug, "\n amvdec_h265 debug \n");
+
+module_param(decode_stop_pos, uint, 0664);
+MODULE_PARM_DESC(decode_stop_pos, "\n amvdec_h265 decode_stop_pos \n");
 
 module_init(amvdec_h265_driver_init_module);
 module_exit(amvdec_h265_driver_remove_module);
