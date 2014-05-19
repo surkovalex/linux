@@ -2500,23 +2500,24 @@ static vframe_t vfpool[VF_POOL_SIZE];
 static int init_buf_spec(hevc_stru_t* hevc)
 {
     int i;
-    int canvas_width = (hevc->pic_w + 63) / 64 * 64;
-    int canvas_height = (hevc->pic_h + 15) / 16 * 16;
-	  for(i=0; i<MAX_REF_PIC_NUM; i++){ 
-	      if(m_PIC[i].index == -1){
-	          break;
-	      }
+
+    for(i=0; i<MAX_REF_PIC_NUM; i++) { 
+        if (m_PIC[i].index == -1) {
+            break;
+        }
+
         buffer_spec[i].y_addr = m_PIC[i].mc_y_adr;
         buffer_spec[i].uv_addr = m_PIC[i].mc_u_v_adr;
 
         buffer_spec[i].y_canvas_index = 128 + i * 2;
         buffer_spec[i].uv_canvas_index = 128 + i * 2 + 1;
 
-        canvas_config(128 + i * 2, buffer_spec[i].y_addr, canvas_width, canvas_height,
+        canvas_config(128 + i * 2, buffer_spec[i].y_addr, ALIGN(hevc->pic_w, 64), ALIGN(hevc->pic_h, 32),
                       CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_64X32);
-        canvas_config(128 + i * 2 + 1, buffer_spec[i].uv_addr, canvas_width, canvas_height>>1,
+        canvas_config(128 + i * 2 + 1, buffer_spec[i].uv_addr, ALIGN(hevc->pic_w, 64), ALIGN(hevc->pic_h>>1, 32),
                       CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_64X32);
     }
+
     if(frame_width == 0 || frame_height == 0){
         frame_width = hevc->pic_w;
         frame_height = hevc->pic_h;   
