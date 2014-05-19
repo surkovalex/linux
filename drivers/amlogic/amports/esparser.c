@@ -353,6 +353,7 @@ s32 esparser_init(struct stream_buf_s *buf)
 
         SET_VREG_MASK(HEVC_STREAM_CONTROL, (1<<3)|(0<<4)); // set use_parser_vbuf_wp
         SET_VREG_MASK(HEVC_STREAM_CONTROL, 1); // set stream_fetch_enable
+        SET_VREG_MASK(HEVC_STREAM_FIFO_CTL, (1<<29)); // set stream_buffer_hole with 256 bytes
 
         video_data_parsed = 0;
     } else
