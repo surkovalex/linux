@@ -796,10 +796,10 @@ sdhc{
         pmu_init_adc_freqc = <100>;         /** set initial coulomb adc coufrequency */
         pmu_init_chg_pretime = <80>;        /** set initial pre-charging time        */
         pmu_init_chg_csttime = <720>;       /** set initial rapid-charging time      */
-        pmu_init_chgcur = <10>;             /** initial charge current, 0.1c         */
-        pmu_suspend_chgcur = <20>;          /** suspend charge current, 0.2c         */
-        pmu_resume_chgcur = <10>;           /** resume charge current, 0.1c          */
-        pmu_shutdown_chgcur = <20>;         /** shutdown charge current, 0.2c        */
+        pmu_init_chgcur = <20>;             /** initial charge current, 0.2c         */
+        pmu_suspend_chgcur = <30>;          /** suspend charge current, 0.3c         */
+        pmu_resume_chgcur = <20>;           /** resume charge current, 0.2c          */
+        pmu_shutdown_chgcur = <30>;         /** shutdown charge current, 0.3c        */
         pmu_usbcur_limit = <1>;             /** enable usb current limit?            */
         pmu_usbcur = <500>;                 /** usb limit current value if enabled   */
         pmu_usbvol_limit = <1>;             /** enable usb vbus voltage limit        */

@@ -314,6 +314,7 @@ EXPORT_SYMBOL_GPL(aml1218_set_recharge_voltage);
 int aml1218_set_charging_current(int curr)
 {
     int idx_cur, idx_to, val = 0;
+    int rem;
 
     if (curr > 2100 * 1000 || curr < 0) {
         AML1218_DBG("%s, wrong input of charge current:%d\n", __func__, curr);
@@ -331,6 +332,10 @@ int aml1218_set_charging_current(int curr)
 #endif
 
     idx_to = (curr - 300) / 150;
+    rem = curr % 150;                       // round up
+    if (rem) {
+        idx_to += 1;    
+    }
     aml1218_read(0x012b, (unsigned char *)&val);
     AML1218_DBG("%s to %dmA, idx_to:%x, idx_cur:%x\n", __func__, idx_to * 150 + 300, idx_to, val);
     idx_cur = val & 0x0f;
@@ -841,8 +846,19 @@ int aml1218_otg_change(struct notifier_block *nb, unsigned long value, void *pda
 int aml1218_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata)
 {
     switch (value) {
-    case USB_BC_MODE_DISCONNECT:                                        // disconnect
     case USB_BC_MODE_SDP:                                               // pc
+        if (g_aml1218_init->vbus_dcin_short_connect) {
+            aml1218_set_dcin(0);                            // cut off dcin for single usb port device
+        }
+        if (aml1218_battery && aml1218_battery->pmu_usbcur_limit) {     // limit usb current
+            aml1218_set_usb_current_limit(aml1218_battery->pmu_usbcur); 
+        }
+        break;
+
+    case USB_BC_MODE_DISCONNECT:                                        // disconnect
+        if (g_aml1218_init->vbus_dcin_short_connect) {
+            aml1218_set_dcin(1); 
+        }
         if (aml1218_battery && aml1218_battery->pmu_usbcur_limit) {     // limit usb current
             aml1218_set_usb_current_limit(aml1218_battery->pmu_usbcur); 
         }
