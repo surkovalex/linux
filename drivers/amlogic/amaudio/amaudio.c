@@ -61,6 +61,7 @@ extern void audio_in_i2s_enable(int flag);
 
 extern int if_audio_in_i2s_enable(void);
 extern int if_audio_out_enable(void);
+extern int if_958_audio_out_enable(void);
 extern unsigned int read_i2s_rd_ptr(void);
 extern unsigned int audio_in_i2s_wr_ptr(void);
 extern unsigned int read_i2s_mute_swap_reg(void);
