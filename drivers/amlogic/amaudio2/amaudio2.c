@@ -191,11 +191,11 @@ static int amaudio_release(struct inode *inode, struct file *file)
 	
 	amaudio_t * amaudio = (amaudio_t *)file->private_data;
 	
-	spin_lock_irqsave(&amaudio->hw.lock,irqflags);
+	//spin_lock_irqsave(&amaudio->hw.lock,irqflags);
 
 	free_irq(INT_AMRISC_DC_PCMLAST, amaudio);
 
-	spin_unlock_irqrestore(&amaudio->hw.lock,irqflags);
+	//spin_unlock_irqrestore(&amaudio->hw.lock,irqflags);
 	
 	if(amaudio->sw.addr){
 		dma_free_coherent(amaudio->dev, amaudio->sw.size, (void*)amaudio->sw.addr, amaudio->sw.paddr);
