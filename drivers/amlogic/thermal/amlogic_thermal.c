@@ -73,6 +73,7 @@ struct amlogic_thermal_platform_data {
 	struct thermal_cooling_device *cpu_cool_dev;
 	struct thermal_cooling_device *gpu_cool_dev;
 	struct thermal_cooling_device *cpucore_cool_dev;
+	struct thermal_cooling_device *gpucore_cool_dev;
 	enum thermal_device_mode mode;
 	struct mutex lock;
 };
@@ -122,8 +123,15 @@ static int amlogic_set_mode(struct thermal_zone_device *thermal,
 	
 	if (mode == THERMAL_DEVICE_ENABLED)
 		pdata->therm_dev->polling_delay = pdata->idle_interval;
-	else
+	else{
 		pdata->therm_dev->polling_delay = 0;
+		if(pdata->cpucore_cool_dev){	
+			pdata->cpucore_cool_dev->ops->set_cur_state(pdata->cpucore_cool_dev,0);
+		}
+		if(pdata->gpucore_cool_dev){	
+			pdata->gpucore_cool_dev->ops->set_cur_state(pdata->gpucore_cool_dev,0);
+		}
+	}
 
 	//mutex_unlock(&pdata->therm_dev->lock);
 
@@ -248,6 +256,7 @@ static int amlogic_bind(struct thermal_zone_device *thermal,
 				goto out;
 			}
 		}
+		pdata->gpu_cool_dev=gpufreq_dev->cool_dev;
 		pr_info("%s bind %s okay !\n",thermal->type,cdev->type);
 	}
 
@@ -303,6 +312,7 @@ static int amlogic_bind(struct thermal_zone_device *thermal,
 				goto out;
 			}
 		}
+		pdata->gpucore_cool_dev=gpucore_dev->cool_dev;
 		pr_info("%s bind %s okay !\n",thermal->type,cdev->type);
 	}
 	return ret;
@@ -607,20 +617,9 @@ static int amlogic_thermal_probe(struct platform_device *pdev)
 	int ret;
 	struct amlogic_thermal_platform_data *pdata=NULL;
 	//pdata = amlogic_get_driver_data(pdev);
-	ret=read_efuse_flag();
-	printk("thermal efuse version 0x%x\n",ret);
-	if(ret<0){
-		printk("read efuse error or adc error ret=%d\n",ret);
-		return -1;
-	}
-	if(NOT_WRITE_EFUSE==ret){
-		printk("this chip do not write efuse  so do not enable  thermal driver\n");
-		return -1;
-	}
-	if(EFUSE_MIGHT_WRONG==ret){
-		printk("this chip efuse data might wrong  so do not enable  thermal driver\n");
-		return -1;
-	}
+	ret=thermal_firmware_init();
+	if(ret<0)
+		return ret;
 	
 	dev_info(&pdev->dev, "amlogic thermal probe start\n");
 	pdata = amlogic_thermal_initialize(pdev);
