@@ -1264,7 +1264,6 @@ void hdmi_hw_init(hdmitx_dev_t* hdmitx_device)
     delay_us(10);
 }    
 
-#ifdef CONFIG_AML_HDMI_TX_HDCP
 // When have below format output, we shall manually configure
 // bolow register to get stable Video Timing.
 static void hdmi_reconfig_packet_setting(HDMI_Video_Codes_t vic)
@@ -1340,7 +1339,6 @@ static void hdmi_reconfig_packet_setting(HDMI_Video_Codes_t vic)
     }
     hdmi_print(IMP, SYS "reconfig packet setting done\n");
 }
-#endif
 
 static void hdmi_hw_reset(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t *param)
 {
@@ -1692,9 +1690,7 @@ static void hdmi_hw_reset(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t *par
             hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_2, 0x00);        
         }
     }
-#ifdef CONFIG_AML_HDMI_TX_HDCP
     hdmi_reconfig_packet_setting(param->VIC);
-#endif
 }
 
 static void hdmi_audio_init(unsigned char spdif_flag)
