@@ -42,7 +42,7 @@ static unsigned last_iec_clock =  -1;
 extern int aout_notifier_call_chain(unsigned long val, void *v);
 //static  unsigned  playback_substream_handle = 0 ;
 extern unsigned int IEC958_mode_codec;
-static int iec958buf[4096+16];
+static int iec958buf[32+16];
 static void  aml_spdif_play()
 {
    	 _aiu_958_raw_setting_t set;
@@ -69,7 +69,7 @@ static void  aml_spdif_play()
 	}	
 	audio_util_set_dac_958_format(AUDIO_ALGOUT_DAC_FORMAT_DSP);
 	memset(iec958buf,0,sizeof(iec958buf));
-	audio_set_958outbuf((virt_to_phys(iec958buf)+63)&(~63),16*1024,0);
+	audio_set_958outbuf((virt_to_phys(iec958buf)+63)&(~63),128,0); //128 bytes as dma buffer 
 	audio_set_958_mode(AIU_958_MODE_PCM16, &set);	
 #if OVERCLOCK == 1 || IEC958_OVERCLOCK == 1	
 	WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 3, 4, 2);//512fs divide 4 == 128fs
