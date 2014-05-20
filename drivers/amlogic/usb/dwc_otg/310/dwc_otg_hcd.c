@@ -1094,6 +1094,7 @@ int dwc_otg_hcd_init(dwc_otg_hcd_t * hcd, dwc_otg_core_if_t * core_if)
 	hcd->frame_list = NULL;
 	hcd->frame_list_dma = 0;
 	hcd->periodic_qh_count = 0;
+	hcd->flags.d32 = 0;
 out:
 	return retval;
 }
@@ -1116,8 +1117,10 @@ static void dwc_otg_hcd_reinit(dwc_otg_hcd_t * hcd)
 	dwc_hc_t *channel;
 	dwc_hc_t *channel_tmp;
 
-	if((!hcd->core_if->suspend_mode)&&(!hcd->core_if->not_clear_hcd_flag))
-		hcd->flags.d32 = 0;
+	if((!hcd->core_if->suspend_mode)&&(!hcd->core_if->not_clear_hcd_flag)){
+		//hcd->flags.d32 = 0;
+		printk("-------hcd->flags.d32 = %d\n",hcd->flags.d32);
+	}
 	
 	hcd->core_if->not_clear_hcd_flag=0;	
 
