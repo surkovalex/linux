@@ -136,6 +136,7 @@ struct ionvideo_dev {
     struct vframe_receiver_s video_vf_receiver;
     u64 pts;
     u8 receiver_register;
+    u8 is_video_started;
     u32 skip;
 };
 

@@ -618,36 +618,45 @@ static int vidioc_synchronization_dqbuf(struct file *file, void *priv, struct v4
     unsigned long flags;
 
     q = dev->vdev.queue;
-    spin_lock_irqsave(&q->done_lock, flags);
-    if (list_empty(&q->done_list)) {
-        spin_unlock_irqrestore(&q->done_lock, flags);
-        return -EAGAIN;
-    }
-    vb = list_first_entry(&q->done_list, struct vb2_buffer, done_entry);
-    spin_unlock_irqrestore(&q->done_lock, flags);
+    if (dev->receiver_register) {  	 
+    	// clear the frame buffer queue  
+    	while(!list_empty(&q->done_list)) {
+		ret = vb2_ioctl_dqbuf(file, priv, p);
+		if (ret) { return ret;}
+		ret = vb2_ioctl_qbuf(file, priv, p);
+		if (ret) { return ret;}
+ 	}
+    	printk("init to clear the done list buffer.done\n");
+    	dev->receiver_register = 0;
+    	dev->is_video_started = 0;
+	return -EAGAIN;
+    } else{
+    	spin_lock_irqsave(&q->done_lock, flags);
+    	if (list_empty(&q->done_list)) {
+       	spin_unlock_irqrestore(&q->done_lock, flags);
+        	return -EAGAIN;
+    	}
+    	vb = list_first_entry(&q->done_list, struct vb2_buffer, done_entry);
+    	spin_unlock_irqrestore(&q->done_lock, flags);
 
-    buf = container_of(vb, struct ionvideo_buffer, vb);
-    if (dev->receiver_register) {
-        tsync_avevent_locked(VIDEO_START, buf->pts ? buf->pts : timestamp_vpts_get());
-        dev->receiver_register = 0;
-        d = 0;
-
-		while(!list_empty(&q->done_list)) {
-			   ret = vb2_ioctl_dqbuf(file, priv, p);
-			   if (ret) {  return ret; }
-			   ret = vb2_ioctl_qbuf(file, priv, p);
-			   if (ret) { return ret; }
-		}
-    } else if (buf->pts) {
-        if (abs(timestamp_pcrscr_get() - buf->pts) > tsync_vpts_discontinuity_margin()) {
-            tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, buf->pts);
-        } else {
-            timestamp_vpts_set(buf->pts);
-        }
-        d = timestamp_vpts_get() - timestamp_pcrscr_get();
-    } else {
-        d = timestamp_vpts_get() + DUR2PTS(buf->duration) - timestamp_pcrscr_get();
+    	buf = container_of(vb, struct ionvideo_buffer, vb);
+    	if(dev->is_video_started == 0){
+		printk("Execute the VIDEO_START cmd. pts=%x\n", buf->pts);
+        	tsync_avevent_locked(VIDEO_START, buf->pts ? buf->pts : timestamp_vpts_get());        
+        	d = 0;
+        	dev->is_video_started=1;
+    	}else if (buf->pts) {
+        	if (abs(timestamp_pcrscr_get() - buf->pts) > tsync_vpts_discontinuity_margin()) {
+            		tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, buf->pts);
+        	} else {
+            		timestamp_vpts_set(buf->pts);
+        	}
+        	d = timestamp_vpts_get() - timestamp_pcrscr_get();
+    	} else {
+        	d = timestamp_vpts_get() + DUR2PTS(buf->duration) - timestamp_pcrscr_get();
+    	}    	
     }
+
     if (d > 450) {
         return -EAGAIN;
     } else if (d < -11520) {
