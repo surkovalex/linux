@@ -2473,10 +2473,8 @@ static void generate_clk_parameter(Lcd_Config_t *pConf)
     unsigned od_sel, pre_div_sel;
     unsigned div_pre_sel_max, crt_xd_max;
     unsigned f_ref, pll_vco, fout_pll, div_pre_out, div_post_out, final_freq, iflogic_vid_clk_in_max;
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
     unsigned min_error = MAX_ERROR;
     unsigned error = MAX_ERROR;
-#endif
 #if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
     unsigned od_fb=0;
     unsigned int dsi_bit_rate_min=0, dsi_bit_rate_max=0;
