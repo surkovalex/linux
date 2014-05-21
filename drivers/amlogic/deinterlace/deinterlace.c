@@ -4986,7 +4986,7 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
 	    		1, 																// ei enable
 	    		1,													// blend enable
 	    		1,													// blend mtn enable
-	    		post_blend_mode,												// blend mode.
+	    		3,//post_blend_mode normal												// blend mode.
 	    		1,                 												// di_vpp_en.
 	    		0,                 												// di_ddr_en.
 	    		(di_buf->di_buf_dup_p[1]->vframe->type & VIDTYPE_TYPEMASK)==VIDTYPE_INTERLACE_TOP ? 0 : 1,		// 1 bottom generate top
@@ -5003,7 +5003,7 @@ static int de_post_process_pd(void* arg, unsigned zoom_start_x_lines,
 	    		1, 																// ei enable
 	    		1,													// blend enable
 	    		1,													// blend mtn enable
-	    		post_blend_mode,												// blend mode.
+	    		3,//post_blend_mode normal												// blend mode.
 	    		1,                 												// di_vpp_en.
 	    		0,                 												// di_ddr_en.
 	    		(di_buf->di_buf_dup_p[1]->vframe->type & VIDTYPE_TYPEMASK)==VIDTYPE_INTERLACE_TOP ? 0 : 1,		// 1 bottom generate top
