@@ -1165,6 +1165,7 @@ void root_func(){
 		scan_period = <20>;
 		key_num = <1>;
         key_name = "power";
+        gpio_high_z;
 		key_code = <116>;
 		key_pin = "GPIOAO_3";
         irq_keyup = <6>;
