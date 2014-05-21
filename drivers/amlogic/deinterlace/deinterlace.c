@@ -181,7 +181,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-04-27a";//fix black screen p by frame switch to i
+static char version_s[] = "2014-05-21b";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -6725,8 +6725,8 @@ get_vframe:
             vframe_ret->early_process_fun(vframe_ret->private_data, vframe_ret);
         }
     }
-    if(vframe_ret)
-	recycle_keep_buffer();
+    //if(vframe_ret)
+       //recycle_keep_buffer();
 
     return vframe_ret;
 }
@@ -6744,7 +6744,7 @@ static void di_vf_put(vframe_t *vf, void* arg)
         return;
     }
     log_buffer_state("pu_");
-    //recycle_keep_buffer();
+    recycle_keep_buffer();
     if(di_buf->type == VFRAME_TYPE_POST){
         di_lock_irqfiq_save(irq_flag2, fiq_flag);
 
