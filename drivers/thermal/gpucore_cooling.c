@@ -142,10 +142,20 @@ static int gpucore_set_cur_state(struct thermal_cooling_device *cdev,
 {
 	struct gpucore_cooling_device *gpucore_device = cdev->devdata;
 	int set_max_num;
+	mutex_lock(&cooling_gpucore_lock);
+	if(gpucore_device->stop_flag){
+		mutex_unlock(&cooling_gpucore_lock);
+		return 0;
+	}
+	if((state & GPU_STOP) ==GPU_STOP){
+		gpucore_device->stop_flag=1;
+		state=state&(~GPU_STOP);
+	}
+	mutex_unlock(&cooling_gpucore_lock);
 	gpucore_device->gpucore_state=state;
 	set_max_num=gpucore_device->max_gpu_core_num-state;
 	gpucore_device->set_max_pp_num((unsigned int)set_max_num);
-	pr_debug( "need set max cpu num=%d,state=%d\n",set_max_num,state);
+	pr_debug( "need set max gpu num=%d,state=%d\n",set_max_num,state);
 	return 0;
 }
 
@@ -196,6 +206,7 @@ gpucore_cooling_register(struct gpucore_cooling_device *gpucore_dev)
 	cool_dev = thermal_cooling_device_register(dev_name, gpucore_dev,
 						   &gpucore_cooling_ops);
 	if (!cool_dev) {
+		
 		release_idr(&gpucore_idr, gpucore_dev->id);
 		kfree(gpucore_dev);
 		return ERR_PTR(-EINVAL);

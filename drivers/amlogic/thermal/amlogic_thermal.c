@@ -73,6 +73,7 @@ struct amlogic_thermal_platform_data {
 	struct thermal_cooling_device *cpu_cool_dev;
 	struct thermal_cooling_device *gpu_cool_dev;
 	struct thermal_cooling_device *cpucore_cool_dev;
+	struct thermal_cooling_device *gpucore_cool_dev;
 	enum thermal_device_mode mode;
 	struct mutex lock;
 };
@@ -114,16 +115,32 @@ static int amlogic_set_mode(struct thermal_zone_device *thermal,
 			enum thermal_device_mode mode)
 {
 	struct  amlogic_thermal_platform_data *pdata= thermal->devdata;
+	struct cpucore_cooling_device *cpucore_device =NULL;
+	struct gpucore_cooling_device *gpucore_device = NULL;
 	
 	if(!pdata)
 		return -EINVAL;
 	
 	//mutex_lock(&pdata->therm_dev->lock);
 	
-	if (mode == THERMAL_DEVICE_ENABLED)
+	if (mode == THERMAL_DEVICE_ENABLED){
 		pdata->therm_dev->polling_delay = pdata->idle_interval;
-	else
+		if(pdata->cpucore_cool_dev){
+			cpucore_device=pdata->cpucore_cool_dev->devdata;
+			cpucore_device->stop_flag=0;
+		}
+		if(pdata->gpucore_cool_dev){
+			gpucore_device=pdata->gpucore_cool_dev->devdata;
+			gpucore_device->stop_flag=0;
+		}
+	}
+	else{
 		pdata->therm_dev->polling_delay = 0;
+		if(pdata->cpucore_cool_dev)
+			pdata->cpucore_cool_dev->ops->set_cur_state(pdata->cpucore_cool_dev,(0|CPU_STOP));
+		if(pdata->gpucore_cool_dev)
+			pdata->gpucore_cool_dev->ops->set_cur_state(pdata->gpucore_cool_dev,(0|GPU_STOP));
+	}
 
 	//mutex_unlock(&pdata->therm_dev->lock);
 
@@ -248,6 +265,7 @@ static int amlogic_bind(struct thermal_zone_device *thermal,
 				goto out;
 			}
 		}
+		pdata->gpu_cool_dev=cdev;
 		pr_info("%s bind %s okay !\n",thermal->type,cdev->type);
 	}
 
@@ -303,6 +321,7 @@ static int amlogic_bind(struct thermal_zone_device *thermal,
 				goto out;
 			}
 		}
+		pdata->gpucore_cool_dev=cdev;
 		pr_info("%s bind %s okay !\n",thermal->type,cdev->type);
 	}
 	return ret;
@@ -384,7 +403,7 @@ static int amlogic_register_thermal(struct amlogic_thermal_platform_data *pdata)
 {
 	int ret=0;
 	struct cpumask mask_val;
-
+	memset(&mask_val,0,sizeof(struct cpumask));
 	cpumask_set_cpu(0, &mask_val);
 	pdata->cpu_cool_dev= cpufreq_cooling_register(&mask_val);
 	if (IS_ERR(pdata->cpu_cool_dev)) {

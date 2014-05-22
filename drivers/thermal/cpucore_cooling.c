@@ -142,10 +142,21 @@ static int cpucore_set_cur_state(struct thermal_cooling_device *cdev,
 {
 	struct cpucore_cooling_device *cpucore_device = cdev->devdata;
 	int set_max_num;
+	mutex_lock(&cooling_cpucore_lock);
+	if(cpucore_device->stop_flag){
+		mutex_unlock(&cooling_cpucore_lock);
+		return 0;
+	}
+	if((state & CPU_STOP ) == CPU_STOP){
+		cpucore_device->stop_flag=1;
+		state=state&(~CPU_STOP);
+	}
+	mutex_unlock(&cooling_cpucore_lock);
 	cpucore_device->cpucore_state=state;
 	set_max_num=cpucore_device->max_cpu_core_num-state;
 	pr_debug( "need set max cpu num=%d,state=%d\n",set_max_num,state);
 	cpufreq_set_max_cpu_num(set_max_num);
+	
 	return 0;
 }
 
