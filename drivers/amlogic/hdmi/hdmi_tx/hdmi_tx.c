@@ -76,6 +76,7 @@ static void hdmitx_early_suspend(struct early_suspend *h)
     hdmitx_dev_t * phdmi = (hdmitx_dev_t *)h->param;
     if (info && (strncmp(info->name, "panel", 5) == 0 || strncmp(info->name, "null", 4) == 0))
         return;
+    phdmi->hpd_lock = 1;
     phdmi->HWOp.Cntl((hdmitx_dev_t *)h->param, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_EARLY_SUSPEND);
     phdmi->cur_VIC = HDMI_Unkown;
     phdmi->output_blank_flag = 0;
@@ -96,6 +97,7 @@ static void hdmitx_late_resume(struct early_suspend *h)
     } else {
         hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_VIDEO_BLANK_OP, VIDEO_BLANK);
     }
+    phdmi->hpd_lock = 0;
     hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_MUTE);
     hdmitx_device.HWOp.CntlDDC(&hdmitx_device, DDC_HDCP_OP, HDCP_OFF);
     hdmitx_device.internal_mode_change = 0;
