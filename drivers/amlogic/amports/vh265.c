@@ -51,12 +51,7 @@
 #define ERROR_LOCAL_RESET_COUNT   100
 #define ERROR_SYSTEM_RESET_COUNT   200
 
-#define STAT_TIMER_INIT     0x01
-#define STAT_MC_LOAD        0x02
-#define STAT_ISR_REG        0x04
-#define STAT_VF_HOOK        0x08
-#define STAT_TIMER_ARM      0x10
-#define STAT_VDEC_RUN       0x20
+
 
 static int  vh265_vf_states(vframe_states_t *states, void*);
 static vframe_t *vh265_vf_peek(void*);
@@ -2853,7 +2848,7 @@ static void vh265_put_timer_func(unsigned long arg)
         else if (error_watchdog_count == ERROR_SYSTEM_RESET_COUNT) {    // and it lasts for a while
             if((debug&H265_DEBUG_DIS_SYS_ERROR_PROC)==0){
                 printk("H265 decoder fatal error watchdog.\n");
-                fatal_error = 0x10;
+                fatal_error = DECODER_FATAL_ERROR_UNKNOW;
             }
             else{
                 error_watchdog_count = 0;
@@ -2881,7 +2876,7 @@ int vh265_dec_status(struct vdec_status *vstatus)
         vstatus->fps = -1;
     }
     vstatus->error_count = 0;
-    vstatus->status = stat | (fatal_error << 16);
+    vstatus->status = stat | fatal_error;
     return 0;
 }
 
