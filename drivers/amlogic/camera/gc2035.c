@@ -78,8 +78,13 @@ static unsigned int vid_limit = 16;
 //module_param(vid_limit, uint, 0644);
 //MODULE_PARM_DESC(vid_limit, "capture memory limit in megabytes");
 
-static int GC2035_h_active=640;
-static int GC2035_v_active=480;
+static int GC2035_h_active = 640;
+static int GC2035_v_active = 480;
+
+#define NORMAL_SKIP_NUM		1
+#define START_SKIP_NUM		4
+static int gc2035_skip_fn = START_SKIP_NUM;
+
 static struct v4l2_fract gc2035_frmintervals_active = {
     .numerator = 1,
     .denominator = 15,
@@ -3205,7 +3210,8 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	para.cfmt = TVIN_YUV422;
         para.dfmt = TVIN_NV21;
 	para.scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;	
-	para.skip_count = 4; //skip_num
+	para.skip_count = gc2035_skip_fn; //skip_num
+	gc2035_skip_fn = NORMAL_SKIP_NUM;
 	para.bt_path = dev->cam_info.bt_path;
 	ret =  videobuf_streamon(&fh->vb_vidq);
 	if(ret == 0){
@@ -3458,6 +3464,7 @@ static int gc2035_open(struct file *file)
 					sizeof(struct gc2035_buffer), (void*)&fh->res, NULL);
 
 	gc2035_start_thread(fh);
+	gc2035_skip_fn = START_SKIP_NUM;
     //msleep(50);  // added james
 	return 0;
 }
@@ -3536,6 +3543,7 @@ static int gc2035_close(struct file *file)
 #ifdef CONFIG_CMA
     vm_deinit_buf();
 #endif
+	gc2035_skip_fn = NORMAL_SKIP_NUM;
 	return 0;
 }
 
