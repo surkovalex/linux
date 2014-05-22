@@ -1212,11 +1212,12 @@ int aml_check_unsupport_cmd(struct mmc_host* mmc, struct mmc_request* mrq)
     if (mmc->caps & MMC_CAP_NONREMOVABLE) { // nonremovable device
         if (pdata->is_fir_init) { // init for the first time
             if (aml_card_type_sdio(pdata)) {
-                if (mrq->cmd->opcode == SD_IO_RW_DIRECT
-                        || mrq->cmd->opcode == SD_IO_RW_EXTENDED
-                        || mrq->cmd->opcode == SD_SEND_IF_COND) { // filter cmd 52/53/8 for a sdio device before init
-                    return aml_cmd_invalid(mmc, mrq);
-                }
+               // if (mrq->cmd->opcode == SD_IO_RW_DIRECT
+               //         || mrq->cmd->opcode == SD_IO_RW_EXTENDED
+               //         || mrq->cmd->opcode == SD_SEND_IF_COND) { // filter cmd 52/53/8 for a sdio device before init
+               //     return aml_cmd_invalid(mmc, mrq);
+               // }
+			   return 0; //for 8189ETV needs ssdio reset when starts
             } else if (aml_card_type_mmc(pdata)) {
                 if (mrq->cmd->opcode == SD_IO_SEND_OP_COND
                         || mrq->cmd->opcode == SD_IO_RW_DIRECT
