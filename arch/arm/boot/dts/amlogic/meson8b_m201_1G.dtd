@@ -700,27 +700,85 @@ void root_func(){
 //$$ L2 PROP_U32 16*3 = "dvfs_table"
         vcck_dvfs {
             dvfs_id     = <1>;                                  /** must be value of (1 << n)            */
-            table_count = <13>;                                 /** must be correct count for dvfs_table */
+            table_count = <12>;                                 /** must be correct count for dvfs_table */
             change-frequent-only;
             dvfs_table  = <
             /* NOTE: frequent in this table must be ascending order */
             /* frequent(Khz)    min_uV      max_uV                  */
-                  96000         825000      825000
-                 192000         825000      825000
-                 312000         825000      825000
-                 408000         825000      825000
-                 504000         825000      825000
-                 600000         825000      825000
-                 720000         825000      825000
-                 816000         850000      850000
-                1008000         875000      875000
-                1200000         925000      925000
-                1320000        1000000     1000000
-                1488000        1075000     1075000
-                1608000        1150000     1150000
+                  96000         875000      875000
+                 192000         875000      875000
+                 312000         875000      875000
+                 408000         875000      875000
+                 504000         875000      875000
+                 600000         900000      900000
+                 720000         900000      900000
+                 816000         925000      925000
+                1008000         975000      975000
+                1200000        1025000     1025000
+                1416000        1075000     1075000
+                1608000        1140000     1140000
             >;
         };
     };
+//$$ DEVICE="meson_vcck_dvfs_driver"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_STR = "pinctrl-names"
+//$$ L2 PROP_CHOICE "meson_vcck_dvfs_pin_0_match" = "pinctrl-0"
+//$$ L2 PROP_U32 = "use_pwm"
+//$$ L2 PROP_U32 = "table_count"
+//$$ L2 PROP_U32 16*2 = "cs_voltage_table"
+	meson_vcck_dvfs_driver{
+        compatible = "amlogic, meson_vcck_dvfs";
+        dev_name = "meson_vcck_dvfs_driver";
+        status = "ok";
+        pinctrl-names = "default";
+        pinctrl-0 = <&aml_pwm_pins>;
+        use_pwm = <1>; 
+        pmw_controller = "PWM_C";
+        table_count = <29>;
+        cs_voltage_table = <
+        /*   
+         * Note: This table is hardware depended, If your hardware use PWM method,
+         * then first line in this table is PWM register value, second line is
+         * voltage of VCCK according this PWM register value. If your platform use
+         * constant-current source to adjust vcck voltage, then the first line should 
+         * set to 0, means not valid, member 'use_pwm' in this node should set to 0.
+         *
+         *  ---- This table must be in ascending order by voltage ----
+         *    
+         *  PWM value       VCCK voltage 
+         */ 
+		0x1c0000        860000
+		0x1b0001        870000
+		0x1a0002        880000
+		0x190003        890000		
+		0x180004        900000			
+		0x170005        910000
+		0x160006        920000
+		0x150007        930000
+		0x140008        940000			
+		0x130009        950000		
+		0x12000a        960000			
+		0x11000b        970000		
+		0x10000c        980000			
+		0x0f000d        990000			
+		0x0e000e        1000000			
+		0x0d000f        1010000		
+		0x0c0010        1020000			
+		0x0b0011        1030000			
+		0x0a0012        1040000			
+		0x090013        1050000
+		0x080014        1060000
+		0x070015        1070000			
+		0x060016        1080000
+		0x050017        1090000
+		0x040018        1100000
+		0x030019        1110000			
+		0x02001a        1120000			
+		0x01001b        1130000
+		0x00001c        1140000
+        >;   
+    };   	
 
 //$$ DEVICE="arm_pmu"
 //$$ L2 PROP_STR = "status"
@@ -1701,6 +1759,16 @@ sdhc_sd_clk_cmd_pins:sdhc_sd_clk_cmd_pins{
 			amlogic,setmask=<5 0xf>;
 			amlogic,clrmask=<2 0x380000>;
 			amlogic,pins = "BOOT_11","BOOT_12","BOOT_13","BOOT_18";
+		};
+//$$ MATCH "meson_vcck_dvfs_pin_0_match" = "&aml_pwm_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+//$$ L2 PROP_STR = "amlogic,pins"
+		aml_pwm_pins:aml_pwm{
+		    	amlogic,setmask=<3 0x1000000>;
+			amlogic,clrmask=<0 0x48
+					 7 0x10000020>;
+			amlogic,pins="GPIODV_9";
 		};
 
 	};
