@@ -189,7 +189,7 @@ static unsigned char new_keep_last_frame_enable = 0;
 static int bypass_state = 1;
 static int bypass_prog = 0;
 static int bypass_hd_prog = 0;
-#if (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESON8) 
+#if (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESON8)
 static int bypass_interlace_output = 0;
 #else
 static int bypass_interlace_output = 1;
@@ -3905,7 +3905,7 @@ static unsigned char pre_de_buf_config(void)
             dump_vframe(vframe);
         }
 	#ifdef SUPPORT_MPEG_TO_VDIN
-	if((!is_from_vdin(vframe))&&mpeg2vdin_en){
+	if((!is_from_vdin(vframe))&&(vframe->sig_fmt == TVIN_SIG_FMT_NULL)&&mpeg2vdin_en){
 	    vdin_arg_t vdin_arg;
 	    vdin_v4l2_ops_t *vdin_ops = get_vdin_v4l2_ops();
 	    vdin_arg.cmd = VDIN_CMD_GET_HISTGRAM;
@@ -3964,7 +3964,7 @@ static unsigned char pre_de_buf_config(void)
             di_set_para_by_tvinfo(vframe);
 #endif
 #ifdef SUPPORT_MPEG_TO_VDIN
-	    if(!is_from_vdin(vframe)){
+	    if((!is_from_vdin(vframe))&&(vframe->sig_fmt == TVIN_SIG_FMT_NULL)){
 		vdin_arg_t vdin_arg;
 		vdin_v4l2_ops_t *vdin_ops = get_vdin_v4l2_ops();
 		vdin_arg.cmd = VDIN_CMD_MPEGIN_START;
