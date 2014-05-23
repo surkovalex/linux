@@ -963,7 +963,6 @@ static int aml_pcm_open(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct aml_runtime_data *prtd;
-	audio_stream_t *s = &prtd->s;
 	int ret = 0;
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
@@ -1013,6 +1012,7 @@ static int aml_pcm_open(struct snd_pcm_substream *substream)
 	runtime->private_data = prtd;
 
 	spin_lock_init(&prtd->s.lock);
+	audio_stream_t *s = &prtd->s;
 	s->xrun_num = 0;
  out:
 	return ret;
