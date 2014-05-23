@@ -7,7 +7,7 @@
 #define AML_MMC_MAJOR_VERSION   1
 #define AML_MMC_MINOR_VERSION   05
 #define AML_MMC_VERSION         ((AML_MMC_MAJOR_VERSION << 8) | AML_MMC_MINOR_VERSION)
-#define AML_MMC_VER_MESSAGE     "2014-05-12: sdhc eMMC tuning support"
+#define AML_MMC_VER_MESSAGE     "2014-05-14: sdhc regular tuning support"
 
 extern unsigned sdhc_debug;
 extern unsigned sdio_debug;

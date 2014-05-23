@@ -14,6 +14,7 @@
 #include <linux/timer.h>
 #include <linux/clk.h>
 #include <linux/mmc/host.h>
+#include <linux/mmc/card.h>
 #include <linux/io.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/sdio.h>
@@ -160,6 +161,7 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
 	u8 *blk_test;
 	unsigned int blksz = tuning_data->blksz;
 	int ret = 0;
+    unsigned long flags;
 
 	int n, nmatch, ntries = 10;
 	int rx_phase = 0;
@@ -168,6 +170,10 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
 	int curr_win_start = -1, curr_win_size = -1;
 
 	u8 rx_tuning_result[20] = { 0 };
+
+    spin_lock_irqsave(&host->mrq_lock, flags);
+    pdata->need_retuning = false;
+    spin_unlock_irqrestore(&host->mrq_lock, flags);
 
     vclk2_bak = readl(host->base + SDHC_CLK2);
 
@@ -319,7 +325,9 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
         pdata->clk2 = vclk2;
         pdata->tune_phase = vclk2;
 
-        printk("Tuning result: rx_phase=%d\n", rx_phase);
+        sdhc_dbg(AMLSD_DBG_TUNING, "Tuning result: rx_phase=%d\n", rx_phase);
+        // printk("Tuning result: rx_phase=%d\n", rx_phase);
+        // sdhc_err("Tuning result: rx_phase=%d, tune_phase=%#x\n", rx_phase, pdata->tune_phase);
     }
 
 	sdhc_dbg(AMLSD_DBG_TUNING, "Final Result\n");
@@ -335,14 +343,18 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
     // writel(vclk2_bak, host->base + SDHC_CLK2);
     // pdata->clk2 = vclk2_bak;
     // sdhc_err("vclk2_bak=%#x\n", vclk2_bak);
+	
+    if (pdata->is_in) {
+        schedule_delayed_work(&pdata->retuning, 15*HZ);
+    }
 
 	return ret;
 }
 
 static int aml_sdhc_execute_tuning (struct mmc_host *mmc, u32 opcode)
 {
-	struct amlsd_platform *pdata = mmc_priv(mmc);
-	struct amlsd_host *host = pdata->host;
+	// struct amlsd_platform *pdata = mmc_priv(mmc);
+	// struct amlsd_host *host = pdata->host;
 	struct aml_tuning_data tuning_data;
 	int err = -ENOSYS;
 
@@ -350,13 +362,13 @@ static int aml_sdhc_execute_tuning (struct mmc_host *mmc, u32 opcode)
         // return 0;
     // }
 
-    if (pdata->is_tuned) { // have been tuned
-        writel(pdata->tune_phase, host->base + SDHC_CLK2);
-        pdata->clk2 = pdata->tune_phase;
+    // if (pdata->is_tuned) { // have been tuned
+        // writel(pdata->tune_phase, host->base + SDHC_CLK2);
+        // pdata->clk2 = pdata->tune_phase;
 
-        printk("Tuning already, tune_phase=0x%x \n", pdata->tune_phase);
-        return 0;
-    }
+        // printk("Tuning already, tune_phase=0x%x \n", pdata->tune_phase);
+        // return 0;
+    // }
 
     if (opcode == MMC_SEND_TUNING_BLOCK_HS200) {
         if (mmc->ios.bus_width == MMC_BUS_WIDTH_8) {
@@ -461,11 +473,12 @@ int aml_sdhc_wait_ready(struct amlsd_host* host, u32 timeout)
 {
     u32 i, vstat=0;
     struct sdhc_stat* stat;
+    u32 esta;
 
     for(i=0; i< timeout; i++){
         vstat = readl(host->base + SDHC_STAT);
         stat = (struct sdhc_stat*)&vstat;
-        u32 esta = readl(host->base + SDHC_ESTA);
+        esta = readl(host->base + SDHC_ESTA);
         if(!stat->cmd_busy && (!((esta << 11) & 7)))
         //if(!stat->cmd_busy)
             return 0;
@@ -1081,6 +1094,17 @@ timeout_handle:
     return ;
 }
 
+static void aml_sdhc_tuning_timer(struct work_struct *work)
+{
+    struct amlsd_platform * pdata = container_of(work, struct amlsd_platform, retuning.work);
+    struct amlsd_host *host = (void*)pdata->host;
+    unsigned long flags;
+
+    spin_lock_irqsave(&host->mrq_lock, flags);
+    pdata->need_retuning = true;
+    spin_unlock_irqrestore(&host->mrq_lock, flags);
+}
+
 /*cmd request interface*/
 void aml_sdhc_request(struct mmc_host *mmc, struct mmc_request *mrq)
 {
@@ -1089,6 +1113,7 @@ void aml_sdhc_request(struct mmc_host *mmc, struct mmc_request *mrq)
     // u32 vista;
     unsigned long flags;
     unsigned int timeout;
+    u32 tuning_opcode;
     
     BUG_ON(!mmc);
     BUG_ON(!mrq);
@@ -1105,6 +1130,13 @@ void aml_sdhc_request(struct mmc_host *mmc, struct mmc_request *mrq)
         spin_unlock_irqrestore(&host->mrq_lock, flags);
         mmc_request_done(mmc, mrq);
         return;
+    }
+
+    if (pdata->need_retuning && mmc->card) {
+        /* eMMC uses cmd21 but sd and sdio use cmd19 */
+        tuning_opcode = (mmc->card->type == MMC_TYPE_MMC)?
+            MMC_SEND_TUNING_BLOCK_HS200 : MMC_SEND_TUNING_BLOCK;
+        aml_sdhc_execute_tuning(mmc, tuning_opcode);
     }
 
     // aml_sdhc_host_reset(host);
@@ -1242,6 +1274,7 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
     struct amlsd_platform* pdata;
     struct mmc_request* mrq;
     unsigned long flags;
+    bool exception_flag = false;
     u32 victl = readl(host->base + SDHC_ICTL);
     u32 vista = readl(host->base + SDHC_ISTA);
 
@@ -1264,6 +1297,7 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
 
     if ((host->xfer_step != XFER_AFTER_START) && (!host->cmd_is_stop)) {
         sdhc_err("host->xfer_step=%d\n", host->xfer_step);
+        exception_flag = true;
     }
 
     if(host->cmd_is_stop)
@@ -1274,6 +1308,8 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
     if (victl & vista) {
         spin_unlock_irqrestore(&host->mrq_lock, flags);
         aml_sdhc_status(host);
+        if (exception_flag)
+            sdhc_err("victl=%#x, vista=%#x, status=%#x\n", victl, vista, host->status);
         spin_lock_irqsave(&host->mrq_lock, flags);
         switch(host->status)
         {
@@ -1300,6 +1336,7 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
                 writel(vista, host->base+SDHC_ISTA);
                 break;
             default:
+                sdhc_err("Unknown irq status, victl=%#x, vista=%#x, status=%#x\n", victl, vista, host->status);
                 break;
         }
 
@@ -1327,6 +1364,7 @@ static irqreturn_t aml_sdhc_irq(int irq, void *dev_id)
 static void aml_sdhc_com_err_handler (struct amlsd_host* host)
 {
     cancel_delayed_work(&host->timeout);
+    aml_sdhc_read_response(host->mmc, host->mrq->cmd);
     aml_sdhc_print_err(host);
     aml_sdhc_host_reset(host);
     aml_sdhc_request_done(host->mmc, host->mrq);
@@ -1335,7 +1373,6 @@ static void aml_sdhc_com_err_handler (struct amlsd_host* host)
 static void aml_sdhc_not_timeout_err_handler (struct amlsd_host* host)
 {
     aml_sdhc_wait_ready(host, STAT_POLL_TIMEOUT);
-    aml_sdhc_read_response(host->mmc, host->mrq->cmd);
     aml_sdhc_com_err_handler(host);
 }
 
@@ -1364,6 +1401,8 @@ void aml_sdhc_send_stop(struct amlsd_host* host)
     aml_sdhc_start_cmd(pdata, &aml_sdhc_stop);
 }
 
+static unsigned int clock[]={90000000,80000000,75000000,70000000,65000000,60000000,50000000};
+static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios);
 irqreturn_t aml_sdhc_data_thread(int irq, void *data)
 {
     struct amlsd_host* host = data;
@@ -1373,7 +1412,8 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
     unsigned long flags;
     u32 vstat, status;
     struct sdhc_stat* stat = (struct sdhc_stat*)&vstat;
-    
+    struct amlsd_platform* pdata;
+    int cnt=0;
 
     spin_lock_irqsave(&host->mrq_lock, flags);
     if ((host->xfer_step != XFER_IRQ_OCCUR) && (host->xfer_step != XFER_IRQ_TASKLET_BUSY)) {
@@ -1468,17 +1508,38 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
             }
             break;
         case HOST_TX_FIFO_EMPTY:
+            cancel_delayed_work(&host->timeout);
             aml_sdhc_wait_ready(host, STAT_POLL_TIMEOUT);
             aml_sdhc_read_response(host->mmc, host->mrq->cmd);
-            cancel_delayed_work(&host->timeout);
             aml_sdhc_print_err(host);
             aml_sdhc_host_reset(host);
             writel(SDHC_ISTA_W1C_ALL, host->base+SDHC_ISTA);
             aml_sdhc_send_stop(host);
             break;
         case HOST_RX_FIFO_FULL:
+            aml_sdhc_not_timeout_err_handler(host);
+            break;
         case HOST_RSP_CRC_ERR:
         case HOST_DAT_CRC_ERR:
+            pdata = mmc_priv(host->mmc);
+            if (aml_card_type_sdio(pdata)  // sdio_wifi
+                    && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK) 
+                    && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK_HS200)) {
+                sdhc_err("host->mmc->ios.clock:%d\n",host->mmc->ios.clock);
+                while(host->mmc->ios.clock<=clock[cnt])
+                {
+                    cnt++;
+                    if(cnt >= (ARRAY_SIZE(clock) - 1))
+                        break;
+                }
+                host->mmc->ios.clock = clock[cnt]; 
+                aml_sdhc_set_clk_rate(host->mmc,host->mmc->ios.clock);
+
+                spin_lock_irqsave(&host->mrq_lock, flags);
+                pdata->need_retuning = true; // retuing will be done in the next request
+                mrq->cmd->retries = (ARRAY_SIZE(clock) - 1) - cnt;
+                spin_unlock_irqrestore(&host->mrq_lock, flags);
+            }
             aml_sdhc_not_timeout_err_handler(host);
             break;
         case HOST_RSP_TIMEOUT_ERR:
@@ -1576,7 +1637,7 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
         return;
     }
 
-    if ((clk_ios > 10000000) && (val1 > 10000000)) // for debug, 10M
+    if ((clk_ios > 100000000) && (val1 > 100000000)) // for debug, 100M
         clk_ios = val1;
 
     clk_src_div = -1;
@@ -1786,6 +1847,9 @@ static int aml_sdhc_suspend(struct platform_device *pdev, pm_message_t state)
     printk("***Entered %s:%s\n", __FILE__,__func__);
     i = 0;
     list_for_each_entry(pdata, &host->sibling, sibling){
+        cancel_delayed_work(&pdata->retuning);
+        pdata->need_retuning = false;
+        
         mmc = pdata->mmc;
         //mmc_power_save_host(mmc);
         ret = mmc_suspend_host(mmc);
@@ -1954,6 +2018,7 @@ static int aml_sdhc_probe(struct platform_device *pdev)
             }
         }
         dev_set_name(&mmc->class_dev, "%s", pdata->pinname);
+        INIT_DELAYED_WORK(&pdata->retuning, aml_sdhc_tuning_timer);
         if (pdata->caps & MMC_CAP_NONREMOVABLE) {
             pdata->is_in = true;
         }
@@ -1963,6 +2028,7 @@ static int aml_sdhc_probe(struct platform_device *pdev)
         pdata->mmc = mmc;
         pdata->is_fir_init = true;
         pdata->is_tuned = false;
+        pdata->need_retuning = false;
         pdata->signal_voltage = 0xff; // init as an invalid value
 
         mmc->index = i;
