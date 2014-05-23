@@ -1329,8 +1329,8 @@ static void aml1218_earlysuspend(struct early_suspend *h)
     struct aml1218_supply *supply = (struct aml1218_supply *)h->param;
     if (aml1218_battery) {
         aml1218_set_charging_current(aml1218_battery->pmu_suspend_chgcur);
-        early_power_status = supply->aml_charger.ext_valid; 
     }
+    early_power_status = supply->aml_charger.ext_valid; 
     in_early_suspend = 1;
 }
 
@@ -1341,10 +1341,10 @@ static void aml1218_lateresume(struct early_suspend *h)
     schedule_work(&supply->work.work);                                      // update for upper layer 
     if (aml1218_battery) {
         aml1218_set_charging_current(aml1218_battery->pmu_resume_chgcur);
-        early_power_status = supply->aml_charger.ext_valid; 
         input_report_key(aml1218_power_key, KEY_POWER, 0);                  // cancel power key 
         input_sync(aml1218_power_key);
     }
+    early_power_status = supply->aml_charger.ext_valid; 
     in_early_suspend = 0;
     wake_unlock(&aml1218_lock);
 }
