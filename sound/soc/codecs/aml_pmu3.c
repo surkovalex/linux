@@ -29,6 +29,9 @@
 //#include <sound/aml_pmu3.h>
 #include <linux/amlogic/aml_pmu.h>
 #include "aml_pmu3.h"
+#include <linux/reboot.h>
+#include <linux/notifier.h>
+
 
 static u16 pmu3_reg_defaults[] = {
 	0x0000,     /* R00h	- SW Reset */
@@ -885,11 +888,48 @@ static struct snd_soc_codec_driver soc_codec_dev_pmu3 = {
 	.num_dapm_routes = ARRAY_SIZE(pmu3_intercon),
 };
 
+
+static int pmu3_audio_codec_mute()
+{
+    uint32_t addr;
+    unsigned int value = 0x8000;
+    unsigned int reg = PMU3_SOFT_MUTE;
+    printk("pmu3_audio_codec_mute\n");
+
+    addr = PMU3_AUDIO_BASE + (reg<<1);
+    aml1218_write16(addr, value);
+
+    return 0;
+}
+
+
+
+static int aml_pmu3_audio_reboot_work(struct notifier_block *nb, unsigned long state, void *cmd)
+{
+    
+    printk(KERN_DEBUG "\n%s\n", __func__);
+
+    pmu3_audio_codec_mute();
+    
+    return NOTIFY_DONE;
+}
+
+
+static struct notifier_block aml_pmu3_audio_reboot_nb = {
+    .notifier_call    = aml_pmu3_audio_reboot_work,
+    .priority = 0,
+};
+
 static int aml_pmu3_codec_probe(struct platform_device *pdev)
 {
-	return snd_soc_register_codec(&pdev->dev, 
-		&soc_codec_dev_pmu3, &pmu3_dai, 1);
+    int ret = snd_soc_register_codec(&pdev->dev, 
+        &soc_codec_dev_pmu3, &pmu3_dai, 1);
+    register_reboot_notifier(&aml_pmu3_audio_reboot_nb);
+
+    return ret;
 }
+
+
 
 static int aml_pmu3_codec_remove(struct platform_device *pdev)
 {
