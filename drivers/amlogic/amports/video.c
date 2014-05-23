@@ -91,6 +91,8 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_DEFAULT_LEVEL_DESC, LOG_MASK_DESC);
 
 static int debugflags=0;
 static int output_fps = 0;
+static u32 omx_pts = 0;
+bool omx_secret_mode = false;
 #define DEBUG_FLAG_FFPLAY	(1<<0)
 #define DEBUG_FLAG_CALC_PTS_INC	(1<<1)
 
@@ -2222,7 +2224,17 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
         timestamp_pcrscr_inc(vsync_pts_inc / vsync_slow_factor);
         timestamp_apts_inc(vsync_pts_inc / vsync_slow_factor);
     }
-
+    if (omx_secret_mode == true) {
+        u32 system_time = timestamp_pcrscr_get();
+        int diff = omx_pts - system_time;
+        if (diff>11000 || diff<-11000) {
+            timestamp_pcrscr_enable(1);
+            //printk("system_time=%d,omx_pts=%d,diff=%d\n",system_time,omx_pts,diff);
+            timestamp_pcrscr_set(omx_pts);
+        }
+    } else {
+        omx_pts = 0;
+    }
     if (trickmode_duration_count > 0) {
         trickmode_duration_count -= vsync_pts_inc;
     }
@@ -3367,6 +3379,14 @@ static long amvideo_ioctl(struct file *file,
     void *argp = (void *)arg;
 
     switch (cmd) {
+    case AMSTREAM_IOC_SET_OMX_VPTS:
+        {
+            u32 pts;
+            memcpy(&pts,arg,sizeof(u32));
+            omx_pts = pts;
+        }
+        break;
+
     case AMSTREAM_IOC_TRICKMODE:
         if (arg == TRICKMODE_I) {
             trickmode_i = 1;
