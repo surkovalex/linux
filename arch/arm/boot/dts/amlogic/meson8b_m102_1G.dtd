@@ -764,8 +764,8 @@ void root_func(){
 	    pmu_twi_id = <2>;                   /** PMU i2c bus                          */
         pmu_irq_id = <0>;                   /** INT_WATCHDOG                         */
         pmu_twi_addr = <0x35>;              /** PMU i2c addr                         */
-        pmu_battery_rdc = <100>;            /** battery internal resistor            */
-        pmu_battery_cap = <3670>;           /** battery capacity                     */
+        pmu_battery_rdc = <101>;            /** battery internal resistor            */
+        pmu_battery_cap = <3560>;           /** battery capacity                     */
         pmu_battery_technology = <4>;       /** POWER_SUPPLY_TECHNOLOGY_LiFe         */
         pmu_battery_name = "PTI PL336078";  /** battery name                         */
         pmu_init_chgvol = <4200000>;        /** target charge voltage                */
@@ -792,24 +792,24 @@ void root_func(){
         pmu_pwrnoe_time = <2000>;           /**                                      */
         pmu_intotp_en = <1>;                /** over temperature protection enable   */
         pmu_pekon_time = <128>;             /** powerkey hold time for power on      */
-        pmu_charge_efficiency = <99>;       /** efficient of charging                */
+        pmu_charge_efficiency = <96>;       /** efficient of charging                */
         pmu_bat_curve = <
          /* ocv, charge, discharge */
             3132      0       0
             3273      0       0
             3414      0       0
-            3585      0       0  
-            3625      1       2  
-            3660      2       5  
-            3696      3      12 
-            3731      8      19 
-            3766     13      32 
-            3801     19      45 
-            3836     36      54
-            3872     48      61
-            3942     63      71
-            4012     77      81
-            4083     87      90
+            3555      0       0  
+            3625      1       1  
+            3660      1       3  
+            3696      2      11 
+            3731      6      17 
+            3766     12      30 
+            3801     18      45 
+            3836     31      55
+            3872     57      61
+            3935     68      71
+            3998     79      81
+            4062     88      89
             4153    100     100>;
 	};
 
