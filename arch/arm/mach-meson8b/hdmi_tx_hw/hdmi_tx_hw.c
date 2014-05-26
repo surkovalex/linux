@@ -970,9 +970,9 @@ void hdmi_hw_init(hdmitx_dev_t* hdmitx_device)
 
     aml_set_reg32_bits(P_HHI_GCLK_MPEG2, 1, 4, 1); //enable HDMI PCLK
     aml_set_reg32_bits(P_HHI_GCLK_MPEG2, 1, 3, 1); //enable HDMI Int Sync
-    aml_write_reg32(P_HHI_HDMI_CLK_CNTL,  ((0 << 9)  |   // select XTAL
-                             (1 << 8)  |   // Enable gated clock
-                             (0 << 0)) );  // Divide by 1
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 0, 9, 2);   // select XTAL
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 0, 0, 7);   // Divide by 1
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 1, 8, 1);   // Enable gated clock
 
     aml_set_reg32_bits(P_HHI_MEM_PD_REG0, 0x00, 8, 8);    //disable HDMI memory PD  TODO: set in suspend/resume
 
