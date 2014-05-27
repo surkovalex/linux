@@ -501,7 +501,7 @@ static void hdmi_tvenc480i_set(Hdmi_tx_video_para_t* param)
             aml_write_reg32(P_ENCI_DVI_VSO_END_EVN,   vso_begin_evn);
         }
     }
-
+    aml_set_reg32_bits(P_HHI_GCLK_OTHER, 1, 8, 1);      // Enable VENCI gate
     // Check if there are duplicate or missing timing settings
     //if ((vso_bline_evn_reg_wr_cnt != 1) || (vso_bline_odd_reg_wr_cnt != 1) ||
     //    (vso_eline_evn_reg_wr_cnt != 1) || (vso_eline_odd_reg_wr_cnt != 1)) {
