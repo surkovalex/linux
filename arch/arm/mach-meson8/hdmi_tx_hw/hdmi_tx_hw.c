@@ -1560,6 +1560,11 @@ static void hdmi_hw_reset(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t *par
     tmp_add_data |= TX_INPUT_COLOR_DEPTH    << 0; // [1:0] input_color_depth:   0=24-b; 1=30-b; 2=36-b; 3=48-b.
     hdmi_wr_reg(TX_VIDEO_DTV_OPTION_L, tmp_add_data); // 0x50
 
+    if(hdmitx_device->cur_audio_param.channel_num > CC_2CH) {
+        i2s_to_spdif_flag = 0;
+    }else {
+        i2s_to_spdif_flag = 1;
+    }
     tmp_add_data  = 0;
     tmp_add_data |= 0                       << 4; // [7:4] Rsrv
     tmp_add_data |= TX_OUTPUT_COLOR_RANGE   << 2; // [3:2] output_color_range:  0=16-235/240; 1=16-240; 2=1-254; 3=0-255.
@@ -2128,6 +2133,11 @@ static int hdmitx_set_audmode(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_audio
     hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_1, 0x30);     // reset audio master & sample
     hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_1, 0x00);
 
+    if(hdmitx_device->cur_audio_param.channel_num > CC_2CH) {
+        i2s_to_spdif_flag = 0;
+    }else{
+        i2s_to_spdif_flag = 1;
+    }
     if(!hdmi_audio_off_flag){
         hdmi_audio_init(i2s_to_spdif_flag);
     }
@@ -2280,6 +2290,7 @@ static int hdmitx_set_audmode(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_audio
             audio_N_para *= 4;
             break;
         case CT_DTS_HD:
+            audio_N_para *= 4;
             break;
         case CT_MAT:
             break;
