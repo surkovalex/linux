@@ -76,18 +76,14 @@ static void set_hpll_clk_out(unsigned clk)
         case 1488:
 #ifdef CONFIG_ARCH_MESON8B
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
-            aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x40238100);
-            aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x12385);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x4023d100);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x8a7ad023);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x12286);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
             while(!(aml_read_reg32(P_HHI_VID_PLL_CNTL) & (1 << 31))) {
                 ;
             }
-            msleep(1);
-            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c80e00);
-            aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x0e79c822);
-            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x400121ef);
-            break;
 #endif
 #ifdef CONFIG_ARCH_MESON8
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
