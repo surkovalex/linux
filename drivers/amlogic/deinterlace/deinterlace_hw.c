@@ -1536,7 +1536,7 @@ void initial_di_post_2 ( int hsize_post, int vsize_post, int hold_line )
                       (0 << 9)  |        				// mif0 to VPP enable.
                       (0 << 10) |        				// post drop first.
                       (0 << 11) |        				// post repeat.
-                      (1 << 12) |        				// post viu link
+                      (0 << 12) |        				// post viu link
                       (hold_line << 16) |      			// post hold line number
                       (0 << 29) |        				// post field number.
                       (0x3 << 30)       				// post soft rst  post frame rst.
@@ -1956,9 +1956,10 @@ void enable_di_post_pd(
 
 void disable_post_deinterlace_2(void)
 {
-	VSYNC_WR_MPEG_REG(DI_POST_CTRL, 0x3 << 30);
+    VSYNC_WR_MPEG_REG(DI_POST_CTRL, 0x3 << 30);
     VSYNC_WR_MPEG_REG(DI_POST_SIZE, (32-1) | ((128-1) << 16));
-	VSYNC_WR_MPEG_REG(DI_IF1_GEN_REG, Rd(DI_IF1_GEN_REG) & 0xfffffffe);
+    VSYNC_WR_MPEG_REG(DI_IF1_GEN_REG, 0x3 << 30);
+    //VSYNC_WR_MPEG_REG(DI_IF1_GEN_REG, Rd(DI_IF1_GEN_REG) & 0xfffffffe);
 }
 
 void enable_di_mode_check_2( int win0_start_x, int win0_end_x, int win0_start_y, int win0_end_y,
