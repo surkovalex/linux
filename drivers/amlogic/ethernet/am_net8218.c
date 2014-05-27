@@ -117,6 +117,7 @@ void start_test(struct net_device *dev);
 static void write_mac_addr(struct net_device *dev, char *macaddr);
 static int ethernet_reset(struct net_device *dev);
 static void am_net_dump_macreg(void);
+static void read_macreg(void);
 
 /* --------------------------------------------------------------------------*/
 /**
@@ -1003,7 +1004,7 @@ static void aml_adjust_link(struct net_device *dev)
 					ctrl |= (1 << 13);//1000m 
 					break;
 				case 100:
-					ctrl |= (1 << 14);
+					ctrl |= (1 << 14)|(1 << 15);
 					if(new_maclogic ==0)
 						PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					break;
@@ -1040,8 +1041,11 @@ static void aml_adjust_link(struct net_device *dev)
 
 	}
 
-	if (new_state)
+	if (new_state){
+		if(priv->phy_interface == PHY_INTERFACE_MODE_RGMII)
+			read_macreg();
 		phy_print_status(phydev);
+	}
 
 	spin_unlock_irqrestore(&priv->lock, flags);
 
@@ -1291,7 +1295,8 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
 	unsigned long flags;
 	dev->trans_start = jiffies;
 	if (np->first_tx) {
-		read_macreg();
+		if(np->phy_interface == PHY_INTERFACE_MODE_RGMII)
+			read_macreg();
 	}
 	if (!running) {
 		return -1;
@@ -2713,8 +2718,8 @@ static int am_net_cali(int argc, char **argv,int gate)
 {
 	int cali_rise = 0;
 	int cali_sel = 0;
-	int cali_start;
-	int cali_time;
+	int cali_start = 0;
+	int cali_time = 0;
 	int ii=0;
 	cali_start = gate;
 	unsigned int value;
@@ -2723,14 +2728,16 @@ static int am_net_cali(int argc, char **argv,int gate)
 		printk("Invalid syntax\n");
 		return -1;
 	}
-	cali_rise = simple_strtol(argv[1], NULL, 16);
-	cali_sel = simple_strtol(argv[2], NULL, 16);
-	cali_time = simple_strtol(argv[3], NULL, 16);
-	aml_write_reg32((aml_read_reg32(P_PREG_ETH_REG0)|(cali_start << 25)|(cali_rise << 26)|(cali_sel << 27)),P_PREG_ETH_REG0);
+	cali_rise = simple_strtol(argv[1], NULL, 0);
+	cali_sel = simple_strtol(argv[2], NULL, 0);
+	cali_time = simple_strtol(argv[3], NULL, 0);
+	writel((readl(P_PREG_ETH_REG0)&(~(0x1f << 25))),P_PREG_ETH_REG0);
+	writel((readl(P_PREG_ETH_REG0)|(cali_start << 25)|(cali_rise << 26)|(cali_sel << 27)),P_PREG_ETH_REG0);
+	printk("rise :%d   sel: %d  time: %d   start:%d  cbus2050 = %x\n",cali_rise,cali_sel,cali_time,cali_start,readl(P_PREG_ETH_REG0));
 	for(ii=0;ii < cali_time;ii++){
-		value = aml_read_reg32(P_PREG_ETH_REG1);
+		value = readl(P_PREG_ETH_REG1);
 		if((value>>15) & 0x1){
- printk("value == %x,  cali_len == %d, cali_idx == %d,  cali_sel =%d,  cali_rise = %d\n",value,(value>>5)&0x1f,(value&0x1f),(value>>11)&0x7,(value>>14)&0x1);
+ 			printk("value == %x,  cali_len == %d, cali_idx == %d,  cali_sel =%d,  cali_rise = %d\n",value,(value>>5)&0x1f,(value&0x1f),(value>>11)&0x7,(value>>14)&0x1);
 		}
 	}
 
