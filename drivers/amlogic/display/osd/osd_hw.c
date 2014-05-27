@@ -291,7 +291,7 @@ static irqreturn_t osd_rdma_isr(int irq, void *dev_id)
 				}
 			}
 		} else {
-			if ((osd_hw.pandata[OSD1].y_start%2) == 0){
+			if ((osd_hw.pandata[OSD1].y_start%2) == 1){
 				odd_or_even_line = (aml_read_reg32(P_ENCI_INFO_READ) & (1<<29)) ?
 									OSD_TYPE_BOT_FIELD : OSD_TYPE_TOP_FIELD;
 			}else{
