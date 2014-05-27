@@ -59,7 +59,7 @@ obj-$(CONFIG_AMLOGIC_SPI_NOR) += spi_nor/
 #obj-$(CONFIG_CARDREADER) += cardreader/
 obj-$(CONFIG_MMC_AML) +=mmc/
 
-obj-y += vfm/
+obj-$(CONFIG_AML_VFM) += vfm/
 
 obj-$(CONFIG_AML_AUDIO_DSP) += audiodsp/
 
