@@ -416,11 +416,11 @@ int aml1216_set_charge_end_rate(int rate)
     aml1216_read(AML1216_CHG_CTRL6, &val);
     switch (rate) {
     case 10:
-        val &= ~(0x01 << 3);
+        val &= ~(0x10);
         break;
 
     case 20:
-        val |= (0x01 << 3);
+        val |= (0x10);
         break;
 
     default:

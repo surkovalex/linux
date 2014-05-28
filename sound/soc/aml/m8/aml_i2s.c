@@ -509,7 +509,7 @@ static int aml_i2s_open(struct snd_pcm_substream *substream)
 
 	spin_lock_init(&prtd->s.lock);
 	s= &prtd->s;
-	WRITE_MPEG_REG_BITS( HHI_MPLL_CNTL9, 1,14, 1);
+	WRITE_MPEG_REG_BITS(MPLL_I2S_CNTL, 1,14, 1);
 	mutex_lock(&gate_mutex);
 	if(!num_clk_gate){
         num_clk_gate = 1;

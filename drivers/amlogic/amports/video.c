@@ -4087,6 +4087,56 @@ static ssize_t video_contrast_store(struct class *cla, struct class_attribute *a
     return count;
 }
 
+static ssize_t vpp_brightness_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    s32 val = (READ_VCBUS_REG(VPP_VADJ2_Y + cur_dev->vpp_off) >> 8) & 0x1ff;
+
+    val = (val << 23) >> 23;
+
+    return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t vpp_brightness_store(struct class *cla, struct class_attribute *attr, const char *buf,
+                                      size_t count)
+{
+    size_t r;
+    int val;
+
+    r = sscanf(buf, "%d", &val);
+    if ((r != 1) || (val < -255) || (val > 255)) {
+        return -EINVAL;
+    }
+
+    WRITE_VCBUS_REG_BITS(VPP_VADJ2_Y + cur_dev->vpp_off, val, 8, 9);
+    WRITE_VCBUS_REG(VPP_VADJ_CTRL + cur_dev->vpp_off, VPP_VADJ2_EN);
+
+    return count;
+}
+
+static ssize_t vpp_contrast_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%d\n", (int)(READ_VCBUS_REG(VPP_VADJ2_Y + cur_dev->vpp_off) & 0xff) - 0x80);
+}
+
+static ssize_t vpp_contrast_store(struct class *cla, struct class_attribute *attr, const char *buf,
+                                    size_t count)
+{
+    size_t r;
+    int val;
+
+    r = sscanf(buf, "%d", &val);
+    if ((r != 1) || (val < -127) || (val > 127)) {
+        return -EINVAL;
+    }
+
+    val += 0x80;
+
+    WRITE_VCBUS_REG_BITS(VPP_VADJ2_Y + cur_dev->vpp_off, val, 0, 8);
+    WRITE_VCBUS_REG(VPP_VADJ_CTRL + cur_dev->vpp_off, VPP_VADJ2_EN);
+
+    return count;
+}
+
 static ssize_t video_saturation_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
     return sprintf(buf, "%d\n", READ_VCBUS_REG(VPP_VADJ1_Y + cur_dev->vpp_off) & 0xff);
@@ -4637,6 +4687,14 @@ static struct class_attribute amvideo_class_attrs[] = {
     S_IRUGO | S_IWUSR,
     video_contrast_show,
     video_contrast_store),
+    __ATTR(vpp_brightness,
+    S_IRUGO | S_IWUSR,
+    vpp_brightness_show,
+    vpp_brightness_store),
+    __ATTR(vpp_contrast,
+    S_IRUGO | S_IWUSR,
+    vpp_contrast_show,
+    vpp_contrast_store),
     __ATTR(saturation,
     S_IRUGO | S_IWUSR,
     video_saturation_show,

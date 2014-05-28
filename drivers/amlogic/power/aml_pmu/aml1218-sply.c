@@ -298,6 +298,23 @@ int aml1218_set_usb_voltage_limit(int voltage)
 }
 EXPORT_SYMBOL_GPL(aml1218_set_usb_voltage_limit);
 
+int aml1218_get_vsys_voltage(void)
+{
+    uint8_t val[2] = {};
+    int     result;
+    aml1218_write(0x00AA, 0xC3);                            // select VBUS channel
+    aml1218_write(0x009A, 0x28);
+    udelay(100);
+    aml1218_reads(0x00B1, val, 2);
+    result = ((val[1] & 0x1f) << 8) + val[0];
+    if (result & 0x1000) {                                  // complement code
+        result = 0;                                         // avoid ADC offset 
+    } else {
+        result = result * 6400 / 4096;
+    }
+    return result;
+}
+
 int aml1218_set_charge_enable(int enable)
 {
     return aml1218_set_bits(0x0017, ((enable & 0x01)), 0x01); 
@@ -420,11 +437,11 @@ int aml1218_set_charge_end_rate(int rate)
     aml1218_read(AML1218_CHG_CTRL6, &val);
     switch (rate) {
     case 10:
-        val &= ~(0x01 << 3);
+        val &= ~(0x10);
         break;
 
     case 20:
-        val |= (0x01 << 3);
+        val |= (0x10);
         break;
 
     default:
@@ -510,6 +527,7 @@ EXPORT_SYMBOL_GPL(aml1218_get_battery_percent);
 
 int aml1218_first_init(struct aml1218_supply *supply)
 {
+    int vbat, vsys;
     /*
      * initialize charger from battery parameters
      */
@@ -521,7 +539,14 @@ int aml1218_first_init(struct aml1218_supply *supply)
         aml1218_set_rapid_time         (aml1218_battery->pmu_init_chg_csttime);
         aml1218_set_recharge_voltage   ();
         aml1218_set_long_press_time    (aml1218_battery->pmu_pekoff_time);
-        aml1218_set_charge_enable      (aml1218_battery->pmu_init_chg_enabled);
+        vbat = aml1218_get_battery_voltage();
+        vsys = aml1218_get_vsys_voltage();
+        if ((vsys > vbat) && (vsys - vbat < 500)) {
+            printk("%s, vsys is not large, vsys:%d, vbat:%d\n", __func__, vsys, vbat);
+            aml1218_set_charge_enable  (0);
+        } else {
+            aml1218_set_charge_enable  (aml1218_battery->pmu_init_chg_enabled);
+        }
 
         if (aml1218_battery->pmu_usbvol_limit) {
             aml1218_set_usb_voltage_limit(aml1218_battery->pmu_usbvol); 
@@ -1210,6 +1235,7 @@ static int aml1218_update_state(struct aml_charger *charger)
 {
     uint8_t val;
     uint32_t chg_status;
+    int vsys;
 
     aml1218_read(0x00E0, &val);
     aml1218_reads(0x00de, &chg_status, 4);
@@ -1244,6 +1270,13 @@ static int aml1218_update_state(struct aml_charger *charger)
         AML1218_DBG("%s, charge timeout happen, status:0x%08x, reset charger now\n", __func__, chg_status);
         aml1218_set_charge_enable(0);
         msleep(1000);
+        aml1218_set_charge_enable(1);
+    }
+    vsys = aml1218_get_vsys_voltage();
+    if ((vsys > charger->vbat) && (vsys - charger->vbat < 500)) {
+        printk("%s, vsys is not large, vsys:%d, vbat:%d\n", __func__, vsys, charger->vbat);
+        aml1218_set_charge_enable(0);
+    } else {
         aml1218_set_charge_enable(1);
     }
 
