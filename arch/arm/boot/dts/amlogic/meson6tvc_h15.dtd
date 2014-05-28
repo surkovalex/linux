@@ -634,6 +634,17 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&smc_pins>;
 	};
+
+	//$$ DEVICE="wifi_power"
+	//$$ L2 PROP_STR = "status"
+	//$$ L2 PROP_STR = "power_gpio"
+	wifi_power {
+		compatible = "amlogic,wifi_power";
+		dev_name = "wifi_power";
+		status = "okay";
+		power_gpio = "GPIOW_19";
+	};
+
 	gpio:gpio {
 		compatible = "amlogic,m6tv-gpio";
 		dev_name = "gpio";
