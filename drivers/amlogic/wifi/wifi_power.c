@@ -105,9 +105,6 @@ static int wifi_power_ioctl(struct file *filp, unsigned int cmd, unsigned long a
      		mdelay(500);
     	  usb_wifi_power(0);   
      		printk(KERN_INFO "Meson8 set usb wifi power up!\n");
-     		#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
-     		usb_wifi_power(0);   
-     		printk(KERN_INFO "Meson8 Baby set usb wifi power up!\n");
    		  #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
     		usb_wifi_power(0);
     		mdelay(500);
@@ -281,13 +278,6 @@ static void usb_wifi_power(int is_power)
 //    CLEAR_CBUS_REG_MASK(PERIPHS_PIN_MUX_1,(1<<11));
 //    CLEAR_CBUS_REG_MASK(PERIPHS_PIN_MUX_0,(1<<18));
 #ifdef CONFIG_OF
-#if ( MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B )	
-	printk(KERN_INFO "mcli: -- usb_wifi_power m8 baby! --\n");	
-	    if(is_power)
-            amlogic_gpio_direction_output(pdata->power_gpio, 1, WIFI_POWER_MODULE_NAME); 	  
-	    else
-	        amlogic_gpio_direction_output(pdata->power_gpio, 0, WIFI_POWER_MODULE_NAME); 
-#else
 	if(pdata->power_gpio > 0)
 	{
 	    if(is_power)
@@ -295,8 +285,6 @@ static void usb_wifi_power(int is_power)
 	    else
 	        amlogic_gpio_direction_output(pdata->power_gpio, 1, WIFI_POWER_MODULE_NAME); 
     }
-#endif
-    
 	if(wifi_power_on_pin2){
 	    	if(pdata->power_gpio2 > 0)
 		{
