@@ -1206,7 +1206,7 @@ void root_func(){
             status = "okay";
             address = <0x4c>;
             i2c_bus = "i2c_bus_b";
-            acc_dir = <0x1100>;
+            acc_dir = <0x1111>;
         };
 //$$ DEVICE="mma7660"
 //$$ L2 PROP_STR = "status"
@@ -1430,8 +1430,8 @@ void root_func(){
 			i2c_bus = "i2c_bus_d";
 			gpio_pwdn = "GPIOH_6";
 			gpio_rst = "GPIOH_4";
-			mirror_flip = <0>;
-			vertical_flip = <1>;
+			mirror_flip = <1>;
+			vertical_flip = <0>;
 			status = "okay";
 		};
 ///	-	gc0328
@@ -1470,8 +1470,8 @@ void root_func(){
 			i2c_bus = "i2c_bus_d";
 			gpio_pwdn = "GPIOH_5";
 			gpio_rst = "GPIOH_4";
-			mirror_flip = <1>;
-			vertical_flip = <1>;
+			mirror_flip = <0>;
+			vertical_flip = <0>;
 			status = "okay";
 		};
 ///	-	sp2518
