@@ -480,6 +480,7 @@ void dwc_otg_hcd_stop(dwc_otg_hcd_t * hcd)
 
 	dwc_mdelay(1);
 }
+
 static void dwc_otg_hcd_power_save(dwc_otg_hcd_t * hcd, int power_on)
 {
 	usb_dbg_uart_data_t uart = {.d32 = 0 };
@@ -498,12 +499,22 @@ static void dwc_otg_hcd_power_save(dwc_otg_hcd_t * hcd, int power_on)
 	
 	DWC_WRITE_REG32(hcd->core_if->pcgcctl, pcgcctl.d32);
 	if(!hcd->auto_pm_suspend_flag)
+	{
 		DWC_WRITE_REG32(&hcd->core_if->usb_peri_reg->dbg_uart,uart.d32);
+		if(power_on)
+		{
+			dwc_otg_enable_common_interrupts(hcd->core_if);
+			dwc_otg_enable_global_interrupts(hcd->core_if);
+		}
+		else
+		{
+			dwc_otg_disable_global_interrupts(hcd->core_if);
+		}
+	}
 }
 /** dwc_otg_hcd suspend */
 int dwc_otg_hcd_suspend(dwc_otg_hcd_t * hcd)
 {
-
 	hcd->core_if->suspend_mode = 1;
 	DWC_DEBUGPL(DBG_HCD, "DWC OTG HCD SUSPEND\n");
 	dwc_otg_hcd_power_save(hcd, 0);
@@ -527,6 +538,7 @@ int dwc_otg_hcd_resume(dwc_otg_hcd_t *hcd)
 
 	hcd->core_if->suspend_mode = 0;
 	dwc_otg_hcd_power_save(hcd, 1);
+	
 	return 0;
 }
 
