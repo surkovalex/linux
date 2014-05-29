@@ -996,7 +996,7 @@ static void aml_adjust_link(struct net_device *dev)
 
 		if (phydev->speed != priv->speed) {
 			new_state = 1;
-			if(new_maclogic ==0)
+			if(new_maclogic != 0)
 				PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, 1);
 			switch (phydev->speed) {
 				case 1000:
@@ -1005,12 +1005,12 @@ static void aml_adjust_link(struct net_device *dev)
 					break;
 				case 100:
 					ctrl |= (1 << 14)|(1 << 15);
-					if(new_maclogic ==0)
+					if(new_maclogic !=0)
 						PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					break;
 				case 10:
 					ctrl &= ~((1 << 14)|(3 << 5));//10m half backoff = 00
-					if(new_maclogic ==0)
+					if(new_maclogic !=0)
 						PERIPHS_CLEAR_BITS(P_PREG_ETHERNET_ADDR0, (1 << 1));
 					if(phydev->phy_id == INTERNALPHY_ID){
 						val =0x4100b040;
@@ -1022,7 +1022,7 @@ static void aml_adjust_link(struct net_device *dev)
 								" or 100!\n", dev->name, phydev->speed);
 					break;
 			}
-			if(new_maclogic ==0)
+			if(new_maclogic !=0)
 				PERIPHS_SET_BITS(P_PREG_ETHERNET_ADDR0, 1);
 			priv->speed = phydev->speed;
 		}
