@@ -71,6 +71,12 @@ extern int dwc_otg_power_register_notifier(struct notifier_block *nb);
 extern int dwc_otg_power_unregister_notifier(struct notifier_block *nb);
 extern int dwc_otg_charger_detect_register_notifier(struct notifier_block *nb);
 extern int dwc_otg_charger_detect_unregister_notifier(struct notifier_block *nb);
+struct later_job {
+    int flag;
+    int value;
+};
+static struct later_job aml1218_charger_job = {};
+static struct later_job aml1218_otg_job = {};
 #endif
 
 static int aml1218_update_state(struct aml_charger *charger);
@@ -863,6 +869,12 @@ static void aml1218_otg_work_fun(struct work_struct *work)
 
 int aml1218_otg_change(struct notifier_block *nb, unsigned long value, void *pdata)
 {
+    if (!g_aml1218_supply) {
+        AML1218_DBG("%s, driver is not ready, do it later\n", __func__);
+        aml1218_otg_job.flag  = 1;
+        aml1218_otg_job.value = value;
+        return 0;
+    }
     aml1218_otg_value = value;
     schedule_work(&aml1218_otg_work);
     return 0;
@@ -870,6 +882,12 @@ int aml1218_otg_change(struct notifier_block *nb, unsigned long value, void *pda
 
 int aml1218_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata)
 {
+    if (!g_aml1218_supply) {
+        AML1218_DBG("%s, driver is not ready, do it later\n", __func__);
+        aml1218_charger_job.flag  = 1;
+        aml1218_charger_job.value = value;
+        return 0;
+    }
     switch (value) {
     case USB_BC_MODE_SDP:                                               // pc
         if (g_aml1218_init->vbus_dcin_short_connect) {
@@ -1430,6 +1448,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     uint32_t tmp2;
 
 	AML1218_DBG("call %s in", __func__);
+	AML1218_DBG("AML_PMU driver version:0.10\n");
     g_aml1218_init = pdev->dev.platform_data;
     if (g_aml1218_init == NULL) {
         AML1218_DBG("%s, NO platform data\n", __func__);
@@ -1512,6 +1531,14 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     supply->charge_timeout_retry = g_aml1218_init->charge_timeout_retry;
 #ifdef CONFIG_AMLOGIC_USB
     INIT_WORK(&aml1218_otg_work, aml1218_otg_work_fun);
+    if (aml1218_charger_job.flag) {     // do later job for usb charger detect
+        aml1218_usb_charger(NULL, aml1218_charger_job.value, NULL);    
+        aml1218_charger_job.flag = 0;
+    }
+    if (aml1218_otg_job.flag) {
+        aml1218_otg_change(NULL, aml1218_otg_job.value, NULL);    
+        aml1218_otg_job.flag = 0;
+    }
 #endif
     if (supply->irq == AML1218_IRQ_NUM) {
         INIT_WORK(&supply->irq_work, aml1218_irq_work_func); 
