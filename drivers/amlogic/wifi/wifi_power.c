@@ -32,7 +32,7 @@ static struct cdev *wifi_power_cdev = NULL;
 static struct device *devp=NULL;
 struct wifi_power_platform_data *pdata = NULL;
 int wifi_power_on_pin2 = 0;
-    
+
 static int wifi_power_probe(struct platform_device *pdev);
 static int wifi_power_remove(struct platform_device *pdev);
 static int  wifi_power_open(struct inode *inode,struct file *file);
@@ -82,48 +82,53 @@ static int  wifi_power_release(struct inode *inode,struct file *file)
 }
 
 static int wifi_power_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
-{	
+{
 	struct wifi_power_platform_data *pdata = NULL;
-    
-        
+
+
     pdata = (struct wifi_power_platform_data*)devp->platform_data;
     if(pdata == NULL){
         printk("%s platform data is required!\n",__FUNCTION__);
         return -1;
     }
-    
+
     amlogic_gpio_request(pdata->power_gpio,WIFI_POWER_MODULE_NAME);
 
 	if(wifi_power_on_pin2)
  	   amlogic_gpio_request(pdata->power_gpio2,WIFI_POWER_MODULE_NAME);
-    
-	switch (cmd) 
+
+	switch (cmd)
 	{
     	case POWER_UP:
-    		#if ( MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8 )
-     		usb_wifi_power(1);
-     		mdelay(500);
-    	  usb_wifi_power(0);   
-     		printk(KERN_INFO "Meson8 set usb wifi power up!\n");
-   		  #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
-    		usb_wifi_power(0);
-    		mdelay(500);
-   	    usb_wifi_power(1);
-    		printk(KERN_INFO "Meson6 set usb wifi power up!\n");
-    		#endif
-    		break;
-    		
+		#if ( MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8 )
+		usb_wifi_power(1);
+		mdelay(500);
+		usb_wifi_power(0);
+		printk(KERN_INFO "Meson8 set usb wifi power up!\n");
+		#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
+		usb_wifi_power(0);
+		mdelay(500);
+		usb_wifi_power(1);
+		printk(KERN_INFO "Meson6 set usb wifi power up!\n");
+		#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV)
+		usb_wifi_power(0);
+		mdelay(500);
+		usb_wifi_power(1);
+		printk(KERN_INFO "Meson6tv set usb wifi power up!\n");
+		#endif
+		break;
+
     	case POWER_DOWN:
-   	        usb_wifi_power(1);     
-           
-    		printk(KERN_INFO "Set usb wifi power down!\n");
-    		break;	
-    
+		usb_wifi_power(1);
+
+		printk(KERN_INFO "Set usb wifi power down!\n");
+		break;
+
     	default:
-    		printk(KERN_ERR "usb wifi_power_ioctl: default !!!\n");
-    		return  - EINVAL;
+		printk(KERN_ERR "usb wifi_power_ioctl: default !!!\n");
+		return  - EINVAL;
 	}
-	
+
 	return 0;
 }
 
@@ -281,21 +286,21 @@ static void usb_wifi_power(int is_power)
 	if(pdata->power_gpio > 0)
 	{
 	    if(is_power)
-            amlogic_gpio_direction_output(pdata->power_gpio, 0, WIFI_POWER_MODULE_NAME); 	  
+            amlogic_gpio_direction_output(pdata->power_gpio, 0, WIFI_POWER_MODULE_NAME);
 	    else
-	        amlogic_gpio_direction_output(pdata->power_gpio, 1, WIFI_POWER_MODULE_NAME); 
+	        amlogic_gpio_direction_output(pdata->power_gpio, 1, WIFI_POWER_MODULE_NAME);
     }
 	if(wifi_power_on_pin2){
 	    	if(pdata->power_gpio2 > 0)
 		{
 		    if(is_power)
-	            amlogic_gpio_direction_output(pdata->power_gpio2, 0, WIFI_POWER_MODULE_NAME); 	  
+	            amlogic_gpio_direction_output(pdata->power_gpio2, 0, WIFI_POWER_MODULE_NAME);
 		    else
-		        amlogic_gpio_direction_output(pdata->power_gpio2, 1, WIFI_POWER_MODULE_NAME); 
-	    }
+		        amlogic_gpio_direction_output(pdata->power_gpio2, 1, WIFI_POWER_MODULE_NAME);
+	    }
 	}
-	
-#else    
+
+#else
     CLEAR_CBUS_REG_MASK(PREG_PAD_GPIO6_EN_N, (1<<11));
     if (is_power)//is_power
          SET_CBUS_REG_MASK(PREG_PAD_GPIO6_O, (1<<11)); // GPIO_E bit 11
@@ -321,26 +326,26 @@ static int wifi_power_probe(struct platform_device *pdev)
     {
         ret = of_property_read_string(pdev->dev.of_node, "power_gpio", &str);
 	    if(ret)
-	     {  
+	     {
 	        printk("Error: can not get power_gpio name------%s %d\n",__func__,__LINE__);
 	        return -1;
 	     }else{
 	        pdata->power_gpio = amlogic_gpio_name_map_num(str);
 	        printk("wifi_power power_gpio is %d\n",pdata->power_gpio);
 	        //ret = amlogic_gpio_request(pdata->power_gpio,WIFI_POWER_MODULE_NAME);
-	        //mcli pdata->usb_set_power(0);    //power on   
-	        //pdata->usb_set_power(1);    //power on   
+	        //mcli pdata->usb_set_power(0);    //power on
+	        //pdata->usb_set_power(1);    //power on
 	     }
-		 
+
 	   if(!(ret = of_property_read_string(pdev->dev.of_node, "power_gpio2", &str)))
 			wifi_power_on_pin2 = 1;
 	   else{
 		printk("wifi_dev_probe : there is no wifi_power_on_pin2 setup in DTS file!\n");
 	   }
-	   
+
 	   if(wifi_power_on_pin2){
 		    if(ret)
-		     {  
+		     {
 		        printk("Error: can not get power_gpio2 name------%s %d\n",__func__,__LINE__);
 		        return -1;
 		     }else{
@@ -348,10 +353,10 @@ static int wifi_power_probe(struct platform_device *pdev)
 		        printk("wifi_power power_gpio2 is %d\n",pdata->power_gpio2);
 		     }
 	   }
-		 
+
 	}
     pdev->dev.platform_data = pdata;
-    
+
     ret = alloc_chrdev_region(&wifi_power_devno, 0, 1, WIFI_POWER_DRIVER_NAME);
     if (ret < 0) {
         printk(KERN_ERR "%s:%s failed to allocate major number\n",WIFI_POWER_MODULE_NAME,__FUNCTION__);
