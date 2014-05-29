@@ -528,7 +528,7 @@
 		aml,sound_card = "AML-M6TV";
 		//aml,codec_dai = "tas5711-","rt5616-aif1","rt5631-hifi","wm8960-hifi";
 		dev_name = "aml_m6tv_audio.0";
-		mute_gpio = "GPIOW_19";
+		mute_gpio = "GPIOAO_10";
 		pinctrl-names = "aml_m6tv_audio";
 		pinctrl-0 = <&aml_i2s_pins>;
 	};
