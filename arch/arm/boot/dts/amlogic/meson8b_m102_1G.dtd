@@ -1572,8 +1572,9 @@ void root_func(){
 		interrupt_pin = "GPIOX_21";
 		irq_num = <4>;
 		irq_trigger_type = "GPIO_IRQ_HIGH";
-//		power_on_pin = "GPIOAO_6";
-		power_on_pin2 = "GPIOX_11";
+		power_on_pin = "GPIOX_11";
+		valid = "high";
+//		power_on_pin2 = "GPIOX_11";
 		clock_32k_pin = "GPIOX_10";
 	};
     

@@ -1485,7 +1485,7 @@ void root_func(){
             dev_name = "wifi_power";
             status = "okay";
             power_gpio = "GPIOX_11";
-//            power_gpio2 = "GPIOX_11";
+            valid = "low";
 	};  
     
 /// ***************************************************************************************
