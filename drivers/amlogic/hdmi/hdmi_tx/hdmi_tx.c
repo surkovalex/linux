@@ -1129,6 +1129,9 @@ static int hdmi_task_handle(void *data)
         if(hdmitx_device->hpd_state == 0) {
             hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
         }
+        else {
+            hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_ENABLE);
+        }
 
         if (hdmitx_device->hpd_event == 1)
         {

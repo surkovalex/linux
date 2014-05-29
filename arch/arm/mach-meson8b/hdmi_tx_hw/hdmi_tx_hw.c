@@ -2912,6 +2912,6 @@ static void hdmi_phy_suspend(void)
 
 static void hdmi_phy_wakeup(void)
 {
-    aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, hdmi_phy_save);
+    aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x08c31e8b);
     //hdmi_print(INF, SYS "phy wakeup\n");
 }
