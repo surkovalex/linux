@@ -181,7 +181,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-05-28a";//remove redundant code in post
+static char version_s[] = "2014-05-29a";
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -372,7 +372,7 @@ static int pre_process_time_force = 0;
 /**/
 #define USED_LOCAL_BUF_MAX 3
 static int used_local_buf_index[USED_LOCAL_BUF_MAX];
-static int used_post_buf_index;
+static int used_post_buf_index = -1;
 
 #define DisableVideoLayer() \
     do { CLEAR_MPEG_REG_MASK(VPP_MISC, \
@@ -5900,28 +5900,38 @@ static int process_post_vframe(void)
                 }
 
                 di_buf->di_buf[0] = di_buf->di_buf_dup_p[0];
-                di_buf->di_buf[1] = di_buf->di_buf_dup_p[1];
                 queue_out(di_buf->di_buf[0]);
-                queue_out(di_buf->di_buf[1]);
-
-                di_lock_irqfiq_save(irq_flag2, fiq_flag);
-                if((frame_count == 0) && check_start_drop_prog){
-                    di_post_stru.start_pts = di_buf->vframe->pts;
-                }
-                if(((frame_count<start_frame_drop_count) && check_start_drop_prog)||
-                    (di_buf->di_buf_dup_p[0]->throw_flag)||(di_buf->di_buf_dup_p[1]->throw_flag)){
-                    queue_in(di_buf, QUEUE_TMP);
+                /*check if the field is error,then drop*/
+		if((di_buf->di_buf_dup_p[0]->vframe->type & VIDTYPE_TYPEMASK)==VIDTYPE_INTERLACE_BOTTOM){
+               	    di_buf->di_buf[1] = di_buf->di_buf_dup_p[1] = NULL;
+               	    di_lock_irqfiq_save(irq_flag2, fiq_flag);
+               	    queue_in(di_buf, QUEUE_TMP);
                     recycle_vframe_type_post(di_buf);
-#ifdef DI_DEBUG
-                    recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
-#endif
-                }
-                else{
-                    if((frame_count == start_frame_drop_count) && check_start_drop_prog){   	                          if((di_post_stru.start_pts != 0) && (di_buf->vframe->pts == 0))
-                            di_buf->vframe->pts = di_post_stru.start_pts;
-                        di_post_stru.start_pts = 0;
+                    printk("%s drop field %d.\n",__func__,di_buf->di_buf_dup_p[0]->seq);
+                }else{ 
+                    di_buf->di_buf[1] = di_buf->di_buf_dup_p[1];
+                    queue_out(di_buf->di_buf[1]);
+	
+                    di_lock_irqfiq_save(irq_flag2, fiq_flag);
+                    if((frame_count == 0) && check_start_drop_prog){
+                        di_post_stru.start_pts = di_buf->vframe->pts;
                     }
-                    queue_in(di_buf, QUEUE_POST_READY);
+                    if(((frame_count<start_frame_drop_count) && check_start_drop_prog)||
+                        (di_buf->di_buf_dup_p[0]->throw_flag)||(di_buf->di_buf_dup_p[1]->throw_flag)){
+                        queue_in(di_buf, QUEUE_TMP);
+                        recycle_vframe_type_post(di_buf);
+#ifdef DI_DEBUG
+                        recycle_vframe_type_post_print(di_buf, __func__, __LINE__);
+#endif
+                    }
+                    else{
+                        if((frame_count == start_frame_drop_count) && check_start_drop_prog){
+                            if((di_post_stru.start_pts != 0) && (di_buf->vframe->pts == 0))
+                                di_buf->vframe->pts = di_post_stru.start_pts;
+                            di_post_stru.start_pts = 0;
+                        }
+                        queue_in(di_buf, QUEUE_POST_READY);
+                   }
                 }
                 frame_count++;
                 di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
