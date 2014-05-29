@@ -1018,7 +1018,7 @@
 		dtv_demod0_reset_value = <0>;
 		dtv_demod0_reset_gpio = "GPIOX_8" ;
 		dtv_demod0_mem = <1>;
-		reserve-memory = <0x400000>;
+		reserve-memory = <0xa00000>;
 		reserve-iomap = "true";
 		fe0_dtv_demod = <0>;
 		fe0_ts = <0>;
