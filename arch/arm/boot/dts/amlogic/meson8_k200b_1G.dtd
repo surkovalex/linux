@@ -1179,6 +1179,7 @@ sdio{
         key_name = "power";
 		key_code = <116>;
 		key_pin = "GPIOAO_3";
+                gpio_high_z;
         irq_keyup = <6>;
         irq_keydown = <7>;
 	};
