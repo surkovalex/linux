@@ -420,7 +420,6 @@ void root_func(){
            gpio_dat3 = "CARD_4";
            jtag_pin = "CARD_0";
            gpio_cd = "CARD_6";
-           gpio_ro = "GPIODV_25";
            irq_in = <3>;
            irq_out = <5>;
            card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
@@ -1218,8 +1217,17 @@ void root_func(){
 //            address = <0x4c>;
 //            i2c_bus = "i2c_bus_b";
 //       };
-
-
+//$$ DEVICE="stk8313"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "address"
+//$$ L2 PROP_STR = "i2c_bus"
+        stk831x{
+            dev_name = "stk8313";
+            status = "okay";
+            address = <0x22>;
+            i2c_bus = "i2c_bus_b";
+            acc_dir = <0x0101>;
+        };
 	};
 
 
@@ -1409,7 +1417,7 @@ void root_func(){
 			i2c_bus = "i2c_bus_d";
 			gpio_pwdn = "GPIOH_6";
 			gpio_rst = "GPIOH_4";
-			mirror_flip = <1>;
+			mirror_flip = <0>;
 			vertical_flip = <0>;	
 			bt_path = "gpio";
 			status = "okay";
@@ -1490,8 +1498,8 @@ void root_func(){
 			i2c_bus = "i2c_bus_d";
 			gpio_pwdn = "GPIOH_5";
 			gpio_rst = "GPIOH_4";
-			mirror_flip = <1>;
-			vertical_flip = <1>;
+			mirror_flip = <0>;
+			vertical_flip = <0>;
 			status = "okay";
 		};
 	};	
