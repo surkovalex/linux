@@ -749,7 +749,8 @@ static irqreturn_t aml_sdio_irq(int irq, void *dev_id)
         spin_unlock_irqrestore(&host->mrq_lock, flags);
 
     if(irqs->sdio_if_int){
-        if(host->mmc->sdio_irq_thread)
+        if((host->mmc->sdio_irq_thread)
+		&&(!atomic_read(& host->mmc->sdio_irq_thread_abort)))
             mmc_signal_sdio_irq(host->mmc);
     }
 
