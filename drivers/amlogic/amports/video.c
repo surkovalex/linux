@@ -593,6 +593,7 @@ static u32 vsync_pts_112 = 0;
 static u32 vsync_pts_101 = 0;
 static u32 vsync_pts_100 = 0;
 static u32 vsync_freerun = 0;
+static u32 vsync_slow_factor = 1;
 
 /* frame rate calculate */
 static u32 last_frame_count = 0;
@@ -2208,8 +2209,12 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
             timestamp_apts_inc(vsync_pts_inc+ 1);
         }
     } else {
-        timestamp_pcrscr_inc(vsync_pts_inc);
-        timestamp_apts_inc(vsync_pts_inc);
+        if (vsync_slow_factor == 0) {
+            printk("invalid vsync_slow_factor, set to 1\n");
+            vsync_slow_factor = 1;
+        }
+        timestamp_pcrscr_inc(vsync_pts_inc / vsync_slow_factor);
+        timestamp_apts_inc(vsync_pts_inc / vsync_slow_factor);
     }
 
     if (trickmode_duration_count > 0) {
@@ -3618,6 +3623,14 @@ static long amvideo_ioctl(struct file *file,
         vsync_pts_inc_upint = arg;
         break;
 
+    case AMSTREAM_IOC_GET_VSYNC_SLOW_FACTOR:
+        *((unsigned int *)arg) = vsync_slow_factor;
+        break;
+
+    case AMSTREAM_IOC_SET_VSYNC_SLOW_FACTOR:
+        vsync_slow_factor = arg;
+        break;
+        
 #if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON6
     /**********************************************************************
     video enhancement ioctl
@@ -4639,6 +4652,29 @@ static ssize_t video_vsync_pts_inc_upint_store(struct class *cla, struct class_a
     return count;
 }
 
+static ssize_t video_vsync_slow_factor_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%d\n", vsync_slow_factor);
+}
+
+static ssize_t video_vsync_slow_factor_store(struct class *cla, struct class_attribute *attr, const char *buf,
+        size_t count)
+{
+    size_t r;
+
+    r = sscanf(buf, "%d", &vsync_slow_factor);
+
+    if(debug_flag){
+        printk("%s(%d)\n", __func__, vsync_slow_factor);
+    }
+    if (r != 1) {
+        return -EINVAL;
+    }
+
+    return count;
+}
+
+
 static ssize_t fps_info_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
     u32 cnt = frame_count - last_frame_count;
@@ -4776,6 +4812,10 @@ static struct class_attribute amvideo_class_attrs[] = {
     S_IRUGO | S_IWUSR,
     video_vsync_pts_inc_upint_show,
     video_vsync_pts_inc_upint_store),
+    __ATTR(vsync_slow_factor,
+    S_IRUGO | S_IWUSR,
+    video_vsync_slow_factor_show,
+    video_vsync_slow_factor_store),
     __ATTR(angle,
     S_IRUGO | S_IWUSR,
     video_angle_show,
