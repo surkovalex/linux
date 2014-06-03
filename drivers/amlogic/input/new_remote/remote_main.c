@@ -201,6 +201,12 @@ void remote_send_key(struct input_dev *dev, unsigned int scancode, unsigned int 
 			input_dbg("scancode is 0x%04x, invalid key is 0x%04x.\n", scancode, key_map[gp_remote->map_num][scancode]);
 			return;
 		}
+		if(type == 1 && scancode == 0x1a && key_map[gp_remote->map_num][scancode] == 0x0074){
+		    disable_irq(NEC_REMOTE_IRQ_NO);
+                }
+		if(type == 0 && scancode == 0x1a && key_map[gp_remote->map_num][scancode] == 0x0074){
+		    enable_irq(NEC_REMOTE_IRQ_NO);
+                }
 		input_event(dev, EV_KEY, key_map[gp_remote->map_num][scancode], type);
 		input_sync(dev);
 		switch (type) {
@@ -729,6 +735,11 @@ static int remote_resume(struct platform_device * pdev)
 		WRITE_AOBUS_REG(AO_RTI_STATUS_REG2, 0);
 	}
 	gp_remote->sleep = 0;
+        printk("to clear irq ...\n");
+	disable_irq(NEC_REMOTE_IRQ_NO);
+        udelay(1000);
+	enable_irq(NEC_REMOTE_IRQ_NO);
+		
 	return 0;
 }
 
