@@ -1984,9 +1984,9 @@ sdhc_sd_clk_cmd_pins:sdhc_sd_clk_cmd_pins{
 //$$ L2 PROP_STR 10 = "amlogic,pins"	
         aml_cam_gpio_pins: aml_cam_gpio_pins{
 			amlogic,setmask=<3 0x80000
+					 4 0x2
 					 9 0x37c>;
 			amlogic,clrmask=<3 0x37
-					 4 0x2
 					 5 0xc0
 					 6 0x800
 					 8 0x10000>;
