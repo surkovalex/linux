@@ -457,7 +457,7 @@ int get_amlvideo2_canvas_index(struct amlvideo2_output* output, int start_canvas
 	}
 	return canvas;
 }
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 int convert_canvas_index(struct amlvideo2_output* output, int start_canvas)
 {
 	int canvas = start_canvas;
@@ -2042,7 +2042,7 @@ static int amlvideo2_fillbuff(struct amlvideo2_fh *fh, struct amlvideo2_node_buf
 	magic = MAGIC_RE_MEM;
 	switch(magic){
 		case  MAGIC_RE_MEM:
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 			if(output.canvas_id == 0){
 				output.canvas_id =  get_amlvideo2_canvas_index(&output, VM_RES0_CANVAS_INDEX+buf->vb.i*3);
 				buf->canvas_id = output.canvas_id;
@@ -2710,7 +2710,7 @@ static int vidioc_querybuf(struct file *file, void *priv, struct v4l2_buffer *p)
 {
 	struct amlvideo2_fh  *fh  = priv;
 	int ret = videobuf_querybuf(&fh->vb_vidq, p);
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	if(ret == 0){
 	    struct amlvideo2_output output;
 	    memset(&output,0,sizeof(struct amlvideo2_output));
