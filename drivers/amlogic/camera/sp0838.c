@@ -808,39 +808,29 @@ static int set_flip(struct sp0838_device *dev)
 static void sp0838_set_resolution(struct sp0838_device *dev,int height,int width)
 {
 	int i=0;
-    unsigned char buf[2];
+	unsigned char buf[2];
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	struct aml_camera_i2c_fig1_s* resolution_script;
-	if (width*height >= 640*480) {
-		printk("set resolution 640X480\n");
-		resolution_script = resolution_640x480_script;
-		sp0838_h_active = 640;
-		sp0838_v_active = 478; //480 
-		sp0838_frmintervals_active.denominator 	= 15;
-		sp0838_frmintervals_active.numerator	= 1;
-		//SP0838_init_regs(dev);
-		//return;
-	} else {
-		printk("set resolution 320X240\n");
-		sp0838_h_active = 320;
-		sp0838_v_active = 238;
-	    sp0838_frmintervals_active.denominator 	= 15;
-		sp0838_frmintervals_active.numerator	= 1;
-		resolution_script = resolution_320x240_script;
-	}
+
+	printk("set resolution 640X480\n");
+	resolution_script = resolution_640x480_script;
+	sp0838_h_active = 640;
+	sp0838_v_active = 478; //480 
+	sp0838_frmintervals_active.denominator 	= 15;
+	sp0838_frmintervals_active.numerator	= 1;
 	
 	while(1) {
-        buf[0] = resolution_script[i].addr;
-        buf[1] = resolution_script[i].val;
-        if(resolution_script[i].val==0xff&&resolution_script[i].addr==0xff) {
-            break;
-        }
-        if((i2c_put_byte_add8(client,buf, 2)) < 0) {
-            printk("fail in setting resolution \n");
-            return;
-        }
-        i++;
-    }
+		buf[0] = resolution_script[i].addr;
+		buf[1] = resolution_script[i].val;
+		if(resolution_script[i].val==0xff&&resolution_script[i].addr==0xff) {
+		    break;
+		}
+		if((i2c_put_byte_add8(client,buf, 2)) < 0) {
+		    printk("fail in setting resolution \n");
+		    return;
+		}
+		i++;
+	}
     	set_flip(dev);
 }
 /*************************************************************************
