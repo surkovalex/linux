@@ -31,6 +31,11 @@ config ARCH_MESON8B
 	help
 	  Enable support for Amlogic Meson8 baby based system
 
+config ARCH_MESONG9TV
+	bool "MesonG9TV series"
+	help
+	  Enable support for Amlogic G9TV based system
+
 endchoice
 
 menu "Meson development boards"
@@ -40,6 +45,7 @@ source "arch/arm/mach-meson6tv/Kconfig.boards"
 source "arch/arm/mach-meson6tvd/Kconfig.boards"
 source "arch/arm/mach-meson8/Kconfig.boards"
 source "arch/arm/mach-meson8b/Kconfig.boards"
+source "arch/arm/mach-mesong9tv/Kconfig.boards"
 
 #if MESON_CUSTOM_BOARD_SUPPORT
 #isource "customer/meson/dt/Kconfig"
@@ -116,6 +122,7 @@ source "arch/arm/mach-meson6tv/Kconfig"
 source "arch/arm/mach-meson6tvd/Kconfig"
 source "arch/arm/mach-meson8/Kconfig"
 source "arch/arm/mach-meson8b/Kconfig"
+source "arch/arm/mach-mesong9tv/Kconfig"
 
 config MESON_CUSTOM_BOARD_SUPPORT
 	bool "Support customer board"
