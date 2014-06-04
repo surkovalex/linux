@@ -64,6 +64,8 @@ static int adc_sign_bit       = 0;
 #define BATTERY_CHARGING      1
 #define BATTERY_DISCHARGING   0
 
+static int pmu_init_chgvol = 0;
+static int ocv_voltage = 0;
 
 #ifdef CONFIG_AMLOGIC_USB
 struct work_struct          aml1218_otg_work;
@@ -321,8 +323,37 @@ int aml1218_get_vsys_voltage(void)
     return result;
 }
 
+int aml1218_get_otp_version()
+{
+    uint8_t val = 0; 
+    int  otp_version = 0;
+    aml1218_read(0x007e, &val);
+    otp_version = (val & 0x60) >> 5;
+    return otp_version;
+}
+
+int aml1218_set_full_charge_voltage(int voltage);
 int aml1218_set_charge_enable(int enable)
 {
+    uint8_t val = 0; 
+    uint8_t val_t = 0;
+    int otp_version = 0;
+    int charge_status = 0;
+    int ocv = 0;
+    otp_version = aml1218_get_otp_version();
+    if (otp_version == 0)
+    {   
+        aml1218_set_full_charge_voltage(4050000);
+        if (ocv_voltage > 4050)
+        {   
+            printk("%s, otp_version:%d, ocv = %d, do not open charger.\n", __func__, otp_version, ocv_voltage);
+            return aml1218_set_bits(0x0017, 0x00, 0x01);
+        }
+    }
+    else if(otp_version >= 1)
+    {
+        aml1218_set_full_charge_voltage(pmu_init_chgvol);
+    }
     return aml1218_set_bits(0x0017, ((enable & 0x01)), 0x01); 
 }
 EXPORT_SYMBOL_GPL(aml1218_set_charge_enable);
@@ -539,12 +570,13 @@ int aml1218_first_init(struct aml1218_supply *supply)
      */
     if (aml1218_battery) {
         aml1218_set_charging_current   (aml1218_battery->pmu_init_chgcur);
-        aml1218_set_full_charge_voltage(aml1218_battery->pmu_init_chgvol);
+        //aml1218_set_full_charge_voltage(aml1218_battery->pmu_init_chgvol);
         aml1218_set_charge_end_rate    (aml1218_battery->pmu_init_chgend_rate);
         aml1218_set_trickle_time       (aml1218_battery->pmu_init_chg_pretime);
         aml1218_set_rapid_time         (aml1218_battery->pmu_init_chg_csttime);
         aml1218_set_recharge_voltage   ();
         aml1218_set_long_press_time    (aml1218_battery->pmu_pekoff_time);
+        pmu_init_chgvol = aml1218_battery->pmu_init_chgvol;
         vbat = aml1218_get_battery_voltage();
         vsys = aml1218_get_vsys_voltage();
         if ((vsys > vbat) && (vsys - vbat < 500)) {
@@ -1084,7 +1116,7 @@ int aml1218_dump_all_register(char *buf)
 {
     uint8_t val[16];
     int     i, size = 0;
-    int     addr_table[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 
+    int     addr_table[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
                             17, 18, 19, 20, 21, 22, 23, 24, 34, 35, 36, 37};
 
     if (!buf) {
@@ -1284,6 +1316,7 @@ static int aml1218_update_state(struct aml_charger *charger)
     charger->vbat = aml1218_get_battery_voltage();
     charger->ocv  = aml1218_cal_ocv(charger->ibat, charger->vbat, charger->charge_status);
 
+    ocv_voltage = charger->ocv;
     if (chg_status & 0x00004000) {
         AML1218_DBG("%s, charge timeout happen, status:0x%08x, reset charger now\n", __func__, chg_status);
         aml1218_set_charge_enable(0);
@@ -1448,7 +1481,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     uint32_t tmp2;
 
 	AML1218_DBG("call %s in", __func__);
-	AML1218_DBG("AML_PMU driver version:0.10\n");
+	AML1218_DBG("AML_PMU driver version:0.30\n");
     g_aml1218_init = pdev->dev.platform_data;
     if (g_aml1218_init == NULL) {
         AML1218_DBG("%s, NO platform data\n", __func__);
@@ -1529,6 +1562,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     charger->soft_limit_to99     = g_aml1218_init->soft_limit_to99;
     charger->coulomb_type        = COULOMB_BOTH; 
     supply->charge_timeout_retry = g_aml1218_init->charge_timeout_retry;
+    aml1218_update_state(charger);
 #ifdef CONFIG_AMLOGIC_USB
     INIT_WORK(&aml1218_otg_work, aml1218_otg_work_fun);
     if (aml1218_charger_job.flag) {     // do later job for usb charger detect

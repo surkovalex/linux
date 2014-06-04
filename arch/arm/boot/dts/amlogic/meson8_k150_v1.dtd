@@ -641,7 +641,7 @@ sdio{
         pmu_battery_cap = <3670>;           /** battery capacity                     */
         pmu_battery_technology = <4>;       /** POWER_SUPPLY_TECHNOLOGY_LiFe         */
         pmu_battery_name = "PTI PL336078";  /** battery name                         */
-        pmu_init_chgvol = <4050000>;        /** target charge voltage                */
+        pmu_init_chgvol = <4200000>;        /** target charge voltage                */
         pmu_init_chgend_rate = <10>;        /** set initial charing end current rate */
         pmu_init_chg_enabled = <1>;         /** set initial charing enabled          */
         pmu_init_adc_freq = <25>;           /** set initial adc frequency            */
