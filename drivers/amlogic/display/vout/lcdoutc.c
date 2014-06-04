@@ -78,7 +78,7 @@
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
 #define DRV_TYPE "c8b"
 #endif
-#define DRIVER_DATE		"20140512"
+#define DRIVER_DATE		"20140522"
 
 //#define LCD_DEBUG_INFO
 #ifdef LCD_DEBUG_INFO
