@@ -1115,8 +1115,10 @@ static int hdmi_task_handle(void *data)
         if(hdmitx_device->HWOp.Cntl) {
             static int st = 0;
             st = hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_HPD_GPI_ST, 0);
+wait:
             if(hdmitx_device->hpd_lock == 1) {
-                goto next;
+                msleep_interruptible(2000);
+                goto wait;
             }
             if((st == 0) && (hdmitx_device->hpd_state == 1)) {
                 hdmitx_device->hpd_event = 2;
@@ -1124,13 +1126,6 @@ static int hdmi_task_handle(void *data)
             if((st == 1) && (hdmitx_device->hpd_state == 0)) {
                 hdmitx_device->hpd_event = 1;
             }
-        }
-
-        if(hdmitx_device->hpd_state == 0) {
-            hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
-        }
-        else {
-            hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_ENABLE);
         }
 
         if (hdmitx_device->hpd_event == 1)
