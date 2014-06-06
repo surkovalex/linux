@@ -2919,6 +2919,7 @@ static int ethernet_probe(struct platform_device *pdev)
        early_suspend.resume = ethernet_late_resume;
        register_early_suspend(&early_suspend);
 #endif
+	SET_NETDEV_DEV(my_ndev, &pdev->dev);
 	res = probe_init(my_ndev);
 	if (res != 0)
 		free_netdev(my_ndev);
