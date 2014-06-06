@@ -4158,6 +4158,42 @@ static ssize_t video_saturation_store(struct class *cla, struct class_attribute 
     return count;
 }
 
+static ssize_t vpp_saturation_hue_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "0x%x\n", READ_VCBUS_REG(VPP_VADJ2_MA_MB));
+}
+
+static ssize_t vpp_saturation_hue_store(struct class *cla, struct class_attribute *attr, const char *buf,
+                                      size_t count)
+{
+    size_t r;
+    s32 mab = 0;
+    s16 mc = 0, md = 0;
+
+    r = sscanf(buf, "0x%x", &mab);
+    if ((r != 1) || (mab&0xfc00fc00)) {
+        return -EINVAL;
+    }
+
+    WRITE_VCBUS_REG(VPP_VADJ2_MA_MB, mab);
+    mc = (s16)((mab<<22)>>22); // mc = -mb
+    mc = 0 - mc;
+    if (mc> 511)
+        mc= 511;
+    if (mc<-512)
+        mc=-512;
+    md = (s16)((mab<<6)>>22);  // md =  ma;
+    mab = ((mc&0x3ff)<<16)|(md&0x3ff);
+    WRITE_VCBUS_REG(VPP_VADJ2_MC_MD, mab);
+    //WRITE_MPEG_REG(VPP_VADJ_CTRL, 1);
+    WRITE_VCBUS_REG_BITS(VPP_VADJ_CTRL + cur_dev->vpp_off, 1, 2, 1);
+#ifdef PQ_DEBUG_EN
+    printk("\n[amvideo..] set vpp_saturation OK!!!\n");
+#endif
+    return count;
+}
+
+
 // [   24] 1/enable, 0/disable
 // [23:16] Y
 // [15: 8] Cb
@@ -4698,6 +4734,10 @@ static struct class_attribute amvideo_class_attrs[] = {
     S_IRUGO | S_IWUSR,
     video_saturation_show,
     video_saturation_store),
+    __ATTR(vpp_saturation_hue,
+    S_IRUGO | S_IWUSR,
+    vpp_saturation_hue_show,
+    vpp_saturation_hue_store),
     __ATTR(test_screen,
     S_IRUGO | S_IWUSR,
     video_test_screen_show,
