@@ -54,7 +54,7 @@
 #define MODULE_NAME "amvdec_h264_4k2k"
 
 #define PUT_INTERVAL        (HZ/100)
-#define ERROR_RESET_COUNT   100
+#define ERROR_RESET_COUNT   500
 
 
 
@@ -807,6 +807,8 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
             printk("H264 4k2k decoder fatal error watchdog.\n");
             fatal_error = DECODER_FATAL_ERROR_UNKNOW;
         }
+    } else {
+      error_watchdog_count = 0;
     }
 
     if (READ_VREG(FATAL_ERROR) != 0) {
