@@ -89,6 +89,7 @@ static int      current_dir    = -1;
 static int      power_flag     = 0;
 static int      pmu_version    = 0;
 static int      chg_status_reg  = 0;
+static int      usb_bc_mode    = 0;
 
 int aml1216_get_battery_voltage(void)
 {
@@ -344,6 +345,9 @@ int aml1216_set_charge_enable(int enable)
     if (otp_version == 0)
     {   
         aml1216_set_full_charge_voltage(4050000);
+        if (usb_bc_mode == USB_BC_MODE_SDP) {
+            return aml1216_set_bits(0x0017, 0x00, 0x01);
+        }
         if (ocv_voltage > 4050)
         {   
             printk("%s, otp_version:%d, ocv = %d, do not open charger.\n", __func__, otp_version, ocv_voltage);
@@ -921,8 +925,13 @@ int aml1216_usb_charger(struct notifier_block *nb, unsigned long value, void *pd
         aml1216_charger_job.value = value;
         return 0;
     }
+    usb_bc_mode = value;
     switch (value) {
     case USB_BC_MODE_SDP:                                               // pc
+        if (aml1216_get_otp_version() == 0) {
+            printk("disable charger for REVB chip when connect to PC\n");
+            aml1216_set_charge_enable(0);
+        }
         if (g_aml1216_init->vbus_dcin_short_connect) {
             aml1216_set_dcin(0);                            // cut off dcin for single usb port device
         }
@@ -937,6 +946,9 @@ int aml1216_usb_charger(struct notifier_block *nb, unsigned long value, void *pd
         }
         if (aml1216_battery && aml1216_battery->pmu_usbcur_limit) {     // limit usb current
             aml1216_set_usb_current_limit(aml1216_battery->pmu_usbcur); 
+        }
+        if (aml1216_get_otp_version() == 0) {
+            aml1216_set_charge_enable(1);
         }
         break;
     case USB_BC_MODE_DCP:                                               // charger
@@ -1489,7 +1501,7 @@ static int aml1216_battery_probe(struct platform_device *pdev)
     uint32_t tmp2;
 
 	AML1216_DBG("call %s in", __func__);
-	AML1216_DBG("AML_PMU driver version:0.30\n");
+	AML1216_DBG("AML_PMU driver version:0.40\n");
 
     g_aml1216_init = pdev->dev.platform_data;
     if (g_aml1216_init == NULL) {
