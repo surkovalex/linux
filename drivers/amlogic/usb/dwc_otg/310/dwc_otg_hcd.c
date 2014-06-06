@@ -501,14 +501,17 @@ static void dwc_otg_hcd_power_save(dwc_otg_hcd_t * hcd, int power_on)
 	if(!hcd->auto_pm_suspend_flag)
 	{
 		DWC_WRITE_REG32(&hcd->core_if->usb_peri_reg->dbg_uart,uart.d32);
-		if(power_on)
+		if(hcd->core_if->swicth_int_reg)
 		{
-			dwc_otg_enable_common_interrupts(hcd->core_if);
-			dwc_otg_enable_global_interrupts(hcd->core_if);
-		}
-		else
-		{
-			dwc_otg_disable_global_interrupts(hcd->core_if);
+			if(power_on)
+			{
+				dwc_otg_enable_common_interrupts(hcd->core_if);
+				dwc_otg_enable_global_interrupts(hcd->core_if);
+			}
+			else
+			{
+				dwc_otg_disable_global_interrupts(hcd->core_if);
+			}
 		}
 	}
 }
