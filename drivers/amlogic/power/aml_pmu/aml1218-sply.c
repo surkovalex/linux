@@ -348,7 +348,7 @@ int aml1218_set_charge_enable(int enable)
         if (usb_bc_mode == USB_BC_MODE_SDP) {
             return aml1218_set_bits(0x0017, 0x00, 0x01);
         }
-        if (ocv_voltage > 4050)
+        if (ocv_voltage > 3950)
         {   
             printk("%s, otp_version:%d, ocv = %d, do not open charger.\n", __func__, otp_version, ocv_voltage);
             return aml1218_set_bits(0x0017, 0x00, 0x01);
@@ -574,7 +574,7 @@ int aml1218_first_init(struct aml1218_supply *supply)
      */
     if (aml1218_battery) {
         aml1218_set_charging_current   (aml1218_battery->pmu_init_chgcur);
-        //aml1218_set_full_charge_voltage(aml1218_battery->pmu_init_chgvol);
+      //aml1218_set_full_charge_voltage(aml1218_battery->pmu_init_chgvol);
         aml1218_set_charge_end_rate    (aml1218_battery->pmu_init_chgend_rate);
         aml1218_set_trickle_time       (aml1218_battery->pmu_init_chg_pretime);
         aml1218_set_rapid_time         (aml1218_battery->pmu_init_chg_csttime);
@@ -1336,11 +1336,13 @@ static int aml1218_update_state(struct aml_charger *charger)
         aml1218_set_charge_enable(1);
     }
     vsys = aml1218_get_vsys_voltage();
-    if ((vsys > charger->vbat) && (vsys - charger->vbat < 500)) {
-        printk("%s, vsys is not large, vsys:%d, vbat:%d\n", __func__, vsys, charger->vbat);
-        aml1218_set_charge_enable(0);
-    } else {
-        aml1218_set_charge_enable(1);
+    if (aml1218_get_otp_version() == 0) {
+        if ((vsys > charger->vbat) && (vsys - charger->vbat < 500) || charger->vbat > 3950) {
+            printk("%s, vsys is not large or vbat too large, vsys:%d, vbat:%d\n", __func__, vsys, charger->vbat);
+            aml1218_set_charge_enable(0);
+        } else {
+            aml1218_set_charge_enable(1);
+        }
     }
 
     return 0;
@@ -1404,7 +1406,7 @@ static void aml1218_charging_monitor(struct work_struct *work)
         (pre_chg_status != charger->charge_status) ||
         charger->resume                            ||
         power_protection) {
-        AML1218_DBG("battery vol change: %d->%d \n", pre_rest_cap, charger->rest_vol);
+        AML1218_DBG("battery vol change: %d->%d, vsys:%d\n", pre_rest_cap, charger->rest_vol, aml1218_get_vsys_voltage());
         if (unlikely(charger->resume)) {
             charger->resume = 0;                                        // MUST clear this flag
         }
@@ -1493,7 +1495,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     uint32_t tmp2;
 
 	AML1218_DBG("call %s in", __func__);
-	AML1218_DBG("AML_PMU driver version:0.40\n");
+	AML1218_DBG("AML_PMU driver version:0.50\n");
     g_aml1218_init = pdev->dev.platform_data;
     if (g_aml1218_init == NULL) {
         AML1218_DBG("%s, NO platform data\n", __func__);

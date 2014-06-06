@@ -348,7 +348,7 @@ int aml1216_set_charge_enable(int enable)
         if (usb_bc_mode == USB_BC_MODE_SDP) {
             return aml1216_set_bits(0x0017, 0x00, 0x01);
         }
-        if (ocv_voltage > 4050)
+        if (ocv_voltage > 3950)
         {   
             printk("%s, otp_version:%d, ocv = %d, do not open charger.\n", __func__, otp_version, ocv_voltage);
             return aml1216_set_bits(0x0017, 0x00, 0x01);
@@ -1344,11 +1344,13 @@ static int aml1216_update_state(struct aml_charger *charger)
         msleep(1000);
         aml1216_set_charge_enable(1);               
     }
-    if ((vsys_voltage > charger->vbat) && (vsys_voltage - charger->vbat < 500)) {
-        printk("%s, vsys is not large, vsys:%d, vbat:%d\n", __func__, vsys_voltage, charger->vbat);
-        aml1216_set_charge_enable(0);
-    } else {
-        aml1216_set_charge_enable(1);
+    if (aml1216_get_otp_version() == 0) {
+        if ((vsys_voltage > charger->vbat) && (vsys_voltage - charger->vbat < 500) || charger->vbat > 3950) {
+            printk("%s, vsys is not large, or vbat is too large, vsys:%d, vbat:%d\n", __func__, vsys_voltage, charger->vbat);
+            aml1216_set_charge_enable(0);
+        } else {
+            aml1216_set_charge_enable(1);
+        }
     }
 
     return 0;
@@ -1412,7 +1414,7 @@ static void aml1216_charging_monitor(struct work_struct *work)
         (pre_chg_status != charger->charge_status) ||
         charger->resume                            ||
         power_protection) {
-        AML1216_DBG("battery vol change: %d->%d \n", pre_rest_cap, charger->rest_vol);
+        AML1216_DBG("battery vol change: %d->%d vsys:%d\n", pre_rest_cap, charger->rest_vol, aml1216_get_vsys_voltage());
         if (unlikely(charger->resume)) {
             charger->resume = 0;                                        // MUST clear this flag
         }
@@ -1501,7 +1503,7 @@ static int aml1216_battery_probe(struct platform_device *pdev)
     uint32_t tmp2;
 
 	AML1216_DBG("call %s in", __func__);
-	AML1216_DBG("AML_PMU driver version:0.40\n");
+	AML1216_DBG("AML_PMU driver version:0.50\n");
 
     g_aml1216_init = pdev->dev.platform_data;
     if (g_aml1216_init == NULL) {
