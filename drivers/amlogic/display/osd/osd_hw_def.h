@@ -149,6 +149,7 @@ typedef  struct {
 	u32         		antiflicker_mode;
 	u32			angle[HW_OSD_COUNT];
 	u32			clone;
+	u32	       bot_type;
 }hw_para_t;
 
 /************************************************************************

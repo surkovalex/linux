@@ -492,10 +492,24 @@ void osd_set_scan_mode(int index)
 		case VMODE_480CVBS:
 		case VMODE_576I:
 		case VMODE_576CVBS:
+			if(osd_hw.free_scale_mode[index]){
+				osd_hw.field_out_en = 1;
+
+				if(osd_hw.free_scale_data[index].y_end == 719){
+					osd_hw.bot_type = 2;
+				}else if(osd_hw.free_scale_data[index].y_end == 1079){
+					osd_hw.bot_type = 3;
+				}else{
+					osd_hw.bot_type = 2;
+				}
+			}
+			osd_hw.scan_mode = SCAN_MODE_INTERLACE;
+		break;
 		case VMODE_1080I:
 		case VMODE_1080I_50HZ:
 			if(osd_hw.free_scale_mode[index]){
 				osd_hw.field_out_en = 1;
+				osd_hw.bot_type = 1;
 			}
 			osd_hw.scan_mode = SCAN_MODE_INTERLACE;
 		break;
@@ -1517,8 +1531,16 @@ static  void  osd1_update_disp_freescale_enable(void)
 		vf_bank_len = 4;
 	}
 
-	vsc_bot_rcv_num = 6;
-	vsc_bot_rpt_p0_num = 2;
+	if(osd_hw.bot_type == 1){
+		vsc_bot_rcv_num = 4;
+		vsc_bot_rpt_p0_num = 1;
+	}else if(osd_hw.bot_type == 2){
+		vsc_bot_rcv_num = 6;
+		vsc_bot_rpt_p0_num = 2;
+	}else if(osd_hw.bot_type == 3){
+		vsc_bot_rcv_num = 8;
+		vsc_bot_rpt_p0_num = 3;
+	}
 	hsc_ini_rcv_num = hf_bank_len;
 	vsc_ini_rcv_num = vf_bank_len;
 	hsc_ini_rpt_p0_num = (hf_bank_len/2 - 1) > 0 ?  (hf_bank_len/2 - 1): 0;
