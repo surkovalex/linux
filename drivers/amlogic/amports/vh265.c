@@ -87,8 +87,9 @@ static u32 error_watchdog_count;
 #define H265_DEBUG_REG                      0x08
 #define H265_DEBUG_MAN_SEARCH_NAL           0x10
 #define H265_DEBUG_MAN_SKIP_NAL             0x20
-#define H265_DEBUG_DISPLAY_CUR_FRAME       0x40
-#define H265_DEBUG_FORCE_CLK               0x80
+#define H265_DEBUG_DISPLAY_CUR_FRAME        0x40
+#define H265_DEBUG_FORCE_CLK                0x80
+#define H265_DEBUG_SEND_PARAM_WITH_REG      0x100
 #define H265_DEBUG_ENA_LOC_ERROR_PROC       0x10000
 #define H265_DEBUG_DIS_SYS_ERROR_PROC   0x20000
 #define H265_DEBUG_DUMP_PIC_LIST       0x40000
@@ -313,7 +314,7 @@ h265 buffer management
 
 
 #define HEVC_DEC_STATUS_REG       HEVC_ASSIST_SCRATCH_0
-#define HEVC_WORK_SPACE_REG       HEVC_ASSIST_SCRATCH_1
+#define HEVC_RPM_BUFFER           HEVC_ASSIST_SCRATCH_1
 #define HEVC_SHORT_TERM_RPS       HEVC_ASSIST_SCRATCH_2
 #define HEVC_VPS_BUFFER           HEVC_ASSIST_SCRATCH_3
 #define HEVC_SPS_BUFFER           HEVC_ASSIST_SCRATCH_4
@@ -442,6 +443,7 @@ typedef struct
     buff_t dblk_data;
     buff_t mpred_above;
     buff_t mpred_mv;
+    buff_t rpm;
 } BuffInfo_t;
 #define WORK_BUF_SPEC_NUM 2
 static BuffInfo_t amvh265_workbuff_spec[WORK_BUF_SPEC_NUM]={
@@ -502,6 +504,9 @@ static BuffInfo_t amvh265_workbuff_spec[WORK_BUF_SPEC_NUM]={
         .mpred_mv = {
            .buf_size = 0x40000*16, //1080p, 0x40000 per buffer
         },
+        .rpm = {
+           .buf_size = 0x80*2,
+        }
     },
     { 
         .max_width = 4096,
@@ -560,6 +565,9 @@ static BuffInfo_t amvh265_workbuff_spec[WORK_BUF_SPEC_NUM]={
         .mpred_mv = {
            .buf_size = 0x100000*16, //4k2k , 0x100000 per buffer
         },
+        .rpm = {
+           .buf_size = 0x80*2,
+        }
     }
 };
 
@@ -581,8 +589,13 @@ static void init_buff_spec(BuffInfo_t* buf_spec)
     buf_spec->dblk_data.buf_start = buf_spec->dblk_para.buf_start + buf_spec->dblk_para.buf_size;
     buf_spec->mpred_above.buf_start = buf_spec->dblk_data.buf_start + buf_spec->dblk_data.buf_size;
     buf_spec->mpred_mv.buf_start    = buf_spec->mpred_above.buf_start + buf_spec->mpred_above.buf_size;
-
-    buf_spec->end_adr = buf_spec->mpred_mv.buf_start + buf_spec->mpred_mv.buf_size;
+    if(debug&H265_DEBUG_SEND_PARAM_WITH_REG){
+        buf_spec->end_adr = buf_spec->mpred_mv.buf_start + buf_spec->mpred_mv.buf_size;
+    }
+    else{
+        buf_spec->rpm.buf_start         = buf_spec->mpred_mv.buf_start + buf_spec->mpred_mv.buf_size;
+        buf_spec->end_adr = buf_spec->rpm.buf_start + buf_spec->rpm.buf_size;
+    }
     if(debug)printk("%s workspace (%x %x) size = %x\n", __func__,buf_spec->start_adr, buf_spec->end_adr, buf_spec->end_adr-buf_spec->start_adr);
     if(debug){
         printk("ipp.buf_start             :%x\n"  , buf_spec->ipp.buf_start         );
@@ -600,6 +613,9 @@ static void init_buff_spec(BuffInfo_t* buf_spec)
         printk("dblk_data.buf_start       :%x\n"  , buf_spec->dblk_data.buf_start      );
         printk("mpred_above.buf_start     :%x\n"  , buf_spec->mpred_above.buf_start    );
         printk("mpred_mv.buf_start        :%x\n"  , buf_spec->mpred_mv.buf_start       );
+        if((debug&H265_DEBUG_SEND_PARAM_WITH_REG)==0){
+            printk("rpm.buf_start             :%x\n"  , buf_spec->rpm.buf_start            );
+        }
     }
     
 }
@@ -651,7 +667,7 @@ typedef struct hevc_state_{
     
     PIC_t* free_pic_list;
     PIC_t* decode_pic_list;
-
+    unsigned short* rpm_ptr;
     int     pic_w           ;
     int     pic_h           ;
     int     lcu_x_num;
@@ -796,15 +812,30 @@ static void get_rpm_param(param_t* params)
 {
 	int i;
 	unsigned int data32;
+	int count = 0;
+	//printk("%s in\n", __func__);
 	for(i=0; i<128; i++){
 		do{
+#if 1
+			count++;
+			if(count>10000){
+			    printk("%s error %d, %x\n", __func__, i, READ_VREG(0x3308));
+			    printk("%s error %d, %x\n", __func__, i, READ_VREG(0x3308));
+			    count=0;
+			}
+#endif			
+			    
 			data32 = READ_VREG(RPM_CMD_REG);
 			//printk("%x\n", data32);
 		}while((data32&0x10000)==0);	
+#if 1
+    count=0;
+#endif    		
 		params->l.data[i] = data32&0xffff;
 		//printk("%x\n", data32);
 		WRITE_VREG(RPM_CMD_REG, 0);		
 	}
+	//printk("%s exit\n", __func__);
 }
 
 
@@ -1354,7 +1385,9 @@ static void hevc_config_work_space_hw(hevc_stru_t* hevc)
 			buf_spec->dblk_para.buf_start,
 			buf_spec->dblk_data.buf_start);
     WRITE_VREG(HEVCD_IPP_LINEBUFF_BASE,buf_spec->ipp.buf_start);
-    WRITE_VREG(HEVC_WORK_SPACE_REG, buf_spec->start_adr);
+    if((debug&H265_DEBUG_SEND_PARAM_WITH_REG)==0){
+        WRITE_VREG(HEVC_RPM_BUFFER, buf_spec->rpm.buf_start);
+    }
     WRITE_VREG(HEVC_SHORT_TERM_RPS, buf_spec->short_term_rps.buf_start);
     WRITE_VREG(HEVC_VPS_BUFFER, buf_spec->vps.buf_start);
     WRITE_VREG(HEVC_SPS_BUFFER, buf_spec->sps.buf_start);
@@ -2595,6 +2628,15 @@ static void hevc_local_init(void)
     mc_buf_spec.buf_size  = (mc_buf_spec.buf_end - mc_buf_spec.buf_start);
     
     hevc_init_stru(&gHevc, cur_buf_info, &mc_buf_spec);
+    
+    if((debug&H265_DEBUG_SEND_PARAM_WITH_REG)==0){
+        gHevc.rpm_ptr = (unsigned short*)ioremap_nocache(cur_buf_info->rpm.buf_start, cur_buf_info->rpm.buf_size);
+        if (!gHevc.rpm_ptr) {
+                printk("%s: failed to remap rpm.buf_start\n", __func__);
+                return 0;
+        }
+    }    
+    
 }
 
 /********************************************
@@ -2800,9 +2842,9 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
 {
     int ret;
     int i;
-
+    unsigned int dec_status;
     hevc_stru_t* hevc = &gHevc;
-    unsigned int dec_status = READ_VREG(HEVC_DEC_STATUS_REG);
+    dec_status = READ_VREG(HEVC_DEC_STATUS_REG);
 
     if(debug&H265_DEBUG_BUFMGR){
         printk("265 isr dec status = %d\n", dec_status);
@@ -2905,11 +2947,21 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
     }
     else if(dec_status == HEVC_SLICE_SEGMENT_DONE){
         if(hevc->wait_buf == 0){
-            get_rpm_param(&rpm_param);      
+            if(debug&H265_DEBUG_SEND_PARAM_WITH_REG){
+                get_rpm_param(&rpm_param);      
+            }
+            else{
+                for(i=0; i<(RPM_END-RPM_BEGIN); i+=4){
+                    int ii;
+                    for(ii=0; ii<4; ii++){
+                        rpm_param.l.data[i+ii]=hevc->rpm_ptr[i+3-ii];
+                    } 
+                }
+            }
             if(debug&H265_DEBUG_BUFMGR){
                 printk("rpm_param: (%d)\n", hevc->slice_idx);
                 hevc->slice_idx++;
-                for(i=0; i<0x80; i++){
+                for(i=0; i<(RPM_END-RPM_BEGIN); i++){
                     printk("%04x ", rpm_param.l.data[i]);
                     if(((i+1)&0xf)==0)
                         printk("\n");
@@ -3136,11 +3188,18 @@ static s32 vh265_init(void)
 
     amhevc_enable();
 
-    if (amhevc_loadmc(vh265_mc) < 0) {
-        amhevc_disable();
-        return -EBUSY;
+    if(debug&H265_DEBUG_SEND_PARAM_WITH_REG){
+        if (amhevc_loadmc(vh265_mc_send_param_with_reg_mc) < 0) {
+            amhevc_disable();
+            return -EBUSY;
+        }
     }
-
+    else{
+        if (amhevc_loadmc(vh265_mc) < 0) {
+            amhevc_disable();
+            return -EBUSY;
+        }
+    }
     stat |= STAT_MC_LOAD;
 
     /* enable AMRISC side protocol */
