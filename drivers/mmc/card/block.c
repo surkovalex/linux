@@ -1400,7 +1400,7 @@ static void mmc_blk_rw_rq_prep(struct mmc_queue_req *mqrq,
 		brq->data.flags |= MMC_DATA_READ;
 	} else {
 		brq->cmd.opcode = writecmd;
-		brq->cmd.retries = 5; // for eMMC debug
+		//brq->cmd.retries = 5; // for eMMC debug
 		brq->data.flags |= MMC_DATA_WRITE;
 	}
 
