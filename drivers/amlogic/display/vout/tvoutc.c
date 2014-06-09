@@ -384,11 +384,12 @@ int tvoutc_setmode(tvmode_t mode)
         setreg(s++);
     printk("%s[%d]\n", __func__, __LINE__);
 
-    if(mode >= TVMODE_VGA || mode <= TVMODE_SXGA){
+    if(mode >= TVMODE_VGA && mode <= TVMODE_SXGA){
         aml_write_reg32(P_PERIPHS_PIN_MUX_0,aml_read_reg32(P_PERIPHS_PIN_MUX_0)|(3<<20));
     }else{
 	aml_write_reg32(P_PERIPHS_PIN_MUX_0,aml_read_reg32(P_PERIPHS_PIN_MUX_0)&(~(3<<20)));
     }
+
     set_tvmode_misc(mode);
 #ifdef CONFIG_ARCH_MESON1
 	tvoutc_setclk(mode);
