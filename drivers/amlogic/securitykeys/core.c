@@ -1297,6 +1297,7 @@ static ssize_t key_name_store(struct device *dev, struct device_attribute *attr,
 {
 	aml_key_t * keys;
 	int i,cnt,suffix;
+	char *name;
 	char *cmd,*oldname=NULL,*newname;
 	keys = key_schematic[keys_version]->keys;
 	if (strncmp(buf, "rename", 6) == 0)
@@ -1363,8 +1364,16 @@ static ssize_t key_name_store(struct device *dev, struct device_attribute *attr,
 		}
 		return count;
 	}
+
+	name = kzalloc(count+1, GFP_KERNEL);
+	if(!name){
+		printk("don't kzalloc mem,%s:%d\n",__func__,__LINE__);
+		return -EINVAL;
+	}
+	memcpy(name,buf,count+1);
 	
-	cmd = (char*)&buf[0];
+	//cmd = (char*)&buf[0];
+	cmd = name;
 	newname = cmd;
 	oldname = cmd;
 	cnt=0;
@@ -1396,11 +1405,14 @@ static ssize_t key_name_store(struct device *dev, struct device_attribute *attr,
 		}
 		if(curkey == NULL){
 			printk("key count too much,%s:%d\n",__func__,__LINE__);
+			if (!IS_ERR_OR_NULL(name))
+				kfree(name);
 			return -EINVAL;
 		}
 		strcpy(security_key_name,newname);
 	}
-
+	if (!IS_ERR_OR_NULL(name))
+		kfree(name);
 	return count;
 }
 //DEVICE_ATTR(key_name, 0660, key_name_show, key_name_store);
