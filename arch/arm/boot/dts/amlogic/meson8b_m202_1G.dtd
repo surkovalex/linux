@@ -77,9 +77,10 @@ void root_func(){
 	memory{
 		device_type = "memory";
 		aml_reserved_start = <0x06000000>; /**reserved memory start */
-		aml_reserved_end = <0x05000000>;/**reserved memory end : dtb start for uboot*/
+		aml_reserved_end = <0x05000000>;/**reserved memory end */
 		phys_offset = <0x00000000>;
-		linux,total-memory = <0x40000000>;
+		linux,total-memory = <0x20000000>;
+
         #address-cells = <1>;
         #size-cells = <1>;
 
