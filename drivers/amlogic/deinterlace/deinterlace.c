@@ -3368,15 +3368,6 @@ static void pre_de_process(void)
 		   	);
 #endif
     //Wr(DI_PRE_CTRL, 0x3 << 30); // remove it for M6, can not disalbe it here
-#ifdef SUPPORT_MPEG_TO_VDIN
-	if(mpeg2vdin_en){
-	    vdin_arg_t vdin_arg;
-	    vdin_v4l2_ops_t *vdin_ops = get_vdin_v4l2_ops();
-	    vdin_arg.cmd = VDIN_CMD_FORCE_GO_FIELD;
-	    if(vdin_ops->tvin_vdin_func)
-	        vdin_ops->tvin_vdin_func(0,&vdin_arg);
-	}
-#endif
 
     enable_di_pre_aml (  &di_pre_stru.di_inp_mif,               // di_inp
                &di_pre_stru.di_mem_mif,               // di_mem
@@ -3428,6 +3419,15 @@ static void pre_de_process(void)
 	Wr(DI_MTN_1_CTRL1, di_mtn_1_ctrl1);
 	//Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL)|(1<<25));
     di_apply_reg_cfg(0);
+#endif
+#ifdef SUPPORT_MPEG_TO_VDIN
+	if(mpeg2vdin_en){
+	    vdin_arg_t vdin_arg;
+	    vdin_v4l2_ops_t *vdin_ops = get_vdin_v4l2_ops();
+	    vdin_arg.cmd = VDIN_CMD_FORCE_GO_FIELD;
+	    if(vdin_ops->tvin_vdin_func)
+	        vdin_ops->tvin_vdin_func(0,&vdin_arg);
+	}
 #endif
 
 }
