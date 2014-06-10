@@ -835,6 +835,7 @@ void root_func(){
         compatible = "amlogic, aml_pmu_prober";                 /* fixed for pmu driver, don't change   */
         #address-cells = <1>;
         #size-cells = <0>;
+        driver_version = "v0.60";
 //$$ DEVICE = "Pmu_axp202"
 //$$ L2 PROP_STR = "sub_type"
 //$$ L2 PROP_STR = "i2c_bus"

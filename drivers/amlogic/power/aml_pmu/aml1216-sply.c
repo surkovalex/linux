@@ -1503,7 +1503,6 @@ static int aml1216_battery_probe(struct platform_device *pdev)
     uint32_t tmp2;
 
 	AML1216_DBG("call %s in", __func__);
-	AML1216_DBG("AML_PMU driver version:0.50\n");
 
     g_aml1216_init = pdev->dev.platform_data;
     if (g_aml1216_init == NULL) {
