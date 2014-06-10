@@ -235,9 +235,9 @@ static int post_ready_empty_count = 0;
 static int force_width = 0;
 static int force_height = 0;
 #ifdef NEW_DI_V1
-int di_vscale_skip_enable = 3;
+static int di_vscale_skip_enable = 3;
 #else
-int di_vscale_skip_enable = 1;
+static int di_vscale_skip_enable = 1;
 #endif
 
 #ifdef RUN_DI_PROCESS_IN_IRQ
@@ -295,13 +295,14 @@ static bool use_2_interlace_buff = false;
 
         bit[5]:
          when two field buffers are used for decoder (bit[4] is 0): 0, use process_count; 1, handle prog frame as two interlace frames
+        bit[6]:(bit[4] is 0,bit[5] is 0,use_2_interlace_buff is 0): 0, process progress frame as field,blend by post; 
+                                                                    1, process progress frame as field,process by normal di
 
     */
 static int prog_proc_config = (1<<1)|1; /*
                                             for source include both progressive and interlace pictures,
                                             always use post_di module for blending
                                          */
-
 #define is_handle_prog_frame_as_interlace(vframe)  (((prog_proc_config&0x30)==0x20)&&((vframe->type & VIDTYPE_VIU_422)==0))
 
 static int pulldown_detect = 0x10;
@@ -317,18 +318,18 @@ static int di_process_cnt = 0;
 static int video_peek_cnt = 0;
 static int force_bob_flag = 0;
 int di_vscale_skip_count = 0;
-int di_vscale_skip_count_real = 0;
+static int di_vscale_skip_count_real = 0;
 #ifdef D2D3_SUPPORT
 static int d2d3_enable = 1;
 #endif
 
 #ifdef DET3D
-bool det3d_en = false;
+static bool det3d_en = false;
 static unsigned int det3d_mode = 0;
 #endif
 
 
-int force_duration_0 = 0;
+static int force_duration_0 = 0;
 
 #ifdef NEW_DI_V1
 static unsigned int di_new_mode_mask = 0xffff;
@@ -4103,6 +4104,8 @@ static unsigned char pre_de_buf_config(void)
                 else{
                     //n
                     di_buf->post_proc_flag = 0;
+                    if(prog_proc_config & 0x40)
+                    	di_buf->post_proc_flag = 1;
                     di_pre_stru.di_inp_buf = di_buf;
                     if(di_pre_stru.prog_proc_type == 0){
                         di_pre_stru.process_count = 1;
