@@ -1218,7 +1218,7 @@ static void vsync_toggle_frame(vframe_t *vf)
 
     if(debug_flag& DEBUG_FLAG_BLACKOUT){
         if(first_picture){
-            printk("[video4osd] first %s picture {%d,%d}\n", (vf->source_type==VFRAME_SOURCE_TYPE_OSD)?"OSD":"", vf->width, vf->height);
+            printk("[video4osd] first %s picture {%d,%d} pts:%x, \n", (vf->source_type==VFRAME_SOURCE_TYPE_OSD)?"OSD":"", vf->width, vf->height, vf->pts);
         }
     }
     /* switch buffer */
@@ -1861,12 +1861,18 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
         pts = timestamp_vpts_get() + (cur_vf ? DUR2PTS(cur_vf->duration) : 0);
 			//printk("system=0x%x vpts=0x%x\n", systime, timestamp_vpts_get());
         if ((int)(systime - pts) >= 0){
-            tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, next_vf->pts);
-	    		printk(" discontinue, system=0x%x vpts=0x%x\n", systime, pts);
-		    if(systime>next_vf->pts || next_vf->pts==0){// pts==0 is a keep frame maybe.
-            	return true;
-            }
-            return false;
+		if(next_vf->pts != 0)
+      			tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, next_vf->pts);
+		else
+			tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, pts);
+		
+    		printk(" discontinue, system=0x%x vpts=0x%x\n", systime, pts);
+
+		if(systime>next_vf->pts || next_vf->pts==0){// pts==0 is a keep frame maybe.
+            		return true;
+	 	}
+		
+            	return false;
         }
     }
 

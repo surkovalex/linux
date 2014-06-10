@@ -51,6 +51,7 @@ const static char tsdemux_irq_id[] = "tsdemux-irq-id";
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 static u32 fetch_done;
 static u32 discontinued_counter;
+static int pcrscr_valid=0;
 
 static int demux_skipbyte;
 
@@ -244,6 +245,20 @@ static int tsdemux_set_sid(int spid)
     return r;
 }
 
+static int tsdemux_set_pcrid(int pcrpid)
+{
+    unsigned long flags;
+    int r = 0;
+
+    spin_lock_irqsave(&demux_ops_lock, flags);
+    if (demux_ops && demux_ops->set_pcrid) {
+        r = demux_ops->set_pcrid(pcrpid);
+    }
+    spin_unlock_irqrestore(&demux_ops_lock, flags);
+
+    return r;
+}
+
 static int tsdemux_set_skip_byte(int skipbyte)
 {
     unsigned long flags;
@@ -416,9 +431,9 @@ static ssize_t _tsdemux_write(const char __user *buf, size_t count)
 }
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
-s32 tsdemux_init(u32 vid, u32 aid, u32 sid, bool is_hevc)
+s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc)
 #else
-s32 tsdemux_init(u32 vid, u32 aid, u32 sid)
+s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
 #endif
 {
     s32 r;
@@ -446,8 +461,8 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid)
 #endif
 
     /* set PID filter */
-    printk("tsdemux video_pid = 0x%x, audio_pid = 0x%x, sub_pid = 0x%x\n",
-           vid, aid, sid);
+    printk("tsdemux video_pid = 0x%x, audio_pid = 0x%x, sub_pid = 0x%x, pcrid = 0x%x\n",
+           vid, aid, sid, pcrid);
 
 #ifndef ENABLE_DEMUX_DRIVER
     WRITE_MPEG_REG(FM_WR_DATA,
@@ -598,8 +613,36 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid)
     if (sid < 0x1FFF) {
         tsdemux_set_sid(sid);
     }
-
+    if ((pcrid < 0x1FFF) && (pcrid != vid) && (pcrid != aid) && (pcrid != sid)) {
+    	tsdemux_set_pcrid(pcrid);
+	}
 #endif
+
+    /* set paramater to fetch pcr */  
+    u32 pcr_num=0;
+    if(pcrid == vid)
+    	pcr_num=0;
+    else if(pcrid == aid)
+    	pcr_num=1;
+    else
+    	pcr_num=3;
+
+    if(READ_MPEG_REG(TS_HIU_CTL_2) & 0x40){
+    	WRITE_MPEG_REG(PCR90K_CTL_2, 12 << 1);    
+    	WRITE_MPEG_REG(ASSIGN_PID_NUMBER_2, pcr_num);    
+    	printk("[tsdemux_init] To use device 2,pcr_num=%d \n",pcr_num);
+    }
+    else if(READ_MPEG_REG(TS_HIU_CTL_3) & 0x40){
+    	WRITE_MPEG_REG(PCR90K_CTL_3, 12 << 1); 
+    	WRITE_MPEG_REG(ASSIGN_PID_NUMBER_3, pcr_num);    
+    	printk("[tsdemux_init] To use device 3,pcr_num=%d \n",pcr_num);
+    }
+    else{
+    	WRITE_MPEG_REG(PCR90K_CTL, 12 << 1); 
+    	WRITE_MPEG_REG(ASSIGN_PID_NUMBER, pcr_num);    
+    	printk("[tsdemux_init] To use device 1,pcr_num=%d \n",pcr_num);
+    }
+    pcrscr_valid=1;
 
     return 0;
 
@@ -622,7 +665,7 @@ err1:
 
 void tsdemux_release(void)
 {
-
+    pcrscr_valid=0;
 
     WRITE_MPEG_REG(PARSER_INT_ENABLE, 0);
     WRITE_MPEG_REG(PARSER_VIDEO_HOLE, 0);
@@ -637,6 +680,7 @@ void tsdemux_release(void)
     tsdemux_set_aid(0xffff);
     tsdemux_set_vid(0xffff);
     tsdemux_set_sid(0xffff);
+    tsdemux_set_pcrid(0xffff);
     tsdemux_free_irq();
 
 #endif
@@ -862,3 +906,20 @@ void tsdemux_set_demux(int dev)
 #endif
 }
 
+u32 tsdemux_pcrscr_get(void)
+{
+    if(READ_MPEG_REG(TS_HIU_CTL_2) & 0x40){
+    	return READ_MPEG_REG(PCR_DEMUX_2);
+    }
+    else if(READ_MPEG_REG(TS_HIU_CTL_3) & 0x40){
+    	return READ_MPEG_REG(PCR_DEMUX_3);
+    }
+    else{
+    	return READ_MPEG_REG(PCR_DEMUX);    
+   }
+}
+
+int tsdemux_pcrscr_valid(void)
+{
+    return pcrscr_valid;
+}

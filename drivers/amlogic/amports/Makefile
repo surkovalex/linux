@@ -32,10 +32,10 @@ endif
 
 obj-$(CONFIG_AM_STREAMING) += amports.o
 
-AMPROT_OBJS = amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+AMPROT_OBJS = amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o tsync_pcr.o
 
 ifeq ($(CONFIG_ARCH_MESON8B),y)
-amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o
+amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o  tsync_pcr.o
 else
 ifeq ($(CONFIG_ARCH_MESON8),y)
 amports-objs := $(AMPROT_OBJS)

@@ -82,6 +82,7 @@ typedef struct stream_port_s {
     u32 vid;
     u32 aid;
     u32 sid;
+    u32 pcrid;
 } stream_port_t;
 
 extern ulong fetchbuf, *fetchbuf_remap;

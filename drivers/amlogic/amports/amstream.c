@@ -653,11 +653,13 @@ static  int amstream_port_init(stream_port_t *port)
         r = tsdemux_init((port->flag & PORT_FLAG_VID) ? port->vid : 0xffff,
                          (port->flag & PORT_FLAG_AID) ? port->aid : 0xffff,
                          (port->flag & PORT_FLAG_SID) ? port->sid : 0xffff,
+                         port->pcrid,
                          (port->vformat == VFORMAT_HEVC));
 #else
         r = tsdemux_init((port->flag & PORT_FLAG_VID) ? port->vid : 0xffff,
                          (port->flag & PORT_FLAG_AID) ? port->aid : 0xffff,
-                         (port->flag & PORT_FLAG_SID) ? port->sid : 0xffff);
+                         (port->flag & PORT_FLAG_SID) ? port->sid : 0xffff,
+                         port->pcrid);
 #endif
         if (r < 0) {
             printk("tsdemux_init  failed\n");
@@ -1107,6 +1109,7 @@ static int amstream_open(struct inode *inode, struct file *file)
     this->vid = 0;
     this->aid = 0;
     this->sid = 0;
+    this->pcrid = 0;
     file->f_op = this->fops;
     file->private_data = this;
 
@@ -1132,6 +1135,18 @@ static int amstream_release(struct inode *inode, struct file *file)
     if (this->flag & PORT_FLAG_INITED) {
         amstream_port_release(this);
     }
+    if ((this->type & (PORT_TYPE_AUDIO | PORT_TYPE_VIDEO)) == PORT_TYPE_AUDIO) {
+        s32 i;
+        stream_port_t *s;
+        for (s = &ports[0], i = 0; i < MAX_AMSTREAM_PORT_NUM; i++, s++) {
+            if ((s->flag & PORT_FLAG_IN_USE) && (s->type & PORT_TYPE_VIDEO)) {
+                break;
+            }
+        }
+        if (i == MAX_AMSTREAM_PORT_NUM) {
+            timestamp_firstvpts_set(0);
+        }
+    }    
     this->flag = 0;
 
     ///timestamp_pcrscr_set(0);
@@ -1287,6 +1302,12 @@ static long amstream_ioctl(struct file *file,
         }
 
         break;
+
+    case AMSTREAM_IOC_PCRID:
+	this->pcrid= (u32)arg;
+       printk("set pcrid = 0x%x \n", this->pcrid);
+    	break;
+    	
     case AMSTREAM_IOC_VB_STATUS:
         if (this->type & PORT_TYPE_VIDEO) {
             struct am_io_param *p = (void*)arg;

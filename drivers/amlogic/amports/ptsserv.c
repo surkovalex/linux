@@ -236,6 +236,29 @@ int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
 }
 EXPORT_SYMBOL(calculation_stream_delayed_ms);
 
+// return the 1/90000 unit time
+int calculation_vcached_delayed(){
+	pts_table_t *pTable;
+	u32 delay=0;
+
+	pTable = &pts_table[PTS_TYPE_VIDEO];
+
+	delay = pTable->last_checkin_pts-timestamp_vpts_get();
+
+	if (0<delay && delay<5*90000) 
+		return delay;
+
+	if(pTable->last_avg_bitrate>0){
+		int diff = pTable->last_checkin_offset-pTable->last_checkout_offset;
+      		delay=diff*90000/(1+pTable->last_avg_bitrate/8);
+
+		return delay;
+	}
+
+	return -1;
+}
+EXPORT_SYMBOL(calculation_vcached_delayed);
+
 int calculation_stream_ext_delayed_ms(u8 type)
 {
     pts_table_t *pTable;

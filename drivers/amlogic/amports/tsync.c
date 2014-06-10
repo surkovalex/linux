@@ -12,6 +12,8 @@
 #endif
 #include "vdec_reg.h"
 #include "amvdec.h"
+#include "tsync_pcr.h"
+
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 //TODO: for stream buffer register bit define only
 #include "streambuf_reg.h"
@@ -91,7 +93,7 @@ const static struct {
 };
 
 const static char *tsync_mode_str[] = {
-    "vmaster", "amaster"
+    "vmaster", "amaster", "pcrmaster"
 };
 
 static DEFINE_SPINLOCK(lock);
@@ -372,6 +374,11 @@ mode='T': diff_pts=|vpts-apts|,timeout mode switch,
 
 static int tsync_mode_switch(int mode,unsigned long diff_pts,int jump_pts)
 {
+	if(tsync_mode == TSYNC_MODE_PCRMASTER){
+		printk("[tsync_mode_switch]tsync_mode is pcr master, do nothing \n");
+		return 0;
+	}
+
 	int debugcnt=0;
 	int old_tsync_mode=tsync_mode;
 	int old_tsync_av_mode=tsync_av_mode;
@@ -487,6 +494,12 @@ void tsync_mode_reinit(void)
 EXPORT_SYMBOL(tsync_mode_reinit);
 void tsync_avevent_locked(avevent_t event, u32 param)
 {
+    if(tsync_mode == TSYNC_MODE_PCRMASTER){
+    	amlog_level(LOG_LEVEL_INFO,"[tsync_avevent_locked]PCR MASTER to use tsync pcr cmd deal ");
+	tsync_pcr_avevent_locked(event,param);
+	return 0;
+    }
+
     u32 t;
 
     switch (event) {
@@ -539,12 +552,17 @@ void tsync_avevent_locked(avevent_t event, u32 param)
         if (/*tsync_mode == TSYNC_MODE_VMASTER && */!vpause_flag) {
             timestamp_pcrscr_enable(1);
         }
+
+        if (!timestamp_firstvpts_get() && param) {
+            timestamp_firstvpts_set(param);
+        }    
         break;
 
     case VIDEO_STOP:
         tsync_stat = TSYNC_STAT_PCRSCR_SETUP_NONE;
         timestamp_vpts_set(0);
         timestamp_pcrscr_enable(0);
+        timestamp_firstvpts_set(0);
         tsync_video_started = 0;
         break;
 
@@ -1153,11 +1171,35 @@ static ssize_t show_mode(struct class *class,
                          struct class_attribute *attr,
                          char *buf)
 {
-    if (tsync_mode <= TSYNC_MODE_AMASTER) {
+    if (tsync_mode <= TSYNC_MODE_PCRMASTER) {
         return sprintf(buf, "%d: %s\n", tsync_mode, tsync_mode_str[tsync_mode]);
     }
 
     return sprintf(buf, "invalid mode");
+}
+
+static ssize_t store_mode(struct class *class,
+                            struct class_attribute *attr,
+                            const char *buf,
+                            size_t size)
+{
+    unsigned mode;
+    ssize_t r;
+
+    r = sscanf(buf, "%d", &mode);
+    if ((r != 1)) {
+        return -EINVAL;
+    }
+
+    if(mode == TSYNC_MODE_PCRMASTER)
+    	tsync_mode = TSYNC_MODE_PCRMASTER;
+    else if(mode == TSYNC_MODE_VMASTER)
+    	tsync_mode=TSYNC_MODE_VMASTER;
+    else
+    	tsync_mode=TSYNC_MODE_AMASTER;
+    
+    printk("[%s]tsync_mode=%d, buf=%s\n",__func__,tsync_mode,buf);
+    return size;
 }
 
 static ssize_t show_enable(struct class *class,
@@ -1398,12 +1440,19 @@ static ssize_t show_last_checkin_apts(struct class *class,
   return sprintf(buf, "0x%x\n",last_apts);
 }
 
+static ssize_t show_firstvpts(struct class *class,
+                         struct class_attribute *attr,
+                         char *buf)
+{
+    return sprintf(buf, "0x%x\n", timestamp_firstvpts_get());
+}
+
 static struct class_attribute tsync_class_attrs[] = {
     __ATTR(pts_video,  S_IRUGO | S_IWUSR | S_IWGRP, show_vpts,    store_vpts),
     __ATTR(pts_audio,  S_IRUGO | S_IWUSR | S_IWGRP, show_apts,    store_apts),
     __ATTR(pts_pcrscr, S_IRUGO | S_IWUSR | S_IWGRP, show_pcrscr,  store_pcrscr),
     __ATTR(event,      S_IRUGO | S_IWUSR | S_IWGRP, NULL,         store_event),
-    __ATTR(mode,       S_IRUGO | S_IWUSR | S_IWGRP, show_mode,    NULL),
+    __ATTR(mode,       S_IRUGO | S_IWUSR | S_IWGRP, show_mode,    store_mode),
     __ATTR(enable,     S_IRUGO | S_IWUSR | S_IWGRP, show_enable,  store_enable),
     __ATTR(pcr_recover, S_IRUGO | S_IWUSR | S_IWGRP, show_pcr_recover,  store_pcr_recover),
     __ATTR(discontinue, S_IRUGO | S_IWUSR, show_discontinue,  store_discontinue),
@@ -1414,6 +1463,7 @@ static struct class_attribute tsync_class_attrs[] = {
     __ATTR(av_threshold_min, S_IRUGO | S_IWUSR | S_IWGRP, show_av_threshold_min,  store_av_threshold_min),
     __ATTR(av_threshold_max, S_IRUGO | S_IWUSR | S_IWGRP, show_av_threshold_max,  store_av_threshold_max),
     __ATTR(last_checkin_apts, S_IRUGO | S_IWUSR, show_last_checkin_apts, NULL),
+    __ATTR(firstvpts, S_IRUGO | S_IWUSR, show_firstvpts, NULL),
     __ATTR_NULL
 };
 
