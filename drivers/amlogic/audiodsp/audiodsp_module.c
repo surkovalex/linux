@@ -795,6 +795,8 @@ static ssize_t digital_raw_store(struct class* class, struct class_attribute* at
   printk("IEC958_mode_raw=%d\n", IEC958_mode_raw);
   return count;
 }
+#define SUPPORT_TYPE_NUM  8
+static unsigned char *codec_str[SUPPORT_TYPE_NUM] = {"2 CH PCM","DTS RAW Mode","Dolby Digital","DTS","DD+","DTSHD","8 CH PCM","TrueHD"};
 static ssize_t digital_codec_show(struct class*cla, struct class_attribute* attr, char* buf)
 {
   char* pbuf = buf;
@@ -806,23 +808,17 @@ static ssize_t digital_codec_show(struct class*cla, struct class_attribute* attr
 static ssize_t digital_codec_store(struct class* class, struct class_attribute* attr,
    const char* buf, size_t count )
 {
-  printk("buf=%s\n", buf);
-  if(buf[0] == '0'){
-      IEC958_mode_codec = 0;  //pcm
-  }else if(buf[0] == '1'){
-      IEC958_mode_codec = 1;  //dts
-  }else if(buf[0] == '2'){
-      IEC958_mode_codec = 2;  // dd
-  }else if(buf[0] == '3'){
-      IEC958_mode_codec= 3;   //dts
-  }else if(buf[0] == '4'){    
-      IEC958_mode_codec=4;   //dd+
-  }else if(buf[0] == '5'){
-      IEC958_mode_codec=5;   //dtshd 
-  }else if(buf[0] == '6'){
-      IEC958_mode_codec=6;   //pcm 8Ch output
-  }
-  printk("IEC958_mode_codec=%d\n", IEC958_mode_codec);
+	int digital_codec  = 0;
+	if(buf){
+  		digital_codec = simple_strtoul(buf, NULL, 10);
+		if(digital_codec < SUPPORT_TYPE_NUM){
+			IEC958_mode_codec = digital_codec;
+			printk("IEC958_mode_codec= %d,IEC958 type %s \n",digital_codec,codec_str[digital_codec]);
+		}
+		else{
+			printk("IEC958 type set exceed supported range \n");
+		}
+	}		
   return count;
 }
 static ssize_t print_flag_show(struct class*cla, struct class_attribute* attr, char* buf)

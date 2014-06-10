@@ -216,9 +216,12 @@ int tvoutc_setclk(tvmode_t mode)
 	switch(mode)
 	{
 		case TVMODE_480I:
+		case TVMODE_480I_RPT:
 		case TVMODE_480CVBS:
 		case TVMODE_480P:
+		case TVMODE_480P_RPT:
 		case TVMODE_576I:
+		case TVMODE_576I_RPT:
 		case TVMODE_576CVBS:
 		case TVMODE_576P:
 			  setreg(&sd[xtal]);
@@ -364,7 +367,6 @@ int tvoutc_setmode(tvmode_t mode)
 //TODO
 //    switch_mod_gate_by_name("venc", 1);
 #endif
-
     printk("TV mode %s selected.\n", tvinfoTab[mode].id);
 
 #ifdef CONFIG_ARCH_MESON8B
@@ -434,15 +436,19 @@ int tvoutc_setmode(tvmode_t mode)
 	switch(mode)
 	{
 		case TVMODE_480I:
+		case TVMODE_480I_RPT:
 		case TVMODE_480CVBS:
 		case TVMODE_576I:
+		case TVMODE_576I_RPT:
 		case TVMODE_576CVBS:
         aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, 1, 0, 2); //reg0x271a, select ENCI to VIU1
         aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, 1, 4, 4); //reg0x271a, Select encI clock to VDIN
         aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, 1, 8, 4); //reg0x271a,Enable VIU of ENC_I domain to VDIN;
 			  break;
 		case TVMODE_480P:
+		case TVMODE_480P_RPT:
 		case TVMODE_576P:
+		case TVMODE_576P_RPT:
 		case TVMODE_720P:
 		case TVMODE_720P_50HZ:
 		case TVMODE_1080I: //??

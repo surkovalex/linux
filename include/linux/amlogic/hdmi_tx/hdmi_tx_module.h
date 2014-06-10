@@ -67,6 +67,16 @@ typedef struct rx_cap_
     } support_3d_format[VIC_MAX_NUM];
 }rx_cap_t;
 
+typedef struct Cts_conf_tab_ {
+    unsigned int fixed_n;
+    unsigned int tmds_clk;
+    unsigned int fixed_cts;
+}Cts_conf_tab;
+
+typedef struct Vic_attr_map_ {
+    HDMI_Video_Codes_t VIC;
+    unsigned int tmds_clk;
+}Vic_attr_map;
 
 #define EDID_MAX_BLOCK              4
 #define HDMI_TMP_BUF_SIZE           1024
@@ -231,9 +241,9 @@ extern void hdmitx_init_parameters(HDMI_TX_INFO_t *info);
 
 extern int hdmitx_edid_parse(hdmitx_dev_t* hdmitx_device);
 
-HDMI_Video_Codes_t hdmitx_edid_get_VIC(hdmitx_dev_t* hdmitx_device,const char* disp_mode, char force_flag);
+HDMI_Video_Codes_t hdmitx_edid_get_VIC(hdmitx_dev_t* hdmitx_device, const char* disp_mode, char force_flag);
 
-HDMI_Video_Codes_t hdmitx_get_VIC(hdmitx_dev_t* hdmitx_device,const char* disp_mode);
+extern int hdmitx_edid_VIC_support(HDMI_Video_Codes_t vic);
 
 extern int hdmitx_edid_dump(hdmitx_dev_t* hdmitx_device, char* buffer, int buffer_len);
 
@@ -241,7 +251,7 @@ extern void hdmitx_edid_clear(hdmitx_dev_t* hdmitx_device);
 
 extern void hdmitx_edid_buf_compare_print(hdmitx_dev_t* hdmitx_device);
 
-extern char* hdmitx_edid_get_native_VIC(hdmitx_dev_t* hdmitx_device);
+extern const char* hdmitx_edid_get_native_VIC(hdmitx_dev_t* hdmitx_device);
 
 extern int hdmitx_set_display(hdmitx_dev_t* hdmitx_device, HDMI_Video_Codes_t VideoCode);
 

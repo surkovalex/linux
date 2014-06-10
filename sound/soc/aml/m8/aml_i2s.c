@@ -93,10 +93,10 @@ static const struct snd_pcm_hardware aml_i2s_hardware = {
 	.formats		= SNDRV_PCM_FMTBIT_S16_LE|SNDRV_PCM_FMTBIT_S24_LE|SNDRV_PCM_FMTBIT_S32_LE,
 
 	.period_bytes_min	= 64,
-	.period_bytes_max	= 32 * 1024,
+	.period_bytes_max	= 32 * 1024*2,
 	.periods_min		= 2,
 	.periods_max		= 1024,
-	.buffer_bytes_max	= 128 * 1024,
+	.buffer_bytes_max	= 128 * 1024*2*2,
 
 	.rate_min = 8000,
 	.rate_max = 48000,
@@ -129,7 +129,7 @@ static const struct snd_pcm_hardware aml_i2s_capture = {
 static char snd_i2s_tmp[32*1024];
 
 
-static unsigned int period_sizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
+static unsigned int period_sizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,65536,65536*2,65536*4 };
 
 static struct snd_pcm_hw_constraint_list hw_constraints_period_sizes = {
 	.count = ARRAY_SIZE(period_sizes),

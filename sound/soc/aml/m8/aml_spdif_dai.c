@@ -45,6 +45,7 @@ extern unsigned int IEC958_mode_codec;
 static int iec958buf[32+16];
 void  aml_spdif_play()
 {
+    return;
    	 _aiu_958_raw_setting_t set;
    	 _aiu_958_channel_status_t chstat;	 
 	struct snd_pcm_substream substream;
@@ -293,7 +294,7 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 	}
 	ALSA_DEBUG("aiu 958 pcm buffer size %d \n",size);	
 	audio_set_958_mode(iec958_mode, &set);
-	if(IEC958_mode_codec == 4 || IEC958_mode_codec == 5){  //dd+
+	if(IEC958_mode_codec == 4 || IEC958_mode_codec == 5 || IEC958_mode_codec == 7){  //dd+
 		WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 0, 4, 2); // 4x than i2s
         	printk("DEBUG--> IEC958_mode_codec/%d  4x than i2s\n",IEC958_mode_codec);
 	}else
@@ -312,6 +313,12 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
                 aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DOBLY_DIGITAL_PLUS,substream);
         }else if(IEC958_mode_codec == 5){
 		aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS_HD,substream);
+        }else if(IEC958_mode_codec == 7){
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1902);
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_L1, 0x900);
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1902);
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_R1, 0x900);    
+        	aout_notifier_call_chain(AOUT_EVENT_RAWDATA_MAT_MLP,substream);
         }else{
 	        aout_notifier_call_chain(AOUT_EVENT_IEC_60958_PCM,substream);
         }
@@ -468,8 +475,10 @@ static struct snd_soc_dai_driver aml_spdif_dai[] = {
 					SNDRV_PCM_RATE_32000 |
 					SNDRV_PCM_RATE_44100 |
 					SNDRV_PCM_RATE_48000 |
-					SNDRV_PCM_RATE_96000),
-			.formats = SNDRV_PCM_FMTBIT_S16_LE, },
+					SNDRV_PCM_RATE_96000  |
+					SNDRV_PCM_RATE_176400 |
+					SNDRV_PCM_RATE_192000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE), },
 		.capture = {
 			.stream_name = "S/PDIF Capture",
 			.channels_min = 1,
