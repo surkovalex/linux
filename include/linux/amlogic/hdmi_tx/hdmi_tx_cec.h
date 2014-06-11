@@ -581,7 +581,7 @@ void cec_set_standby(void);
 void cec_isr_post_process(void);
 void cec_clear_buf(unsigned int flag);
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
 void cec_arbit_bit_time_set(unsigned bit_set, unsigned time_set, unsigned flag);
 void tx_irq_handle(void);
 void cec_arbit_bit_time_read(void);

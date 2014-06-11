@@ -41,6 +41,10 @@ ifeq ($(CONFIG_ARCH_MESON8),y)
 amports-objs := $(AMPROT_OBJS)
 amports-y    := $(AMPROT_OBJS)
 else
+ifeq ($(CONFIG_ARCH_MESON8M2),y)
+amports-objs := $(AMPROT_OBJS)
+amports-y    := $(AMPROT_OBJS)
+else
 ifeq ($(CONFIG_ARCH_MESON6),y)
 amports-objs := $(AMPROT_OBJS)
 amports-y    := $(AMPROT_OBJS)
@@ -55,6 +59,7 @@ amports-y    := $(AMPROT_OBJS)
 else
 amports-objs := $(AMPROT_OBJS) amve.o amcm.o
 amports-y    := $(AMPROT_OBJS) amve.o amcm.o
+endif
 endif
 endif
 endif
