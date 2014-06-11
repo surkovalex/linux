@@ -11,7 +11,11 @@
 extern int (*get_cpu_temperature_celius)(void);
 int get_cpu_temperature(void);
 
+#ifdef CONFIG_ARCH_MESON8
 #define MESON_CPU_TYPE	MESON_CPU_TYPE_MESON8
+#else //CONFIG_ARCH_MESON8M2
+#define MESON_CPU_TYPE	MESON_CPU_TYPE_MESON8M2
+#endif
 
 #define MESON_CPU_CONTROL_REG (IO_SRAM_BASE + 0x1ff80)
 #define MESON_CPU1_CONTROL_ADDR_REG (IO_SRAM_BASE + 0x1ff84)
