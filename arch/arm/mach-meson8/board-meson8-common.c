@@ -138,6 +138,7 @@ static void __init meson_init_irq(void)
 }
 static const char *m8_common_board_compat[] __initdata = {
 	"AMLOGIC,8726_M8",
+	"AMLOGIC,8726_M8B",
 	NULL,
 };
 
