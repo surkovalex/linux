@@ -725,7 +725,7 @@ void root_func(){
 //$$ L2 PROP_U32 16*3 = "dvfs_table"
         vcck_dvfs {
             dvfs_id     = <1>;                                  /** must be value of (1 << n)            */
-            table_count = <12>;                                 /** must be correct count for dvfs_table */
+            table_count = <11>;                                 /** must be correct count for dvfs_table */
             change-frequent-only;
             dvfs_table  = <
             /* NOTE: frequent in this table must be ascending order */
@@ -741,7 +741,6 @@ void root_func(){
                 1008000         975000      975000
                 1200000        1025000     1025000
                 1416000        1075000     1075000
-                1608000        1140000     1140000
             >;
         };
     };
