@@ -811,30 +811,15 @@ static void get_rpm_param(param_t* params)
 {
 	int i;
 	unsigned int data32;
-	int count = 0;
-	//printk("%s in\n", __func__);
 	for(i=0; i<128; i++){
 		do{
-#if 1
-			count++;
-			if(count>10000){
-			    printk("%s error %d, %x\n", __func__, i, READ_VREG(0x3308));
-			    printk("%s error %d, %x\n", __func__, i, READ_VREG(0x3308));
-			    count=0;
-			}
-#endif			
-			    
 			data32 = READ_VREG(RPM_CMD_REG);
 			//printk("%x\n", data32);
 		}while((data32&0x10000)==0);	
-#if 1
-    count=0;
-#endif    		
 		params->l.data[i] = data32&0xffff;
 		//printk("%x\n", data32);
 		WRITE_VREG(RPM_CMD_REG, 0);		
 	}
-	//printk("%s exit\n", __func__);
 }
 
 
@@ -884,21 +869,25 @@ static PIC_t* get_pic_by_POC(hevc_stru_t* hevc, int POC)
 static PIC_t* get_ref_pic_by_POC(hevc_stru_t* hevc, int POC)
 {
 	PIC_t* pic = hevc->decode_pic_list;
+	PIC_t* ret_pic = NULL;
 	while(pic){
-		if((pic->POC==POC)&&(pic->referenced))
-			break;
+		if((pic->POC==POC)&&(pic->referenced)){
+			if(ret_pic==NULL){
+			    ret_pic = pic;
+		  }
+		  else{
+    	    if(pic->decode_idx > ret_pic->decode_idx)
+				    ret_pic = pic;			
+			}
+		}
 		pic = pic->next;
 	}
-	if(pic==NULL){
+	
+	if(ret_pic==NULL){
 		if(debug) printk("Wrong, POC of %d is not in referenced list\n", POC);		
-		pic = hevc->decode_pic_list;
-		while(pic){
-			if(pic->POC==POC)
-				break;
-			pic = pic->next;
-		}
+		ret_pic = get_pic_by_POC(hevc, POC);
 	}
-	return pic;
+	return ret_pic;
 }
 
 static PIC_t* get_pic_by_IDX(hevc_stru_t* hevc, int idx)
