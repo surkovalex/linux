@@ -41,7 +41,7 @@ endif
 
 obj-y += ethernet/
 
-#obj-$(CONFIG_AM_CANVAS) += canvas/
+obj-$(CONFIG_AM_CANVAS) += canvas/
 
 obj-y += amports/
 
