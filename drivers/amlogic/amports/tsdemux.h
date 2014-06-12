@@ -21,6 +21,7 @@
 
 #ifndef TSDEMUX_H
 #define TSDEMUX_H
+#include "amports_config.h"
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 // TODO: move to register headers
@@ -68,7 +69,7 @@
 #define PARSER_INT_HOST_EN_BIT      8
 #endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
 extern s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc);
 #else
 extern s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid);

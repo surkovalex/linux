@@ -42,6 +42,7 @@
 #include "vdec_reg.h"
 #include "streambuf_reg.h"
 #include "streambuf.h"
+#include "amports_config.h"
 
 #include "tsdemux.h"
 
@@ -430,7 +431,7 @@ static ssize_t _tsdemux_write(const char __user *buf, size_t count)
     return count - r;
 }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
 s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc)
 #else
 s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
@@ -513,7 +514,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
     }
 
     /* hook stream buffer with PARSER */
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     if (is_hevc) {
         WRITE_MPEG_REG(PARSER_VIDEO_START_PTR,
                        READ_VREG(HEVC_STREAM_START_ADDR));
@@ -538,7 +539,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
         WRITE_VREG(VLD_MEM_VIFIFO_BUF_CNTL, MEM_BUFCTRL_INIT);
         CLEAR_VREG_MASK(VLD_MEM_VIFIFO_BUF_CNTL, MEM_BUFCTRL_INIT);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
         WRITE_VREG(DOS_GEN_CTRL0, 0);    // set vififo_vbuf_rp_sel=>vdec
     }
 #endif
@@ -562,7 +563,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
     WRITE_MPEG_REG(PARSER_SUB_RP, parser_sub_rp);
     SET_MPEG_REG_MASK(PARSER_ES_CONTROL, (7 << ES_SUB_WR_ENDIAN_BIT) | ES_SUB_MAN_RD_PTR);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     if ((r = pts_start((is_hevc) ? PTS_TYPE_HEVC : PTS_TYPE_VIDEO)) < 0) {
 #else
     if ((r = pts_start(PTS_TYPE_VIDEO)) < 0) {
@@ -653,7 +654,7 @@ err4:
 err3:
     pts_stop(PTS_TYPE_AUDIO);
 err2:
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     pts_stop((is_hevc) ? PTS_TYPE_HEVC : PTS_TYPE_VIDEO);
 #else
     pts_stop(PTS_TYPE_VIDEO);

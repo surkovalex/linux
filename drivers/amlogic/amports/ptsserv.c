@@ -6,6 +6,7 @@
 #include <linux/amlogic/amports/timestamp.h>
 #include <linux/amlogic/amports/tsync.h>
 #include "amports_priv.h"
+#include "amports_config.h"
 
 #include <mach/am_regs.h>
 
@@ -182,7 +183,7 @@ int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
         return 0;
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     if (type == PTS_TYPE_HEVC) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
     } else
@@ -193,7 +194,7 @@ int calculation_stream_delayed_ms(u8 type,u32 *latestbitrate,u32*avg_bitare)
         return 0;
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     if (type == PTS_TYPE_HEVC) {
         outtime = timestamp_vpts_get();
     } else
@@ -868,7 +869,7 @@ int pts_start(u8 type)
         return -EINVAL;
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     if (type == PTS_TYPE_HEVC) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
     } else
@@ -886,7 +887,7 @@ int pts_start(u8 type)
             return -ENOMEM;
         }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
         if (type == PTS_TYPE_HEVC) {
             pTable->buf_start = READ_VREG(HEVC_STREAM_START_ADDR);
             pTable->buf_size = READ_VREG(HEVC_STREAM_END_ADDR)
@@ -961,7 +962,7 @@ int pts_stop(u8 type)
         return -EINVAL;
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if HAS_HEVC_VDEC
     if (type == PTS_TYPE_HEVC) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
     } else
