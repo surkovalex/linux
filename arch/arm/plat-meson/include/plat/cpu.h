@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __ASM_ARCH_MESON_CPU_H
-#define __ASM_ARCH_MESON_CPU_H
+#ifndef __PLAT_MESON_CPU_H
+#define __PLAT_MESON_CPU_H
 
 #define MESON_CPU_TYPE_MESON1		0x10
 #define MESON_CPU_TYPE_MESON2		0x20
@@ -47,4 +47,5 @@
 
 int  meson_cpu_version_init(void);
 int get_meson_cpu_version(int level);
+
 #endif
