@@ -1939,7 +1939,8 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t
     }
 
     hdmi_hw_reset(hdmitx_device, param);    
-    hdmitx_set_pll(param);
+	// move hdmitx_set_pll() to the end of this function.
+    // hdmitx_set_pll(param);
     hdmitx_set_phy(hdmitx_device);
 
     if((param->VIC==HDMI_720p60)||(param->VIC==HDMI_720p50)||
@@ -1986,6 +1987,8 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t
     hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_1, 0x00);
     hdmi_wr_reg(TX_SYS5_TX_SOFT_RESET_2, 0x60);
     mdelay(5);
+
+	hdmitx_set_pll(param);
 
     return 0;
 }
