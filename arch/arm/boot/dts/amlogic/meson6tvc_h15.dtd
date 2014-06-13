@@ -115,6 +115,17 @@
 		delay_setting = <500 50 20 20 50 0 0 200>;  /** CLK ON/OFF,PWM ON/OFF,PANEL_PWR ON/OFF,BL ON/OFF delay */
 	};
 
+	backlight{
+		compatible = "amlogic,backlight";
+		dev_name = "backlight";
+		status = "okay";
+		power_pin = "GPIOX_2";
+		pwm_hz = <160>;   /* Hz */
+		pinctrl-names = "pwm_a","pwm_vs";
+		pinctrl-0 = <&lcd_bl_pwm_a_pins>;	/* pwma pinmux */
+		pinctrl-1 = <&lcd_bl_pwm_vs_pins>;	/* pwm_vs pinmux */
+	};
+
 /// ***************************************************************************************
 ///	-	ION
 //$$ MODULE="ION"
@@ -768,6 +779,31 @@
 					   8 0x00000800>;
 			amlogic,pins = "GPIOA_12","GPIOA_13","GPIOA_14","GPIOA_15";
 		};
+
+//$$ MATCH "lcd_bl_pwm_a_pins_match" = "&lcd_bl_pwm_a_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+//$$ L2 PROP_STR = "amlogic,pins"
+		lcd_bl_pwm_a_pins:lcd_bl_pwm_a_pin {
+			amlogic,setmask=<2 0x1>;
+			amlogic,clrmask=<2 0x4
+					   	1 0x100000
+					   	9 0x10000000>;
+			amlogic,pins = "GPIOP_6";
+		};
+
+//$$ MATCH "lcd_bl_pwm_vs_pins_match" = "&lcd_bl_pwm_vs_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+//$$ L2 PROP_STR = "amlogic,pins"
+		lcd_bl_pwm_vs_pins:lcd_bl_pwm_vs_pin {
+			amlogic,setmask=<2 0x4>;
+			amlogic,clrmask=<2 0x1
+					   	1 0x100000
+					   	9 0x10000000>;
+			amlogic,pins = "GPIOP_6";
+		};
+
 //$$ MATCH "dvb_p_ts0_pins_match" = "&dvb_p_ts0_pins"
 //$$ L2 PROP_U32 2 = "amlogic,setmask"
 //$$ L2 PROP_U32 8 = "amlogic,clrmask"
