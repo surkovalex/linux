@@ -37,7 +37,6 @@
 #include <linux/dma-contiguous.h>
 
 #include <mach/am_regs.h>
-#include <mach/vpu.h>
 #include "vdec_reg.h"
 
 #include "vdec.h"
@@ -3319,8 +3318,6 @@ static int amvdec_h265_probe(struct platform_device *pdev)
         mutex_unlock(&vh265_mutex);
         return -ENODEV;
     }
-
-    request_vpu_clk_vmod(360000000, VPU_VIU_VD1);
 
     mutex_unlock(&vh265_mutex);
     return 0;

@@ -335,10 +335,18 @@ static stream_buf_t bufs[BUF_MAX_NUM] = {
 
 stream_buf_t *get_buf_by_type(u32  type)
 {
-   if(type<BUF_MAX_NUM)
-       return &bufs[type];
-   else 
-       return NULL;
+    switch (type) {
+        case PTS_TYPE_VIDEO:
+            return &bufs[BUF_TYPE_VIDEO];
+        case PTS_TYPE_AUDIO:
+            return &bufs[BUF_TYPE_AUDIO];
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+        case PTS_TYPE_HEVC:
+            return &bufs[BUF_TYPE_HEVC];
+#endif
+        default:
+            return NULL;
+    }
 }
 
 void set_sample_rate_info(int arg)
@@ -1851,14 +1859,14 @@ static ssize_t bufs_show(struct class *class, struct class_attribute *attr, char
             int calc_delayms=0;
             u32 bitrate=0,avg_bitrate=0;
 
-            calc_delayms = calculation_stream_delayed_ms(p->type, &bitrate, &avg_bitrate);
+            calc_delayms = calculation_stream_delayed_ms((p->type == BUF_TYPE_AUDIO) ? PTS_TYPE_AUDIO : PTS_TYPE_VIDEO,
+                               &bitrate, &avg_bitrate);
 
             if (calc_delayms>=0) {
                 pbuf += sprintf(pbuf, "\tbuf current delay:%dms\n",calc_delayms);
                 pbuf += sprintf(pbuf, "\tbuf bitrate latest:%dbps,avg:%dbps\n",bitrate,avg_bitrate);
                 pbuf += sprintf(pbuf, "\tbuf time after last pts:%d ms\n",
-
-                calculation_stream_ext_delayed_ms(p->type));
+                                calculation_stream_ext_delayed_ms((p->type == BUF_TYPE_AUDIO) ? PTS_TYPE_AUDIO : PTS_TYPE_VIDEO));
 
                 pbuf += sprintf(pbuf, "\tbuf time after last write data :%d ms\n",
                                 (int)(jiffies_64 - p->last_write_jiffies64)*1000/HZ);
