@@ -509,7 +509,14 @@ void osd_set_scan_mode(int index)
 		case VMODE_1080I_50HZ:
 			if(osd_hw.free_scale_mode[index]){
 				osd_hw.field_out_en = 1;
-				osd_hw.bot_type = 1;
+
+				if(osd_hw.free_scale_data[index].y_end == 719){
+					osd_hw.bot_type = 1;
+				}else if(osd_hw.free_scale_data[index].y_end == 1079){
+					osd_hw.bot_type = 2;
+				}else{
+					osd_hw.bot_type = 1;
+				}
 			}
 			osd_hw.scan_mode = SCAN_MODE_INTERLACE;
 		break;
