@@ -1869,17 +1869,4 @@ sdhc_sd_clk_cmd_pins:sdhc_sd_clk_cmd_pins{
 		};
 
 	};
-/// ***************************************************************************************
-///	-	Ethernet
-//$$ MODULE="Ethernet"
-//$$ DEVICE="meson-eth"
-//$$ L2 PROP_STR = "status"
-    meson-eth{
-		compatible = "amlogic,meson-eth";
-		dev_name = "meson-eth";
-		status = "okay";
-		ethbaseaddr = <0xfe0c0000>;
-		interruptnum = <40>;
-	};
-
 }; /* end of / */
