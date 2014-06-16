@@ -2800,7 +2800,7 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
         struct vdin_v4l2_ops_s *vops = &node->vops;
         vdin_parm_t para;
         const vinfo_t *vinfo;
-
+        int dst_w, dst_h;
         vinfo = get_current_vinfo();
         if ((fh->type != V4L2_BUF_TYPE_VIDEO_CAPTURE) || (i != fh->type))
                 return -EINVAL;
@@ -2837,7 +2837,8 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
         if(TVIN_SCAN_MODE_INTERLACED == para.scan_mode){
                 para.v_active = para.v_active/2;
         }
-        int dst_w = fh->width, dst_h = fh->height;
+        dst_w = fh->width;
+        dst_h = fh->height;
         if(vinfo->width<vinfo->height){
                 dst_w = fh->height;
                 dst_h = fh->width;
@@ -2946,7 +2947,7 @@ static int vidioc_enum_frameintervals(struct file *file, void *priv,
 
 }
 
-static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id *i)
+static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id i)
 {
 	return 0;
 }
@@ -3461,7 +3462,7 @@ static int amlvideo2_create_node(struct platform_device *pdev)
 	return ret;
 }
 
-static int __init amlvideo2_driver_probe(struct platform_device *pdev)
+static int amlvideo2_driver_probe(struct platform_device *pdev)
 {
 	int ret = 0;
 	struct amlvideo2_device *dev = NULL;

@@ -1317,7 +1317,7 @@ static int amvenc_avc_open(struct inode *inode, struct file *file)
     {
         gAmvencbuff.buf_start = page_to_phys(venc_pages);
         gAmvencbuff.buf_size = 15 * SZ_1M;
-        pr_info("%s: allocating phys %p, size %dk\n", __func__, gAmvencbuff.buf_start, gAmvencbuff.buf_size >> 10);
+        pr_info("%s: allocating phys %p, size %dk\n", __func__, (void *)gAmvencbuff.buf_start, gAmvencbuff.buf_size >> 10);
     }
     else
     {
@@ -1591,18 +1591,18 @@ int uninit_avc_device(void)
     unregister_chrdev(avc_device_major, DEVICE_NAME);	
     return 0;
 }
-
+#ifndef CONFIG_CMA
 static struct resource memobj;
+#endif
 static int amvenc_avc_probe(struct platform_device *pdev)
 {
-    struct resource *mem;
-    int idx;
-
     amlog_level(LOG_LEVEL_INFO, "amvenc_avc probe start.\n");
 
 #ifdef CONFIG_CMA
     this_pdev = pdev;
 #else
+    int idx;
+    struct resource *mem;
     mem = &memobj;
     idx = find_reserve_block(pdev->dev.of_node->name,0);
     if(idx < 0){
