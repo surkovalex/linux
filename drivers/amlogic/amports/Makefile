@@ -131,13 +131,14 @@ obj-$(CONFIG_AM_VIDEO) += amvideo.o
 ifeq ($(CONFIG_ARCH_MESON8),y)
 amvideo-objs := video.o vpp.o video_prot.o
 amvideo-y    := video.o vpp.o video_prot.o
-endif
+else
 ifeq ($(CONFIG_ARCH_MESON8M2),y)
 amvideo-objs := video.o vpp.o video_prot.o
 amvideo-y    := video.o vpp.o video_prot.o
 else
 amvideo-objs := video.o vpp.o
 amvideo-y    := video.o vpp.o
+endif
 endif
 
 ifeq ($(CONFIG_AM_VIDEOCAPTURE),y)
