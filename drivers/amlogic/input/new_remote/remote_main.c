@@ -615,8 +615,9 @@ static int remote_probe(struct platform_device *pdev)
 	tasklet_enable(&tasklet);
 	tasklet.data = (unsigned long)remote;
 	setup_timer(&remote->timer, remote_release_timer_sr, 0);
-
-
+        /*read status & frame register to abandon last key from uboot*/
+	am_remote_read_reg(DURATION_REG1_AND_STATUS);	
+	am_remote_read_reg(FRAME_BODY);	
 	#ifdef CONFIG_HAS_EARLYSUSPEND
     early_suspend.level = EARLY_SUSPEND_LEVEL_STOP_DRAWING + 1;
     early_suspend.suspend = remote_early_suspend;
