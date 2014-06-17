@@ -1381,6 +1381,7 @@ sdio{
     audio_dai{
         compatible = "amlogic,aml-i2s-dai";
         dev_name = "aml-i2s-dai.0";
+        clk_src_mpll = <0>; /* 0:mpll0, 1:mpll1, 2:mpll2 */
         status = "okay";
     };
     audio_spdif_dai{

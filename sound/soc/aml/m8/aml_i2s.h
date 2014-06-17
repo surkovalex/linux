@@ -1,5 +1,5 @@
-#ifndef __AML_PCM_H__
-#define __AML_PCM_H__
+#ifndef __AML_I2S_H__
+#define __AML_I2S_H__
 
 //#define debug_printk
 #ifdef debug_printk
