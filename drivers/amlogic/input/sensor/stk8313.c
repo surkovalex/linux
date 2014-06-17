@@ -58,7 +58,7 @@
 #define STK_RESUME_RE_INIT	
 //#define STK_DEBUG_PRINT
 //#define STK_DEBUG_RAWDATA
-#define STK_FIR_LEN	1
+#define STK_FIR_LEN	8
 #define STK_ZG_FILTER
 
 #define STK_ZG_COUNT	4
