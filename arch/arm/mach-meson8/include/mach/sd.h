@@ -13,13 +13,6 @@
 #include <linux/mmc/host.h>
 #include <linux/earlysuspend.h>
 
-#define     AML_ERROR_RETRY_COUNTER         5
-#define     AML_TIMEOUT_RETRY_COUNTER       2
-
-#define AML_SDHC_MAGIC			 "amlsdhc"
-#define AML_SDIO_MAGIC			 "amlsdio"
-
-
 enum aml_mmc_waitfor {
 	XFER_INIT,              /* 0 */
 	XFER_START,				/* 1 */
@@ -163,8 +156,6 @@ struct amlsd_host {
 	struct delayed_work	timeout;
 	// struct early_suspend amlsd_early_suspend;
 
-    struct class            debug;
-    
 	unsigned int send;
 	unsigned int ctrl;
 	unsigned int clkc;
@@ -193,7 +184,6 @@ struct amlsd_host {
 	// unsigned int		ccnt, dcnt;
 
 	int     status; // host status: xx_error/ok
-	int init_flag;
 
     char    *msg_buf;
 #define MESSAGE_BUF_SIZE            512
@@ -215,10 +205,10 @@ struct amlsd_host {
 #ifdef      CONFIG_MMC_AML_DEBUG
     u32         req_cnt;
     u32         trans_size;
+    u32         time_req_sta; // request start time
 
     u32         reg_buf[16];
 #endif
-    u32         time_req_sta; // request start time
     
     struct pinctrl  *pinctrl;
     char        pinctrl_name[30];
