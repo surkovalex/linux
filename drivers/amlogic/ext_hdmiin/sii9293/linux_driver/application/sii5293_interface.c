@@ -4,9 +4,13 @@
 
 #define GET_VIDEO_INFO_FROM_TABLE
 
-#ifndef GET_VIDEO_INFO_FROM_TABLE
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+void sii_set_standby(int bStandby)
+{
+	SiiRegWrite(RX_A__PD_TOT, !bStandby);
+	return ;
+}
 
-#endif
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

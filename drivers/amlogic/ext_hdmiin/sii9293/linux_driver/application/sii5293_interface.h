@@ -2,6 +2,11 @@
 #define __SII5293_INTERFACE_H__
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+// sii5293 standby or not
+
+void sii_set_standby(int bStandby);
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 // sii5293 output signal horizontal parameters
 
 int sii_get_h_active(void);

@@ -86,6 +86,46 @@ const char strVersion[] = "CP5293-v0.90.01";
 
 static char BUILT_TIME[64];
 
+int32_t StartMhlTxDevice(void);
+int32_t StopMhlTxDevice(void);
+
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+// early_suspend/late_resume
+#include <linux/earlysuspend.h>
+static void sii9293_early_suspend(struct early_suspend *h)
+{
+	int ret = 0;
+
+	ret = StopMhlTxDevice();
+
+	sii_set_standby(1);
+
+	return ;
+}
+
+static void sii9293_late_resume(struct early_suspend *h)
+{
+	int ret = 0;
+
+	sii_set_standby(0);
+
+	ret = StartMhlTxDevice();
+
+	return ;
+}
+
+static struct early_suspend sii9293_early_suspend_handler = {
+    .level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 10,
+    .suspend = sii9293_early_suspend,
+    .resume = sii9293_late_resume,
+    .param = &devinfo,
+};
+
+#endif
+
+
 /*****************************************************************************
  *  @brief Start the MHL transmitter device
  *
@@ -2325,6 +2365,10 @@ static int __init SiiMhlInit(void)
     if (ret) {
         goto free_dev;
     }
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	register_early_suspend(&sii9293_early_suspend_handler);
+#endif
 
     ret = StartMhlTxDevice();
     if(ret == 0) {
