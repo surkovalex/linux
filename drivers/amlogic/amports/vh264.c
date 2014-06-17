@@ -973,7 +973,7 @@ static void vh264_isr(void)
 										frame_dur = pts_duration;
 										duration_from_pts_done = 1;
 										printk("used calculate frame rate,on frame_dur problem=%d\n",frame_dur);
-									}else if(frame_dur<96000/240 && pts_duration>96000/240 || duration_on_correcting){//>if frameRate>240fps,I think have error,use calculate rate.
+									}else if(((frame_dur < 96000/240) && (pts_duration > 96000/240)) || duration_on_correcting){//>if frameRate>240fps,I think have error,use calculate rate.
 										frame_dur = pts_duration;
 										//printk("used calculate frame rate,on frame_dur error=%d\n",frame_dur);
 										duration_on_correcting=1;
@@ -1517,8 +1517,15 @@ static s32 vh264_init(void)
 	/*while for easy break out, always  run once.*/
     while(debugfirmware){
 		int size;
-        printk("start debug load firmware ...\n");
+        const char *pvh264_header_mc;
+        const char *pvh264_data_mc;
+        const char *pvh264_mmco_mc;
+        const char *pvh264_list_mc;
+        const char *pvh264_slice_mc;
+        char *mc = NULL;
         char *mbuf=kmalloc(4096 * 4*6, GFP_KERNEL);
+
+        printk("start debug load firmware ...\n");
         if (!mbuf) {
             printk("vh264_init: Cannot malloc mbuf  memory1\n");
             break;
@@ -1530,12 +1537,12 @@ static s32 vh264_init(void)
             kfree(mbuf);
             break;
         }
-        const char *pvh264_header_mc=mbuf+(0x800 + 0x400*2)*4;
-        const char *pvh264_data_mc=mbuf+(0x800 + 0x400*1)*4;
-        const char *pvh264_mmco_mc=mbuf+(0x800 + 0x400*4)*4;
-        const char *pvh264_list_mc=mbuf+(0x800 + 0x400*3)*4;
-        const char *pvh264_slice_mc=mbuf+(0x800 + 0x400*0)*4;
-        char *mc=kmalloc(4096 * 4, GFP_KERNEL);
+        pvh264_header_mc=mbuf+(0x800 + 0x400*2)*4;
+        pvh264_data_mc=mbuf+(0x800 + 0x400*1)*4;
+        pvh264_mmco_mc=mbuf+(0x800 + 0x400*4)*4;
+        pvh264_list_mc=mbuf+(0x800 + 0x400*3)*4;
+        pvh264_slice_mc=mbuf+(0x800 + 0x400*0)*4;
+        mc=kmalloc(4096 * 4, GFP_KERNEL);
         if (!mc) {
             kfree(mbuf);
             printk("vh264_init: Cannot malloc mbuf  memory3\n");
@@ -1544,7 +1551,7 @@ static s32 vh264_init(void)
         memcpy(mc,mbuf,0x800*4);
         memcpy(mc+0x800*4,pvh264_data_mc,0x400*4);
         memcpy(mc+0x800*4+0x400*4,pvh264_list_mc,0x400*4);
-        if (amvdec_loadmc(mc) < 0) {
+        if (amvdec_loadmc((u32 *)mc) < 0) {
             kfree(mbuf);
             kfree(mc);
             break;
