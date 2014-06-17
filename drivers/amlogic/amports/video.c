@@ -96,7 +96,6 @@ static int output_fps = 0;
 
 #define RECEIVER_NAME "amvideo"
 static int video_receiver_event_fun(int type, void* data, void*);
-static int ext_end_frame_capture(void);
 
 static const struct vframe_receiver_op_s video_vf_receiver =
 {
@@ -802,7 +801,6 @@ static int ext_frame_capture_poll(int endflags)
 			capture_frame_req =NULL;
 		}
 	}
-endexit:
 	mutex_unlock(&video_module_mutex);
 	return 0;
 }
