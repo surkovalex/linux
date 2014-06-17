@@ -1163,9 +1163,9 @@ timeout_handle:
     if(host->mrq->stop && (!aml_card_type_sd(pdata)) && !host->cmd_is_stop){
     //if((host->mrq->cmd->opcode != SD_IO_RW_DIRECT) && (host->mrq->cmd->opcode != SD_IO_RW_EXTENDED) 
    //         && (!mmc_card_removed(pdata->mmc->card)) && (!mrq->data)){
-        spin_lock_irqsave(&host->mrq_lock, flags);
+        //spin_lock_irqsave(&host->mrq_lock, flags);
         aml_sdhc_send_stop(host);                
-        spin_unlock_irqrestore(&host->mrq_lock, flags);
+        //spin_unlock_irqrestore(&host->mrq_lock, flags);
         schedule_delayed_work(&host->timeout, 1);
     }
     else{
