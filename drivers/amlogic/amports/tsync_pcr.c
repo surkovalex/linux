@@ -80,7 +80,8 @@ static int play_mode=PLAY_MODE_NORMAL;
 
 extern int get_vsync_pts_inc_mode(void);
 
-u32 tsync_pcr_vstream_delayed(){
+u32 tsync_pcr_vstream_delayed(void)
+{
     int cur_delay = calculation_vcached_delayed();	
     if(cur_delay == -1)
     	return DEFAULT_VSTREAM_DELAY;

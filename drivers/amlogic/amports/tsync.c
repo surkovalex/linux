@@ -374,17 +374,17 @@ mode='T': diff_pts=|vpts-apts|,timeout mode switch,
 
 static int tsync_mode_switch(int mode,unsigned long diff_pts,int jump_pts)
 {
-	if(tsync_mode == TSYNC_MODE_PCRMASTER){
-		printk("[tsync_mode_switch]tsync_mode is pcr master, do nothing \n");
-		return 0;
-	}
-
 	int debugcnt=0;
 	int old_tsync_mode=tsync_mode;
 	int old_tsync_av_mode=tsync_av_mode;
 	char VA[]="VA--";
        unsigned int oldtimeout=tsync_av_dynamic_timeout_ms;
 	
+        if(tsync_mode == TSYNC_MODE_PCRMASTER){
+                printk("[tsync_mode_switch]tsync_mode is pcr master, do nothing \n");
+                return 0;
+        }
+
 	printk("%c-discontinue,pcr=%d,vpts=%d,apts=%d,diff_pts=%lu,jump_Pts=%d\n",mode,timestamp_pcrscr_get(),timestamp_vpts_get(),timestamp_apts_get(),diff_pts,jump_pts);
 	if (!tsync_enable) {
         if(tsync_mode != TSYNC_MODE_VMASTER)
@@ -494,13 +494,13 @@ void tsync_mode_reinit(void)
 EXPORT_SYMBOL(tsync_mode_reinit);
 void tsync_avevent_locked(avevent_t event, u32 param)
 {
+    u32 t;
+
     if(tsync_mode == TSYNC_MODE_PCRMASTER){
     	amlog_level(LOG_LEVEL_INFO,"[tsync_avevent_locked]PCR MASTER to use tsync pcr cmd deal ");
 	tsync_pcr_avevent_locked(event,param);
-	return 0;
+	return;
     }
-
-    u32 t;
 
     switch (event) {
     case VIDEO_START:

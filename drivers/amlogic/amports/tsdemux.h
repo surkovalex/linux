@@ -69,6 +69,8 @@
 #define PARSER_INT_HOST_EN_BIT      8
 #endif
 
+struct stream_buf_s;
+
 #if HAS_HEVC_VDEC
 extern s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc);
 #else

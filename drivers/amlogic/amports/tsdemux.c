@@ -441,6 +441,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
     u32 parser_sub_start_ptr;
     u32 parser_sub_end_ptr;
     u32 parser_sub_rp;
+    u32 pcr_num;
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     switch_mod_gate_by_type(MOD_DEMUX, 1);
@@ -620,7 +621,7 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid)
 #endif
 
     /* set paramater to fetch pcr */  
-    u32 pcr_num=0;
+    pcr_num=0;
     if(pcrid == vid)
     	pcr_num=0;
     else if(pcrid == aid)

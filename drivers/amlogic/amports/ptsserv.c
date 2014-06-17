@@ -428,7 +428,7 @@ EXPORT_SYMBOL(pts_checkin_offset_us64);
  */
 int pts_checkin_wrptr(u8 type, u32 ptr, u32 val)
 {
-    u32 offset, cur_offset, page, page_no;
+    u32 offset, cur_offset = 0, page = 0, page_no;
 
     if (type >= PTS_TYPE_MAX) {
         return -EINVAL;
