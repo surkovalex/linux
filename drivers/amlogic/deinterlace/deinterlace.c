@@ -181,7 +181,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-05-29a";
+static char version_s[] = "2014-06-18a";//keep the old frame for display queue is empty
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -2651,11 +2651,12 @@ static void di_uninit_buf(void)
     int itmp;
 
     //vframe_t* cur_vf = get_cur_dispbuf();
-
-    for(i=0; i<USED_LOCAL_BUF_MAX; i++){
-    	used_local_buf_index[i] = -1;
+    if(!queue_empty(QUEUE_DISPLAY)){
+        for(i=0; i<USED_LOCAL_BUF_MAX; i++){
+    	    used_local_buf_index[i] = -1;
+        }
+        used_post_buf_index = -1;
     }
-    used_post_buf_index = -1;
 
     queue_for_each_entry(p, ptmp, QUEUE_DISPLAY, list) {
         if(p->di_buf[0]->type!=VFRAME_TYPE_IN){
@@ -2690,9 +2691,6 @@ static void di_uninit_buf(void)
                         }
 	        }
 #endif
-	        printk("%s keep cur di_buf %d (%d %d %d)\n",
-	                __func__, used_post_buf_index, used_local_buf_index[0],
-	                used_local_buf_index[1],used_local_buf_index[2]);
 	        break;
 	    }
 	}
@@ -2700,7 +2698,11 @@ static void di_uninit_buf(void)
 	    break;
 	}
     }
-
+    if(used_post_buf_index != -1){
+        printk("%s keep cur di_buf %d (%d %d %d)\n",
+               __func__, used_post_buf_index, used_local_buf_index[0],
+                     used_local_buf_index[1],used_local_buf_index[2]);
+    }
 #ifdef USE_LIST
     list_for_each_entry_safe(p, ptmp, &local_free_list_head, list) {
         list_del(&p->list);
