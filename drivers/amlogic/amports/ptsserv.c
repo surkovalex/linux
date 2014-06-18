@@ -66,6 +66,7 @@ typedef struct pts_table_s {
        u32 last_checkin_jiffies;
     u32 last_bitrate;
     u32 last_avg_bitrate;
+    u32 last_pts_delay_ms;
 #endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
     u32 hevc;
@@ -179,8 +180,8 @@ EXPORT_SYMBOL(pts_cached_time);
 int calculation_stream_delayed_ms(u8 type, u32 *latestbitrate, u32 *avg_bitare)
 {
     pts_table_t *pTable;
-    u32 timestampe_delayed=0;
-    u32 outtime;
+    int timestampe_delayed=0;
+    unsigned long outtime;
 	
     if (type >= PTS_TYPE_MAX) {
         return 0;
@@ -209,30 +210,31 @@ int calculation_stream_delayed_ms(u8 type, u32 *latestbitrate, u32 *avg_bitare)
     } else {
         outtime = timestamp_pcrscr_get();
     }
-
+    if(outtime == 0 || outtime == 0xffffffff )
+        outtime = pTable->last_checkout_pts;
     timestampe_delayed = (pTable->last_checkin_pts-outtime)/90;
-
-    if ((timestampe_delayed<0 ||timestampe_delayed>5*1000) && pTable->last_avg_bitrate>0) {
+	pTable->last_pts_delay_ms = timestampe_delayed;
+    if ((timestampe_delayed < 10 || abs(pTable->last_pts_delay_ms - timestampe_delayed)> 3000 ) && pTable->last_avg_bitrate>0) {
         int diff = pTable->last_checkin_offset-pTable->last_checkout_offset;
         int diff2;
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+        int delay_ms;
+#if HAS_HEVC_VDEC
         if (pTable->hevc) {
             diff2 = stbuf_level(get_buf_by_type(PTS_TYPE_HEVC));
-        } else
-#endif
+        } else{
+            diff2 = stbuf_level(get_buf_by_type(type));
+        }
+#else
         diff2 = stbuf_level(get_buf_by_type(type));
-
-        if ((diff-diff2) > (pTable->last_avg_bitrate/8/10) || (diff-diff2*10)) {
-            int delay_ms;
+#endif
+	if(diff2 > stbuf_space(get_buf_by_type(type)))
             diff = diff2;
-            delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
+        delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
 
-            if (timestampe_delayed< 0 ||abs(timestampe_delayed-delay_ms)>3*1000) {
-                timestampe_delayed=delay_ms;
-                ///printk("..recalculated %d ms delay,diff=%d\n",timestampe_delayed,diff);
-            }
-	}
+        if (timestampe_delayed < 10 || (abs(timestampe_delayed - delay_ms)>3*1000 && delay_ms > 1000)) {
+            printk("%d:recalculated ptsdelay=%dms bitratedelay=%d,diff=%d,pTable->last_avg_bitrate=%d\n",type,timestampe_delayed,delay_ms,diff,pTable->last_avg_bitrate);
+            timestampe_delayed=delay_ms;
+        }
     }
 
     if (latestbitrate) {
@@ -242,7 +244,6 @@ int calculation_stream_delayed_ms(u8 type, u32 *latestbitrate, u32 *avg_bitare)
     if (avg_bitare) {
         *avg_bitare=pTable->last_avg_bitrate;
     }
-
     return timestampe_delayed;
 }
 EXPORT_SYMBOL(calculation_stream_delayed_ms);
@@ -356,7 +357,7 @@ static int pts_checkin_offset_inline(u8 type, u32 offset, u32 val,u64 uS64)
 				int newbitrate=diff*8*90/(1+(val-pTable->last_checkin_pts)/1000);
 				if(pTable->last_bitrate>100){
 					if(newbitrate<pTable->last_bitrate*5 && newbitrate>pTable->last_bitrate/5){
-						pTable->last_avg_bitrate=(pTable->last_avg_bitrate*9+newbitrate)/10;
+						pTable->last_avg_bitrate=(pTable->last_avg_bitrate*19+newbitrate)/20;
 					}else{
 						/*
 						newbitrate is >5*lastbitrate or < bitrate/5;
