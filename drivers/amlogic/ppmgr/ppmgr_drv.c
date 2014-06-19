@@ -1009,7 +1009,7 @@ static long ppmgr_ioctl(struct file *file,
             break;
 #endif
         case PPMGR_IOC_GET_ANGLE:
-            *((unsigned int *)argp) = ppmgr_device.angle;
+            put_user(ppmgr_device.angle,(unsigned int *)argp);
             break;
         case PPMGR_IOC_SET_ANGLE:
             ret = _ppmgr_angle_write(args);

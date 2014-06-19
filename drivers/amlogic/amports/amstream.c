@@ -1320,7 +1320,8 @@ static long amstream_ioctl(struct file *file,
     	
     case AMSTREAM_IOC_VB_STATUS:
         if (this->type & PORT_TYPE_VIDEO) {
-            struct am_io_param *p = (void*)arg;
+            struct am_io_param para;
+            struct am_io_param *p = &para;
 #if HAS_HEVC_VDEC
             stream_buf_t *buf = (this->vformat == VFORMAT_HEVC) ? &bufs[BUF_TYPE_HEVC] : &bufs[BUF_TYPE_VIDEO];
 #else
@@ -1334,6 +1335,9 @@ static long amstream_ioctl(struct file *file,
             p->status.data_len = stbuf_level(buf);
             p->status.free_len = stbuf_space(buf);
             p->status.read_pointer = stbuf_rp(buf);
+            if(copy_to_user((void *)arg,p,sizeof(para)))
+                r = -EFAULT;
+            return r;	
         } else {
             r = -EINVAL;
         }
@@ -1341,7 +1345,8 @@ static long amstream_ioctl(struct file *file,
 
     case AMSTREAM_IOC_AB_STATUS:
         if (this->type & PORT_TYPE_AUDIO) {
-            struct am_io_param *p = (void*)arg;
+            struct am_io_param para;
+            struct am_io_param *p = &para;
             stream_buf_t *buf = &bufs[BUF_TYPE_AUDIO];
 
             if (p == NULL) {
@@ -1352,6 +1357,9 @@ static long amstream_ioctl(struct file *file,
             p->status.data_len = stbuf_level(buf);
             p->status.free_len = stbuf_space(buf);
             p->status.read_pointer = stbuf_rp(buf);
+            if(copy_to_user((void *)arg,p,sizeof(para)))
+               r = -EFAULT;
+            return r;	
         } else {
             r = -EINVAL;
         }
@@ -1417,7 +1425,8 @@ static long amstream_ioctl(struct file *file,
         	r = -EINVAL;
         } else{
             u64 pts;
-            memcpy(&pts,(void *)arg,sizeof(u64));
+            if(copy_from_user((void*)&pts,(void *)arg,sizeof(u64)))
+                return -EFAULT;
 #if HAS_HEVC_VDEC
             if (this->type & PORT_TYPE_HEVC) {
                 r = es_vpts_checkin_us64(&bufs[BUF_TYPE_HEVC], pts);
@@ -1439,8 +1448,8 @@ static long amstream_ioctl(struct file *file,
             return -ENODEV;
         } else {
             struct vdec_status vstatus;
-            struct am_io_param *p = (void*)arg;
-
+            struct am_io_param para;
+            struct am_io_param *p = &para;
             if (p == NULL) {
                 return -EINVAL;
             }
@@ -1450,8 +1459,9 @@ static long amstream_ioctl(struct file *file,
             p->vstatus.fps = vstatus.fps;
             p->vstatus.error_count = vstatus.error_count;
             p->vstatus.status = vstatus.status;
-
-            return 0;
+            if(copy_to_user((void*)arg,p,sizeof(para)))
+                r = -EFAULT;
+            return r;
         }
 
     case AMSTREAM_IOC_ADECSTAT:
@@ -1462,7 +1472,8 @@ static long amstream_ioctl(struct file *file,
             return -ENODEV;
         } else {
             struct adec_status astatus;
-            struct am_io_param *p = (void*)arg;
+            struct am_io_param para;
+            struct am_io_param *p = &para;
 
             if (p == NULL) {
                 return -EINVAL;
@@ -1473,8 +1484,9 @@ static long amstream_ioctl(struct file *file,
             p->astatus.resolution = astatus.resolution;
             p->astatus.error_count = astatus.error_count;
             p->astatus.status = astatus.status;
-
-            return 0;
+            if(copy_to_user((void *)arg,p,sizeof(para)))
+                r = -EFAULT;
+            return r;
         }
 
     case AMSTREAM_IOC_PORT_INIT:
@@ -1592,19 +1604,19 @@ static long amstream_ioctl(struct file *file,
         timestamp_pcrscr_set(arg);
         break;
     case AMSTREAM_IOC_GET_LAST_CHECKIN_APTS:
-        *((u32 *)arg) = get_last_checkin_pts(PTS_TYPE_AUDIO);
+        put_user(get_last_checkin_pts(PTS_TYPE_AUDIO),(int *)arg);
         break;
     case AMSTREAM_IOC_GET_LAST_CHECKIN_VPTS:
-        *((u32 *)arg) = get_last_checkin_pts(PTS_TYPE_VIDEO);
+        put_user(get_last_checkin_pts(PTS_TYPE_VIDEO),(int *)arg);
         break;
     case AMSTREAM_IOC_GET_LAST_CHECKOUT_APTS:
-        *((u32 *)arg) = get_last_checkout_pts(PTS_TYPE_AUDIO);
+        put_user(get_last_checkout_pts(PTS_TYPE_AUDIO),(int *)arg);
         break;
     case AMSTREAM_IOC_GET_LAST_CHECKOUT_VPTS:
-        *((u32* )arg) = get_last_checkout_pts(PTS_TYPE_VIDEO);
+        put_user(get_last_checkout_pts(PTS_TYPE_VIDEO),(int *)arg);
         break;
     case AMSTREAM_IOC_SUB_NUM:
-        *((u32 *)arg) = psparser_get_sub_found_num();
+        put_user(psparser_get_sub_found_num(),(int *)arg);
         break;
 
     case AMSTREAM_IOC_SUB_INFO:

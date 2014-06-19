@@ -1007,9 +1007,8 @@ static void zoom_get_vert_pos(vframe_t* vf,u32 vpp_3d_mode,u32 *ls,u32 *le,u32 *
 #endif
 static void zoom_display_horz(int hscale)
 {
-	u32 ls, le, rs, re, w;
+	u32 ls, le, rs, re;
 #ifdef TV_3D_FUNCTION_OPEN
-    	w = zoom_end_x_lines - zoom_start_x_lines + 1;
     	if(process_3d_type&MODE_3D_ENABLE){
         	zoom_get_horz_pos(cur_dispbuf,cur_frame_par->vpp_3d_mode,&ls,&le,&rs,&re);
     	} else {
@@ -3399,19 +3398,19 @@ static long amvideo_ioctl(struct file *file,
         break;
 
     case AMSTREAM_IOC_GET_SYNC_ADISCON:
-        *((u32 *)arg) = tsync_get_sync_adiscont();
+        put_user(tsync_get_sync_adiscont(),(int *)arg);
         break;
 
 	case AMSTREAM_IOC_GET_SYNC_VDISCON:
-        *((u32 *)arg) = tsync_get_sync_vdiscont();
+        put_user(tsync_get_sync_vdiscont(),(int *)arg);
         break;
 
 	case AMSTREAM_IOC_GET_SYNC_ADISCON_DIFF:
-		*((u32 *)arg) = tsync_get_sync_adiscont_diff();
+        put_user(tsync_get_sync_adiscont(),(int *)arg);
 		break;
 
 	case AMSTREAM_IOC_GET_SYNC_VDISCON_DIFF:
-		*((u32 *)arg) = tsync_get_sync_vdiscont_diff();
+        put_user(tsync_get_sync_vdiscont_diff(),(int *)arg);
 		break;
 
 	case AMSTREAM_IOC_SET_SYNC_ADISCON_DIFF:
@@ -3424,21 +3423,19 @@ static long amvideo_ioctl(struct file *file,
 
     case AMSTREAM_IOC_VF_STATUS: {
             vframe_states_t vfsta;
-            vframe_states_t *states = (void *)arg;
+            vframe_states_t states;
             vf_get_states(&vfsta);
-
-            if (states == NULL)
-                return -EINVAL;
-
-            states->vf_pool_size = vfsta.vf_pool_size;
-            states->buf_avail_num = vfsta.buf_avail_num;
-            states->buf_free_num = vfsta.buf_free_num;
-            states->buf_recycle_num = vfsta.buf_recycle_num;
+            states.vf_pool_size = vfsta.vf_pool_size;
+            states.buf_avail_num = vfsta.buf_avail_num;
+            states.buf_free_num = vfsta.buf_free_num;
+            states.buf_recycle_num = vfsta.buf_recycle_num;
+            if(copy_to_user((void*)arg,&states,sizeof(states)))
+                ret = -EFAULT;
         }
         break;
 
     case AMSTREAM_IOC_GET_VIDEO_DISABLE:
-        *((u32 *)arg) = disable_video;
+        put_user(disable_video,(int *)arg);
         break;
 
     case AMSTREAM_IOC_SET_VIDEO_DISABLE:
@@ -3446,7 +3443,7 @@ static long amvideo_ioctl(struct file *file,
         break;
 
     case AMSTREAM_IOC_GET_VIDEO_DISCONTINUE_REPORT:
-        *((u32 *)arg) = enable_video_discontinue_report;
+		put_user(enable_video_discontinue_report,(int *)arg);
         break;
 
     case AMSTREAM_IOC_SET_VIDEO_DISCONTINUE_REPORT:
@@ -3587,7 +3584,7 @@ static long amvideo_ioctl(struct file *file,
         break;
 
     case AMSTREAM_IOC_GET_FREERUN_MODE:
-        *((u32 *)arg) = freerun_mode;
+        put_user(freerun_mode,(int *)arg);
         break;
     /****************************************************************
     3d process ioctl
@@ -3613,7 +3610,8 @@ static long amvideo_ioctl(struct file *file,
     	}
 	case AMSTREAM_IOC_GET_3D_TYPE:
 #ifdef TV_3D_FUNCTION_OPEN
-        *((unsigned int *)arg) = process_3d_type;
+         put_user(process_3d_type,(int *)arg);
+
 #endif
         break;
     case AMSTREAM_IOC_SET_VSYNC_UPINT:
