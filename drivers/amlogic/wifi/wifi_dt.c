@@ -296,6 +296,11 @@ void wifi_request_32k_clk(int is_on, const char *requestor)
                 aml_write_reg32(P_PWM_MISC_REG_CD, (aml_read_reg32(P_PWM_MISC_REG_CD) & ~(0x7f<<16)) | ((1 << 23) | (0<<16) | (3<<6) | (1<<1)));//
                 aml_set_reg32_bits(P_PWM_PWM_D, 0x27bc-1, 0, 16);   //pwm low
                 aml_set_reg32_bits(P_PWM_PWM_D, 0x27bd-1, 16, 16); //pwm high
+            } if(wifi_info.clock_32k_pin == 188) { //GPIOAO_6, as CLK_OUT2
+                aml_set_reg32_mask(P_HHI_GEN_CLK_CNTL2,1<<9);//set clk source
+                aml_clr_reg32_mask(P_HHI_GEN_CLK_CNTL2,0x3f<<0);//set div ==1
+                aml_set_reg32_mask(P_HHI_GEN_CLK_CNTL2,1<<8);//set enable clk
+                aml_set_reg32_mask(P_AO_RTI_PIN_MUX_REG,0x1<<22);//set mode GPIOAO_6-->CLK_OUT2
             } else {
                 aml_set_reg32_mask(P_HHI_GEN_CLK_CNTL2,1<<22);//set clk source
                 aml_clr_reg32_mask(P_HHI_GEN_CLK_CNTL2,0x3f<<13);//set div ==1
