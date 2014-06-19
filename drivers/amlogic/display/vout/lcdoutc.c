@@ -40,6 +40,7 @@
 #include <linux/amlogic/vout/lcdoutc.h>
 #include <linux/amlogic/vout/lcd_aml.h>
 #include <mach/clock.h>
+#include <mach/power_gate.h>
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <mach/vpu.h>
 #endif
@@ -1489,7 +1490,7 @@ static void vclk_set_lcd(int lcd_type, int vclk_sel, unsigned long pll_reg, unsi
 	udelay(5);
 	
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
-	WRITE_LCD_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 3, 1);	//enable encl clk gate //new add for M8b
+	CLK_GATE_ON(CTS_ENCL); //enable encl clk gate //new add for M8b
 #endif
 	
 	spin_unlock_irqrestore(&lcd_clk_lock, flags);
@@ -3247,6 +3248,10 @@ static void _disable_lcd_driver(Lcd_Config_t *pConf)
     WRITE_LCD_REG(ENCT_VIDEO_EN, 0);	//disable enct
 #endif
     WRITE_LCD_REG(ENCL_VIDEO_EN, 0);	//disable encl
+
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
+    CLK_GATE_OFF(CTS_ENCL); //disable encl clk gate //new add for M8b
+#endif
 
     if (vclk_sel)
         WRITE_LCD_CBUS_REG_BITS(HHI_VIID_CLK_CNTL, 0, 0, 5);	//close vclk2 gate: 0x104b[4:0]

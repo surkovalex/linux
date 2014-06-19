@@ -138,8 +138,8 @@ static Lcd_Bl_Config_t bl_config = {
     .method = BL_CTL_MAX,
 };
 static unsigned bl_level = BL_LEVEL_DEFAULT;
-static int bl_status = 1;
-static int bl_real_status = 1;
+static unsigned int bl_status = 3; //0=off, 1=lcd_on_bl_off, 3=lcd_on_bl_on. //bit[0]:lcd, bit[1]:bl
+static unsigned int bl_real_status = 1;
 
 #define FIN_FREQ				(24 * 1000)
 
@@ -157,11 +157,15 @@ static void power_on_bl(int bl_flag)
     int ret;
 
     mutex_lock(&bl_power_mutex);
-    if (bl_flag == LCD_BL_FLAG)
-        bl_status = 1;
+    if (bl_flag == LCD_BL_FLAG) {
+        if (bl_status > 0)
+            bl_status = 3;
+        else
+            goto exit_power_on_bl;
+    }
 
-    DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%s, bl_real_status=%s\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, (bl_status ? "ON" : "OFF"), (bl_real_status ? "ON" : "OFF"));
-    if ((bl_level == 0) || (bl_status == 0) || (bl_real_status == 1)) {
+    DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%u, bl_real_status=%u\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, bl_status, bl_real_status);
+    if ((bl_level == 0) || (bl_status != 3) || (bl_real_status == 1)) {
         goto exit_power_on_bl;
     }
 
@@ -339,6 +343,9 @@ static void bl_delayd_on(void) //bl_delayed_work for LCD_BL_FLAG control
 void bl_power_on(int bl_flag)
 {
     DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%s, bl_real_status=%s\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, (bl_status ? "ON" : "OFF"), (bl_real_status ? "ON" : "OFF"));
+    if (bl_flag == LCD_BL_FLAG)
+        bl_status = 1;
+
     if (bl_config.method < BL_CTL_MAX) {
         if (bl_flag == LCD_BL_FLAG) {
             if (bl_config.workqueue) {
@@ -371,7 +378,7 @@ void bl_power_off(int bl_flag)
     if (bl_flag == LCD_BL_FLAG)
         bl_status = 0;
 
-    DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%s, bl_real_status=%s\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, (bl_status ? "ON" : "OFF"), (bl_real_status ? "ON" : "OFF"));
+    DPRINT("%s(bl_flag=%s): bl_level=%u, bl_status=%u, bl_real_status=%u\n", __FUNCTION__, (bl_flag ? "LCD_BL_FLAG" : "DRV_BL_FLAG"), bl_level, bl_status, bl_real_status);
     if (bl_real_status == 0) {
         mutex_unlock(&bl_power_mutex);
         return;
@@ -649,7 +656,7 @@ static void set_backlight_level(unsigned level)
             default:
                 break;
         }
-        if ((bl_status == 1) && (bl_real_status == 0))
+        if ((bl_status == 3) && (bl_real_status == 0))
             bl_power_on(DRV_BL_FLAG);
     }
     mutex_unlock(&bl_level_mutex);

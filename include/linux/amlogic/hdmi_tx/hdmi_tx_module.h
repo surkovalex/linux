@@ -22,6 +22,17 @@ typedef struct
     unsigned char cc3;
 } rx_audio_cap_t;
 
+enum hd_ctrl {
+    VID_EN,
+    VID_DIS,
+    AUD_EN,
+    AUD_DIS,
+    EDID_EN,
+    EDID_DIS,
+    HDCP_EN,
+    HDCP_DIS,
+};
+
 typedef struct rx_cap_
 {
     unsigned char native_Mode;
