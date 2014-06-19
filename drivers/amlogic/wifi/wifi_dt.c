@@ -22,6 +22,7 @@ struct wifi_plat_info {
 	int irq_trigger_type;
 
 	int power_on_pin;
+	int power_on_pin_level;
 	int power_on_pin2;
 
 	int clock_32k_pin;
@@ -113,7 +114,9 @@ static int wifi_dev_probe(struct platform_device *pdev)
 			CHECK_PROP(ret, "power_on_pin", value);
 			wifi_power_gpio = 1;
 			plat->power_on_pin = amlogic_gpio_name_map_num(value);
-		}	
+		}
+	
+		ret = of_property_read_u32(pdev->dev.of_node, "power_on_pin_level", &plat->power_on_pin_level);
 		
 		ret = of_property_read_string(pdev->dev.of_node, "power_on_pin2", &value);
 		if(!ret){
@@ -223,7 +226,10 @@ int wifi_setup_dt()
 		SHOW_PIN_OWN("power_on_pin", wifi_info.power_on_pin);
 		ret = amlogic_gpio_request(wifi_info.power_on_pin, OWNER_NAME);
 		CHECK_RET(ret);
-		ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 0, OWNER_NAME);
+		if(wifi_info.power_on_pin_level)
+			ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 1, OWNER_NAME);
+		else
+			ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 0, OWNER_NAME);
 		CHECK_RET(ret);
 		SHOW_PIN_OWN("power_on_pin", wifi_info.power_on_pin);
 	}	
@@ -333,7 +339,10 @@ void extern_wifi_set_enable(int is_on)
 	int ret = 0;
 	if (is_on) {
 		if(wifi_power_gpio){
-			ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 1, OWNER_NAME);
+			if(wifi_info.power_on_pin_level)
+				ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 0, OWNER_NAME);
+			else
+				ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 1, OWNER_NAME);
 			CHECK_RET(ret);
 		}	
 		if(wifi_power_gpio2){
@@ -343,7 +352,10 @@ void extern_wifi_set_enable(int is_on)
 		printk("WIFI  Enable! %d\n", wifi_info.power_on_pin);
 	} else {
 		if(wifi_power_gpio){
-			ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 0, OWNER_NAME);
+			if(wifi_info.power_on_pin_level)
+				ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 1, OWNER_NAME);
+			else
+				ret = amlogic_gpio_direction_output(wifi_info.power_on_pin, 0, OWNER_NAME);
 			CHECK_RET(ret);
 		}
 		if(wifi_power_gpio2){
