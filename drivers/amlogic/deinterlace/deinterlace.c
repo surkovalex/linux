@@ -324,7 +324,7 @@ static int d2d3_enable = 1;
 #endif
 
 #ifdef DET3D
-static bool det3d_en = false;
+bool det3d_en = false;
 static unsigned int det3d_mode = 0;
 #endif
 
