@@ -65,6 +65,7 @@ struct amlsd_platform {
 	unsigned int irq_out;
 	unsigned int irq_out_edge;
 	unsigned int gpio_cd;
+	unsigned int gpio_cd_level;
 	unsigned int gpio_power;
 	unsigned int power_level;
 	char pinname[32];

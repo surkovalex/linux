@@ -917,7 +917,8 @@ static int aml_is_card_insert (struct amlsd_platform * pdata)
 		ret = amlogic_get_value(pdata->gpio_cd, MODULE_NAME); // 1: no inserted  0: inserted
     // sdio_err("card %s\n", ret?"OUT":"IN");
 
-    ret = !ret; // reverse, so ---- 0: no inserted  1: inserted
+    if(!pdata->gpio_cd_level)
+        ret = !ret; // reverse, so ---- 0: no inserted  1: inserted
 
 	return ret;
 }
