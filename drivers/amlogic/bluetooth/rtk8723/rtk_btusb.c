@@ -971,14 +971,14 @@ static int btusb_probe(struct usb_interface *intf,
 	hdev->driver_data = data;
 	hdev->destruct = btusb_destruct;
 	hdev->owner = THIS_MODULE;
-#endif
+
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 1)
 	if (!reset)
 		set_bit(HCI_QUIRK_RESET_ON_CLOSE, &hdev->quirks);
 	RTKBT_DBG("set_bit(HCI_QUIRK_RESET_ON_CLOSE, &hdev->quirks);");
 #endif
-
+#endif
 	/* Interface numbers are hardcoded in the specification */
 	data->isoc = usb_ifnum_to_if(data->udev, 1);
 
