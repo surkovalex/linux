@@ -2660,7 +2660,7 @@ static void di_uninit_buf(void)
     }
 
     queue_for_each_entry(p, ptmp, QUEUE_DISPLAY, list) {
-        if(p->di_buf[0]->type!=VFRAME_TYPE_IN){
+        if(p->di_buf[0]->type!=VFRAME_TYPE_IN && p->process_fun_index != PROCESS_FUN_NULL){
 #if 1
 	    if(p->index == di_post_stru.cur_disp_index){
 	        used_post_buf_index = p->index;
