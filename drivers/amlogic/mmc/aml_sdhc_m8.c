@@ -2049,7 +2049,11 @@ static int aml_sdhc_probe(struct platform_device *pdev)
         mmc->f_max = pdata->f_max;
         mmc->max_current_180 = 300; // 300 mA in 1.8V
         mmc->max_current_330 = 300; // 300 mA in 3.3V
-
+        
+        if (aml_card_type_sdio(pdata)) { // if sdio_wifi
+            mmc->rescan_entered = 1; // do NOT run mmc_rescan for the first time
+        }
+        
         if(pdata->port_init)
             pdata->port_init(pdata);
 
@@ -2062,7 +2066,7 @@ static int aml_sdhc_probe(struct platform_device *pdev)
         } else { // ok
             if (aml_card_type_sdio(pdata)) { // if sdio_wifi
                 sdio_host = mmc;
-                mmc->rescan_entered = 1; // do NOT run mmc_rescan for the first time
+                //mmc->rescan_entered = 1; // do NOT run mmc_rescan for the first time
             }
         }
 

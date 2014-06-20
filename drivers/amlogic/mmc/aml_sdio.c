@@ -1193,6 +1193,10 @@ static int aml_sdio_probe(struct platform_device *pdev)
         mmc->f_min = pdata->f_min;
         mmc->f_max = pdata->f_max;
 
+        if (aml_card_type_sdio(pdata)) { // if sdio_wifi
+            mmc->rescan_entered = 1; // do NOT run mmc_rescan for the first time
+        }
+         
         if(pdata->port_init)
             pdata->port_init(pdata);
 
@@ -1205,7 +1209,7 @@ static int aml_sdio_probe(struct platform_device *pdev)
         } else { // ok
             if (aml_card_type_sdio(pdata)) { // if sdio_wifi
                 sdio_host = mmc;
-                mmc->rescan_entered = 1; // do NOT run mmc_rescan for the first time
+                //mmc->rescan_entered = 1; // do NOT run mmc_rescan for the first time
             }
         }
 
