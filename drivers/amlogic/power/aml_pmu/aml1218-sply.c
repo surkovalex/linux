@@ -1320,6 +1320,11 @@ static int aml1218_update_state(struct aml_charger *charger)
     /*
      * limit duty cycle of DC3 according CHG_GAT_BAT_LV bit
      */
+    aml1218_set_bits(0x003b, (chg_status & 0x02000000) ? 0x00 : 0x40, 0x40);
+    aml1218_set_bits(0x0044, (chg_status & 0x02000000) ? 0x00 : 0x40, 0x40);
+    aml1218_write(0x011d, (chg_status & 0x02000000) ? 0x02 : 0x00);
+    aml1218_write(0x011f, (chg_status & 0x02000000) ? 0x02 : 0x00);
+
     aml1218_set_bits(0x0035, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
     aml1218_set_bits(0x003e, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
     aml1218_set_bits(0x0047, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
