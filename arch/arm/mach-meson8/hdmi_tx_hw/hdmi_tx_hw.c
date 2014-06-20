@@ -1881,7 +1881,10 @@ static void hdmitx_set_pll(Hdmi_tx_video_para_t *param)
 
 static int hdmitx_set_phy(hdmitx_dev_t* hdmitx_device)
 {
-    switch(hdmitx_device->cur_video_param->VIC) {
+    if(!hdmitx_device)
+        return;
+
+    switch(hdmitx_device->cur_VIC) {
         case HDMI_4k2k_24:
         case HDMI_4k2k_25:
         case HDMI_4k2k_30:
@@ -1941,6 +1944,7 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t
     hdmi_hw_reset(hdmitx_device, param);    
 	// move hdmitx_set_pll() to the end of this function.
     // hdmitx_set_pll(param);
+    hdmitx_device->cur_VIC = param->VIC;
     hdmitx_set_phy(hdmitx_device);
 
     if((param->VIC==HDMI_720p60)||(param->VIC==HDMI_720p50)||
