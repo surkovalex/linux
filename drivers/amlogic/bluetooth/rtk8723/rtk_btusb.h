@@ -39,7 +39,7 @@
 #define CONFIG_BLUEDROID        1 //bleuz 0 ;  bluedroid 1
 
 #if CONFIG_BLUEDROID //for 4.2
-#else //for blueZ	
+#else //for blueZ
 	#include <net/bluetooth/bluetooth.h>
 	#include <net/bluetooth/hci_core.h>
 	#include <net/bluetooth/hci.h>
@@ -50,11 +50,14 @@
 ** Realtek - For rtk_btusb driver **
 ***********************************/
 #define BTUSB_RPM		0* USB_RPM 	//	1 SS enable; 0 SS disable
-#define LOAD_CONFIG		1         // set 1 if need to reconfig bt efuse
-#define URB_CANCELING_DELAY_MS	10  	 // Added by Realtek
-//when os suspend, module is still powered,usb is not powered, 
+
+//when os suspend, module is still powered,usb is not powered,
 //this may set to 1 ,and must comply with special patch code
-#define CONFIG_RESET_RESUME		1
+#define CONFIG_RESET_RESUME		0
+
+#define URB_CANCELING_DELAY_MS	10  	 // Added by Realtek
+#define PRINT_CMD_EVENT			0
+#define PRINT_ACL_DATA			0
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 33)
 #define HDEV_BUS		hdev->bus
@@ -68,16 +71,25 @@
 #define NUM_REASSEMBLY 3
 #endif
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 4, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
 #define GET_DRV_DATA(x)		hci_get_drvdata(x)
 #else
 #define GET_DRV_DATA(x)		x->driver_data
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 13, 0)
+#define SCO_NUM    hdev->conn_hash.sco_num
+#else
+#define SCO_NUM     hci_conn_num(hdev, SCO_LINK)
 #endif
 
 static int patch_add(struct usb_interface* intf);
 static void patch_remove(struct usb_interface* intf);
 static int download_patch(struct usb_interface* intf);
 static int set_btoff(struct usb_interface* intf);
+static void print_event(struct sk_buff *skb);
+static void print_command(struct sk_buff *skb);
+static void print_acl (struct sk_buff *skb,int dataOut);
 
 #define BTUSB_MAX_ISOC_FRAMES	10
 #define BTUSB_INTR_RUNNING		0
@@ -85,6 +97,10 @@ static int set_btoff(struct usb_interface* intf);
 #define BTUSB_ISOC_RUNNING		2
 #define BTUSB_SUSPENDING		3
 #define BTUSB_DID_ISO_RESUME	4
+/*******************************/
+// Added by Realtek
+#define BTUSB_NEXT_RX_URB_SUBMITTING		5
+/*******************************/
 
 struct btusb_data {
 	struct hci_dev       *hdev;
@@ -125,6 +141,53 @@ struct btusb_data {
 #endif
 };
 
+
+//----------
+#define HCI_CMD_READ_BD_ADDR 0x1009
+#define HCI_VENDOR_CHANGE_BDRATE 0xfc17
+#define HCI_VENDOR_READ_RTK_ROM_VERISION 0xfc6d
+#define HCI_VENDOR_READ_LMP_VERISION 0x1001
+
+#define ROM_LMP_8723a               0x1200
+#define ROM_LMP_8723b               0x8723
+#define ROM_LMP_8821a               0X8821
+#define ROM_LMP_8761a               0X8761
+
+//signature: Realtech
+const uint8_t  RTK_EPATCH_SIGNATURE[8]={0x52,0x65,0x61,0x6C,0x74,0x65,0x63,
+0x68};
+//Extension Section IGNATURE:0x77FD0451
+const uint8_t Extension_Section_SIGNATURE[4]={0x51,0x04,0xFD,0x77};
+uint16_t project_id[]=
+{
+	ROM_LMP_8723a,
+	ROM_LMP_8723b,
+	ROM_LMP_8821a,
+	ROM_LMP_8761a
+};
+struct rtk_eversion_evt {
+	uint8_t status;
+	uint8_t version;
+}__attribute__ ((packed));
+
+struct rtk_epatch_entry{
+	uint16_t chipID;
+	uint16_t patch_length;
+	uint32_t start_offset;
+} __attribute__ ((packed));
+
+struct rtk_epatch{
+    	uint8_t signature[8];
+	uint32_t fm_version;
+	uint16_t number_of_total_patch;
+	struct rtk_epatch_entry entry[0];
+} __attribute__ ((packed));
+
+struct rtk_extension_entry{
+	uint8_t opcode;
+	uint8_t length;
+	uint8_t *data;
+} __attribute__ ((packed));
 /* Realtek - For rtk_btusb driver end */
 
 //========================================================================
@@ -132,7 +195,7 @@ struct btusb_data {
 #if CONFIG_BLUEDROID //for 4.2
 #define SUCCESS               0 /* Linux success code */
 #define ERROR                -1 /* Linux error code */
-#define QUEUE_SIZE 100
+#define QUEUE_SIZE 500
 static int btfcd_init(void);
 static void btfcd_exit(void);
 static int btfcd_open(struct inode *inode_p, struct file *file_p);
@@ -368,6 +431,9 @@ struct hci_dev {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 4, 0)
 	void (*destruct)(struct hci_dev *hdev);
 #endif
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 7, 1)
+	__u16               voice_setting;
+#endif
 	void (*notify)(struct hci_dev *hdev, unsigned int evt);
 	int (*ioctl)(struct hci_dev *hdev, unsigned int cmd, unsigned long arg);
 };
@@ -410,5 +476,84 @@ static int hci_recv_fragment(struct hci_dev *hdev, int type, void *data, int cou
 
 #define SET_HCIDEV_DEV(hdev, pdev) ((hdev)->parent = (pdev))
 /* Realtek - Integrate from hci_core.h end */
+
+
+
+/* -----  HCI Commands ---- */
+#define HCI_OP_INQUIRY			0x0401
+#define HCI_OP_INQUIRY_CANCEL		0x0402
+#define HCI_OP_EXIT_PERIODIC_INQ	0x0404
+#define HCI_OP_CREATE_CONN		0x0405
+#define HCI_OP_ADD_SCO			0x0407
+#define HCI_OP_CREATE_CONN_CANCEL	0x0408
+#define HCI_OP_ACCEPT_CONN_REQ		0x0409
+#define HCI_OP_REJECT_CONN_REQ		0x040a
+#define HCI_OP_LINK_KEY_REPLY		0x040b
+#define HCI_OP_LINK_KEY_NEG_REPLY	0x040c
+#define HCI_OP_PIN_CODE_REPLY		0x040d
+#define HCI_OP_PIN_CODE_NEG_REPLY	0x040e
+#define HCI_OP_CHANGE_CONN_PTYPE	0x040f
+#define HCI_OP_AUTH_REQUESTED		0x0411
+#define HCI_OP_SET_CONN_ENCRYPT		0x0413
+#define HCI_OP_CHANGE_CONN_LINK_KEY	0x0415
+#define HCI_OP_REMOTE_NAME_REQ		0x0419
+#define HCI_OP_REMOTE_NAME_REQ_CANCEL	0x041a
+#define HCI_OP_READ_REMOTE_FEATURES	0x041b
+#define HCI_OP_READ_REMOTE_EXT_FEATURES	0x041c
+#define HCI_OP_READ_REMOTE_VERSION	0x041d
+#define HCI_OP_SETUP_SYNC_CONN		0x0428
+#define HCI_OP_ACCEPT_SYNC_CONN_REQ	0x0429
+#define HCI_OP_REJECT_SYNC_CONN_REQ	0x042a
+#define HCI_OP_SNIFF_MODE		0x0803
+#define HCI_OP_EXIT_SNIFF_MODE		0x0804
+#define HCI_OP_ROLE_DISCOVERY		0x0809
+#define HCI_OP_SWITCH_ROLE		0x080b
+#define HCI_OP_READ_LINK_POLICY		0x080c
+#define HCI_OP_WRITE_LINK_POLICY	0x080d
+#define HCI_OP_READ_DEF_LINK_POLICY	0x080e
+#define HCI_OP_WRITE_DEF_LINK_POLICY	0x080f
+#define HCI_OP_SNIFF_SUBRATE		0x0811
+#define HCI_OP_SET_EVENT_MASK		0x0c01
+#define HCI_OP_RESET			0x0c03
+#define HCI_OP_SET_EVENT_FLT		0x0c05
+
+/* -----  HCI events---- */
+#define HCI_OP_DISCONNECT		0x0406
+#define HCI_EV_INQUIRY_COMPLETE		0x01
+#define HCI_EV_INQUIRY_RESULT		0x02
+#define HCI_EV_CONN_COMPLETE		0x03
+#define HCI_EV_CONN_REQUEST			0x04
+#define HCI_EV_DISCONN_COMPLETE		0x05
+#define HCI_EV_AUTH_COMPLETE		0x06
+#define HCI_EV_REMOTE_NAME			0x07
+#define HCI_EV_ENCRYPT_CHANGE		0x08
+#define HCI_EV_CHANGE_LINK_KEY_COMPLETE	0x09
+
+#define HCI_EV_REMOTE_FEATURES		0x0b
+#define HCI_EV_REMOTE_VERSION		0x0c
+#define HCI_EV_QOS_SETUP_COMPLETE	0x0d
+#define HCI_EV_CMD_COMPLETE			0x0e
+#define HCI_EV_CMD_STATUS			0x0f
+
+#define HCI_EV_ROLE_CHANGE			0x12
+#define HCI_EV_NUM_COMP_PKTS		0x13
+#define HCI_EV_MODE_CHANGE			0x14
+#define HCI_EV_PIN_CODE_REQ			0x16
+#define HCI_EV_LINK_KEY_REQ			0x17
+#define HCI_EV_LINK_KEY_NOTIFY		0x18
+#define HCI_EV_CLOCK_OFFSET			0x1c
+#define HCI_EV_PKT_TYPE_CHANGE		0x1d
+#define HCI_EV_PSCAN_REP_MODE		0x20
+
+#define HCI_EV_INQUIRY_RESULT_WITH_RSSI	0x22
+#define HCI_EV_REMOTE_EXT_FEATURES	0x23
+#define HCI_EV_SYNC_CONN_COMPLETE	0x2c
+#define HCI_EV_SYNC_CONN_CHANGED	0x2d
+#define HCI_EV_SNIFF_SUBRATE			0x2e
+#define HCI_EV_EXTENDED_INQUIRY_RESULT	0x2f
+#define HCI_EV_IO_CAPA_REQUEST		0x31
+#define HCI_EV_SIMPLE_PAIR_COMPLETE	0x36
+#define HCI_EV_REMOTE_HOST_FEATURES	0x3d
+
 
 #endif //if bluedroid 4.2
