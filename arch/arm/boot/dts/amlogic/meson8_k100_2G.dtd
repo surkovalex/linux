@@ -900,7 +900,7 @@ sdio{
 		pinctrl-0 = <&lcd_backlight_pins>;	/** pwm_default pinmux */
 		pinctrl-1 = <&lcd_backlight_combo_pins>;	/** pwm_combo pinmux */
 		
-		bl_level_default_uboot_kernel=<20 128>;	/** default brightness level for uboot & kernel */
+		bl_level_default_uboot_kernel=<128 128>;	/** default brightness level for uboot & kernel */
 		bl_level_middle_mapping=<102 70>;	/** brightness middle level mapping to a new level*/
 		bl_level_max_min=<255 10>;	/** brightness level max & min, must match the rootfs setting*/
 		
