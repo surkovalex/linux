@@ -312,17 +312,6 @@ static int aml_pmus_probe(struct platform_device *pdev)
     int    bus_type = -1;
     const  char *str;
 
-    prop = of_find_property(pmu_node, "driver_version", &val);
-    if (!prop) {
-        printk("%s, PMU drvier version not found\n", __func__);
-    } else {
-        if (of_property_read_string(pmu_node, "driver_version", &str)) {
-            printk("%s, PMU drvier version get failed\n", __func__); 
-        } else {
-            printk("----> PMU driver version:%s\n", str); 
-        }
-    }
-
     for_each_child_of_node(pmu_node, child) {
         /* register exist pmu */
         printk("%s, child name:%s\n", __func__, child->name);
