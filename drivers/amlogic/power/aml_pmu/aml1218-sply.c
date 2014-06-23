@@ -1326,7 +1326,7 @@ static int aml1218_update_state(struct aml_charger *charger)
     aml1218_write(0x011f, (chg_status & 0x02000000) ? 0x02 : 0x00);
 
     aml1218_set_bits(0x0035, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
-    aml1218_set_bits(0x003e, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
+    //aml1218_set_bits(0x003e, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
     aml1218_set_bits(0x0047, (chg_status & 0x02000000) ? 0x00 : 0x04, 0x07);
     aml1218_set_bits(0x004f, (chg_status & 0x02000000) >> 22, 0x08);
 
@@ -1499,7 +1499,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     int      ret;
     uint32_t tmp2;
 
-	AML1218_DBG("---> PMU driver version:v0.80\n");
+	AML1218_DBG("---> PMU driver version:v0.90\n");
 	AML1218_DBG("call %s in", __func__);
     g_aml1218_init = pdev->dev.platform_data;
     if (g_aml1218_init == NULL) {
