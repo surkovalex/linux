@@ -844,20 +844,48 @@ static resolution_size_t get_res_size(const char* res_str)
 }
 
 #ifdef CONFIG_ARCH_MESON8B
-static inline void cam_enable_clk(int clk)
+static inline void cam_spread_spectrum(int spread_spectrum)
 {
-	if (clk == 12000)
-		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 3, 16, 2);
-	else
-		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 16, 2);
+	printk("spread_spectrum = %d\n", spread_spectrum);
+	if (spread_spectrum == 1)
+		aml_set_reg32_bits(P_HHI_DPLL_TOP_0, 0x1c1, 0, 9);
+	else if (spread_spectrum == 2)
+		aml_set_reg32_bits(P_HHI_DPLL_TOP_0, 0x1a1, 0, 9);
+	else if (spread_spectrum == 3)
+		aml_set_reg32_bits(P_HHI_DPLL_TOP_0, 0x181, 0, 9);
+	else if (spread_spectrum == 4)
+		aml_set_reg32_bits(P_HHI_DPLL_TOP_0, 0x141, 0, 9);
+	else if (spread_spectrum == 5)
+		aml_set_reg32_bits(P_HHI_DPLL_TOP_0, 0x121, 0, 9);
 }
 
-static inline void cam_disable_clk(void)
+static inline void cam_enable_clk(int clk, int spread_spectrum)
 {
-	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 16, 2); //close clock
+	if (spread_spectrum) {
+		cam_spread_spectrum(spread_spectrum);
+		aml_set_reg32_bits(P_HHI_MPLL_CNTL7, 0x15d063, 0, 25);
+		if (clk == 12000)
+			aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0x6809, 0, 16);
+		else
+			aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0x6804, 0, 16);
+	} else {
+		if (clk == 12000)
+			aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 3, 16, 2);
+		else
+			aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 16, 2);
+	}
+}
+
+static inline void cam_disable_clk(int spread_spectrum)
+{
+	if (spread_spectrum) {
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 0, 16); //close clock
+	} else {
+		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 16, 2); //close clock
+	}
 }
 #elif defined CONFIG_ARCH_MESON8
-static inline void cam_enable_clk(int clk)
+static inline void cam_enable_clk(int clk, int spread_spectrum)
 {
 	if (clk == 12000) {
 		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 12, 4);
@@ -872,27 +900,27 @@ static inline void cam_enable_clk(int clk)
 	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 11, 1);
 }
 
-static inline void cam_disable_clk(void)
+static inline void cam_disable_clk(int spread_spectrum)
 {
 	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 11, 5); //close clock
 	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 0, 7);
 }
 #elif defined CONFIG_ARCH_MESON6
-static inline void cam_enable_clk(int clk)
+static inline void cam_enable_clk(int clk, int spread_spectrum)
 {
 	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 1, 8, 5); 
 }
 
-static inline void cam_disable_clk(void)
+static inline void cam_disable_clk(int spread_spectrum)
 {
 	aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 8, 5);  //close clock
 }
 #else
-static inline void cam_enable_clk(int clk)
+static inline void cam_enable_clk(int clk, int spread_spectrum)
 {
 }
 
-static inline void cam_disable_clk(void)
+static inline void cam_disable_clk(int spread_spectrum)
 {	
 }
 #endif
@@ -911,7 +939,7 @@ void aml_cam_init(aml_cam_info_t* cam_dev)
 		pin_ctrl = pinctrl_get_select((struct device*)(&cam_pdev->dev), "gpio");
 
 	//select XTAL as camera clock
-	cam_enable_clk(cam_dev->mclk);
+	cam_enable_clk(cam_dev->mclk, cam_dev->spread_spectrum);
 	
 	msleep(20);
 	// set camera power enable
@@ -943,7 +971,7 @@ void aml_cam_uninit(aml_cam_info_t* cam_dev)
 					cam_dev->pwdn_act,"camera");
 	msleep(5);
 	
-	cam_disable_clk();
+	cam_disable_clk(cam_dev->spread_spectrum);
 	
 	p = pinctrl_get(&cam_pdev->dev);
 	if (IS_ERR(p))
@@ -1055,6 +1083,8 @@ static int fill_cam_dev(struct device_node* p_node, aml_cam_info_t* cam_dev)
 		ret = -1;
 		goto err_out;
 	} 
+	
+	of_property_read_u32(p_node, "spread_spectrum", &cam_dev->spread_spectrum);
 	
 	cam_dev->pwdn_act = cam_info->pwdn;
 	cam_dev->i2c_addr = cam_info->addr;

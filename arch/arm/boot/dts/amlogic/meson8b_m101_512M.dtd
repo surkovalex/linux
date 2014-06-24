@@ -1216,6 +1216,7 @@ void root_func(){
     audio_dai{
         compatible = "amlogic,aml-i2s-dai";
         dev_name = "aml-i2s-dai.0";
+        clk_src_mpll =  <0>;
         status = "okay";
     };
     audio_spdif_dai{
@@ -1381,6 +1382,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <0>;
 			vertical_flip = <0>;	
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 ///	-	gc0308
@@ -1401,6 +1403,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <1>;
 			vertical_flip = <0>;
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 ///	-	gc0328
@@ -1421,6 +1424,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <0>;
 			vertical_flip = <0>;
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 	
@@ -2006,7 +2010,7 @@ sdhc_sd_clk_cmd_pins:sdhc_sd_clk_cmd_pins{
 			amlogic,setmask=<3 0x80000
 					 4 0x2
 					 9 0x37c>;
-			amlogic,clrmask=<3 0x37
+			amlogic,clrmask=<3 0x37 
 					 5 0xc0
 					 6 0x800
 					 8 0x10000>;

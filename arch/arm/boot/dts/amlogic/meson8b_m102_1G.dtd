@@ -1256,6 +1256,7 @@ void root_func(){
     audio_dai{
         compatible = "amlogic,aml-i2s-dai";
         dev_name = "aml-i2s-dai.0";
+        clk_src_mpll =  <0>;
         status = "okay";
     };
     audio_spdif_dai{
@@ -1421,6 +1422,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <1>;
 			vertical_flip = <1>;	
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			bt_path = "gpio";
 			status = "okay";
 		};
@@ -1442,6 +1444,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <0>;
 			vertical_flip = <1>;
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 ///	-	gc0328
@@ -1462,6 +1465,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <0>;
 			vertical_flip = <0>;
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 ///	-	gc2035
@@ -1482,6 +1486,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <1>;
 			vertical_flip = <1>;
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 ///	-	sp2518
@@ -1502,6 +1507,7 @@ void root_func(){
 			gpio_rst = "GPIOH_4";
 			mirror_flip = <1>;
 			vertical_flip = <1>;
+			spread_spectrum = <0>;	//0:none; 1:0.3%; 2:0.6%; 3:1.25%; 4:2.5%; 5:5%
 			status = "okay";
 		};
 	};	

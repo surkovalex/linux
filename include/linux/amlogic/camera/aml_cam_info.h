@@ -76,6 +76,7 @@ typedef struct {
 	unsigned flash_support;
 	unsigned flash_ctrl_level;
 	unsigned vcm_mode;
+	unsigned spread_spectrum;
 	bt_path_t bt_path;
 	cam_interface_t         interface;
 	clk_channel_t           clk_channel;
