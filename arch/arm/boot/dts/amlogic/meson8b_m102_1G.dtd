@@ -216,8 +216,8 @@ void root_func(){
         compatible = "amlogic,vdin";
         dev_name = "vdin0";
         status = "ok";
-	reserve-memory = <0x02700000>;
-	camera_size = <2592 1944>;//2592x1944x2x4=41M
+	reserve-memory = <0x01000000>;
+	camera_size = <1600 1200>;//camera is gc2035,the picture resolution is 1600x1200;so 1600x1200x2x4=16M
 	 reserve-iomap = "true";
         irq = <115>;
         vdin_id = <0>;
@@ -233,8 +233,8 @@ void root_func(){
         compatible = "amlogic,vdin";
         dev_name = "vdin1";
         status = "ok";
-        reserve-memory = <0x01000000>;
-	miracast_size = <1920 1080>;//1920x1080x2x4=17M
+        reserve-memory = <0x0600000>;
+	miracast_size = <1024 768>;//miracast resolution is 1024x768,1024x768x2x4=6M
 	reserve-iomap = "true";
         irq = <117>;
         vdin_id = <1>;
@@ -250,7 +250,7 @@ void root_func(){
 		compatible = "amlogic,amlvideo2";
 		dev_name = "amlvideo2.0";
 		status = "okay";
-		reserve-memory = <0x01800000>;
+		reserve-memory = <0x0600000>;//miracast resolution is 1024x768,1024x768x1.5x4=6M. NV21,not YUV422 now,so not 1024x768x2x4
 		reserve-iomap = "true";
 	};
 
@@ -287,13 +287,6 @@ void root_func(){
 	mesonvout{
 		compatible = "amlogic,mesonvout";
 		dev_name = "mesonvout";
-		status = "okay";
-	};
-//$$ DEVICE = "mesonvout2"
-//$$ L2 PROP_STR = "status"
-	mesonvout2{
-		compatible = "amlogic,mesonvout2";
-		dev_name = "mesonvout2";
 		status = "okay";
 	};
 

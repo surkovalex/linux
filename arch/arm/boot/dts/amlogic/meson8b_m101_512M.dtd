@@ -289,13 +289,6 @@ void root_func(){
 		dev_name = "mesonvout";
 		status = "okay";
 	};
-//$$ DEVICE = "mesonvout2"
-//$$ L2 PROP_STR = "status"
-	mesonvout2{
-		compatible = "amlogic,mesonvout2";
-		dev_name = "mesonvout2";
-		status = "okay";
-	};
 
 /// ***************************************************************************************
 ///	-	RTC
