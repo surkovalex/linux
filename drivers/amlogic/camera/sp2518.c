@@ -1008,43 +1008,43 @@ void SP2518_set_param_wb(struct sp2518_device *dev,enum  camera_wb_flip_e para)/
 			break;
 
 		case CAM_WB_CLOUD: //cloud
-			i2c_put_byte_add8_new(client,0xfd,0x00);
-			i2c_put_byte_add8_new(client,0x32,0x05);
 			i2c_put_byte_add8_new(client,0xfd,0x01);
 			i2c_put_byte_add8_new(client,0x28,0xe2);
 			i2c_put_byte_add8_new(client,0x29,0x82);
+			i2c_put_byte_add8_new(client,0xfd,0x00);
+			i2c_put_byte_add8_new(client,0x32,0x05);
 			break;
 
 		case CAM_WB_DAYLIGHT: //
-			i2c_put_byte_add8_new(client,0xfd,0x00);
-			i2c_put_byte_add8_new(client,0x32,0x05);
 			i2c_put_byte_add8_new(client,0xfd,0x01);
 			i2c_put_byte_add8_new(client,0x28,0xc1);
 			i2c_put_byte_add8_new(client,0x29,0x88);
+			i2c_put_byte_add8_new(client,0xfd,0x00);
+			i2c_put_byte_add8_new(client,0x32,0x05);
 			break;
 
 		case CAM_WB_INCANDESCENCE:
-			i2c_put_byte_add8_new(client,0xfd,0x00);
-			i2c_put_byte_add8_new(client,0x32,0x05);
 			i2c_put_byte_add8_new(client,0xfd,0x01);
 			i2c_put_byte_add8_new(client,0x28,0x7b);
 			i2c_put_byte_add8_new(client,0x29,0xd3);
+			i2c_put_byte_add8_new(client,0xfd,0x00);
+			i2c_put_byte_add8_new(client,0x32,0x05);
 			break;
 
 		case CAM_WB_TUNGSTEN:
-			i2c_put_byte_add8_new(client,0xfd,0x00);
-			i2c_put_byte_add8_new(client,0x32,0x05);
 			i2c_put_byte_add8_new(client,0xfd,0x01);
 			i2c_put_byte_add8_new(client,0x28,0xae);
 			i2c_put_byte_add8_new(client,0x29,0xcc);
+			i2c_put_byte_add8_new(client,0xfd,0x00);
+			i2c_put_byte_add8_new(client,0x32,0x05);
 			break;
 
 		case CAM_WB_FLUORESCENT:
-			i2c_put_byte_add8_new(client,0xfd,0x00);
-			i2c_put_byte_add8_new(client,0x32,0x05);
 			i2c_put_byte_add8_new(client,0xfd,0x01);
 			i2c_put_byte_add8_new(client,0x28,0xb4);
 			i2c_put_byte_add8_new(client,0x29,0xc4);
+			i2c_put_byte_add8_new(client,0xfd,0x00);
+			i2c_put_byte_add8_new(client,0x32,0x05);
 			break;
 
 		case CAM_WB_MANUAL:
