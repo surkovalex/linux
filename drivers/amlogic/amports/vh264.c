@@ -82,12 +82,6 @@ static DEFINE_MUTEX(vh264_mutex);
 
 
 #define DEF_BUF_START_ADDR            0x1000000
-#define MEM_HEADER_CPU_OFFSET         (0x110000)
-#define MEM_DATA_CPU_OFFSET           (0x111000)
-#define MEM_MMCO_CPU_OFFSET           (0x112000)
-#define MEM_LIST_CPU_OFFSET           (0x113000)
-#define MEM_SLICE_CPU_OFFSET          (0x114000)
-#define MEM_SWAP_SIZE                 (0x5000*4)
 #define V_BUF_ADDR_OFFSET             (0x13e000)
 
 #define PIC_SINGLE_FRAME        0
@@ -235,6 +229,17 @@ static struct work_struct stream_switching_work;
 
 static struct dec_sysinfo vh264_amstream_dec_info;
 extern u32 trickmode_i;
+static dma_addr_t mc_dma_handle;
+static void *mc_cpu_addr;
+
+#define MC_OFFSET_HEADER    0x0000
+#define MC_OFFSET_DATA      0x1000
+#define MC_OFFSET_MMCO      0x2000
+#define MC_OFFSET_LIST      0x3000
+#define MC_OFFSET_SLICE     0x4000
+
+#define MC_TOTAL_SIZE       (20*SZ_1K)
+#define MC_SWAP_SIZE        ( 4*SZ_1K)
 
 static DEFINE_SPINLOCK(lock);
 
@@ -906,7 +911,6 @@ static void vh264_set_params(void)
     }
 
     WRITE_VREG(AV_SCRATCH_1, addr);
-    //WRITE_VREG(AV_SCRATCH_2, (unsigned)vpts_map);
     WRITE_VREG(AV_SCRATCH_3, post_canvas); // should be modified later
     addr += mb_total * mb_mv_byte * max_reference_size;
     WRITE_VREG(AV_SCRATCH_4, addr);
@@ -1088,7 +1092,7 @@ static void vh264_isr(void)
 										frame_dur = pts_duration;
 										duration_from_pts_done = 1;
 										printk("used calculate frame rate,on frame_dur problem=%d\n",frame_dur);
-									}else if(((frame_dur < 96000/240) && (pts_duration > 96000/240)) || duration_on_correcting){//>if frameRate>240fps,I think have error,use calculate rate.
+									}else if(((frame_dur<96000/240) && (pts_duration>96000/240)) || duration_on_correcting){//>if frameRate>240fps,I think have error,use calculate rate.
 										frame_dur = pts_duration;
 										//printk("used calculate frame rate,on frame_dur error=%d\n",frame_dur);
 										duration_on_correcting=1;
@@ -1490,6 +1494,7 @@ static void vh264_prot_init(void)
 
     WRITE_VREG(AV_SCRATCH_0, 0);
     WRITE_VREG(AV_SCRATCH_1, buf_offset);
+    WRITE_VREG(AV_SCRATCH_G, mc_dma_handle);
     WRITE_VREG(AV_SCRATCH_7, 0);
     WRITE_VREG(AV_SCRATCH_8, 0);
     WRITE_VREG(AV_SCRATCH_9, 0);
@@ -1604,12 +1609,6 @@ static s32 vh264_init(void)
 {
     int trickmode_fffb = 0;
     int firmwareloaded=0;
-    void __iomem *p = ioremap_nocache(ucode_map_start, V_BUF_ADDR_OFFSET);
-    void __iomem *p1 = (void __iomem *)((ulong)(p) + MEM_HEADER_CPU_OFFSET);
-    if (!p) {
-        printk("\nvh264_init: Cannot remap ucode swapping memory\n");
-        return -ENOMEM;
-    }
 
     //printk("\nvh264_init\n");
     init_timer(&recycle_timer);
@@ -1624,23 +1623,32 @@ static s32 vh264_init(void)
     query_video_status(0, &trickmode_fffb);
 
     if (!trickmode_fffb) {
-        memset(p, 0, V_BUF_ADDR_OFFSET);
+        void __iomem *p = ioremap_nocache(ucode_map_start, V_BUF_ADDR_OFFSET);
+        if (p != NULL) {
+            memset(p, 0, V_BUF_ADDR_OFFSET);
+            iounmap(p);
+        }
     }
 
     amvdec_enable();
 
+    // -- ucode loading (amrisc and swap code)
+    mc_cpu_addr = dma_alloc_coherent(NULL, MC_TOTAL_SIZE, &mc_dma_handle, GFP_KERNEL);
+    if (!mc_cpu_addr) {
+        amvdec_disable();
+
+        printk("vh264_init: Can not allocate mc memory.\n");
+        return -ENOMEM;
+    }
+
+    printk("264 ucode swap area: physical address 0x%x, cpu virtual addr %p\n", mc_dma_handle, mc_cpu_addr);
 	/*while for easy break out, always  run once.*/
     while(debugfirmware){
 		int size;
-        const char *pvh264_header_mc;
-        const char *pvh264_data_mc;
-        const char *pvh264_mmco_mc;
-        const char *pvh264_list_mc;
-        const char *pvh264_slice_mc;
-        char *mc = NULL;
-        char *mbuf=kmalloc(4096 * 4*6, GFP_KERNEL);
-
+        char *mbuf, *mc;
+        const char *pvh264_header_mc, *pvh264_data_mc, *pvh264_mmco_mc, *pvh264_list_mc, *pvh264_slice_mc;
         printk("start debug load firmware ...\n");
+        mbuf=kmalloc(4096 * 4*6, GFP_KERNEL);
         if (!mbuf) {
             printk("vh264_init: Cannot malloc mbuf  memory1\n");
             break;
@@ -1666,21 +1674,20 @@ static s32 vh264_init(void)
         memcpy(mc,mbuf,0x800*4);
         memcpy(mc+0x800*4,pvh264_data_mc,0x400*4);
         memcpy(mc+0x800*4+0x400*4,pvh264_list_mc,0x400*4);
-        if (amvdec_loadmc((u32 *)mc) < 0) {
+        if (amvdec_loadmc((const u32 *)mc) < 0) {
             kfree(mbuf);
             kfree(mc);
+            dma_free_coherent(NULL, MC_TOTAL_SIZE, mc_cpu_addr, mc_dma_handle);
+            mc_cpu_addr = NULL;
             break;
         }
-        memcpy(p1,
-        pvh264_header_mc, 0x400*4);//vh264_header_mc   //0x4000
-        memcpy((void *)((ulong)p1 + 0x1000),
-        pvh264_data_mc, 0x400*4);//vh264_data_mc //0x3000
-        memcpy((void *)((ulong)p1 + 0x2000),
-        pvh264_mmco_mc, 0x400*4);//vh264_mmco_mc//0x6000
-        memcpy((void *)((ulong)p1 + 0x3000),
-        pvh264_list_mc, 0x400*4);//vh264_list_mc//0x5000
-        memcpy((void *)((ulong)p1 + 0x4000),
-        pvh264_slice_mc, 0x400*4);//vh264_slice_mc //0x2000
+
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_HEADER, pvh264_header_mc, MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_DATA,   pvh264_data_mc,   MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_MMCO,   pvh264_mmco_mc,   MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_LIST,   pvh264_list_mc,   MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_SLICE,  pvh264_slice_mc,  MC_SWAP_SIZE);
+
         kfree(mbuf);
         kfree(mc);
 		firmwareloaded=1;
@@ -1691,26 +1698,15 @@ static s32 vh264_init(void)
         printk("start load orignal firmware ...\n");
         if (amvdec_loadmc(vh264_mc) < 0) {
             amvdec_disable();
-            iounmap(p);
             return -EBUSY;
         }
         
-        memcpy(p1,
-        vh264_header_mc, sizeof(vh264_header_mc));
-        
-        memcpy((void *)((ulong)p1 + 0x1000),
-        vh264_data_mc, sizeof(vh264_data_mc));
-        
-        memcpy((void *)((ulong)p1 + 0x2000),
-        vh264_mmco_mc, sizeof(vh264_mmco_mc));
-        
-        memcpy((void *)((ulong)p1 + 0x3000),
-        vh264_list_mc, sizeof(vh264_list_mc));
-        
-        memcpy((void *)((ulong)p1 + 0x4000),
-        vh264_slice_mc, sizeof(vh264_slice_mc));
-    }	
-    iounmap(p);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_HEADER, vh264_header_mc, MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_DATA,   vh264_data_mc,   MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_MMCO,   vh264_mmco_mc,   MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_LIST,   vh264_list_mc,   MC_SWAP_SIZE);
+        memcpy((u8 *)mc_cpu_addr + MC_OFFSET_SLICE,  vh264_slice_mc,  MC_SWAP_SIZE);
+    }
 
     stat |= STAT_MC_LOAD;
 
@@ -1750,9 +1746,11 @@ static s32 vh264_init(void)
     vh264_stream_switching = 0;
     vh264_stream_new = 0;
 
-    amvdec_start();
-
     stat |= STAT_VDEC_RUN;
+    wmb();
+
+    // -- start decoder
+    amvdec_start();
 
     set_vdec_func(&vh264_dec_status);
     set_trickmode_func(&vh264_set_trickmode);
@@ -1788,6 +1786,12 @@ static int vh264_stop(void)
         stat &= ~STAT_VF_HOOK;
     }
 
+    if (stat & STAT_MC_LOAD) {
+        if (mc_cpu_addr != NULL) {
+            dma_free_coherent(NULL, MC_TOTAL_SIZE, mc_cpu_addr, mc_dma_handle);
+            mc_cpu_addr = NULL;
+        }
+    }
     amvdec_disable();
 
     return 0;
