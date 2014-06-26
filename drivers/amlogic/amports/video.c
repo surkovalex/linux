@@ -2084,9 +2084,10 @@ void vsync_rdma_process(void)
 }
 #endif
 
-#ifdef CONFIG_SUPPORT_VIDEO_ON_VPP2
+//#ifdef CONFIG_SUPPORT_VIDEO_ON_VPP2
 static vmode_t old_vmode = VMODE_MAX;
-#endif
+//#endif
+static vmode_t new_vmode = VMODE_MAX;
 #ifdef FIQ_VSYNC
 void vsync_fisr(void)
 #else
@@ -2127,11 +2128,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
             printk("Change to video 1\n");
         }
     }
-    vinfo_t *check_vinfo = get_current_vinfo();
-    if((check_vinfo != NULL) && (old_vmode != check_vinfo->mode)){
-    	first_picture = 1;
-    	old_vmode = check_vinfo->mode;
-    }
+
 
     if((dev_id_s[dev_id_len-1] == '2' && cur_dev_idx == 0) ||
         (dev_id_s[dev_id_len-1] != '2' && cur_dev_idx != 0)){
@@ -2139,6 +2136,15 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     }
     //printk("%s: %s\n", __func__, dev_id_s);
 #endif
+    vf = video_vf_peek();
+    if((vf)&&((vf->type & VIDTYPE_NO_VIDEO_ENABLE) == 0)){
+	    if( (old_vmode != new_vmode)||(debug_flag == 8)){
+	    	debug_flag = 1 ;
+	        video_property_changed = true;
+	        printk("detect vout mode change!!!!!!!!!!!!\n");
+	    	old_vmode = new_vmode;
+	    }
+	}
 
 #ifdef CONFIG_AM_VIDEO_LOG
     toggle_cnt = 0;
@@ -4952,6 +4958,7 @@ int vout_notify_callback(struct notifier_block *block, unsigned long cmd , void 
 	/* pre-calculate vsync_pts_inc in 90k unit */
     	vsync_pts_inc = 90000 * vinfo->sync_duration_den / vinfo->sync_duration_num;
 	spin_unlock_irqrestore(&lock, flags);
+	new_vmode = vinfo->mode;
 	break;
 	case VOUT_EVENT_OSD_PREBLEND_ENABLE:
 	vpp_set_osd_layer_preblend(para);
@@ -5028,6 +5035,7 @@ static void vout_hook(void)
 
     if (vinfo) {
         vsync_pts_inc = 90000 * vinfo->sync_duration_den / vinfo->sync_duration_num;
+        old_vmode = new_vmode = vinfo->mode;
     }
 
 #ifdef CONFIG_AM_VIDEO_LOG
