@@ -22,6 +22,7 @@ obj-$(CONFIG_DEINTERLACE) += deinterlace/
 
 ##### Basic drivers#####
 
+obj-y += watchdog/
 obj-y += secure/
 obj-y += securitykeys/
 obj-y += keymanage/
@@ -80,9 +81,7 @@ obj-$(CONFIG_AML_EXT_HDMIIN) += ext_hdmiin/
 
 obj-y += thermal/
 
-obj-$(CONFIG_BOOT_MONITOR) += boot_monitor/
 
-#obj-$(CONFIG_AML_WATCHDOG) += aml_watchdog/
 #####Sound system is later init in kernel default..######################
 obj-$(CONFIG_AMAUDIO) += amaudio/
 obj-$(CONFIG_AMAUDIO2) += amaudio2/

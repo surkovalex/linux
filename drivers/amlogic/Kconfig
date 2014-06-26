@@ -23,7 +23,6 @@ source "drivers/amlogic/securitykeys/Kconfig"
 source "drivers/amlogic/keymanage/Kconfig"
 source "drivers/amlogic/efuse/Kconfig"
 source "drivers/amlogic/smartcard/Kconfig"
-source "drivers/amlogic/boot_monitor/Kconfig"
 source "drivers/amlogic/thermal/Kconfig"
 source "drivers/amlogic/watchdog/Kconfig"
 

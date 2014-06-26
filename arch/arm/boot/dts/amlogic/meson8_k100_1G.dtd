@@ -2097,7 +2097,16 @@ sdio{
         compatible = "amlogic,cpufreq-meson";
         status = "okay";
     };
-
+	amlogic-watchdog{
+	compatible = "amlogic,aml-wdt";
+	status = "disable";
+	default_timeout=<10>;
+	reset_watchdog_method=<1>;//0:sysfs,1:kernel
+	reset_watchdog_time=<2>;
+	shutdown_timeout=<10>;
+	firmware_timeout=<6>;
+	suspend_timeout=<6>;
+	};
 /// **************************************************************************************
 /// -   GPIO
 //$$ MODULE="GPIO"
