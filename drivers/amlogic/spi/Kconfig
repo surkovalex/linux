@@ -5,13 +5,12 @@
 menu "AMLOGIC SPI Hardware bus support"
 
 
-config AMLOGIC_SPI_HW_MASTER
-	tristate "AMLOGIC SPI HARDWARE BUS MASTER SUPPORT"
+config AMLOGIC_SPICC_MASTER
+	tristate "AMLOGIC SPICC MASTER SUPPORT"
 
   select SPI
 	help
-		This is amlogic spi bus Hardware master suport
-		This driver can also be built as a module.  If so, the module
-		will be called spi-apollo.
+		This is amlogic SPICC hardware bus master.
+		This driver can also be built as a module.
 	  
 endmenu

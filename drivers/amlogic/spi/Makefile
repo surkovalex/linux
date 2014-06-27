@@ -1,5 +1,5 @@
 #
-# Makefile for the amlogic spi nor flash bus drivers.
+# Makefile for the amlogic SPI bus drivers.
 #
 
-obj-$(CONFIG_AMLOGIC_SPI_HW_MASTER)	+= aml_spi.o
+obj-$(CONFIG_AMLOGIC_SPICC_MASTER)	+= spicc.o

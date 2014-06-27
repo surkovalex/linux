@@ -618,6 +618,27 @@ sdio{
 	};
 
 /// ***************************************************************************************
+	spi@c1108d80{
+		compatible = "amlogic,spicc";
+		dev_name = "spicc";
+		status = "disable";
+		reg = <0xc1108d80 0x28>;
+		pinctrl-names="default";
+		pinctrl-0=<&spicc_pins>;
+		device_id = <0>;
+		num_chipselect = <1>;
+		cs_gpios = "GPIOZ_14";
+		test_spi_dev@0 {
+			compatible = "amlogic,test_spi_dev";
+			status = "okay";
+			chip_select = <0>;
+			max_speed_hz = <2000000>;
+			mode = <0>;  /*SPI_MODE_0*/
+			bits_per_word = <8>;
+		};
+	};
+/// ***************************************************************************************
+
 ///	-	Power
 //$$ MODULE="Power"
 //$$ DEVICE="dvfs"
@@ -2427,6 +2448,12 @@ sdio{
 		d_i2c_master:d_i2c{
 			amlogic,setmask=<4 0xc>;
 			amlogic,pins="GPIOH_7","GPIOH_8";
+		};
+
+		spicc_pins:spicc{
+			amlogic,setmask=<8 0xe000>;
+			amlogic,clrmask=<5 0xc0 6 0xe0>;
+			amlogic,pins="GPIOZ_11", "GPIOZ_12", "GPIOZ_13";
 		};
 		
 //$$ MATCH "Bl_pin_0_match" = "&lcd_backlight_pins"
