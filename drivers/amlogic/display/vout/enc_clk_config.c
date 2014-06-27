@@ -41,7 +41,7 @@ static void set_hpll_clk_out(unsigned clk)
     aml_write_reg32(P_HHI_VID2_PLL_CNTL2, 0x430a800);       // internal LDO share with HPLL & VIID PLL
 #endif
     switch(clk){
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8)||(defined CONFIG_ARCH_MESON8M2)) 
         case 2970:
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c84e00);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xce49c822);
@@ -83,7 +83,8 @@ static void set_hpll_clk_out(unsigned clk)
                 ;
             }
 #endif
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8)||(defined CONFIG_ARCH_MESON8M2)) 
+
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
             printk("waiting HPLL lock[%d]\n", __LINE__);
@@ -97,7 +98,7 @@ static void set_hpll_clk_out(unsigned clk)
 #endif
             break;
         case 1080:
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
     aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000042d);
     aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000042d);
 #endif
@@ -121,7 +122,7 @@ static void set_hpll_clk_out(unsigned clk)
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x43e);
             break;
         case 1296:
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2)) 
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c88000);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xca49b022);
             aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x0023b100);
@@ -134,7 +135,7 @@ static void set_hpll_clk_out(unsigned clk)
         default:
             break;
     }
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
 
 #endif
     printk("config HPLL done\n");
@@ -164,7 +165,7 @@ static void set_hpll_hdmi_od(unsigned div)
     }
 }
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
 static void set_hpll_lvds_od(unsigned div)
 {
     switch(div) {
@@ -193,7 +194,7 @@ int set_viu_path(unsigned viu_channel_sel, viu_type_e viu_type_sel)
     if((viu_channel_sel > 2) || (viu_channel_sel == 0))
         return -1;
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
     printk("VPU_VIU_VENC_MUX_CTRL: 0x%x\n", aml_read_reg32(P_VPU_VIU_VENC_MUX_CTRL));
     if(viu_channel_sel == 1){
         aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, viu_type_sel, 0, 2);
@@ -238,7 +239,7 @@ static void set_vid_pll_div(unsigned div)
     // Gate enable
     WRITE_CBUS_REG_BITS(HHI_VID_DIVIDER_CNTL, 1, 16, 1);
 #endif
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
     // Gate disable
     aml_set_reg32_bits(P_HHI_VID_DIVIDER_CNTL, 0, 16, 1);
     switch(div){
@@ -354,7 +355,7 @@ static enc_clk_val_t setting_enc_clk_val[] = {
     {VMODE_576CVBS,    1296, 4, 1, 1, VIU_ENCI,  6, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_576P,       2160, 8, 1, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
 #endif
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
     {VMODE_480I,       1080, 4, 1, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480I_RPT,   2160, 4, 1, 1, VIU_ENCI,  5, 4, 2,-1,  4, -1, -1,  2,  -1},
     {VMODE_480CVBS,    1296, 4, 1, 1, VIU_ENCI,  6, 4, 2,-1,  2, -1, -1,  2,  -1},
@@ -397,7 +398,7 @@ void set_vmode_clk(vmode_t mode)
     }
     set_viu_path(p_enc[j].viu_path, p_enc[j].viu_type);
     set_hpll_clk_out(p_enc[j].hpll_clk_out);
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
     set_hpll_lvds_od(p_enc[j].hpll_lvds_od);
 #endif
     set_hpll_hdmi_od(p_enc[j].hpll_hdmi_od);

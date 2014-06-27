@@ -1231,12 +1231,12 @@ void osd_set_osd_rotate_on_hw(u32 index, u32 on_off)
 	}
 	else
 	{
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
 		VSYNCOSD_SET_MPEG_REG_MASK(VPU_SW_RESET, 1<<8);
 		VSYNCOSD_CLR_MPEG_REG_MASK(VPU_SW_RESET, 1<<8);
 #endif
 		if(index == OSD1){
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
 			VSYNCOSD_SET_MPEG_REG_MASK(VIU_SW_RESET, 1<<0);
 			VSYNCOSD_CLR_MPEG_REG_MASK(VIU_SW_RESET, 1<<0);
 #endif
@@ -2058,7 +2058,7 @@ static void osd1_update_disp_osd_rotate(void)
 	y_end = osd_hw.rotation_pandata[OSD1].y_end;
 	y_len_m1 = y_end-y_start;
 
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
 	osd_set_prot(
                 x_rev,
                 y_rev,
@@ -2130,7 +2130,7 @@ static void osd2_update_disp_osd_rotate(void)
 	y_end = osd_hw.rotation_pandata[OSD2].y_end;
 	y_len_m1 = y_end-y_start;
 
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
 	osd_set_prot(
                 x_rev,
                 y_rev,
@@ -2432,7 +2432,7 @@ static void osd1_update_disp_geometry(void)
 			data32 = ((osd_hw.rotation_pandata[OSD1].y_start + osd_hw.pandata[OSD1].y_start) & 0x1fff)
 					| ((osd_hw.rotation_pandata[OSD1].y_end  + osd_hw.pandata[OSD1].y_start) & 0x1fff) << 16 ;
 			VSYNCOSD_WR_MPEG_REG(VIU_OSD1_BLK0_CFG_W2,data32);
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
 			VSYNCOSD_WR_MPEG_REG(VPU_PROT1_Y_START_END,data32);
 #endif
 		}else if (osd_hw.rotate[OSD1].on_off
@@ -2443,7 +2443,7 @@ static void osd1_update_disp_geometry(void)
 			data32 = ((osd_hw.rotation_pandata[OSD1].y_start + osd_hw.pandata[OSD1].y_start) & 0x1fff)
 					| ((osd_hw.rotation_pandata[OSD1].y_end  + osd_hw.pandata[OSD1].y_start) & 0x1fff) << 16 ;
 			VSYNCOSD_WR_MPEG_REG(VIU_OSD1_BLK0_CFG_W2,data32);
-#ifdef CONFIG_ARCH_MESON8
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
 			VSYNCOSD_WR_MPEG_REG(VPU_PROT1_Y_START_END,data32);
 #endif
 		}else {
