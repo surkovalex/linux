@@ -95,7 +95,7 @@ config AM_VDEC_H264_4K2K
 
 config AM_VDEC_H265
         tristate "Amlogic H265 Video Decoder"
-        depends on ARCH_MESON8B
+        depends on ARCH_MESON8B || ARCH_MESON8M2
         default y
 
         select AM_PTSSERVER

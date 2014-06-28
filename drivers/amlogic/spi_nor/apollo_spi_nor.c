@@ -189,7 +189,7 @@ int retry = 0,ret;
 
 static void spi_hw_disable(struct amlogic_spi	*amlogic_spi)
 {
-#if (defined(CONFIG_ARCH_MESON6) || defined(CONFIG_ARCH_MESON8))
+#if (defined(CONFIG_ARCH_MESON6) || defined(CONFIG_ARCH_MESON8) || defined(CONFIG_ARCH_MESON8M2))
 #ifdef CONFIG_OF
 	int ret=0;
 	if(amlogic_spi->p)
