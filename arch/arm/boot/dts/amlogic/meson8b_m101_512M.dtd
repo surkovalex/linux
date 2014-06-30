@@ -289,13 +289,6 @@ void root_func(){
 		dev_name = "mesonvout";
 		status = "okay";
 	};
-//$$ DEVICE = "mesonvout2"
-//$$ L2 PROP_STR = "status"
-	mesonvout2{
-		compatible = "amlogic,mesonvout2";
-		dev_name = "mesonvout2";
-		status = "okay";
-	};
 
 /// ***************************************************************************************
 ///	-	RTC
@@ -1713,6 +1706,16 @@ void root_func(){
         status = "okay";
     };
 
+	amlogic-watchdog{
+		compatible = "amlogic,aml-wdt";
+		status = "disable";
+		default_timeout=<10>;
+		reset_watchdog_method=<1>;//0:sysfs,1:kernel
+		reset_watchdog_time=<2>;
+		shutdown_timeout=<10>;
+		firmware_timeout=<6>;
+		suspend_timeout=<6>;
+	};
 //    crypto_device{
 //       compatible = "amlogic,crypto-device";
 //       dev_name = "crypto_device";
