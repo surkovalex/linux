@@ -1271,7 +1271,7 @@ void osd_set_osd_antiflicker_hw(u32 index, u32 vmode, u32 yres)
 		case VMODE_576CVBS:
 		case VMODE_1080I:
 		case VMODE_1080I_50HZ:
-			osd_need_antiflicker = true;
+			osd_need_antiflicker = false;
 		break;
 		default:
 		break;
