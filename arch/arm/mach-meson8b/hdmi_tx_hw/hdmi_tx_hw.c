@@ -123,7 +123,6 @@ static void hdmi_tx_mode_ctrl(HDMI_Video_Codes_t vic)
         hdmi_set_reg_bits(OTHER_BASE_ADDR + HDMI_OTHER_CTRL1, 1, 15, 1);
         break;
     case HDMI_Unkown:
-        CLK_GATE_OFF(CTS_ENCI);
         CLK_GATE_OFF(CTS_ENCP);
         CLK_GATE_OFF(CTS_HDMI_TX_PIXEL);
         hdmi_set_reg_bits(OTHER_BASE_ADDR + HDMI_OTHER_CTRL1, 0, 15, 1);

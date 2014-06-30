@@ -367,6 +367,21 @@ int tvoutc_setmode(tvmode_t mode)
 
     printk("TV mode %s selected.\n", tvinfoTab[mode].id);
 
+#ifdef CONFIG_ARCH_MESON8B
+	if( (mode!=TVMODE_480CVBS) && (mode!=TVMODE_576CVBS) )
+	{
+		CLK_GATE_OFF(CTS_VDAC);
+		CLK_GATE_OFF(DAC_CLK);
+	}
+	if( (mode!=TVMODE_480I) && (mode!=TVMODE_480CVBS) &&
+		(mode!=TVMODE_576I) && (mode!=TVMODE_576CVBS) )
+	{
+		CLK_GATE_OFF(CTS_ENCI);
+		CLK_GATE_OFF(VCLK2_ENCI);
+		CLK_GATE_OFF(VCLK2_VENCI1);
+	}
+#endif
+
     s = tvregsTab[mode];
 
     if(uboot_display_flag) {
@@ -391,9 +406,6 @@ int tvoutc_setmode(tvmode_t mode)
 		WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 0x0, 30, 1);
 	}
     cvbs_cntl_output(0);
-#ifdef CONFIG_ARCH_MESON8B
-    CLK_GATE_OFF(CTS_VDAC);
-#endif
 #endif
     while (MREG_END_MARKER != s->reg)
         setreg(s++);
@@ -487,8 +499,11 @@ printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
     {
         msleep(1000);
 #ifdef CONFIG_ARCH_MESON8B
+		CLK_GATE_ON(VCLK2_ENCI);
+		CLK_GATE_ON(VCLK2_VENCI1);
         CLK_GATE_ON(CTS_ENCI);
         CLK_GATE_ON(CTS_VDAC);
+		CLK_GATE_ON(DAC_CLK);
 #endif
         cvbs_cntl_output(1);
     }
