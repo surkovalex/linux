@@ -41,7 +41,7 @@ static void set_hpll_clk_out(unsigned clk)
     aml_write_reg32(P_HHI_VID2_PLL_CNTL2, 0x430a800);       // internal LDO share with HPLL & VIID PLL
 #endif
     switch(clk){
-#if ((defined CONFIG_ARCH_MESON8)||(defined CONFIG_ARCH_MESON8M2)) 
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2)
         case 2970:
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c84e00);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xce49c822);
@@ -58,7 +58,7 @@ static void set_hpll_clk_out(unsigned clk)
             aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x00016385);   // optimise HPLL VCO 2.97GHz performance
             break;
 #endif
-#ifdef CONFIG_ARCH_MESON8B
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
         case 2160:
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c80000);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x0a563823);
@@ -72,7 +72,7 @@ static void set_hpll_clk_out(unsigned clk)
             break;
 #endif
         case 1488:
-#ifdef CONFIG_ARCH_MESON8B
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
             aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x4023d100);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x8a7ad023);
@@ -83,7 +83,7 @@ static void set_hpll_clk_out(unsigned clk)
                 ;
             }
 #endif
-#if ((defined CONFIG_ARCH_MESON8)||(defined CONFIG_ARCH_MESON8M2)) 
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2)
 
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
@@ -93,16 +93,16 @@ static void set_hpll_clk_out(unsigned clk)
             }
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
 #endif
-#ifdef CONFIG_ARCH_MESON6
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x43e);
 #endif
             break;
         case 1080:
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000042d);
     aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000042d);
 #endif
-#ifdef CONFIG_ARCH_MESON6
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x42d);
 #endif
             break;
@@ -122,7 +122,7 @@ static void set_hpll_clk_out(unsigned clk)
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x43e);
             break;
         case 1296:
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2)) 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c88000);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xca49b022);
             aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x0023b100);
@@ -135,7 +135,7 @@ static void set_hpll_clk_out(unsigned clk)
         default:
             break;
     }
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 
 #endif
     printk("config HPLL done\n");
@@ -165,7 +165,7 @@ static void set_hpll_hdmi_od(unsigned div)
     }
 }
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static void set_hpll_lvds_od(unsigned div)
 {
     switch(div) {
@@ -193,8 +193,7 @@ int set_viu_path(unsigned viu_channel_sel, viu_type_e viu_type_sel)
 {
     if((viu_channel_sel > 2) || (viu_channel_sel == 0))
         return -1;
-
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     printk("VPU_VIU_VENC_MUX_CTRL: 0x%x\n", aml_read_reg32(P_VPU_VIU_VENC_MUX_CTRL));
     if(viu_channel_sel == 1){
         aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, viu_type_sel, 0, 2);
@@ -212,7 +211,7 @@ int set_viu_path(unsigned viu_channel_sel, viu_type_e viu_type_sel)
 
 static void set_vid_pll_div(unsigned div)
 {
-#ifdef CONFIG_ARCH_MESON6
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
     // Gate disable
     WRITE_CBUS_REG_BITS(HHI_VID_DIVIDER_CNTL, 0, 16, 1);
     switch(div){
@@ -239,7 +238,7 @@ static void set_vid_pll_div(unsigned div)
     // Gate enable
     WRITE_CBUS_REG_BITS(HHI_VID_DIVIDER_CNTL, 1, 16, 1);
 #endif
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     // Gate disable
     aml_set_reg32_bits(P_HHI_VID_DIVIDER_CNTL, 0, 16, 1);
     switch(div){
@@ -327,7 +326,7 @@ static void set_vdac1_div(unsigned div)
 // mode hpll_clk_out hpll_hdmi_od viu_path viu_type vid_pll_div clk_final_div
 // hdmi_tx_pixel_div unsigned encp_div unsigned enci_div unsigned enct_div unsigned ecnl_div;
 static enc_clk_val_t setting_enc_clk_val[] = {
-#ifdef CONFIG_ARCH_MESON6
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
     {VMODE_480I,       1080, 4, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480CVBS,    1080, 4, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480P,       1080, 4, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
@@ -347,7 +346,7 @@ static enc_clk_val_t setting_enc_clk_val[] = {
     {VMODE_XGA, 1085, 1, 1, VIU_ENCP, 5, 1, 1, 1, -1, -1, -1,  1,  1},
 #endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-#ifdef CONFIG_ARCH_MESON8B
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
     {VMODE_480I,       2160, 8, 1, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480CVBS,    1296, 4, 1, 1, VIU_ENCI,  6, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480P,       2160, 8, 1, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
@@ -355,7 +354,7 @@ static enc_clk_val_t setting_enc_clk_val[] = {
     {VMODE_576CVBS,    1296, 4, 1, 1, VIU_ENCI,  6, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_576P,       2160, 8, 1, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
 #endif
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8M2))
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2)
     {VMODE_480I,       1080, 4, 1, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480I_RPT,   2160, 4, 1, 1, VIU_ENCI,  5, 4, 2,-1,  4, -1, -1,  2,  -1},
     {VMODE_480CVBS,    1296, 4, 1, 1, VIU_ENCI,  6, 4, 2,-1,  2, -1, -1,  2,  -1},
@@ -398,7 +397,7 @@ void set_vmode_clk(vmode_t mode)
     }
     set_viu_path(p_enc[j].viu_path, p_enc[j].viu_type);
     set_hpll_clk_out(p_enc[j].hpll_clk_out);
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     set_hpll_lvds_od(p_enc[j].hpll_lvds_od);
 #endif
     set_hpll_hdmi_od(p_enc[j].hpll_hdmi_od);
@@ -411,7 +410,7 @@ void set_vmode_clk(vmode_t mode)
     set_encl_div(p_enc[j].encl_div);
     set_vdac0_div(p_enc[j].vdac0_div);
     set_vdac1_div(p_enc[j].vdac1_div);
-#ifdef CONFIG_ARCH_MESON6
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
     // If VCO outputs 1488, then we will reset it to exact 1485
     // please note, don't forget to re-config CNTL3/4
     if(((READ_CBUS_REG(HHI_VID_PLL_CNTL) & 0x7fff) == 0x43e)||((READ_CBUS_REG(HHI_VID_PLL_CNTL) & 0x7fff) == 0x21ef)) {
