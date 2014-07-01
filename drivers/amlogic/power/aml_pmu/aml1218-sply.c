@@ -324,13 +324,17 @@ int aml1218_get_vsys_voltage(void)
     return result;
 }
 
-int aml1218_get_otp_version()
+static int pmu__version = -1;
+int aml1218_get_pmu_version()
 {
     uint8_t val = 0; 
-    int  otp_version = 0;
-    aml1218_read(0x007e, &val);
-    otp_version = (val & 0x60) >> 5;
-    return otp_version;
+
+    if (pmu__version == -1) {
+        aml1218_read(0x007e, &val);
+        pmu__version = (val & 0x60) >> 5;
+    }
+
+    return pmu__version;
 }
 
 int aml1218_set_full_charge_voltage(int voltage);
@@ -338,11 +342,15 @@ int aml1218_set_charge_enable(int enable)
 {
     uint8_t val = 0; 
     uint8_t val_t = 0;
-    int otp_version = 0;
+    int pmu_version = 0;
     int charge_status = 0;
     int ocv = 0;
-    otp_version = aml1218_get_otp_version();
-    if (otp_version == 0)
+
+    pmu_version = aml1218_get_pmu_version();
+    printk("---> set charger enable, vbat:%d, vsys:%d\n", 
+           aml1218_get_battery_voltage(),
+           aml1218_get_vsys_voltage());
+    if (pmu_version == 0)
     {   
         aml1218_set_full_charge_voltage(4050000);
         if (usb_bc_mode == USB_BC_MODE_SDP) {
@@ -350,11 +358,11 @@ int aml1218_set_charge_enable(int enable)
         }
         if (ocv_voltage > 3950)
         {   
-            printk("%s, otp_version:%d, ocv = %d, do not open charger.\n", __func__, otp_version, ocv_voltage);
+            printk("%s, pmu_version:%d, ocv = %d, do not open charger.\n", __func__, pmu_version, ocv_voltage);
             return aml1218_set_bits(0x0017, 0x00, 0x01);
         }
     }
-    else if(otp_version >= 1)
+    else if(pmu_version >= 1)
     {
         aml1218_set_full_charge_voltage(pmu_init_chgvol);
     }
@@ -573,6 +581,7 @@ int aml1218_first_init(struct aml1218_supply *supply)
      * initialize charger from battery parameters
      */
     if (aml1218_battery) {
+        aml1218_set_charge_enable  (0);
         aml1218_set_charging_current   (aml1218_battery->pmu_init_chgcur);
       //aml1218_set_full_charge_voltage(aml1218_battery->pmu_init_chgvol);
         aml1218_set_charge_end_rate    (aml1218_battery->pmu_init_chgend_rate);
@@ -927,7 +936,7 @@ int aml1218_usb_charger(struct notifier_block *nb, unsigned long value, void *pd
     usb_bc_mode = value;
     switch (value) {
     case USB_BC_MODE_SDP:                                               // pc
-        if (aml1218_get_otp_version() == 0) {
+        if (aml1218_get_pmu_version() == 0) {
             printk("disable charger for REVB chip when connect to PC\n");
             aml1218_set_charge_enable(0);
         }
@@ -946,7 +955,7 @@ int aml1218_usb_charger(struct notifier_block *nb, unsigned long value, void *pd
         if (aml1218_battery && aml1218_battery->pmu_usbcur_limit) {     // limit usb current
             aml1218_set_usb_current_limit(aml1218_battery->pmu_usbcur); 
         }
-        if (aml1218_get_otp_version() == 0) {
+        if (aml1218_get_pmu_version() == 0) {
             aml1218_set_charge_enable(1);
         }
         break;
@@ -1341,7 +1350,7 @@ static int aml1218_update_state(struct aml_charger *charger)
         aml1218_set_charge_enable(1);
     }
     vsys = aml1218_get_vsys_voltage();
-    if (aml1218_get_otp_version() == 0) {
+    if (aml1218_get_pmu_version() == 0) {
         if ((vsys > charger->vbat) && (vsys - charger->vbat < 500) || charger->vbat > 3950) {
             printk("%s, vsys is not large or vbat too large, vsys:%d, vbat:%d\n", __func__, vsys, charger->vbat);
             aml1218_set_charge_enable(0);
@@ -1499,7 +1508,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     int      ret;
     uint32_t tmp2;
 
-	AML1218_DBG("---> PMU driver version:v0.90\n");
+	AML1218_DBG("---> PMU driver version:v0.91_A\n");
 	AML1218_DBG("call %s in", __func__);
     g_aml1218_init = pdev->dev.platform_data;
     if (g_aml1218_init == NULL) {
