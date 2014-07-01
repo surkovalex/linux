@@ -691,9 +691,11 @@ static  int amstream_port_init(stream_port_t *port)
     }
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#ifndef CONFIG_H264_4K2K_SINGLE_CORE
     if ((port->type & PORT_TYPE_VIDEO) && (port->vformat == VFORMAT_H264_4K2K)) {
         stbuf_vdec2_init(pvbuf);
     }
+#endif
 #endif
 
     tsync_audio_break(0); // clear audio break
