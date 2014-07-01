@@ -184,6 +184,15 @@ static struct v4l2_queryctrl sp2518_qctrl[] = {
 		.step          = 20,
 		.default_value = 100,
 		.flags         = V4L2_CTRL_FLAG_SLIDER,
+	},{
+		.id		= V4L2_CID_ROTATE,
+		.type		= V4L2_CTRL_TYPE_INTEGER,
+		.name		= "Rotate",
+		.minimum	= 0,
+		.maximum	= 270,
+		.step		= 90,
+		.default_value	= 0,
+		.flags         = V4L2_CTRL_FLAG_SLIDER,
 	}
 };
 struct v4l2_querymenu sp2518_qmenu_wbmode[] = {
@@ -1800,6 +1809,11 @@ static int sp2518_setting(struct sp2518_device *dev,int PROP_ID,int value )
 			//printk(KERN_INFO " set camera  zoom mode=%d. \n ",value);
 		}
 		break;
+	case V4L2_CID_ROTATE:
+		if(sp2518_qctrl[8].default_value!=value){
+			sp2518_qctrl[8].default_value=value;
+			printk(" set camera  rotate =%d. \n ",value);
+		}
 	default:
 		ret=-1;
 		break;
@@ -1835,7 +1849,7 @@ static void sp2518_fillbuff(struct sp2518_fh *fh, struct sp2518_buffer *buf)
 	para.v4l2_format = fh->fmt->fourcc;
 	para.v4l2_memory = 0x18221223;
 	para.zoom = sp2518_qctrl[7].default_value;
-	para.angle = 0;
+	para.angle = sp2518_qctrl[8].default_value;
 	para.vaddr = (unsigned)vbuf;
 	vm_fill_buffer(&buf->vb,&para);
 	buf->vb.state = VIDEOBUF_DONE;
@@ -2620,6 +2634,7 @@ static int sp2518_close(struct file *file)
 
 	sp2518_qctrl[5].default_value=0;
 	sp2518_qctrl[7].default_value=100;
+	sp2518_qctrl[8].default_value=0;
 	sp2518_frmintervals_active.numerator = 1;
 	sp2518_frmintervals_active.denominator = 15;
 	power_down_sp2518(dev);
