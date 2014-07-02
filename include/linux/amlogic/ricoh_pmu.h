@@ -123,6 +123,7 @@ extern int  rn5t618_set_charge_enable(int enable);                      // 0->di
 extern int  rn5t618_set_charge_current(int curr);                       // current of charge, in uA
 extern int  rn5t618_get_battery_percent(void);                          // return volume of battery, in 1%
 extern int  rn5t618_cal_ocv(int ibat, int vbat, int dir);               // ibat in mA, vbat in mV
+extern int  rn5t618_get_saved_coulomb(void);                            // for coulomb clear issue
 extern void rn5t618_power_off(void);                                    // power of system
 
 #endif /* __RN5T618_H__ */

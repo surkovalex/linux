@@ -280,6 +280,8 @@ static int ricoh_pmu_probe(struct i2c_client *client,
         dwc_otg_power_register_notifier(&rn5t618_otg_nb);
         dwc_otg_charger_detect_register_notifier(&rn5t618_usb_nb);
     #endif
+        RICOH_DBG("%s, %d\n", __func__, __LINE__);
+        rn5t618_get_saved_coulomb();
     }
 #endif
     /*

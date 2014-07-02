@@ -399,6 +399,44 @@ int rn5t618_get_coulomber_counter(void)
     return result;
 }
 
+/*
+ * get saved coulomb counter form PMU registers for RICOH
+ */
+static int rn5t618_save_coulomb = 0;
+static int rn5t618_coulomb_flag = 0;
+#define POWER_OFF_FLAG          0x40
+#define REBOOT_FLAG             0x20
+int rn5t618_get_saved_coulomb(void)
+{
+    uint8_t val[4];
+    int result;
+
+    rn5t618_read(0x01, &val[0]);
+    if (val[0] <= 0x06) {
+        RICOH_DBG("Chip version is RN5T618F, nothing todo\n");
+        rn5t618_coulomb_flag = REBOOT_FLAG; 
+        return -1;
+    }
+    rn5t618_read(0x07, &val[0]);
+    rn5t618_coulomb_flag = (val[0] & 0x60);
+    RICOH_DBG("coulomb_flag:0x%02x\n", rn5t618_coulomb_flag);
+    if (rn5t618_coulomb_flag & POWER_OFF_FLAG) {
+        rn5t618_write(0x00ff, 0x01);                                // register bank set to 1
+        rn5t618_read(0x00bd, &val[0]);
+        rn5t618_read(0x00bf, &val[1]);
+        rn5t618_read(0x00c1, &val[2]);
+        rn5t618_read(0x00c3, &val[3]);
+        rn5t618_save_coulomb = val[3] | (val[2] << 8) | (val[1] << 16) | (val[0] << 24);
+        RICOH_DBG("saved coulomb counter:0x%02x %02x %02x %02x\n",
+                  val[0], val[1], val[2], val[3]);
+        rn5t618_write(0x00ff, 0x00);                                // register bank set to 0
+        rn5t618_set_bits(0x0007, 0x00, 0x60);                       // clear flag
+    } else {
+        RICOH_DBG("no saved coulomb counter\n");    
+        return -1;
+    }
+}
+
 static int rn5t618_get_coulomber(struct aml_charger *charger)
 {
     uint8_t val[4];
@@ -412,7 +450,25 @@ static int rn5t618_get_coulomber(struct aml_charger *charger)
 
     result = val[3] | (val[2] << 8) | (val[1] << 16) | (val[0] << 24);
     result = result / (3600);                                           // to mAh
-    charger->charge_cc    = result;
+    if (rn5t618_coulomb_flag & POWER_OFF_FLAG) {
+        /*
+         * use saved coulomb registers
+         */
+        RICOH_DBG("saved   coulomb:%02x %02x %02x %02x, %dmah\n",
+                 (rn5t618_save_coulomb >> 24) & 0xff,
+                 (rn5t618_save_coulomb >> 16) & 0xff,
+                 (rn5t618_save_coulomb >>  8) & 0xff,
+                 (rn5t618_save_coulomb >>  0) & 0xff,
+                  rn5t618_save_coulomb / 3600);    
+        RICOH_DBG("current coulomb:%02x %02x %02x %02x, %dmah\n",
+                  val[0], val[1], val[2], val[3],
+                  result);
+        rn5t618_save_coulomb = rn5t618_save_coulomb / 3600;
+        charger->charge_cc   = rn5t618_save_coulomb + result;
+        rn5t618_coulomb_flag = 0;
+    } else {
+        charger->charge_cc   = result;
+    }
     charger->discharge_cc = 0;
     return 0;
 }
@@ -1435,8 +1491,12 @@ static void rn5t618_irq_work_func(struct work_struct *work)
 static struct notifier_block rn5t618_reboot_nb;
 static int rn5t618_reboot_work(struct notifier_block *nb, unsigned long state, void *cmd)
 {
-    RICOH_DBG("%s, clear flags\n", __func__);
-    rn5t618_set_bits(0x0007, 0x00, 0x01);
+    if (g_rn5t618_init->reset_to_system) {
+        RICOH_DBG("%s, clear flags\n", __func__);
+        rn5t618_set_bits(0x0007, 0x00, 0x01);
+    }
+    rn5t618_set_bits(0x0007, 0x20, 0x60);
+
     return NOTIFY_DONE;
 }
 
@@ -1477,6 +1537,10 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
         return -ENODEV;
     }
 
+    if (!(rn5t618_coulomb_flag & (POWER_OFF_FLAG | REBOOT_FLAG))) {
+        RICOH_DBG("no special flag, clear RTC mem, force using ocv\n");
+        aml_write_rtc_mem_reg(0, 0); 
+    }
     rn5t618_power_key->name       = pdev->name;
     rn5t618_power_key->phys       = "m1kbd/input2";
     rn5t618_power_key->id.bustype = BUS_HOST;
@@ -1556,10 +1620,8 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
         rn5t618_otg_job.flag = 0;
     }
 #endif
-    if (g_rn5t618_init->reset_to_system) {
-        rn5t618_reboot_nb.notifier_call = rn5t618_reboot_work;
-        register_reboot_notifier(&rn5t618_reboot_nb);
-    }
+    rn5t618_reboot_nb.notifier_call = rn5t618_reboot_work;
+    register_reboot_notifier(&rn5t618_reboot_nb);
     if (supply->irq == RN5T618_IRQ_NUM) {
         INIT_WORK(&supply->irq_work, rn5t618_irq_work_func); 
         ret = request_irq(supply->irq, 

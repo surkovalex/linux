@@ -159,6 +159,14 @@ void aml_pmu_do_callbacks(struct aml_charger *charger)
 }
 EXPORT_SYMBOL(aml_pmu_do_callbacks);
 
+long aml_pmu_get_ts(void)
+{
+    struct timespec ts; 
+    ktime_get_ts(&ts);
+    return ts.tv_sec;
+}
+EXPORT_SYMBOL(aml_pmu_get_ts);
+
 int aml_pmu_register_api(struct aml_pmu_api *api)
 {
     if (!api || g_aml_pmu_api) {
