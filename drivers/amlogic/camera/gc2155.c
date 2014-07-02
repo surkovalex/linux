@@ -3103,7 +3103,7 @@ static int vidioc_streamoff(struct file *file, void *priv, enum v4l2_buf_type i)
 static int vidioc_enum_framesizes(struct file *file, void *priv, struct v4l2_frmsizeenum *fsize)
 {
 	//printk("----------- %s \n",__func__);
-	struct gc2155_fh *fh = priv;
+//	struct gc2155_fh *fh = priv;
 	//struct gc2155_device *dev = fh->dev;
 	int ret = 0,i=0;
 	struct gc2155_fmt *fmt = NULL;

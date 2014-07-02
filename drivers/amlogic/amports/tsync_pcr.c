@@ -91,7 +91,6 @@ u32 tsync_pcr_vstream_delayed(void)
 
 void tsync_pcr_avevent_locked(avevent_t event, u32 param)
 {
-    u32 t;
 
     switch (event) {
     case VIDEO_START:        

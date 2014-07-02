@@ -797,15 +797,6 @@ static ssize_t digital_raw_store(struct class* class, struct class_attribute* at
 }
 static ssize_t digital_codec_show(struct class*cla, struct class_attribute* attr, char* buf)
 {
-  static char* codec_format[] = {
-	"0-pcm",
-    "1-old_dts",
-    "2-dd",
-    "3-dts",
-    "4-dd+",
-    "5-dtshd"
-    "6-8chpcm"
-  };
   char* pbuf = buf;
 
   //printk("IEC958_mode_codec/%d Digital codec type: %s\n",IEC958_mode_codec, codec_format[IEC958_mode_codec]);

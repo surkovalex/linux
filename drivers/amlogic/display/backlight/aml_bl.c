@@ -48,6 +48,14 @@
 #ifdef MESON_BACKLIGHT_DEBUG
 #define DPRINT(...) printk(KERN_INFO __VA_ARGS__)
 #define DTRACE()    DPRINT(KERN_INFO "%s()\n", __FUNCTION__)
+static const char* bl_ctrl_method_table[]={
+    "gpio",
+    "pwm_negative",
+    "pwm_positive",
+    "pwm_combo",
+    "extern",
+    "null"
+};
 #else
 #define DPRINT(...)
 #define DTRACE()
@@ -73,14 +81,6 @@ typedef enum {
     BL_CTL_MAX = 5,
 } BL_Ctrl_Method_t;
 
-static const char* bl_ctrl_method_table[]={
-    "gpio",
-    "pwm_negative",
-    "pwm_positive",
-    "pwm_combo",
-    "extern",
-    "null"
-};
 
 typedef enum {
     BL_PWM_A = 0,

@@ -83,12 +83,12 @@ static struct later_job aml1218_otg_job = {};
 
 static int aml1218_update_state(struct aml_charger *charger);
 
-static uint32_t charge_timeout = 0;
-static int      re_charge_cnt  = 0;
-static int      current_dir    = -1;
-static int      power_flag     = 0;
-static int      pmu_version    = 0;
-static int      chg_status_reg  = 0;
+//static uint32_t charge_timeout = 0;
+//static int      re_charge_cnt  = 0;
+//static int      current_dir    = -1;
+//static int      power_flag     = 0;
+//static int      pmu_version    = 0;
+//static int      chg_status_reg  = 0;
 static int      usb_bc_mode = 0;
 
 int aml1218_get_battery_voltage(void)
@@ -340,11 +340,11 @@ int aml1218_get_pmu_version()
 int aml1218_set_full_charge_voltage(int voltage);
 int aml1218_set_charge_enable(int enable)
 {
-    uint8_t val = 0; 
-    uint8_t val_t = 0;
+//    uint8_t val = 0; 
+//    uint8_t val_t = 0;
     int pmu_version = 0;
-    int charge_status = 0;
-    int ocv = 0;
+//    int charge_status = 0;
+//    int ocv = 0;
 
     pmu_version = aml1218_get_pmu_version();
     printk("---> set charger enable, vbat:%d, vsys:%d\n", 

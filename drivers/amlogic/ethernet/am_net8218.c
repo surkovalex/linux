@@ -100,7 +100,7 @@ MODULE_PARM_DESC(amlog_level, "ethernet debug level\n");
 //#define PHY_LOOPBACK_TEST
 
 static int running = 0;
-static struct ethtool_wol *syswol =NULL;
+//static struct ethtool_wol *syswol =NULL;
 static struct net_device *my_ndev = NULL;
 static struct aml_eth_platdata *eth_pdata = NULL;
 static unsigned int g_ethernet_registered = 0;

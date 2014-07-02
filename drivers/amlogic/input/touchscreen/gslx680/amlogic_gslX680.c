@@ -693,7 +693,7 @@ static void report_data(struct gsl_ts *ts, u16 x, u16 y, u8 pressure, u8 id)
 static void gslX680_ts_worker(struct work_struct *work)
 {
 	int rc, i;
-	u8 id, touches, read_buf[4] = {0};
+	u8 id, touches;
 	u16 x, y;
 
 	struct gsl_ts *ts = container_of(work, struct gsl_ts,work);
@@ -931,7 +931,7 @@ static irqreturn_t gsl_ts_irq(int irq, void *dev_id)
 static int gslX680_ts_init(struct i2c_client *client, struct gsl_ts *ts)
 {
 	struct input_dev *input_device;
-	int i, rc = 0;
+	int  rc = 0;
 	
 	printk("[GSLX680] Enter %s\n", __func__);
 

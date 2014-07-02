@@ -1260,8 +1260,6 @@ void bf3720_set_param_effect(struct bf3720_device *dev,enum camera_effect_flip_e
 *************************************************************************/
 void bf3720_set_night_mode(struct bf3720_device *dev,enum  camera_night_mode_flip_e enable)
 {
-	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-    unsigned char buf[2];
 /*
 	if (enable) {
 		buf[0]=0x86;
@@ -1330,14 +1328,14 @@ static int set_flip(struct bf3720_device *dev)
 	return 0;
 }
 
-static unsigned int shutter_l = 0;
-static unsigned int shutter_h = 0;
+//static unsigned int shutter_l = 0;
+//static unsigned int shutter_h = 0;
 
 void bf3720_set_resolution(struct bf3720_device *dev,int height,int width)
 {
 	unsigned char buf[2];
-	unsigned  int value;
-	unsigned   int pid=0,shutter;
+//	unsigned  int value;
+//	unsigned   int pid=0,shutter;
 //	static unsigned int shutter_l = 0;
 //	static unsigned int shutter_h = 0;
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);

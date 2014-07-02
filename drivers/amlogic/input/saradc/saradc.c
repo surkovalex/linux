@@ -307,7 +307,7 @@ static ssize_t saradc_print_flag_store(struct class *cla, struct class_attribute
 #ifndef CONFIG_MESON_CPU_TEMP_SENSOR
 static ssize_t saradc_temperature_store(struct class *cla, struct class_attribute *attr, const char *buf, size_t count)
 {
-    int ret;
+    //int ret;
 		u8 tempsen;
 		sscanf(buf, "%d", (int*)&tempsen);
 		if (tempsen) {

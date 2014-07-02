@@ -1613,7 +1613,7 @@ static bool queue_empty(int queue_idx)
 static bool is_in_queue(di_buf_t* di_buf, int queue_idx)
 {
     bool ret = 0;
-    di_buf_t *p = NULL, *ptmp;
+    di_buf_t *p = NULL;
     int itmp;
     queue_for_each_entry(p, ptmp, queue_idx, list) {
         if(p==di_buf){
@@ -3738,7 +3738,7 @@ static void recycle_vframe_type_pre(di_buf_t* di_buf)
 */
 static int peek_free_linked_buf(void)
 {
-    di_buf_t *p = NULL, *p_linked = NULL,*ptmp;
+    di_buf_t *p = NULL;
     int itmp, p_index = -2;
 
     if(list_count(QUEUE_LOCAL_FREE) < 2)
@@ -3759,8 +3759,8 @@ static int peek_free_linked_buf(void)
 */
 static di_buf_t *get_free_linked_buf(int idx)
 {
-    di_buf_t *di_buf=NULL, *di_buf_linked=NULL, *di_buf_tmp;
-    int i = 0, pool_idx = 0, di_buf_idx = 0;
+    di_buf_t *di_buf=NULL, *di_buf_linked=NULL;
+    int pool_idx = 0, di_buf_idx = 0;
 
     queue_t *q = &(queue[QUEUE_LOCAL_FREE]);
     if(list_count(QUEUE_LOCAL_FREE)<2)
@@ -4447,7 +4447,7 @@ di post process
 */
 static void inc_post_ref_count(di_buf_t* di_buf)
 {
-    int post_blend_mode;
+//    int post_blend_mode;
 
     if(di_buf == NULL){
 #ifdef DI_DEBUG
@@ -6795,8 +6795,8 @@ static void di_vf_put(vframe_t *vf, void* arg)
 {
     di_buf_t* di_buf = (di_buf_t*)vf->private_data;
     ulong irq_flag2=0, fiq_flag=0;
-    di_buf_t *p = NULL, *ptmp = NULL;
-    int itmp = 0;
+    //di_buf_t *p = NULL;
+    //int itmp = 0;
     if((init_flag == 0)||recovery_flag){
 #ifdef DI_DEBUG
         di_print("%s: %x\n", __func__, vf);

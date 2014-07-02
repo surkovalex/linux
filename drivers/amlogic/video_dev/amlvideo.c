@@ -62,7 +62,7 @@
 MODULE_DESCRIPTION("pass a frame of amlogic video codec device  to user in style of v4l2");
 MODULE_AUTHOR("amlogic-sh");
 MODULE_LICENSE("GPL");
-static u32 vpts_remainder;
+//static u32 vpts_remainder;
 static unsigned video_nr = 10;
 //module_param(video_nr, uint, 0644);
 //MODULE_PARM_DESC(video_nr, "videoX start number, 10 is defaut");

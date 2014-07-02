@@ -984,8 +984,8 @@ static int set_flip(struct sp1628_device *dev)
 
 static void sp1628_set_resolution(struct sp1628_device *dev,int height,int width)
 {
-	int i=0;
-	unsigned char buf[2];
+	//int i=0;
+	//unsigned char buf[2];
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	if (width*height >= 640*480) {
 		printk("set resolution 1280X960\n");
@@ -1549,8 +1549,8 @@ void SP1628_night_mode(struct sp1628_device *dev,enum  camera_night_mode_flip_e 
 
 void SP1628_set_param_banding(struct sp1628_device *dev,enum  camera_banding_flip_e banding)
 	{
-		struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-		unsigned char buf[4];
+		//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+		//unsigned char buf[4];
 		
 		  switch(banding)
 		

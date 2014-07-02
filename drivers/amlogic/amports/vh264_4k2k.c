@@ -1144,7 +1144,6 @@ static void vh264_4k2k_local_init(void)
 
 static s32 vh264_4k2k_init(void)
 {
-    int i;
     void __iomem *p = ioremap_nocache(work_space_adr, DECODER_WORK_SPACE_SIZE);
 
     if (!p) {

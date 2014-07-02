@@ -1605,7 +1605,7 @@ static int hm2057_setting(struct hm2057_device *dev,int PROP_ID,int value )
 	//printk("----------- %s \n",__func__);
 
 	int ret=0;
-	unsigned char cur_val;
+	//unsigned char cur_val;
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	switch(PROP_ID)  {
 	case V4L2_CID_BRIGHTNESS:

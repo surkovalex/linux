@@ -65,7 +65,7 @@ static int remote_enable;
 static int NEC_REMOTE_IRQ_NO = INT_REMOTE;
 unsigned int g_remote_base;
 DECLARE_TASKLET_DISABLED(tasklet, remote_tasklet, 0);
-static int repeat_flag;
+//static int repeat_flag;
 static struct remote *gp_remote = NULL;
 char *remote_log_buf;
 // use 20 map for this driver
@@ -255,7 +255,7 @@ static irqreturn_t remote_interrupt(int irq, void *dev_id){
 
 static void remote_fiq_interrupt(unsigned long data)
 {
-	struct remote *remote_data = (struct remote *)data;
+	//struct remote *remote_data = (struct remote *)data;
 	remote_reprot_key(gp_remote);
 }
 

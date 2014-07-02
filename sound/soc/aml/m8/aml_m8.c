@@ -160,7 +160,7 @@ static void aml_asoc_work_func(struct work_struct *work)
 {
     struct aml_audio_private_data *p_aml_audio = NULL;
     struct snd_soc_card *card = NULL;
-    int jack_type = 0;
+  //  int jack_type = 0;
     int flag = -1;
 	int status = SND_JACK_HEADPHONE;
     p_aml_audio = container_of(work, struct aml_audio_private_data, work);
@@ -687,7 +687,7 @@ static void aml_m8_pinmux_deinit(struct snd_soc_card *card)
 }
 static int aml_m8_audio_probe(struct platform_device *pdev)
 {
-    struct device_node *np;
+//    struct device_node *np;
     struct snd_soc_card *card = &aml_snd_soc_card;
     struct aml_audio_private_data *p_aml_audio;
 	char tmp[NAME_SIZE];

@@ -357,7 +357,7 @@ unsigned int (*get_cur_key_domian[])(struct remote *remote_data,int domain)={
 
 int remote_hw_reprot_key(struct remote *remote_data)
 {
-	static int last_scan_code,scan_code;
+	static int last_scan_code;
 	int i;
 	get_cur_scancode(remote_data);
 	get_cur_scanstatus(remote_data);

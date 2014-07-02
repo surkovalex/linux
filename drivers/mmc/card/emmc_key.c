@@ -337,7 +337,7 @@ static unsigned char *test_emmc_write_buf;// ={"fffffffffffff  gggggggggg"};
 #define TEST_STRING_3  "kernel test 3333333333333333 3333333333333333"
 static void fill_data()
 {
-	int i;
+	//int i;
 	memset(test_emmc_write_buf,0,2048);
 	//for(i=0;i<EMMCKEY_DATA_VALID_LEN;i++){
 	//	test_emmc_write_buf[i]= 'a';

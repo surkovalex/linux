@@ -747,10 +747,10 @@ void HM5065_init_regs(struct hm5065_device *dev)
 	return;
 }
 
-static unsigned long hm5065_preview_exposure;
-static unsigned long hm5065_preview_extra_lines;
-static unsigned long hm5065_gain;
-static unsigned long hm5065_preview_maxlines;
+//static unsigned long hm5065_preview_exposure;
+//static unsigned long hm5065_preview_extra_lines;
+//static unsigned long hm5065_gain;
+//static unsigned long hm5065_preview_maxlines;
 /*************************************************************************
 * FUNCTION
 *    HM5065_set_param_wb
@@ -1019,7 +1019,7 @@ void HM5065_set_param_effect(struct hm5065_device *dev,enum camera_effect_flip_e
 static void HM5065_set_param_banding(struct hm5065_device *dev,enum  camera_banding_flip_e banding)
 {
 		struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-		unsigned char buf[4];
+		//unsigned char buf[4];
 		switch(banding){
 			case CAM_BANDING_60HZ:
 							printk("set banding 60Hz\n");
@@ -1040,7 +1040,7 @@ static int HM5065_AutoFocus(struct hm5065_device *dev, int focus_mode)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	int ret = 0;
-    int i = 0;
+    //int i = 0;
     
 	switch (focus_mode) {
 					case CAM_FOCUS_MODE_AUTO:
@@ -1072,9 +1072,9 @@ static int HM5065_AutoFocus(struct hm5065_device *dev, int focus_mode)
 
 static int HM5065_FlashCtrl(struct hm5065_device *dev, int flash_mode)
 {
-	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+	//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	int ret = 0;
-    int i = 0;
+    //int i = 0;
     return ret;
 
 }    /* HM5065_FlashCtrl */

@@ -1927,8 +1927,8 @@ unsigned char v4l_2_sp0a19(int val)
 static int sp0a19_setting(struct sp0a19_device *dev,int PROP_ID,int value )
 {
 	int ret=0;
-	unsigned char cur_val;
-	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+	//unsigned char cur_val;
+	//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	switch(PROP_ID)  {
 	case V4L2_CID_DO_WHITE_BALANCE:
 		if(sp0a19_qctrl[0].default_value!=value){

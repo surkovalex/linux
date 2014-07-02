@@ -4776,7 +4776,6 @@ static int ar0543_close(struct file *file)
     struct ar0543_device *dev       = fh->dev;
     struct ar0543_dmaqueue *vidq = &dev->vidq;
     struct video_device  *vdev = video_devdata(file);
-    int i=0;
     ar0543_have_open = 0;
     capture_proc = 0;
     ar0543_stop_thread(vidq);

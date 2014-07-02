@@ -804,7 +804,7 @@ void SP0838_init_regs(struct sp0838_device *dev)
 
 }
 
-
+#if 0
 static struct aml_camera_i2c_fig1_s resolution_320x240_script[] = {
 	{0xfd, 0x00},
 	{0x47, 0x00},
@@ -819,7 +819,7 @@ static struct aml_camera_i2c_fig1_s resolution_320x240_script[] = {
 	{0xff, 0xff}
 
 };
-
+#endif
 static struct aml_camera_i2c_fig1_s resolution_640x480_script[] = {
 #if 1
 		{0xfd, 0x00},

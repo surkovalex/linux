@@ -305,8 +305,8 @@ static int aml_pmus_probe(struct platform_device *pdev)
     struct i2c_board_info   board_info;
     struct i2c_adapter      *adapter;
     struct i2c_client       *client;
-    struct property         *prop;
-    int    val;
+    //struct property         *prop;
+    //int    val;
     int    err;
     int    addr;
     int    bus_type = -1;

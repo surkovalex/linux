@@ -53,7 +53,7 @@
 #endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
-static struct early_suspend ov5647_early_suspend;
+//static struct early_suspend ov5647_early_suspend;
 #endif
 
 #include "common/config_parser.h"
@@ -108,8 +108,8 @@ static struct class *cam_class;
 static unsigned int g_ae_manual_exp;
 static unsigned int g_ae_manual_ag;
 static unsigned int g_ae_manual_vts;
-static unsigned int exp_mode;
-static unsigned int change_cnt;
+//static unsigned int exp_mode;
+//static unsigned int change_cnt;
 static unsigned int current_fmt;
 static unsigned int current_fr = 0;//50 hz
 static unsigned int aet_index;
@@ -2767,7 +2767,7 @@ void OV5647_set_param_wb(struct ov5647_device *dev,enum  camera_wb_flip_e para)/
  *************************************************************************/
 void OV5647_set_param_exposure(struct ov5647_device *dev,enum camera_exposure_e para)
 {
-    struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+    //struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
     int value;
     if(0){//para == EXPOSURE_0_STEP){
         dev->cam_para->cam_command = CAM_COMMAND_AE_ON;
@@ -2906,7 +2906,7 @@ static void OV5647_set_param_banding(struct ov5647_device *dev,enum  camera_nigh
 
 static int OV5647_AutoFocus(struct ov5647_device *dev, int focus_mode)
 {
-    struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+    //struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
     int ret = 0;
 
     switch (focus_mode) {
@@ -3059,7 +3059,7 @@ static resolution_param_t* get_resolution_param(struct ov5647_device *dev, int o
 void set_resolution_param(struct ov5647_device *dev, resolution_param_t* res_param)
 {
     struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-    int rc = -1;
+    //int rc = -1;
     int i=0;
     unsigned char t = dev->cam_info.interface;
     if(i_index != -1 && ov5647_work_mode != CAMERA_CAPTURE){
@@ -3122,9 +3122,9 @@ void set_resolution_param(struct ov5647_device *dev, resolution_param_t* res_par
 static int set_focus_zone(struct ov5647_device *dev, int value)
 {
 	int xc, yc, tx, ty;
-	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-	int retry_count = 10;
-	int ret = -1;
+	//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+	//int retry_count = 10;
+	//int ret = -1;
 	
 	xc = (value >> 16) & 0xffff;
 	yc = (value & 0xffff);
