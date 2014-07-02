@@ -2174,6 +2174,7 @@ static const struct mmc_host_ops aml_sdhc_ops = {
     .start_signal_voltage_switch = aml_signal_voltage_switch,
     .card_busy = aml_sdhc_card_busy,
     .execute_tuning = aml_sdhc_execute_tuning,
+    .hw_reset = aml_emmc_hw_reset,
 };
 
 /*for multi host claim host*/

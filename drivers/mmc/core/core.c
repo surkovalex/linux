@@ -2216,9 +2216,12 @@ int mmc_can_reset(struct mmc_card *card)
 
 	if (!mmc_card_mmc(card))
 		return 0;
+    
 	rst_n_function = card->ext_csd.rst_n_function;
-	if ((rst_n_function & EXT_CSD_RST_N_EN_MASK) != EXT_CSD_RST_N_ENABLED)
-		return 0;
+	if ((rst_n_function & EXT_CSD_RST_N_EN_MASK) != EXT_CSD_RST_N_ENABLED){
+        pr_err("###Detect hw reset function disabled here, rst_n_function:%d\n", rst_n_function);
+        return 0;
+	}
 	return 1;
 }
 EXPORT_SYMBOL(mmc_can_reset);

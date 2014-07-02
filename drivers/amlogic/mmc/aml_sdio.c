@@ -1194,6 +1194,7 @@ static const struct mmc_host_ops aml_sdio_ops = {
     .enable_sdio_irq = aml_sdio_enable_irq,
     .get_cd = aml_sdio_get_cd,
     .get_ro = aml_sdio_get_ro,
+	.hw_reset = aml_emmc_hw_reset,
 };
 
 static ssize_t sdio_debug_func(struct class *class, struct class_attribute *attr, const char *buf, size_t count)

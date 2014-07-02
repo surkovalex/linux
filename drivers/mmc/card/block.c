@@ -842,8 +842,8 @@ static int mmc_blk_cmd_recovery(struct mmc_card *card, struct request *req,
 			break;
 
 		prev_cmd_status_valid = false;
-		pr_err("%s: error %d sending status command, %sing\n",
-		       req->rq_disk->disk_name, err, retry ? "retry" : "abort");
+		pr_err("%s: error %d sending status command, %sing, %s\n",
+		       req->rq_disk->disk_name, err, retry ? "retry" : "abort", __func__);
 	}
 
 	/* We couldn't get a response from the card.  Give up. */
@@ -933,8 +933,11 @@ static int mmc_blk_reset(struct mmc_blk_data *md, struct mmc_host *host,
 {
 	int err;
 
-	if (md->reset_done & type)
+	if (md->reset_done & type){
+        pr_err("%s %d reset error md->reset_done:%d and type:%d\n", 
+            __func__, __LINE__, md->reset_done, type);
 		return -EEXIST;
+	}
 
 	md->reset_done |= type;
 	err = mmc_hw_reset(host);
@@ -1286,8 +1289,8 @@ static int mmc_blk_packed_err_check(struct mmc_card *card,
 	check = mmc_blk_err_check(card, areq);
 	err = get_card_status(card, &status, 0);
 	if (err) {
-		pr_err("%s: error %d sending status command\n",
-		       req->rq_disk->disk_name, err);
+		pr_err("%s: error %d sending status command %s\n",
+		       req->rq_disk->disk_name, err, __func__);
 		return MMC_BLK_ABORT;
 	}
 

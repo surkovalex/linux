@@ -1311,6 +1311,43 @@ int aml_sd_voltage_switch (struct amlsd_platform* pdata, char signal_voltage)
     return 0;
 }
 
+// boot9 here
+void aml_emmc_hw_reset(struct mmc_host *mmc)
+{
+    struct amlsd_platform * pdata = mmc_priv(mmc);
+
+    if(!aml_card_type_mmc(pdata)){
+        return;
+    }
+
+    printk("%s %d\n", __func__, __LINE__);
+
+#if ((defined CONFIG_ARCH_MESON6) ||(defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+    //boot_9 used as eMMC hw_rst pin here.
+
+    //clr nand ce1 pinmux
+    aml_clr_reg32_mask(P_PERIPHS_PIN_MUX_2, (1<<24));
+
+    //set out    
+    aml_clr_reg32_mask(P_PREG_PAD_GPIO3_EN_N, (1<<9));
+
+    //high
+    aml_set_reg32_mask(P_PREG_PAD_GPIO3_O, (1<<9));
+    mdelay(1);
+
+    //low
+    aml_clr_reg32_mask(P_PREG_PAD_GPIO3_O, (1<<9));
+    mdelay(2);
+
+    //high
+    aml_set_reg32_mask(P_PREG_PAD_GPIO3_O, (1<<9));
+    mdelay(1);
+ #endif
+ 
+    return; 
+}
+
+
 /*-------------------debug---------------------*/
 
 unsigned int sdhc_debug=0x0; // 0xffffffff;
