@@ -437,6 +437,10 @@ void vdec_power_mode(int level)
     raw_local_save_flags(fiq_flag);
     local_fiq_disable();
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    vdec_clock_prepare_switch();
+#endif
+
     if (level == 0) {
         vdec_clock_enable();
     } else {
@@ -461,6 +465,10 @@ void vdec2_power_mode(int level)
     spin_lock_irqsave(&lock, flags);
     raw_local_save_flags(fiq_flag);
     local_fiq_disable();
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    vdec_clock_prepare_switch();
+#endif
 
     if (level == 0) {
         vdec2_clock_enable();

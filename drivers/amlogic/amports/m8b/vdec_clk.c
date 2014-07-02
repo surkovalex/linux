@@ -72,15 +72,23 @@ HHI_VDEC_CLK_CNTL
 #define VDEC2_364M() WRITE_MPEG_REG(HHI_VDEC2_CLK_CNTL, (3 << 9) | (0))
 
 #define VDEC1_CLOCK_ON()   WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 1, 8, 1); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 0, 15, 1); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 0, 8, 1); \
                            WRITE_VREG_BITS(DOS_GCLK_EN0, 0x3ff,0,10)
-
 #define VDEC2_CLOCK_ON()   WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 1, 8, 1); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 0, 31, 1); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 0, 24, 1); \
                            WRITE_VREG(DOS_GCLK_EN1, 0x3ff)
-
-#define HCODEC_CLOCK_ON()  WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 1, 24, 1); \
+#define HCODEC_CLOCK_ON()  WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  1, 24, 1); \
                            WRITE_VREG_BITS(DOS_GCLK_EN0, 0x7fff, 12, 15)
-#define HEVC_CLOCK_ON()  WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 1, 24, 1); \
+#define HEVC_CLOCK_ON()    WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 1, 24, 1); \
                            WRITE_VREG(DOS_GCLK_EN3, 0xffffffff)
+#define VDEC1_SAFE_CLOCK() WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, READ_MPEG_REG(HHI_VDEC_CLK_CNTL) & 0x7f, 0, 7); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 1, 8, 1); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 1, 15, 1);
+#define VDEC2_SAFE_CLOCK() WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, (READ_MPEG_REG(HHI_VDEC_CLK_CNTL) >> 16) & 0x7f, 16, 7); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 1, 24, 1); \
+                           WRITE_MPEG_REG_BITS(HHI_VDEC3_CLK_CNTL, 1, 31, 1);
 #define VDEC1_CLOCK_OFF()  WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  0, 8, 1)
 #define VDEC2_CLOCK_OFF()  WRITE_MPEG_REG_BITS(HHI_VDEC2_CLK_CNTL, 0, 8, 1)
 #define HCODEC_CLOCK_OFF() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 0, 24, 1)
@@ -172,6 +180,16 @@ void hevc_clock_on(void)
 void hevc_clock_off(void)
 {
     HEVC_CLOCK_OFF();
+}
+
+void vdec_clock_prepare_switch(void)
+{
+    VDEC1_SAFE_CLOCK();
+}
+
+void vdec2_clock_prepare_switch(void)
+{
+    VDEC2_SAFE_CLOCK();
 }
 
 int vdec_clock_level(vdec_type_t core)
