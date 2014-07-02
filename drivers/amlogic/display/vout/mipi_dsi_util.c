@@ -3,7 +3,7 @@
 #include <plat/cpu.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#if ((MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B))
+#if ((MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
 #include <linux/amlogic/vout/lcdoutc.h>
 #include <linux/kernel.h>
 #include "mipi_dsi_util.h"

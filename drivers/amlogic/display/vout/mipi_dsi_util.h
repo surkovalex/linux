@@ -5,7 +5,7 @@
 #include <mach/cpu.h>
 #include <linux/amlogic/vout/lcdoutc.h>
 
-#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
+#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
 #include <mach/mipi_dsi_reg.h>
 
 // --------------------------------------------------------

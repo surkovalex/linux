@@ -15,7 +15,7 @@
 #include <linux/delay.h>
 #include <mach/am_regs.h>
 #include <linux/amlogic/vout/lcd_reg.h>
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
 #include <mach/edp_tx_reg.h>
 #include "edp_drv.h"
 

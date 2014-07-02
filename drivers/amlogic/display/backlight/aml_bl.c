@@ -1060,7 +1060,7 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                 printk("faild to get bl_pwm_port_gpio_used!\n");
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
                 bl_config.pwm_port = BL_PWM_D;
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
                 bl_config.pwm_port = BL_PWM_C;
 #elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
                 bl_config.pwm_port = BL_PWM_MAX;
@@ -1085,7 +1085,7 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                     printk("faild to get bl_gpio_port!\n");
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
                     str = "GPIOD_1";
-#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B))
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
                     str = "GPIODV_28";
 #endif
                 }
@@ -1117,7 +1117,7 @@ static inline int _get_backlight_config(struct platform_device *pdev)
             if (ret) {
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
                 pwm_freq = 1000;
-#elif (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
                 pwm_freq = 300000;
 #endif
                 printk("faild to get bl_pwm_freq, default set to %u\n", pwm_freq);
