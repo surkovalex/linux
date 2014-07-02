@@ -14,7 +14,7 @@ arch\arm\plat-meson\include\plat\cpu.h
 #define HAS_HEVC_VDEC 1
 #define HAS_HDEC      1
 
-#elif MESON_CPU_TYPEi == MESON_CPU_TYPE_MESON8B
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
 #define HAS_VPU_PROT  0
 #define HAS_VDEC2     0
 #define HAS_HEVC_VDEC 1

@@ -19,41 +19,30 @@
  *
  */
 
-#ifndef VDEC_H
-#define VDEC_H
-#include <mach/cpu.h>
-
-#include <linux/platform_device.h>
+#ifndef VDEC_CLK_H
+#define VDEC_CLK_H
 
 #include <mach/cpu.h>
 
-extern void vdec_set_decinfo(void *p);
-extern int vdec_set_resource(struct resource *s, struct device *p);
+extern void vdec_clock_enable(void);
+extern void vdec_clock_hi_enable(void);
+extern void vdec2_clock_enable(void);
+extern void vdec2_clock_hi_enable(void);
+extern void hcodec_clock_enable(void);
+extern void hevc_clock_enable(void);
+extern void hevc_clock_hi_enable(void);
 
-extern s32 vdec_init(vformat_t vf);
-extern s32 vdec_release(vformat_t vf);
-
-s32 vdec_dev_register(void);
-s32 vdec_dev_unregister(void);
-void vdec_power_mode(int level);
+extern void vdec_clock_on(void);
+extern void vdec_clock_off(void);
+extern void vdec2_clock_on(void);
+extern void vdec2_clock_off(void);
+extern void hcodec_clock_on(void);
+extern void hcodec_clock_off(void);
+extern void hevc_clock_on(void);
+extern void hevc_clock_off(void);
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
-
-typedef enum {
-    VDEC_1 = 0,
-    VDEC_HCODEC,
-    VDEC_2,
-    VDEC_HEVC,
-    VDEC_MAX
-} vdec_type_t;
-
-extern void vdec2_power_mode(int level);
-extern void vdec_poweron(vdec_type_t core);
-extern void vdec_poweroff(vdec_type_t core);
-extern bool vdec_on(vdec_type_t core);
-#else
-#define vdec_poweron(core)
-#define vdec_poweroff(core)
+extern int vdec_clock_level(vdec_type_t core);
 #endif
 
-#endif /* VDEC_H */
+#endif /* VDEC_CLK_H */

@@ -19,41 +19,20 @@
  *
  */
 
-#ifndef VDEC_H
-#define VDEC_H
-#include <mach/cpu.h>
+#include <linux/types.h>
 
-#include <linux/platform_device.h>
+#define MicroCode vh264_4k2k_mc
+#include "h264c_linux_single.h"
 
-#include <mach/cpu.h>
+#undef MicroCode
+#define MicroCode vh264_4k2k_header_mc
+#include "h264header_linux_single.h"
 
-extern void vdec_set_decinfo(void *p);
-extern int vdec_set_resource(struct resource *s, struct device *p);
+#undef MicroCode
+#define MicroCode vh264_4k2k_mmco_mc
+#include "h264mmc_linux_single.h"
 
-extern s32 vdec_init(vformat_t vf);
-extern s32 vdec_release(vformat_t vf);
+#undef MicroCode
+#define MicroCode vh264_4k2k_slice_mc
+#include "h264slice_linux_single.h"
 
-s32 vdec_dev_register(void);
-s32 vdec_dev_unregister(void);
-void vdec_power_mode(int level);
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
-
-typedef enum {
-    VDEC_1 = 0,
-    VDEC_HCODEC,
-    VDEC_2,
-    VDEC_HEVC,
-    VDEC_MAX
-} vdec_type_t;
-
-extern void vdec2_power_mode(int level);
-extern void vdec_poweron(vdec_type_t core);
-extern void vdec_poweroff(vdec_type_t core);
-extern bool vdec_on(vdec_type_t core);
-#else
-#define vdec_poweron(core)
-#define vdec_poweroff(core)
-#endif
-
-#endif /* VDEC_H */
