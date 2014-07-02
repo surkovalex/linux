@@ -623,7 +623,7 @@ extern struct mmc_host *sdio_host;
 #define     SPI_EMMC_FLAG                   5
 
 #define R_BOOT_DEVICE_FLAG  READ_CBUS_REG(ASSIST_POR_CONFIG)
-#ifdef CONFIG_ARCH_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8 
 #define POR_BOOT_VALUE ((((R_BOOT_DEVICE_FLAG>>9)&1)<<2)|((R_BOOT_DEVICE_FLAG>>6)&3)) // {poc[9],poc[7:6]}
 #else
 #define POR_BOOT_VALUE (R_BOOT_DEVICE_FLAG & 7)
@@ -631,7 +631,13 @@ extern struct mmc_host *sdio_host;
 
 #define POR_NAND_BOOT() ((POR_BOOT_VALUE == 7) || (POR_BOOT_VALUE == 6))
 #define POR_SPI_BOOT() ((POR_BOOT_VALUE == 5) || (POR_BOOT_VALUE == 4))
-#define POR_EMMC_BOOT() (POR_BOOT_VALUE == 3)
+
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
+	#define POR_EMMC_BOOT() ((POR_BOOT_VALUE == 3) || ((POR_BOOT_VALUE == 1)))
+#else
+	#define POR_EMMC_BOOT()	 (POR_BOOT_VALUE == 3)
+#endif
+
 #define POR_CARD_BOOT() (POR_BOOT_VALUE == 0)
 
 #define print_tmp(fmt, args...) do{\
