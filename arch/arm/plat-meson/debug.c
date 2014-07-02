@@ -92,11 +92,11 @@ static char * base_addr_type(char base)
 #endif // CONFIG_ARCH_MESON6
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	case 'v':
-        case 'V':
-                return "VCBUS";
+	case 'V':
+		return "VCBUS";
 	case 'm':
 	case 'M':
-                return "MMC";
+		return "MMC";
 #endif // CONFIG_ARCH_MESON8
 	default:
 		break;
@@ -138,8 +138,8 @@ static unsigned int  base_addr_convert(char base,unsigned int address)
 	case 'V':
 		address = VCBUS_REG_ADDR(address);
 		break;
-        case 'm':
-        case 'M':
+	case 'm':
+	case 'M':
 		address = MMC_REG_ADDR(address);
 		break;
 #endif // CONFIG_ARCH_MESON8
@@ -271,7 +271,7 @@ int do_thread_show_work(char argn ,char **argv )
 		for_each_process(p) {
 			pid = pid_vnr(get_task_pid(p,PIDTYPE_PID));
 			printk("%4d: \t%ld\t%p\t%s\n",pid,p->state,p,p->comm);
-		} 
+		}
 	}else{
 		pid = simple_strtol(argv[1],NULL,10);
 		p = pid_task(find_vpid(pid), PIDTYPE_PID);
@@ -283,7 +283,7 @@ int do_stack_show_work(char argn ,char **argv )
 {
 	pid_t pid;
 	struct task_struct *task;
-		
+
 	if(argn != 2){
 		printk("%s",syntax_error_str);
 	}else{
