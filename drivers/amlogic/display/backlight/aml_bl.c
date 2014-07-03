@@ -171,7 +171,9 @@ static void power_on_bl(int bl_flag)
 
     switch (bl_config.method) {
         case BL_CTL_GPIO:
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
             aml_set_reg32_bits(P_LED_PWM_REG0, 1, 12, 2);
+#endif
             mdelay(20);
             bl_gpio_direction_output(bl_config.gpio, 1);
             break;
@@ -497,7 +499,9 @@ static void set_backlight_level(unsigned level)
         switch (bl_config.method) {
             case BL_CTL_GPIO:
                 level = bl_config.dim_min - ((level - bl_config.level_min) * (bl_config.dim_min - bl_config.dim_max)) / (bl_config.level_max - bl_config.level_min);
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
                 aml_set_reg32_bits(P_LED_PWM_REG0, level, 0, 4);
+#endif
                 break;
             case BL_CTL_PWM_NEGATIVE:
             case BL_CTL_PWM_POSITIVE:
