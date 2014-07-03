@@ -1786,6 +1786,11 @@ sdio{
 		status = "okay";
 		ethbaseaddr = <0xfe0c0000>;
 		interruptnum = <40>;
+                savepowermode = <0>;
+                phy_interface = <1>;
+                reset_pin_enable = <0>;
+                reset_pin = "GPI0H_4";
+                reset_delay = <100>;
 	};
 
 /// ***************************************************************************************

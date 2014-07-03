@@ -2902,8 +2902,10 @@ static int ethernet_probe(struct platform_device *pdev)
 	if (ret) {
 		printk("Please config reset_pin.\n");
 	}
-	if(reset_pin_enable)
+	if(reset_pin_enable){
 		reset_pin_num = amlogic_gpio_name_map_num(reset_pin);
+		amlogic_gpio_request(reset_pin_num, OWNER_NAME);
+	}
 
 #endif
 	printk(DRV_NAME "init(dbg[%p]=%d)\n", (&g_debug), g_debug);
