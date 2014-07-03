@@ -1234,7 +1234,6 @@ edid_op:
             switch_set_state(&sdev, 0);
             hdmitx_device->vic_count = 0;
         }
-next:
         msleep_interruptible(100);
     }
     return 0;
