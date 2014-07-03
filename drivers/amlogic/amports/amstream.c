@@ -1704,7 +1704,13 @@ static long amstream_ioctl(struct file *file,
         break;		
 		}
 	case AMSTREAM_IOC_SET_DRMMODE:
-		this->flag |= PORT_FLAG_DRM;
+		if((u32)arg==1){
+            printk("set drmmode\n");
+			this->flag |= PORT_FLAG_DRM;
+		}else{
+		    this->flag &= (~PORT_FLAG_DRM);
+			printk("no drmmode\n");
+		}
 		break;
      case AMSTREAM_IOC_SET_APTS:
         {
