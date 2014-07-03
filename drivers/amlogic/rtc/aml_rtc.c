@@ -706,13 +706,15 @@ static int aml_rtc_probe(struct platform_device *pdev)
 	static char keyexamples[4096];
 #endif
 #ifdef CONFIG_SECURITYKEY
-	extenal_api_key_set_version("auto3");
-	ret = get_aml_key_kernel("keyexample", keyexamples, 1);
-	if(ret >= 0){
-		printk("key name:keyexample, key data:%s\n",keyexamples);
-	}
-	else{
-		printk("get keyexample fail, %s:%d\n",__func__,__LINE__);
+	ret = extenal_api_key_set_version("auto3");
+	if(ret >=0){
+		ret = get_aml_key_kernel("keyexample", keyexamples, 1);
+		if(ret >= 0){
+			printk("key name:keyexample, key data:%s\n",keyexamples);
+		}
+		else{
+			printk("get keyexample fail, %s:%d\n",__func__,__LINE__);
+		}
 	}
 #endif
 

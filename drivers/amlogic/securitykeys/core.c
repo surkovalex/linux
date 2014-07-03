@@ -1258,6 +1258,9 @@ static ssize_t key_list_show(struct device *dev, struct device_attribute *attr,
 {
 	aml_key_t * keys;
 	int i,n=0;
+	if(keys_version == 0){
+		return -EINVAL;
+	}
 	keys = key_schematic[keys_version]->keys;
 	for(i=0;i<key_schematic[keys_version]->count;i++)
 	{
@@ -1299,6 +1302,9 @@ static ssize_t key_name_store(struct device *dev, struct device_attribute *attr,
 	int i,cnt,suffix;
 	char *name;
 	char *cmd,*oldname=NULL,*newname;
+	if(keys_version == 0){
+		return -EINVAL;
+	}
 	keys = key_schematic[keys_version]->keys;
 
 	name = kzalloc(count+1, GFP_KERNEL);
@@ -1464,6 +1470,9 @@ static ssize_t key_usid_show(struct device *dev, struct device_attribute *attr,
 	int i,j,err=0;
 	int count;
 	char * data=NULL;
+	if(keys_version == 0){
+		return -EINVAL;
+	}
 	keys = key_schematic[keys_version]->keys;
 	for(i=0;i<key_schematic[keys_version]->count;i++)
 	{
@@ -1618,6 +1627,9 @@ static ssize_t version_available_show(struct device *dev,
     int i,j;
     ssize_t n=0;
     aml_key_t * key;
+    if(keys_version == 0){
+		return -EINVAL;
+	}
     key=key_schematic[keys_version]->keys;
     n+=sprintf(&buf[n],"key version %d\n",keys_version);
     for(i=0;i<key_schematic[keys_version]->count;i++)
@@ -1665,6 +1677,9 @@ static ssize_t install_key(struct device *dev, struct device_attribute *attr,
     aml_key_t * key;
     char * name, *data;
     int i;
+    if(keys_version == 0){
+		return -EINVAL;
+	}
     data = strstr(buf, "=");
     *data++ = 0;
     name = (char*) buf;
@@ -1780,7 +1795,10 @@ int get_aml_key_kernel(const char* key_name, unsigned char* data, int ascii_flag
 	}
 	memset(buf, 0, MAX_BUF_LEN);
 	//printk("11111111\n");
-	key_name_store(NULL, NULL, key_name, strlen(key_name));
+	ret = key_name_store(NULL, NULL, key_name, strlen(key_name));
+	if(ret < 0){
+		goto exit;
+	}
 	//printk("2222222\n");
 	ret = key_read_show(NULL, NULL, buf);
 	//printk("hdcp strlen is %d\n", strlen(buf));
@@ -1795,6 +1813,7 @@ int get_aml_key_kernel(const char* key_name, unsigned char* data, int ascii_flag
 			strncpy(data, buf, MAX_BUF_LEN);
 		}
 	}
+exit:
 	kfree(buf);
 	buf = NULL;
 	return ret;
