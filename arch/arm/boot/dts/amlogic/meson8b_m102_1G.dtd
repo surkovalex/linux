@@ -130,7 +130,7 @@ void root_func(){
 		compatible = "amlogic,mesonfb";
 		dev_name = "mesonfb";
 		status = "okay";
-        reserve-memory = <0x0900000  0x0100000>;//9M+1M=10M
+        reserve-memory = <0x0900000  0x0b00000>;//9M+11M=20M 1280x720x4x3=0xa8c000,11MB,for HDMI output.Horizontal panel neend't it.
 	   	reserve-iomap = "true";
         vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
         display_size_default = <768 1024 768 3072 32>;//1024x768x4x3==0x0900000,9MB
