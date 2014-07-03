@@ -754,8 +754,8 @@ void root_func(){
 	    pmu_twi_id = <2>;                   /** PMU i2c bus                          */
         pmu_irq_id = <0>;                   /** INT_WATCHDOG                         */
         pmu_twi_addr = <0x35>;              /** PMU i2c addr                         */
-        pmu_battery_rdc = <101>;            /** battery internal resistor            */
-        pmu_battery_cap = <3560>;           /** battery capacity                     */
+        pmu_battery_rdc = <103>;            /** battery internal resistor            */
+        pmu_battery_cap = <2883>;           /** battery capacity                     */
         pmu_battery_technology = <4>;       /** POWER_SUPPLY_TECHNOLOGY_LiFe         */
         pmu_battery_name = "PTI PL336078";  /** battery name                         */
         pmu_init_chgvol = <4200000>;        /** target charge voltage                */
@@ -789,17 +789,17 @@ void root_func(){
             3273      0       0
             3414      0       0
             3555      0       0  
-            3625      1       1  
-            3660      1       3  
-            3696      2      11 
-            3731      6      17 
-            3766     12      30 
-            3801     18      45 
-            3836     31      55
-            3872     57      61
-            3935     68      71
-            3998     79      81
-            4062     88      89
+            3625      1       2  
+            3660      2       6  
+            3696      3      14 
+            3731      7      22 
+            3766     14      37 
+            3801     20      48 
+            3836     32      57
+            3872     48      64
+            3935     62      73
+            3998     74      83
+            4062     84      91
             4153    100     100>;
 	};
 
