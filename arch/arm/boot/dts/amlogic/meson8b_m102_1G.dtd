@@ -238,7 +238,7 @@ void root_func(){
         compatible = "amlogic,vdin";
         dev_name = "vdin1";
         status = "ok";
-        reserve-memory = <0x01000000>;
+        reserve-memory = <0xa00000>;
 	miracast_size = <1920 1080>;//1920x1080x2x4=17M
 	reserve-iomap = "true";
         irq = <117>;
@@ -255,7 +255,7 @@ void root_func(){
 		compatible = "amlogic,amlvideo2";
 		dev_name = "amlvideo2.0";
 		status = "okay";
-		reserve-memory = <0x01800000>;
+		reserve-memory = <0x00800000>;
 		reserve-iomap = "true";
 	};
 
