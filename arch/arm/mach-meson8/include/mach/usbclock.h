@@ -165,7 +165,12 @@ typedef union phy_test_data {
 	unsigned clk:1;
 	unsigned vatestenb:2;
 	unsigned data_out:4;
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2
+        unsigned disable_idpull_up:1;
+	unsigned not_used:11;
+#else
 	unsigned not_used:12;
+#endif
     } b;
 } phy_test_data_t;
 
@@ -184,7 +189,13 @@ typedef union phy_tune_data {
 	unsigned sqrx_tune:3;
 	unsigned otg_tune:3;
 	unsigned comp_dis_tune:3;
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2
+        unsigned host_dmpulldown:1;
+	unsigned host_dppulldown:1;
+	unsigned not_used:4;
+#else
 	unsigned not_used:6;
+#endif
     } b;
 } phy_tune_data_t;
 
