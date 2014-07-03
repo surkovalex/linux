@@ -295,7 +295,7 @@ static int ricoh_pmu_probe(struct i2c_client *client,
     pdev->dev.parent        = &client->dev;
     pdev->dev.platform_data =  init_data; 
     ret = platform_device_add(pdev);
-    RICOH_DBG("%s, %d\n", __func__, __LINE__);
+    printk(KERN_DEBUG "%s, %d\n", __func__, __LINE__);
     if (ret) {
         printk(">> %s, add platform device failed\n", __func__);
         platform_device_del(pdev);

@@ -44,7 +44,7 @@
 
 #define CHECK_DRIVER()      \
     if (!g_rn5t618_supply) {        \
-        RICOH_DBG("driver is not ready right now, wait...\n");   \
+        RICOH_INFO("driver is not ready right now, wait...\n");   \
         dump_stack();       \
         return -ENODEV;     \
     }
@@ -177,7 +177,7 @@ int rn5t618_set_gpio(int gpio, int output)
 {
     int val = output ? 1 : 0;
     if (gpio < 0 || gpio > 3) {
-        RICOH_DBG("%s, wrong input of GPIO:%d\n", __func__, gpio);
+        RICOH_ERR("%s, wrong input of GPIO:%d\n", __func__, gpio);
         return -1;
     }
     RICOH_DBG("%s, gpio:%d, output:%d\n", __func__, gpio, output);
@@ -191,7 +191,7 @@ int rn5t618_get_gpio(int gpio, int *val)
 {
     int value;
     if (gpio < 0 || gpio > 3) {
-        RICOH_DBG("%s, wrong input of GPIO:%d\n", __func__, gpio);
+        RICOH_ERR("%s, wrong input of GPIO:%d\n", __func__, gpio);
         return -1;
     }
     rn5t618_read(0x0097, (uint8_t *)&value);                    // read status
@@ -210,13 +210,13 @@ void rn5t618_power_off()
     msleep(100);
     rn5t618_set_bits(0x00EF, 0x00, 0x10);                       // disable coulomb counter
     rn5t618_set_bits(0x00E0, 0x00, 0x01);                       // disable fuel gauge
-    RICOH_DBG("%s, send power off command\n", __func__);
+    RICOH_INFO("%s, send power off command\n", __func__);
     rn5t618_set_bits(0x000f, 0x00, 0x01);                       // do not re-power-on system
     rn5t618_set_bits(0x000E, 0x01, 0x01);                       // software power off PMU
     udelay(1000);
     while (1) {
         msleep(1000);
-        RICOH_DBG("%s, error\n", __func__);
+        RICOH_ERR("%s, error\n", __func__);
     }
 }
 EXPORT_SYMBOL_GPL(rn5t618_power_off);
@@ -225,7 +225,7 @@ int rn5t618_set_usb_current_limit(int limit)
 {
     int val;
     if ((limit < 100 || limit > 1500) && limit != -1){
-        RICOH_DBG("%s, wrong usb current limit:%d\n", __func__, limit);
+        RICOH_ERR("%s, wrong usb current limit:%d\n", __func__, limit);
         return -1;
     }
     if (limit == -1) {                                          // -1 means not limit
@@ -234,7 +234,7 @@ int rn5t618_set_usb_current_limit(int limit)
     } else {
         val = (limit / 100) - 1;
     }
-    RICOH_DBG("%s, set usb current limit to %d mA\n", __func__, limit);
+    RICOH_INFO("%s, set usb current limit to %d mA\n", __func__, limit);
     return rn5t618_set_bits(0x00B7, val, 0x1f);
 }
 EXPORT_SYMBOL_GPL(rn5t618_set_usb_current_limit);
@@ -243,7 +243,7 @@ int rn5t618_set_dcin_current_limit(int limit)
 {
     int val;
     if (limit < 100 || limit > 2500) {
-        RICOH_DBG("%s, wrong usb current limit:%d\n", __func__, limit);
+        RICOH_ERR("%s, wrong usb current limit:%d\n", __func__, limit);
         return -1;
     }
     val = (limit / 100) - 1;
@@ -257,7 +257,7 @@ int rn5t618_set_usb_voltage_limit(int voltage)
     int bits;
 
     if (voltage < 4100 || voltage > 4400) {
-        RICOH_DBG("%s, invalid input voltage:%d\n", __func__, voltage);
+        RICOH_ERR("%s, invalid input voltage:%d\n", __func__, voltage);
         return -EINVAL;
     }
     bits = ((voltage - 4100) / 100) << 2;
@@ -278,7 +278,7 @@ int rn5t618_set_charge_current(int curr)
     int bits;
 
     if (curr < 0 || curr > 1800000) {
-        RICOH_DBG("%s, invalid charge current:%d\n", __func__, curr);
+        RICOH_ERR("%s, invalid charge current:%d\n", __func__, curr);
         return -EINVAL;
     }
     if (curr > 100) {                           // input is uA
@@ -300,7 +300,7 @@ int rn5t618_set_trickle_time(int minutes)
     int bits;
 
     if (minutes != 40 && minutes != 80) {
-        RICOH_DBG("%s, invalid trickle time:%d\n", __func__, minutes);
+        RICOH_ERR("%s, invalid trickle time:%d\n", __func__, minutes);
         return -EINVAL;
     }
     bits = (minutes == 40) ? 0x00 : 0x10;
@@ -312,7 +312,7 @@ int rn5t618_set_long_press_time(int ms)
     int bits;
 
     if (ms < 1000 || ms > 12000) {
-        RICOH_DBG("%s, invalid long press time:%d\n", __func__, ms);
+        RICOH_ERR("%s, invalid long press time:%d\n", __func__, ms);
         return -EINVAL;
     }
     switch(ms) {
@@ -333,7 +333,7 @@ int rn5t618_set_rapid_time(int minutes)
     int bits;
 
     if (minutes > 300 || minutes < 120) {
-        RICOH_DBG("%s, invalid rapid charge time:%d\n", __func__, minutes);    
+        RICOH_ERR("%s, invalid rapid charge time:%d\n", __func__, minutes);    
         return -EINVAL;
     }
     bits = (minutes - 120) / 60;
@@ -345,7 +345,7 @@ int rn5t618_set_full_charge_voltage(int voltage)
     int bits;
 
     if (voltage > 4350 * 1000 || voltage < 4050 * 1000) {
-        RICOH_DBG("%s, invalid target charge voltage:%d\n", __func__, voltage);
+        RICOH_ERR("%s, invalid target charge voltage:%d\n", __func__, voltage);
         return -EINVAL;
     }
     if (voltage == 4350000) {
@@ -361,7 +361,7 @@ int rn5t618_set_charge_end_current(int curr)
     int bits;
 
     if (curr < 50000 || curr > 200000) {
-        RICOH_DBG("%s, invalid charge end current:%d\n", __func__, curr);
+        RICOH_ERR("%s, invalid charge end current:%d\n", __func__, curr);
     }
     bits = (curr / 50000 - 1) << 6;
     return rn5t618_set_bits(0x00B8, bits, 0xc0);
@@ -372,7 +372,7 @@ int rn5t618_set_recharge_voltage(int voltage)
     int bits;
 
     if (voltage < 3850 || voltage > 4100) {
-        RICOH_DBG("%s, invalid recharge volatage:%d\n", __func__, voltage);
+        RICOH_ERR("%s, invalid recharge volatage:%d\n", __func__, voltage);
         return -EINVAL;
     }
     if (voltage == 4100) {
@@ -390,7 +390,7 @@ int rn5t618_get_coulomber_counter(void)
 
     result = rn5t618_reads(0x00F0, val, 3);
     if (result) {
-        RICOH_DBG("%s, failed: %d\n", __func__, __LINE__);
+        RICOH_ERR("%s, failed: %d\n", __func__, __LINE__);
         return result;
     }
 
@@ -435,6 +435,7 @@ int rn5t618_get_saved_coulomb(void)
         RICOH_DBG("no saved coulomb counter\n");    
         return -1;
     }
+    return 0;
 }
 
 static int rn5t618_get_coulomber(struct aml_charger *charger)
@@ -444,7 +445,7 @@ static int rn5t618_get_coulomber(struct aml_charger *charger)
 
     result = rn5t618_reads(0x00F3, val, 4);
     if (result) {
-        RICOH_DBG("%s, failed: %d\n", __func__, __LINE__);
+        RICOH_ERR("%s, failed: %d\n", __func__, __LINE__);
         return result;
     }
 
@@ -586,21 +587,21 @@ static void rn5t618_battery_check_health(struct rn5t618_supply       *supply,
 
     if ((status == RN5T618_DIE_ERROR) || 
         (status == RN5T618_DIE_SHUTDOWN)) {
-        RICOH_DBG("%s, BATTERY DEAD, fault:0x%x\n", __func__, status);
+        RICOH_ERR("%s, BATTERY DEAD, fault:0x%x\n", __func__, status);
         val->intval = POWER_SUPPLY_HEALTH_DEAD;
     } else if (status == RN5T618_BATTERY_TEMPERATURE_ERROR) {
-        RICOH_DBG("%s, BATTERY OVERHEAT, fault:0x%x, temperature:%d\n", 
+        RICOH_ERR("%s, BATTERY OVERHEAT, fault:0x%x, temperature:%d\n", 
                   __func__, status, rn5t618_get_battery_temperature());
         val->intval = POWER_SUPPLY_HEALTH_OVERHEAT;
     } else if ((status == RN5T618_CHARGE_OVER_VOLTAGE) || 
                (status == RN5T618_BATTERY_OVER_VOLTAGE)) {
-        RICOH_DBG("%s, BATTERY OVERVOLTAGE, fault:0x%x, voltage:%d\n",
+        RICOH_ERR("%s, BATTERY OVERVOLTAGE, fault:0x%x, voltage:%d\n",
                   __func__, status, rn5t618_get_battery_voltage());
         val->intval = POWER_SUPPLY_HEALTH_OVERVOLTAGE;
     } else if ((status == RN5T618_BATTERY_ERROR) ||
                (status == RN5T618_NO_BATTERY   ) ||
                (status == RN5T618_NO_BATTERY2  )) {
-        RICOH_DBG("%s, BATTERY UNSPEC FAILURE, fault:0x%x\n", __func__, status);
+        RICOH_ERR("%s, BATTERY UNSPEC FAILURE, fault:0x%x\n", __func__, status);
         val->intval = POWER_SUPPLY_HEALTH_UNSPEC_FAILURE;    
     } else {
         val->intval = POWER_SUPPLY_HEALTH_GOOD;
@@ -832,13 +833,13 @@ int rn5t618_otg_change(struct notifier_block *nb, unsigned long value, void *pda
 {
     uint8_t val;
     if (!g_rn5t618_supply) {
-        RICOH_DBG("%s, driver is not ready, do it later\n", __func__);
+        RICOH_INFO("%s, driver is not ready, do it later\n", __func__);
         rn5t618_otg_job.flag  = 1;
         rn5t618_otg_job.value = value;
         return 0;
     }
     rn5t618_otg_value = value;
-    RICOH_DBG("%s, value:%d, is_short:%d\n", __func__, rn5t618_otg_value, g_rn5t618_init->vbus_dcin_short_connect);
+    RICOH_INFO("%s, value:%d, is_short:%d\n", __func__, rn5t618_otg_value, g_rn5t618_init->vbus_dcin_short_connect);
     if (rn5t618_otg_value) {
         rn5t618_read(0xB3, &val);
         if (g_rn5t618_init->vbus_dcin_short_connect) {
@@ -875,7 +876,7 @@ int rn5t618_otg_change(struct notifier_block *nb, unsigned long value, void *pda
 int rn5t618_usb_charger(struct notifier_block *nb, unsigned long value, void *pdata)
 {
     if (!g_rn5t618_supply) {
-        RICOH_DBG("%s, driver is not ready, do it later\n", __func__);
+        RICOH_INFO("%s, driver is not ready, do it later\n", __func__);
         rn5t618_charger_job.flag  = 1;
         rn5t618_charger_job.value = value;
         return 0;
@@ -992,7 +993,7 @@ static ssize_t aml_pmu_vddao_store(struct device *dev, struct device_attribute *
     uint32_t data = simple_strtoul(buf, NULL, 10);
 
     if (data > 3500 || data < 600) {
-        RICOH_DBG("Invalid input value = %d\n", data);
+        RICOH_ERR("Invalid input value = %d\n", data);
         return -1;
     }
     RICOH_DBG("Set VDD_AO to %4d mV\n", data);
@@ -1037,7 +1038,7 @@ static ssize_t charge_timeout_store(struct device *dev, struct device_attribute 
 { 
     uint32_t data = simple_strtoul(buf, NULL, 10);
     if (data > 300 || data < 120) {
-        RICOH_DBG("Invalid input value = %d\n", data);
+        RICOH_ERR("Invalid input value = %d\n", data);
         return -1;
     }
     RICOH_DBG("Set charge timeout to %4d minutes\n", data);
@@ -1052,14 +1053,14 @@ int rn5t618_dump_all_register(char *buf)
     int     size = 0;
 
     if (!buf) {
-        printk("[RN5T618] DUMP ALL REGISTERS:\n");
+        printk(KERN_DEBUG "[RN5T618] DUMP ALL REGISTERS:\n");
         for (i = 0; i < 16; i++) {
             rn5t618_reads(i*16, val, 16);
-            printk("0x%02x - %02x: ", i * 16, i * 16 + 15);
-            printk("%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
-            printk("%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
-            printk("%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
-            printk("%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
+            printk(KERN_DEBUG "0x%02x - %02x: ", i * 16, i * 16 + 15);
+            printk(KERN_DEBUG "%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
+            printk(KERN_DEBUG "%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
+            printk(KERN_DEBUG "%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
+            printk(KERN_DEBUG "%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
         }
         return 0;
     }
@@ -1158,13 +1159,13 @@ static ssize_t report_delay_store(struct device *dev, struct device_attribute *a
     uint32_t tmp = simple_strtoul(buf, NULL, 10); 
 
     if (tmp > 200) {
-        RICOH_DBG("input too large, failed to set report_delay\n");
+        RICOH_ERR("input too large, failed to set report_delay\n");
         return count;
     }    
     if (api && api->pmu_set_report_delay) {
         api->pmu_set_report_delay(tmp);
     } else {
-        RICOH_DBG("API not found\n");
+        RICOH_ERR("API not found\n");
     }    
     return count;
 }
@@ -1272,7 +1273,7 @@ static int rn5t618_update_state(struct aml_charger *charger)
     }
     rn5t618_read(0x00C5, buff);
     if (buff[0] & 0x20) {
-        RICOH_DBG("charge time out, reset charger\n");
+        RICOH_INFO("charge time out, reset charger\n");
         rn5t618_set_bits(0x00C5, 0x00, 0x20);                           // clear flag
         rn5t618_set_bits(0x00B3, 0x00, 0x03);                           // disable charger
         msleep(100);
@@ -1412,7 +1413,7 @@ static void rn5t618_charging_monitor(struct work_struct *work)
         charger->charge_status == CHARGER_DISCHARGING) {
         over_discharge_cnt++;
         if (over_discharge_cnt >= 5) {
-            RICOH_DBG("%s, battery is over-discharge now, force system power off\n", __func__);
+            RICOH_ERR("%s, battery is over-discharge now, force system power off\n", __func__);
             power_protection = 1;
         }
     } else {
@@ -1424,7 +1425,7 @@ static void rn5t618_charging_monitor(struct work_struct *work)
         (pre_chg_status != charger->charge_status) ||
         charger->resume                            ||
         power_protection) {
-        RICOH_DBG("battery vol change: %d->%d \n", pre_rest_cap, charger->rest_vol);
+        RICOH_INFO("battery vol change: %d->%d \n", pre_rest_cap, charger->rest_vol);
         if (unlikely(charger->resume)) {
             charger->resume = 0;
         }
@@ -1528,7 +1529,7 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
 	RICOH_DBG("call %s in", __func__);
     g_rn5t618_init = pdev->dev.platform_data;
     if (g_rn5t618_init == NULL) {
-        RICOH_DBG("%s, NO platform data\n", __func__);
+        RICOH_ERR("%s, NO platform data\n", __func__);
         return -EINVAL;
     }
     rn5t618_power_key = input_allocate_device();
@@ -1604,7 +1605,7 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
         supply->battery_info->use_for_apm        = 1;
         supply->battery_info->name               = rn5t618_battery->pmu_battery_name;
     } else {
-        RICOH_DBG(" NO BATTERY_PARAMETERS FOUND\n");
+        RICOH_ERR(" NO BATTERY_PARAMETERS FOUND\n");
     }
 
     charger->soft_limit_to99     = g_rn5t618_init->soft_limit_to99;
@@ -1630,7 +1631,7 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
                           RN5T618_IRQ_NAME,
                           supply); 
         if (ret) {
-            RICOH_DBG("request irq failed, ret:%d, irq:%d\n", ret, supply->irq);    
+            RICOH_ERR("request irq failed, ret:%d, irq:%d\n", ret, supply->irq);    
         }
     }
 

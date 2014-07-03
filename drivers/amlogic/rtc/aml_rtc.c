@@ -905,7 +905,6 @@ static int  __init aml_rtc_init(void)
 	static_register_write(0x3c0a);
 #endif
 	RTC_DBG(RTC_DBG_VAL, "aml_rtc --aml_rtc_init\n");
-	printk(KERN_ERR"%s...\n",__func__);
 	return platform_driver_register(&aml_rtc_driver);
 }
 

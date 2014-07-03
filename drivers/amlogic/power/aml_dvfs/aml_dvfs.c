@@ -13,10 +13,10 @@
 #include <linux/sched.h>
 
 #define DVFS_DBG(format, args...) \
-    if (1) printk(KERN_ERR "[DVFS]"format, ##args)
+    if (1) printk(KERN_DEBUG "[DVFS]"format, ##args)
 
 #define DVFS_WARN(format, args...) \
-    if (1) printk(KERN_DEBUG"[DVFS]"format, ##args)
+    if (1) printk(KERN_DEBUG "[DVFS]"format, ##args)
 
 #define DEBUG_DVFS      0
 
