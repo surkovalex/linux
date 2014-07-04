@@ -884,7 +884,7 @@ static inline void cam_disable_clk(int spread_spectrum)
 		aml_set_reg32_bits(P_HHI_GEN_CLK_CNTL, 0, 16, 2); //close clock
 	}
 }
-#elif defined CONFIG_ARCH_MESON8
+#elif defined CONFIG_ARCH_MESON8 || defined CONFIG_ARCH_MESON8M2
 static inline void cam_enable_clk(int clk, int spread_spectrum)
 {
 	if (clk == 12000) {
