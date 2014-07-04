@@ -41,6 +41,8 @@ int __init meson_cpu_version_init(void)
 	
 	version = aml_read_reg32(P_METAL_REVISION);
 	switch (version) {		
+		case 0x11111112:
+			meson_cpu_version[MESON_CPU_VERSION_LVL_MAJOR] = 0x1D; //M8 MarkII RevA
 		case 0x11111111:			
 			ver = 0xA;		
 			break;		
