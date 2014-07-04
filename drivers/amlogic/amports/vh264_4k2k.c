@@ -812,7 +812,6 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
         state = RECEIVER_INACTIVE;
     }
 
-#if 0
     // error watchdog
     if (((READ_VREG(VLD_MEM_VIFIFO_CONTROL) & 0x100) == 0) && // decoder has input
         (state == RECEIVER_INACTIVE) &&                       // receiver has no buffer to recycle
@@ -836,7 +835,6 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
         fatal_error = DECODER_FATAL_ERROR_UNKNOW;
         WRITE_VREG(FATAL_ERROR, 0);
     }
-#endif
 
     while (!kfifo_is_empty(&recycle_q) &&
            (READ_VREG(BUFFER_RECYCLE) == 0)) {
