@@ -4,6 +4,10 @@
 config  AM_PTSSERVER
 	bool 
 	default n
+
+config  H264_4K2K_SINGLE_CORE
+	bool 
+	default n
 	
 config  VSYNC_RDMA
 	bool "VSYNC CBUS RDMA"
@@ -86,10 +90,11 @@ config AM_VDEC_H264MVC
 
 config AM_VDEC_H264_4K2K
         tristate "Amlogic H264_4K2K Video Decoder"
-	depends on ARCH_MESON8 || ARCH_MESON6TVD
+	 depends on ARCH_MESON8 || ARCH_MESON6TVD || ARCH_MESON8M2
         default y
 
         select AM_PTSSERVER
+        select H264_4K2K_SINGLE_CORE if ARCH_MESON8M2
         help
           Driver for h264 4Kx2K video decoder.
 

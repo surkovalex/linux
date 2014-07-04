@@ -1241,7 +1241,9 @@ static s32 vh264_4k2k_init(void)
                     IRQF_SHARED, "vh264_4k2k-irq", (void *)vh264_4k2k_dec_id)) {
         printk("vh264_4k2k irq register error.\n");
         amvdec_disable();
+#ifndef CONFIG_H264_4K2K_SINGLE_CORE		
         amvdec2_disable();
+#endif
         return -ENOENT;
     }
 
