@@ -1,6 +1,6 @@
 /dts-v1/;
 /// ***************************************************************************************\n
-//$$ PROJECT="meson8"
+//$$ PROJECT="meson8m2"
 //$$ REMOVE 1
 void root_func(){
 //$$ ADD /{
@@ -79,7 +79,7 @@ void root_func(){
 		aml_reserved_start = <0x06000000>; /**reserved memory start */
 		aml_reserved_end = <0x05000000>;/**reserved memory end : dtb start for uboot*/
 		phys_offset = <0x00000000>;
-		linux,total-memory = <0x40000000>;
+		linux,total-memory = <0x80000000>;
 
         #address-cells = <1>;
         #size-cells = <1>;
@@ -448,7 +448,7 @@ void root_func(){
             f_max_w = <50000000>;
             max_req_size = <0x20000>;          /**128KB*/
             gpio_dat3 = "BOOT_3";
-            card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+            card_type = <1>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
         };
     };
 
@@ -960,7 +960,7 @@ void root_func(){
 //$$ L2 PROP_CHOICE "Camera_pin_1_match" = "pinctrl-1"
 	aml_cams{
 		compatible = "amlogic,cams_prober";
-		status = "okay";
+		status = "disabled";
 		pinctrl-names = "gpio","csi";
 		pinctrl-0 = <&aml_cam_gpio_pins> ;
 		pinctrl-1 = <&aml_cam_csi_pins> ;
