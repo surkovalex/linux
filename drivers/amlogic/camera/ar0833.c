@@ -33,6 +33,7 @@
 #include <media/v4l2-device.h>
 #include <media/v4l2-ioctl.h>
 #include <linux/wakelock.h>
+#include <linux/vmalloc.h>
 
 #include <linux/i2c.h>
 #include <media/v4l2-chip-ident.h>
@@ -5464,7 +5465,7 @@ static int ar0833_open(struct file *file)
     aml_cam_init(&dev->cam_info);
     printk("config path:%s\n",(dev->cam_info).config);
     if((dev->cam_info).config != NULL){
-        if((dev->configure = kmalloc(sizeof(configure_t),0)) != NULL){
+        if((dev->configure = vmalloc(sizeof(configure_t))) != NULL){
             if(parse_config((dev->cam_info).config,dev->configure) == 0){
                 printk("parse successfully");
             }else{
@@ -5620,11 +5621,12 @@ static int ar0833_close(struct file *file)
             for(i = 0; i < dev->configure->aet.sum; i++){
                 kfree(dev->configure->aet.aet[i].info);
                 dev->configure->aet.aet[i].info = NULL;
-                kfree(dev->configure->aet.aet[i].aet_table);
+                vfree(dev->configure->aet.aet[i].aet_table);
                 dev->configure->aet.aet[i].aet_table = NULL;
             }
         }
-        kfree(cf);
+        vfree(dev->configure);
+        dev->configure = NULL;
     }
     if(dev->cam_para != NULL ){
         free_para(dev->cam_para);

@@ -4239,7 +4239,7 @@ static int ov5647_close(struct file *file)
             for(i = 0; i < dev->configure->aet.sum; i++){
                 kfree(dev->configure->aet.aet[i].info);
                 dev->configure->aet.aet[i].info = NULL;
-                kfree(dev->configure->aet.aet[i].aet_table);
+                vfree(dev->configure->aet.aet[i].aet_table);
                 dev->configure->aet.aet[i].aet_table = NULL;
             }
         }
