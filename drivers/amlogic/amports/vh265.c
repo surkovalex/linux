@@ -3346,7 +3346,11 @@ static struct platform_driver amvdec_h265_driver = {
 
 static struct codec_profile_t amvdec_h265_profile = {
     .name = "hevc",
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8M2
+    .profile = "4k" //support 4k
+#else
     .profile = ""
+#endif
 };
 
 static int __init amvdec_h265_driver_init_module(void)
