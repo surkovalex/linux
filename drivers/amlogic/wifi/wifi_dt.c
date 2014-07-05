@@ -194,7 +194,7 @@ int wifi_setup_dt()
 	//setup 32k clock
 	wifi_request_32k_clk(1, OWNER_NAME);
 	
-#if ((!(defined CONFIG_ARCH_MESON8)) && (!(defined CONFIG_ARCH_MESON8B)))
+#if ((!(defined CONFIG_ARCH_MESON8)) && (!(defined CONFIG_ARCH_MESON8B)) && (!(defined CONFIG_ARCH_MESON8M2)))
 	//setup sdio pullup
 	aml_clr_reg32_mask(P_PAD_PULL_UP_REG4,0xf|1<<8|1<<9|1<<11|1<<12);		
 	aml_clr_reg32_mask(P_PAD_PULL_UP_REG2,1<<7|1<<8|1<<9);	
@@ -294,7 +294,7 @@ void wifi_request_32k_clk(int is_on, const char *requestor)
 			amlogic_gpio_direction_output(wifi_info.clock_32k_pin, 0, OWNER_NAME);
 			CHECK_RET(ret);
 			SHOW_PIN_OWN("clock_32k_pin", wifi_info.clock_32k_pin);
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
 			aml_set_reg32_mask(P_PERIPHS_PIN_MUX_3,0x1<<22);//set mode GPIOX_10-->CLK_OUT3
 #else
             if(wifi_info.clock_32k_pin == 96) { // GPIOD_1, as PWM_D output
@@ -322,7 +322,7 @@ void wifi_request_32k_clk(int is_on, const char *requestor)
         if(clk_32k_on < 0)
             clk_32k_on = 0; 
 		if (clk_32k_on == 0) {
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B) || (defined CONFIG_ARCH_MESON8M2))
                         aml_clr_reg32_mask(P_PERIPHS_PIN_MUX_3,0x1<<22);
 #else
 			aml_clr_reg32_mask(P_PERIPHS_PIN_MUX_3,0x1<<21);
