@@ -992,6 +992,7 @@ restart:
 				} else {
 					fepriv->algo_status |= DVBFE_ALGO_SEARCH_AGAIN;
 					fepriv->delay = HZ / 2;
+					s = FE_TIMEDOUT;
 				}
 				dtv_property_legacy_params_sync(fe, &fepriv->parameters_out);
 				//fe->ops.read_status(fe, &s);
