@@ -22,13 +22,17 @@
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define HDEC_255M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (2 << 25) | (1 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
 #define HDEC_319M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (0 << 25) | (1 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
+#define HDEC_364M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (3 << 25) | (0 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
+#define HDEC_425M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (1 << 25) | (1 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
+#define HDEC_510M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (2 << 25) | (0 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
+#define HDEC_638M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (0 << 25) | (0 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
 #define hvdec_clock_enable() \
     HDEC_319M(); \
     WRITE_VREG_BITS(DOS_GCLK_EN0, 0x7fff, 12, 15)
 
 #define hvdec_clock_disable() \
     WRITE_VREG_BITS(DOS_GCLK_EN0, 0, 12, 15); \
-    WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  24, 0, 1);
+    WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  0, 24, 1);
 #else
 #define HDEC_250M()   WRITE_MPEG_REG(HHI_VDEC_CLK_CNTL, (0 << 25) | (3 << 16) |(1 << 24) | (0xffff&READ_CBUS_REG(HHI_VDEC_CLK_CNTL)))
 #define hvdec_clock_enable() \
@@ -36,7 +40,7 @@
     WRITE_VREG(DOS_GCLK_EN0, 0xffffffff)
 
 #define hvdec_clock_disable() \
-    WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  24, 0, 1);
+    WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL,  0, 24, 1);
 #endif
 
 

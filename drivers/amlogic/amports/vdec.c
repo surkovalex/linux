@@ -480,6 +480,20 @@ void vdec2_power_mode(int level)
     spin_unlock_irqrestore(&lock, flags);
 }
 
+static vdec2_usage_t vdec2_usage = USAGE_NONE;
+void set_vdec2_usage(vdec2_usage_t usage)
+{
+    ulong flags;
+    spin_lock_irqsave(&lock, flags);
+    vdec2_usage = usage;
+    spin_unlock_irqrestore(&lock, flags);
+}
+
+vdec2_usage_t get_vdec2_usage(void)
+{
+    return vdec2_usage;
+}
+
 #endif
 
 

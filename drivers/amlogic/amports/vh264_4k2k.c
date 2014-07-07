@@ -35,6 +35,7 @@
 #include <linux/amlogic/amports/vframe_receiver.h>
 #include <linux/dma-mapping.h>
 #include <linux/dma-contiguous.h>
+#include <linux/delay.h>
 
 #include <mach/am_regs.h>
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
@@ -1361,12 +1362,20 @@ static int vh264_4k2k_stop(void)
     return 0;
 }
 
+#ifndef CONFIG_H264_4K2K_SINGLE_CORE
+#ifdef CONFIG_AM_ENCODER
+extern void AbortEncodeWithVdec2(int abort);
+#endif
+#endif
+
 static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
 {
     struct resource *mem;
 
     printk("amvdec_h264_4k2k probe start.\n");
-
+#ifndef CONFIG_H264_4K2K_SINGLE_CORE
+    int count = 0;
+#endif
     mutex_lock(&vh264_4k2k_mutex);
     
     fatal_error = 0;
@@ -1388,6 +1397,31 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
     cma_dev = (struct device *)mem[2].start;
 
 #ifndef CONFIG_H264_4K2K_SINGLE_CORE
+#ifdef CONFIG_AM_ENCODER
+    if(get_vdec2_usage() != USAGE_NONE)
+        AbortEncodeWithVdec2(1);
+#endif
+
+    while((get_vdec2_usage() != USAGE_NONE)&&(count < 10)){
+        msleep(50);
+        count++;
+    }
+
+    if(get_vdec2_usage() != USAGE_NONE){
+        printk("\namvdec_h264_4k2k --- vdec2 is used by encode now.\n");
+        mutex_unlock(&vh264_4k2k_mutex);
+        return -EBUSY;
+    }
+
+    if (vdec_on(VDEC_2)) {//++++
+        vdec_poweroff(VDEC_2);//++++
+        mdelay(10);
+    }
+
+    set_vdec2_usage(USAGE_DEC_4K2K);
+#ifdef CONFIG_AM_ENCODER
+    AbortEncodeWithVdec2(0);
+#endif
     vdec_poweron(VDEC_2);
 #endif
 
@@ -1424,6 +1458,7 @@ static int amvdec_h264_4k2k_remove(struct platform_device *pdev)
 
 #ifndef CONFIG_H264_4K2K_SINGLE_CORE
     vdec_poweroff(VDEC_2);
+    set_vdec2_usage(USAGE_NONE);
 #endif
 
 #ifdef DEBUG_PTS

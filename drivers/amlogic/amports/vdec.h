@@ -22,6 +22,7 @@
 #ifndef VDEC_H
 #define VDEC_H
 #include <mach/cpu.h>
+#include "amports_config.h"
 
 #include <linux/platform_device.h>
 
@@ -56,4 +57,14 @@ extern bool vdec_on(vdec_type_t core);
 #define vdec_poweroff(core)
 #endif
 
+#if HAS_VDEC2
+typedef enum {
+    USAGE_NONE,
+    USAGE_DEC_4K2K,
+    USAGE_ENCODE,
+} vdec2_usage_t;
+
+extern void set_vdec2_usage(vdec2_usage_t usage);
+extern vdec2_usage_t get_vdec2_usage(void);
+#endif
 #endif /* VDEC_H */
