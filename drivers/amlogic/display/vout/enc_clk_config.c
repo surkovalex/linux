@@ -105,12 +105,12 @@ static void set_hpll_clk_out(unsigned clk)
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x42d);
 #endif
             break;
-        case 2160:
 #ifdef CONFIG_ARCH_MESON8
+        case 2160:
     aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000045a);
     aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000045a);
-#endif
             break;
+#endif
         case 1066:
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x42a);
             break;
