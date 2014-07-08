@@ -101,6 +101,8 @@ static int wifi_power_ioctl(struct file *filp, unsigned int cmd, unsigned long a
 	switch (cmd) 
 	{
     	case POWER_UP:
+    		usb_wifi_power(!power);
+    		mdelay(500);
      		usb_wifi_power(power);   
      		printk(KERN_INFO "Set usb wifi power up!\n");
     		break;
@@ -301,20 +303,7 @@ static int wifi_power_probe(struct platform_device *pdev)
     pdata->usb_set_power = &usb_wifi_power;
     if(pdev->dev.of_node)
     {
-        ret = of_property_read_string(pdev->dev.of_node, "power_gpio", &str);
-	    if(ret)
-	     {  
-	        printk("Error: can not get power_gpio name------%s %d\n",__func__,__LINE__);
-	        return -1;
-	     }else{
-	        pdata->power_gpio = amlogic_gpio_name_map_num(str);
-	        printk("wifi_power power_gpio is %d\n",pdata->power_gpio);
-	        ret = amlogic_gpio_request(pdata->power_gpio,WIFI_POWER_MODULE_NAME);
-	        //mcli pdata->usb_set_power(0);    //power on   
-	        pdata->usb_set_power(1);    //power on   
-	     }
-	     
-	    ret = of_property_read_string(pdev->dev.of_node, "valid", &str);
+    	ret = of_property_read_string(pdev->dev.of_node, "valid", &str);
 		if(ret)
 		{
 			printk("Error: Didn't get power valid value --- %s %d\n",__func__,__LINE__);
@@ -326,20 +315,33 @@ static int wifi_power_probe(struct platform_device *pdev)
 			else
 				power = 1;
 		}
+		
+        ret = of_property_read_string(pdev->dev.of_node, "power_gpio", &str);
+	    if(ret)
+	    {  
+	       printk("Error: can not get power_gpio name------%s %d\n",__func__,__LINE__);
+	       return -1;
+	    }else{
+	       pdata->power_gpio = amlogic_gpio_name_map_num(str);
+	       printk("wifi_power power_gpio is %d\n",pdata->power_gpio);
+	       //ret = amlogic_gpio_request(pdata->power_gpio,WIFI_POWER_MODULE_NAME);
+	       //mcli pdata->usb_set_power(0);    //power on   
+	       //pdata->usb_set_power(1);    //power on   
+	    }	    
 		 
-	   if(!(ret = of_property_read_string(pdev->dev.of_node, "power_gpio2", &str)))
+	    if(!(ret = of_property_read_string(pdev->dev.of_node, "power_gpio2", &str)))
 			wifi_power_on_pin2 = 1;
-	   else{
-		printk("wifi_dev_probe : there is no wifi_power_on_pin2 setup in DTS file!\n");
-	   }
+	    else{
+			printk("wifi_dev_probe : there is no wifi_power_on_pin2 setup in DTS file!\n");
+	    }
 	   
-	   if(wifi_power_on_pin2){
+	    if(wifi_power_on_pin2){
 		    if(ret)
 		     {  
 		        printk("Error: can not get power_gpio2 name------%s %d\n",__func__,__LINE__);
 		        return -1;
 		     }else{
-			 pdata->power_gpio2 = amlogic_gpio_name_map_num(str);
+			 	pdata->power_gpio2 = amlogic_gpio_name_map_num(str);
 		        printk("wifi_power power_gpio2 is %d\n",pdata->power_gpio2);
 		     }
 	   }
