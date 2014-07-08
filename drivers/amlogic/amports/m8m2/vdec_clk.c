@@ -145,7 +145,8 @@ void hcodec_clock_off(void)
 void hevc_clock_enable(void)
 {
     HEVC_CLOCK_OFF();
-    HEVC_255M();
+//    HEVC_255M();
+    HEVC_638M();
     HEVC_CLOCK_ON();
 }
 
