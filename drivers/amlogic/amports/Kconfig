@@ -48,8 +48,9 @@ config SUPPORT_VIDEO_ON_VPP2
 
 config AM_MEMPROTECT
     bool "Amlogic Video protect video streambuf framebuf"
-    default n
+    default y
     depends on  AM_VIDEO
+    depends on  MESON_TRUSTZONE
     help
       Select to enable protect video streambuf framebuf.
 
