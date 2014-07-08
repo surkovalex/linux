@@ -398,6 +398,7 @@ void root_func(){
             status = "okay";
             power_gpio = "GPIOAO_6";
             power_gpio2 = "GPIOX_11";
+            valid = "high";
 	}; 
 
 /// ***************************************************************************************
