@@ -47,6 +47,10 @@
 #include "amvdec.h"
 #include "vh264_mc.h"
 
+#ifdef CONFIG_AM_MEMPROTECT
+#include <linux/amlogic/logo/logo.h>
+#endif
+
 #define DRIVER_NAME "amvdec_h264"
 #define MODULE_NAME "amvdec_h264"
 
@@ -117,6 +121,15 @@ typedef struct {
     int y_canvas_index;
     int u_canvas_index;
     int v_canvas_index;
+#ifdef CONFIG_AM_MEMPROTECT
+    unsigned int y_canvas_width;
+    unsigned int u_canvas_width;
+    unsigned int v_canvas_width;
+
+    unsigned int y_canvas_height;
+    unsigned int u_canvas_height;
+    unsigned int v_canvas_height;
+#endif
 } buffer_spec_t;
 
 #define spec2canvas(x)  \
@@ -231,6 +244,87 @@ extern u32 set_blackout_policy(int policy);
 extern u32 get_blackout_policy(void);
 
 #define DFS_HIGH_THEASHOLD 3
+
+#ifdef CONFIG_AM_MEMPROTECT
+static ge2d_context_t *ge2d_videoh264_context = NULL;
+
+static int ge2d_videoh264task_init()
+{
+    if (ge2d_videoh264_context == NULL)
+            ge2d_videoh264_context = create_ge2d_work_queue();
+
+    if (ge2d_videoh264_context == NULL){
+            printk("create_ge2d_work_queue video task failed \n");
+            return -1;
+    }
+    return 0;
+}
+static int ge2d_videoh264task_release()
+{
+    if (ge2d_videoh264_context) {
+            destroy_ge2d_work_queue(ge2d_videoh264_context);
+            ge2d_videoh264_context = NULL;
+    }
+    return 0;
+}
+static int ge2d_canvas_dup(canvas_t *srcy ,canvas_t *srcu,canvas_t *des,
+    int format,u32 srcindex,u32 desindex)
+{
+    printk("ge2d_canvas_dupvh264 ADDR srcy[0x%x] srcu[0x%x] des[0x%x]\n",srcy->addr,srcu->addr,des->addr);
+
+    config_para_ex_t ge2d_config;
+    memset(&ge2d_config,0,sizeof(config_para_ex_t));
+
+    ge2d_config.alu_const_color= 0;
+    ge2d_config.bitmask_en  = 0;
+    ge2d_config.src1_gb_alpha = 0;
+
+    ge2d_config.src_planes[0].addr = srcy->addr;
+    ge2d_config.src_planes[0].w = srcy->width;
+    ge2d_config.src_planes[0].h = srcy->height;
+
+    ge2d_config.src_planes[1].addr = srcu->addr;
+    ge2d_config.src_planes[1].w = srcu->width;
+    ge2d_config.src_planes[1].h = srcu->height;
+
+    ge2d_config.dst_planes[0].addr = des->addr;
+    ge2d_config.dst_planes[0].w = des->width;
+    ge2d_config.dst_planes[0].h = des->height;
+
+    ge2d_config.src_para.canvas_index=srcindex;
+    ge2d_config.src_para.mem_type = CANVAS_TYPE_INVALID;
+    ge2d_config.src_para.format = format;
+    ge2d_config.src_para.fill_color_en = 0;
+    ge2d_config.src_para.fill_mode = 0;
+    ge2d_config.src_para.color = 0;
+    ge2d_config.src_para.top = 0;
+    ge2d_config.src_para.left = 0;
+    ge2d_config.src_para.width = srcy->width;
+    ge2d_config.src_para.height = srcy->height;
+
+    ge2d_config.dst_para.canvas_index=desindex;
+    ge2d_config.dst_para.mem_type = CANVAS_TYPE_INVALID;
+    ge2d_config.dst_para.format = format;
+    ge2d_config.dst_para.fill_color_en = 0;
+    ge2d_config.dst_para.fill_mode = 0;
+    ge2d_config.dst_para.color = 0;
+    ge2d_config.dst_para.top = 0;
+    ge2d_config.dst_para.left = 0;
+    ge2d_config.dst_para.width = srcy->width;
+    ge2d_config.dst_para.height = srcy->height;
+
+    if(ge2d_context_config_ex(ge2d_videoh264_context,&ge2d_config)<0) {
+        printk("ge2d_context_config_ex failed \n");
+        return -1;
+    }
+
+    stretchblt_noalpha(ge2d_videoh264_context ,0, 0,srcy->width, srcy->height,
+        0, 0,srcy->width,srcy->height);
+
+    return 0;
+}
+#endif
+
 static inline int fifo_level(void)
 {
     int level = get_ptr - fill_ptr;
@@ -607,7 +701,14 @@ static void vh264_set_params(void)
                 buffer_spec[i].y_canvas_index = 128 + i * 2;
                 buffer_spec[i].u_canvas_index = 128 + i * 2 + 1;
                 buffer_spec[i].v_canvas_index = 128 + i * 2 + 1;
-
+#ifdef CONFIG_AM_MEMPROTECT
+                buffer_spec[i].y_canvas_width = mb_width << 4;
+                buffer_spec[i].y_canvas_height = mb_height << 4;
+                buffer_spec[i].u_canvas_width = mb_width << 4;
+                buffer_spec[i].u_canvas_height = mb_height << 4;
+                buffer_spec[i].v_canvas_width = mb_width << 4;
+                buffer_spec[i].v_canvas_height = mb_height << 4;
+#endif
                 canvas_config(128 + i * 2, buffer_spec[i].y_addr, mb_width << 4, mb_height << 4,
                               CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32);
                 canvas_config(128 + i * 2 + 1, buffer_spec[i].u_addr, mb_width << 4, mb_height << 3,
@@ -640,7 +741,14 @@ static void vh264_set_params(void)
                 buffer_spec[i].y_canvas_index = 128 + i * 2;
                 buffer_spec[i].u_canvas_index = 128 + i * 2 + 1;
                 buffer_spec[i].v_canvas_index = 128 + i * 2 + 1;
-
+#ifdef CONFIG_AM_MEMPROTECT
+                buffer_spec[i].y_canvas_width = mb_width << 4;
+                buffer_spec[i].y_canvas_height = mb_height << 4;
+                buffer_spec[i].u_canvas_width = mb_width << 4;
+                buffer_spec[i].u_canvas_height = mb_height << 4;
+                buffer_spec[i].v_canvas_width = mb_width << 4;
+                buffer_spec[i].v_canvas_height = mb_height << 4;
+#endif
                 canvas_config(128 + i * 2, buffer_spec[i].y_addr, mb_width << 4, mb_height << 4,
                               CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32);
                 canvas_config(128 + i * 2 + 1, buffer_spec[i].u_addr, mb_width << 4, mb_height << 3,
@@ -679,7 +787,14 @@ static void vh264_set_params(void)
                 buffer_spec[i].u_addr = addr;
                 addr += mb_total << 7;
                 vfbuf_use[i] = 0;
-
+#ifdef CONFIG_AM_MEMPROTECT
+                buffer_spec[i].y_canvas_width = mb_width << 4;
+                buffer_spec[i].y_canvas_height = mb_height << 4;
+                buffer_spec[i].u_canvas_width = mb_width << 4;
+                buffer_spec[i].u_canvas_height = mb_height << 4;
+                buffer_spec[i].v_canvas_width = mb_width << 4;
+                buffer_spec[i].v_canvas_height = mb_height << 4;
+#endif
                 spec_set_canvas(&buffer_spec[i], mb_width << 4, mb_height << 4);
                 WRITE_VREG(ANC0_CANVAS_ADDR + i, spec2canvas(&buffer_spec[i]));
 #else
@@ -1745,6 +1860,10 @@ static void stream_switching_do(struct work_struct *work)
     bool do_copy = true;
     int mb_total_num, mb_width_num, mb_height_num;
 
+#ifdef CONFIG_AM_MEMPROTECT
+    u32 y_index, u_index,src_index,des_index,y_desindex,u_dexindex;
+    canvas_t csy,csu,cyd;
+#endif
     mutex_lock(&vh264_mutex);
 
     if (atomic_read(&vh264_active)) {
@@ -1782,6 +1901,29 @@ static void stream_switching_do(struct work_struct *work)
         if (do_copy) {
             /* construct a clone of the frame from last frame */
 #ifdef NV21
+#ifdef CONFIG_AM_MEMPROTECT
+            printk("src yaddr[0x%x] index[%d] width[%d] heigth[%d]\n",buffer_spec[buffer_index].y_addr,buffer_spec[buffer_index].y_canvas_index,\
+                buffer_spec[buffer_index].y_canvas_width,buffer_spec[buffer_index].y_canvas_height);
+            
+            printk("src uaddr[0x%x] index[%d] width[%d] heigth[%d]\n",buffer_spec[buffer_index].u_addr,buffer_spec[buffer_index].u_canvas_index,\
+                buffer_spec[buffer_index].u_canvas_width,buffer_spec[buffer_index].u_canvas_height);
+            y_index = buffer_spec[buffer_index].y_canvas_index;
+            u_index = buffer_spec[buffer_index].u_canvas_index;
+            canvas_read(y_index,&csy);
+            canvas_read(u_index,&csu);
+            
+            canvas_config(0, videoKeepBufPhys[0], mb_width_num << 4, mb_height_num << 4,
+                          CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32);
+            canvas_config(1, videoKeepBufPhys[1], mb_width_num << 4, mb_height_num << 3,
+                          CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32);
+            
+            y_desindex = 0;
+            u_dexindex = 1;
+            canvas_read(y_desindex,&cyd);
+            src_index = ((y_index&0xff) | (( u_index << 8)& 0x0000ff00 ));
+            des_index = ((y_desindex&0xff) | (( u_dexindex << 8)& 0x0000ff00 ));
+            ge2d_canvas_dup(&csy,&csu,&cyd,GE2D_FORMAT_M24_NV21,src_index,des_index);
+#else
             canvas_dup((u8 *)videoKeepBuf[0], buffer_spec[buffer_index].y_addr, mb_total_num<<8);
             canvas_dup((u8 *)videoKeepBuf[1], buffer_spec[buffer_index].u_addr, mb_total_num<<7);
 
@@ -1789,6 +1931,7 @@ static void stream_switching_do(struct work_struct *work)
                           CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32);
             canvas_config(1, videoKeepBufPhys[1], mb_width_num << 4, mb_height_num << 3,
                           CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32);
+#endif
 #else
             canvas_dup((u8 *)videoKeepBuf[0], buffer_spec[buffer_index].y_addr, mb_total_num<<8);
             canvas_dup((u8 *)videoKeepBuf[1], buffer_spec[buffer_index].u_addr, mb_total_num<<6);
@@ -1912,7 +2055,9 @@ static struct codec_profile_t amvdec_h264_profile = {
 static int __init amvdec_h264_driver_init_module(void)
 {
     printk("amvdec_h264 module init\n");
-
+#ifdef CONFIG_AM_MEMPROTECT	
+    ge2d_videoh264task_init();
+#endif
     if (platform_driver_register(&amvdec_h264_driver)) {
         printk("failed to register amvdec_h264 driver\n");
         return -ENODEV;
@@ -1926,6 +2071,9 @@ static void __exit amvdec_h264_driver_remove_module(void)
     printk("amvdec_h264 module remove.\n");
 
     platform_driver_unregister(&amvdec_h264_driver);
+#ifdef CONFIG_AM_MEMPROTECT	
+    ge2d_videoh264task_release();
+#endif
 }
 
 /****************************************/

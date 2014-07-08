@@ -88,6 +88,12 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_DEFAULT_LEVEL_DESC, LOG_MASK_DESC);
 #include "cm_regs.h"
 #include "amcm.h"
 #include <linux/amlogic/amports/video_prot.h>
+#ifdef CONFIG_AM_MEMPROTECT
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+#include <mach/mod_gate.h>
+#endif
+#include "mach/meson-secure.h"
+#endif
 
 static int debugflags=0;
 static int output_fps = 0;
@@ -671,49 +677,137 @@ static int android_clone_rate = 30;
 static int noneseamless_play_clone_rate = 5;
 #endif
 
-#if 0
-/* video enhancement */
-static struct ve_bext_s ve_bext;
-static struct ve_dnlp_s ve_dnlp;
-static struct ve_hsvs_s ve_hsvs;
-static struct ve_ccor_s ve_ccor;
-static struct ve_benh_s ve_demo;
-static struct ve_demo_s ve_demo;
-
-typedef struct ve_regs_s {
-    unsigned val  : 32;
-    unsigned reg  : 14;
-    unsigned port :  2; // port port_addr            port_data            remark
-                        // 0    NA                   NA                   direct access
-                        // 1    VPP_CHROMA_ADDR_PORT VPP_CHROMA_DATA_PORT CM port registers
-                        // 2    NA                   NA                   reserved
-                        // 3    NA                   NA                   reserved
-    unsigned bit  :  5;
-    unsigned wid  :  5;
-    unsigned mode :  1; // 0:read, 1:write
-    unsigned rsv  :  5;
-} ve_regs_t;
-
-static uchar ve_dnlp_tgt[64], ve_dnlp_rt;
-static ulong ve_dnlp_lpf[64], ve_dnlp_reg[16];
-
-static ulong ve_benh_ve_benh_inv[32][2] = { // [0]: inv_10_0, [1]: inv_11
-    {2047, 1}, {2047, 1}, {   0, 1}, {1365, 0}, {1024, 0}, { 819, 0}, { 683, 0}, { 585, 0},
-    { 512, 0}, { 455, 0}, { 410, 0}, { 372, 0}, { 341, 0}, { 315, 0}, { 293, 0}, { 273, 0},
-    { 256, 0}, { 241, 0}, { 228, 0}, { 216, 0}, { 205, 0}, { 195, 0}, { 186, 0}, { 178, 0},
-    { 171, 0}, { 164, 0}, { 158, 0}, { 152, 0}, { 146, 0}, { 141, 0}, { 137, 0}, { 132, 0},
-};
-
-static ulong ve_reg_limit(ulong val, ulong wid)
+#ifdef CONFIG_AM_MEMPROTECT
+static ge2d_context_t *ge2d_video_context = NULL;
+static int ge2d_videotask_init()
 {
-    if (val < (1 << wid)) {
-        return(val);
-    } else {
-        return((1 << wid) - 1);
+    if (ge2d_video_context == NULL)
+            ge2d_video_context = create_ge2d_work_queue();
+
+    if (ge2d_video_context == NULL){
+            printk("create_ge2d_work_queue video task failed \n");
+            return -1;
     }
+	 printk("create_ge2d_work_queue video task ok \n");
+
+    return 0;
+}
+static int ge2d_videotask_release()
+{
+    if (ge2d_video_context) {
+            destroy_ge2d_work_queue(ge2d_video_context);
+            ge2d_video_context = NULL;
+    }
+    return 0;
 }
 
-#endif
+static int ge2d_canvas_dup(canvas_t *srcy ,canvas_t *srcu,canvas_t *des,
+    int format,u32 srcindex,u32 desindex)
+{
+    printk("ge2d_canvas_dup ADDR srcy[0x%x] srcu[0x%x] des[0x%x]\n",srcy->addr,srcu->addr,des->addr);
+
+    config_para_ex_t ge2d_config;
+    memset(&ge2d_config,0,sizeof(config_para_ex_t));
+
+    ge2d_config.alu_const_color= 0;
+    ge2d_config.bitmask_en  = 0;
+    ge2d_config.src1_gb_alpha = 0;
+
+    ge2d_config.src_planes[0].addr = srcy->addr;
+    ge2d_config.src_planes[0].w = srcy->width;
+    ge2d_config.src_planes[0].h = srcy->height;
+
+    ge2d_config.src_planes[1].addr = srcu->addr;
+    ge2d_config.src_planes[1].w = srcu->width;
+    ge2d_config.src_planes[1].h = srcu->height;
+
+    ge2d_config.dst_planes[0].addr = des->addr;
+    ge2d_config.dst_planes[0].w = des->width;
+    ge2d_config.dst_planes[0].h = des->height;
+
+    ge2d_config.src_para.canvas_index=srcindex;
+    ge2d_config.src_para.mem_type = CANVAS_TYPE_INVALID;
+    ge2d_config.src_para.format = format;
+    ge2d_config.src_para.fill_color_en = 0;
+    ge2d_config.src_para.fill_mode = 0;
+    ge2d_config.src_para.color = 0;
+    ge2d_config.src_para.top = 0;
+    ge2d_config.src_para.left = 0;
+    ge2d_config.src_para.width = srcy->width;
+    ge2d_config.src_para.height = srcy->height;
+
+    ge2d_config.dst_para.canvas_index=desindex;
+    ge2d_config.dst_para.mem_type = CANVAS_TYPE_INVALID;
+    ge2d_config.dst_para.format = format;
+    ge2d_config.dst_para.fill_color_en = 0;
+    ge2d_config.dst_para.fill_mode = 0;
+    ge2d_config.dst_para.color = 0;
+    ge2d_config.dst_para.top = 0;
+    ge2d_config.dst_para.left = 0;
+    ge2d_config.dst_para.width = srcy->width;
+    ge2d_config.dst_para.height = srcy->height;
+
+    if(ge2d_context_config_ex(ge2d_video_context,&ge2d_config)<0) {
+        printk("ge2d_context_config_ex failed \n");
+        return -1;
+    }
+
+    stretchblt_noalpha(ge2d_video_context ,0, 0,srcy->width, srcy->height,
+    0, 0,srcy->width,srcy->height);
+
+    return 0;
+}
+
+int ge2d_show_frame(ulong yaddr,ulong uaddr)
+{
+    u32 cur_index;
+    u32 y_index, u_index,des_index,src_index;
+    cur_index = READ_MPEG_REG(VD1_IF0_CANVAS0);
+    y_index = cur_index & 0xff;
+    u_index = (cur_index >> 8) & 0xff;
+    canvas_update_addr(y_index, (u32)yaddr);
+    canvas_update_addr(u_index, (u32)uaddr);
+}
+int ge2d_store_frame(ulong yaddr,ulong uaddr,u32 ydupindex,u32 udupindex)
+{
+    u32 cur_index;
+    u32 y_index, u_index,des_index,src_index;
+    canvas_t cs0,cs1,cyd;
+    cur_index = READ_MPEG_REG(VD1_IF0_CANVAS0);
+    y_index = cur_index & 0xff;
+    u_index = (cur_index >> 8) & 0xff;
+
+    canvas_read(y_index,&cs0);
+    canvas_read(u_index,&cs1);
+    canvas_config(ydupindex,
+        (ulong)yaddr,
+        cs0.width, cs0.height,
+        CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32); 
+    canvas_config(udupindex,
+        (ulong)uaddr,
+        cs1.width, cs1.height,
+        CANVAS_ADDR_NOWRAP, CANVAS_BLKMODE_32X32); 
+
+    canvas_read(ydupindex,&cyd);
+
+    src_index = ((y_index&0xff) | (( u_index << 8)& 0x0000ff00 ));
+    des_index = ((ydupindex&0xff) | (( udupindex << 8)& 0x0000ff00 ));
+    //printk("src_index=[0x%x] y_index=[0x%x]  u_index=[0x%x] \n",src_index,y_index,u_index);
+    //printk("des_index=[0x%x]  y_index= [0x%x]\n",des_index,udupindex);
+
+    ge2d_canvas_dup(&cs0,&cs1,&cyd,GE2D_FORMAT_M24_NV21,src_index,des_index);
+    return 0;
+}
+static void ge2d_keeplastframe_block()
+{
+    mutex_lock(&video_module_mutex);
+    ge2d_store_frame(keep_y_addr,keep_u_addr,DISPLAY_CANVAS_YDUP_INDEX,DISPLAY_CANVAS_UDUP_INDEX);
+    ge2d_show_frame(keep_y_addr,keep_u_addr);
+    mutex_unlock(&video_module_mutex);
+
+}
+
+#endif 
 
 /*********************************************************/
 static inline vframe_t *video_vf_peek(void)
@@ -2803,6 +2897,7 @@ static int alloc_keep_buffer(void)
             goto err6;
         }
     }
+    printk("yaddr=%x,u_addr=%x,v_addr=%x\n",keep_y_addr,keep_u_addr,keep_v_addr);	
     return 0;
 
 err6:
@@ -2839,6 +2934,7 @@ static inline ulong keep_phy_addr(ulong addr)
 
 void get_video_keep_buffer(ulong *addr, ulong *phys_addr)
 {
+#if 1
     if (addr) {
         addr[0] = (ulong)keep_y_addr_remap;
         addr[1] = (ulong)keep_u_addr_remap;
@@ -2850,7 +2946,7 @@ void get_video_keep_buffer(ulong *addr, ulong *phys_addr)
         phys_addr[1] = keep_phy_addr(keep_u_addr);
         phys_addr[2] = keep_phy_addr(keep_v_addr);
     }
-
+#endif
     if(debug_flag& DEBUG_FLAG_BLACKOUT){
         printk("%s: y=%lx u=%lx v=%lx\n", __func__, phys_addr[0], phys_addr[1], phys_addr[2]);
     }
@@ -2980,13 +3076,22 @@ static void video_vf_unreg_provider(void)
     video_prot.video_started = 0;
     spin_unlock_irqrestore(&lock, flags);
 
+#ifdef CONFIG_AM_MEMPROTECT
+    if (cur_dispbuf)
+    {
+        switch_mod_gate_by_name("ge2d", 1);
+        vf_keep_current();
+        switch_mod_gate_by_name("ge2d", 0);
+    }
+    tsync_avevent(VIDEO_STOP, 0);
+#else    
     //if (!trickmode_fffb)
     if (cur_dispbuf)
     {
         vf_keep_current();
     }
     tsync_avevent(VIDEO_STOP, 0);
-    
+ #endif   
     atomic_set(&video_unreg_flag, 0);
     enable_video_discontinue_report = 1;
 }
@@ -3189,6 +3294,9 @@ unsigned int vf_keep_current(void)
             Y_BUFFER_SIZE,U_BUFFER_SIZE, V_BUFFER_SIZE, cs0.width,cs0.height,cs1.width,cs1.height);
             return -1;
         }
+ #ifdef CONFIG_AM_MEMPROTECT
+        ge2d_keeplastframe_block();
+#else       
         if (keep_phy_addr(keep_y_addr) != canvas_get_addr(y_index) &&
             canvas_dup(keep_y_addr_remap, canvas_get_addr(y_index), (cs0.width *cs0.height)) &&
             canvas_dup(keep_u_addr_remap, canvas_get_addr(u_index), (cs1.width *cs1.height))){
@@ -3201,11 +3309,11 @@ unsigned int vf_keep_current(void)
             canvas_update_addr(y_index, keep_phy_addr(keep_y_addr));
             canvas_update_addr(u_index, keep_phy_addr(keep_u_addr));
 #endif
-            if(debug_flag& DEBUG_FLAG_BLACKOUT){
-                printk("%s: VIDTYPE_VIU_NV21\n", __func__);
-            }
         }
-
+#endif
+        if(debug_flag& DEBUG_FLAG_BLACKOUT){
+            printk("%s: VIDTYPE_VIU_NV21\n", __func__);
+        }
     }else{
         canvas_read(y_index,&cs0);
         canvas_read(u_index,&cs1);
@@ -5305,6 +5413,11 @@ static int __init video_init(void)
     vf_receiver_init(&video4osd_vf_recv, RECEIVER4OSD_NAME, &video4osd_vf_receiver, NULL);
     vf_reg_receiver(&video4osd_vf_recv);
 
+#ifdef CONFIG_AM_MEMPROTECT
+   // video_frame_getmem();
+    ge2d_videotask_init();
+#endif
+
 #ifdef CONFIG_AM_VIDEO2
     set_clone_frame_rate(android_clone_rate, 0);
 #endif
@@ -5350,6 +5463,10 @@ static void __exit video_exit(void)
 #endif
 
     class_unregister(&amvideo_class);
+
+#ifdef CONFIG_AM_MEMPROTECT
+    ge2d_videotask_release();
+#endif
 }
 #ifdef CONFIG_KEEP_FRAME_RESERVED
 static int video_probe(struct platform_device *pdev)
@@ -5363,7 +5480,7 @@ static int video_probe(struct platform_device *pdev)
         ret = -ENOMEM;
         goto fail_get_res;
     }
-    pr_info("%s y start %x, end %x\n", __func__, res->start, res->end);
+    printk("keep reserved %s y start %x, end %x\n", __func__, res->start, res->end);
     keep_y_addr = res->start;
     y_buffer_size = res->end - res->start + 1;
     keep_y_addr_remap = ioremap_nocache(keep_y_addr, y_buffer_size);
@@ -5379,7 +5496,7 @@ static int video_probe(struct platform_device *pdev)
         ret = -ENOMEM;
         goto fail_get_res;
     }
-    pr_info("%s u start %x, end %x\n", __func__, res->start, res->end);
+    printk("%s u start %x, end %x\n", __func__, res->start, res->end);
     keep_u_addr = res->start;
     u_buffer_size = res->end - res->start + 1;
     keep_u_addr_remap = ioremap_nocache(keep_u_addr, u_buffer_size);
@@ -5395,7 +5512,7 @@ static int video_probe(struct platform_device *pdev)
         ret = -ENOMEM;
         goto fail_get_res;
     }
-    pr_info("%s v start %x, end %x\n", __func__, res->start, res->end);
+    printk("%s v start %x, end %x\n", __func__, res->start, res->end);
     keep_v_addr = res->start;
     v_buffer_size = res->end - res->start + 1;
     keep_v_addr_remap = ioremap_nocache(keep_v_addr, v_buffer_size);

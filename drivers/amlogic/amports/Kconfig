@@ -46,6 +46,13 @@ config SUPPORT_VIDEO_ON_VPP2
 	help
 	  Support displaying video on vpp2
 
+config AM_MEMPROTECT
+    bool "Amlogic Video protect video streambuf framebuf"
+    default n
+    depends on  AM_VIDEO
+    help
+      Select to enable protect video streambuf framebuf.
+
 menu "Video Decoders"
 	depends on AM_VIDEO
 config AM_VDEC_MPEG12
