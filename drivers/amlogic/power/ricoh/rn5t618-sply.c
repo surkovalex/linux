@@ -409,7 +409,6 @@ static int rn5t618_coulomb_flag = 0;
 int rn5t618_get_saved_coulomb(void)
 {
     uint8_t val[4];
-    int result;
 
     rn5t618_read(0x01, &val[0]);
     if (val[0] <= 0x06) {
@@ -1057,10 +1056,10 @@ int rn5t618_dump_all_register(char *buf)
         for (i = 0; i < 16; i++) {
             rn5t618_reads(i*16, val, 16);
             printk(KERN_DEBUG "0x%02x - %02x: ", i * 16, i * 16 + 15);
-            printk(KERN_DEBUG "%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
-            printk(KERN_DEBUG "%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
-            printk(KERN_DEBUG "%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
-            printk(KERN_DEBUG "%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
+            printk("%02x %02x %02x %02x ",   val[0],  val[1],  val[2],  val[3]);
+            printk("%02x %02x %02x %02x   ", val[4],  val[5],  val[6],  val[7]);
+            printk("%02x %02x %02x %02x ",   val[8],  val[9],  val[10], val[11]);
+            printk("%02x %02x %02x %02x\n",  val[12], val[13], val[14], val[15]);
         }
         return 0;
     }
@@ -1688,7 +1687,7 @@ static int rn5t618_battery_probe(struct platform_device *pdev)
     rn5t618_set_bits(0x0012, 0x40, 0x40);                       // enable watchdog
     rn5t618_feed_watchdog();
 #endif
-    rn5t618_dump_all_register(NULL);
+    //rn5t618_dump_all_register(NULL);
 	RICOH_DBG("call %s exit, ret:%d", __func__, ret);
     return ret;
 
