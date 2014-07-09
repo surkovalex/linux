@@ -321,6 +321,15 @@ static ssize_t __efuse_write(const char *buf, size_t count, loff_t *ppos )
 #endif	
 }
 
+ssize_t aml__efuse_read( char *buf, size_t count, loff_t *ppos )
+{
+	return __efuse_read( buf, count, ppos );
+}
+ssize_t aml__efuse_write(const char *buf, size_t count, loff_t *ppos )
+{
+	return __efuse_write(buf, count, ppos );
+}
+
 //=================================================================================================
 static int cpu_is_before_m6(void)
 {
@@ -381,7 +390,7 @@ static const struct efuse_chip_identify_t efuse_chip_hw_info[]={
 #define EFUSE_CHIP_HW_INFO_NUM  sizeof(efuse_chip_hw_info)/sizeof(efuse_chip_hw_info[0])
 
 
-static efuse_socchip_type_e efuse_get_socchip_type(void)
+efuse_socchip_type_e efuse_get_socchip_type(void)
 {
 	efuse_socchip_type_e type;
 	//unsigned int __iomem *bootrom_base;

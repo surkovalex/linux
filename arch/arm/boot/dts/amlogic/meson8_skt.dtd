@@ -1305,6 +1305,18 @@ void root_func(){
 	};
 
 /// ***************************************************************************************
+///	-	defendkey
+//$$ MODULE="defendkey"
+//$$ DEVICE="defendkey"
+//$$ L2 PROP_STR = "status"
+    defendkey{
+		compatible = "amlogic,defendkey";
+		status = "ok";
+	};
+
+
+
+/// ***************************************************************************************
 ///	-	HDMI
 //$$ MODULE="HDMI"
 //$$ DEVICE="amhdmitx"

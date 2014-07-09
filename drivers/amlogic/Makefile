@@ -134,3 +134,5 @@ obj-y += crypto/
 #obj-$(CONFIG_MESON_TRUSTZONE) += trustzone/
 obj-$(CONFIG_MESON_TRUSTZONE) += secure_monitor/
 obj-y += spi/
+
+obj-y += defendkey/
