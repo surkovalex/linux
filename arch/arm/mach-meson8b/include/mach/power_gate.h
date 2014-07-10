@@ -17,7 +17,7 @@
 
 #define __CLK_GATE_OFF(_MOD) \
 	do{                             \
-		if(GCLK_ref[GCLK_IDX_##_MOD] <= 0){ \
+		if(--GCLK_ref[GCLK_IDX_##_MOD] <= 0){ \
 			if (0) printk(KERN_INFO "gate off %s %x, %x\n", GCLK_NAME_##_MOD, GCLK_REG_##_MOD, GCLK_MASK_##_MOD); \
 			CLEAR_CBUS_REG_MASK(GCLK_REG_##_MOD, GCLK_MASK_##_MOD); \
 			GCLK_ref[GCLK_IDX_##_MOD] = 0; \
