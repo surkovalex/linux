@@ -436,10 +436,18 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
 
     pdma->dma_mode = 0;
     pdma->dma_urgent = 1;
+#if (defined CONFIG_ARCH_MESON8M2)
+    pdma->wr_burst = 7;
+#else
     pdma->wr_burst = 3; // means 4
+#endif
     pdma->txfifo_th = 49; // means 49
     pdma->rd_burst = 15; // means 8
+#if (defined CONFIG_ARCH_MESON8M2)
+    pdma->rxfifo_th = 7;
+#else
     pdma->rxfifo_th = 8; // means 8
+#endif
     // pdma->rd_burst = 3;
     // pdma->wr_burst = 3;
     // pdma->rxfifo_th = 7;
@@ -447,18 +455,31 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
     writel(vpdma, host->base+SDHC_PDMA);
 
     /*Send Stop Cmd automatically*/
+#if (defined CONFIG_ARCH_MESON8M2)
+    misc.txstart_thres = 4; // [29:31] = 7
+#else
     misc.reserved2 = 7; // [29:31] = 7
+#endif
     misc.manual_stop = 0;
     misc.wcrc_err_patt = 5;
     misc.wcrc_ok_patt = 2;
     writel(*(u32*)&misc, host->base + SDHC_MISC);
 
     venhc = readl(host->base+SDHC_ENHC);
+#if (defined CONFIG_ARCH_MESON8M2)
+    enhc->rxfifo_th = 64;
+    enhc->sdio_irq_period = 12;
+    enhc->debug = 1;
+    enhc->chk_dma = 0;
+    enhc->chk_wrrsp = 0;
+    enhc->wrrsp_mode = 1;
+#else
     enhc->rxfifo_th = 60;
     enhc->dma_rd_resp = 0;
     enhc->dma_wr_resp = 1;
     enhc->sdio_irq_period = 12;
     enhc->rx_timeout = 255;
+#endif
     writel(venhc, host->base + SDHC_ENHC);
 
     /*Disable All Irq*/
