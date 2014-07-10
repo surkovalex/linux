@@ -144,9 +144,17 @@ static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *b
     if (!vf) {
         return -EAGAIN;
     }
+    if (vf && dev->once_record == 1) {
+    	dev->once_record = 0;
+    	if ((vf->type & VIDTYPE_INTERLACE_BOTTOM) == 0x3) {
+    		dev->ppmgr2_dev.bottom_first = 1;
+    	} else {
+    		dev->ppmgr2_dev.bottom_first = 0;
+    	}
+    }
     if (freerun_mode == 0) {
         if ((vf->type & 0x1) == VIDTYPE_INTERLACE) {
-            if (dev->ppmgr2_dev.interlaced_num == 0) {
+            if ((dev->ppmgr2_dev.bottom_first && (vf->type & 0x2)) || (dev->ppmgr2_dev.bottom_first == 0 && ((vf->type & 0x2) == 0))) {
                 buf->pts = vf->pts;
                 buf->duration = vf->duration;
             }
@@ -162,7 +170,7 @@ static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *b
         vf_put(vf, RECEIVER_NAME);
     } else {
         if ((vf->type & 0x1) == VIDTYPE_INTERLACE) {
-            if (dev->ppmgr2_dev.interlaced_num == 0)
+            if ((dev->ppmgr2_dev.bottom_first && (vf->type & 0x2)) || (dev->ppmgr2_dev.bottom_first == 0 && ((vf->type & 0x2) == 0)))
                 dev->pts = vf->pts_us64;
         } else
             dev->pts = vf->pts_us64;
@@ -450,6 +458,8 @@ static int vidioc_open(struct file *file) {
     dev->pts = 0;
     dev->c_width = 0;
     dev->c_height = 0;
+    dev->once_record = 1;
+    dev->ppmgr2_dev.bottom_first = 0;
     skip_frames = 0;
     dprintk(dev, 2, "vidioc_open\n");
     printk("ionvideo open\n");
@@ -458,12 +468,15 @@ static int vidioc_open(struct file *file) {
 
 static int vidioc_release(struct file *file) {
     struct ionvideo_dev *dev = video_drvdata(file);
+    ionvideo_stop_generating(dev);
+    printk("ionvideo_stop_generating!!!!\n");
     ppmgr2_release(&(dev->ppmgr2_dev));
     dprintk(dev, 2, "vidioc_release\n");
     printk("ionvideo release\n");
     if (dev->fd_num > 0) {
         dev->fd_num--;
     }
+    dev->once_record = 0;
     return vb2_fop_release(file);
 }
 
