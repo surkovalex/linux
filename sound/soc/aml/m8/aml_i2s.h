@@ -68,7 +68,8 @@ struct aml_runtime_data {
 	struct snd_pcm_substream *substream;
 	audio_stream_t s;	
 	struct timer_list timer;	// timeer for playback and capture
-    struct hrtimer hrtimer;
+	struct hrtimer hrtimer;
+	void *buf; //tmp buffer for playback or capture
 };
 
 extern struct snd_soc_platform_driver aml_soc_platform;

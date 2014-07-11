@@ -126,9 +126,6 @@ static const struct snd_pcm_hardware aml_i2s_capture = {
 	.fifo_size = 0,
 };
 
-static char snd_i2s_tmp[32*1024];
-
-
 static unsigned int period_sizes[] = { 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768,65536,65536*2,65536*4 };
 
 static struct snd_pcm_hw_constraint_list hw_constraints_period_sizes = {
@@ -460,11 +457,15 @@ static int aml_i2s_open(struct snd_pcm_substream *substream)
 	struct aml_runtime_data *prtd = runtime->private_data;
 	audio_stream_t *s ;
 	int ret = 0;
+	void *buffer = NULL;
+	unsigned int buffersize = 0;
     ALSA_TRACE();
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 		snd_soc_set_runtime_hwparams(substream, &aml_i2s_hardware);
+		buffersize = aml_i2s_hardware.period_bytes_max;
 	}else{
 		snd_soc_set_runtime_hwparams(substream, &aml_i2s_capture);
+		buffersize = aml_i2s_capture.period_bytes_max;
 	}
 
     /* ensure that peroid size is a multiple of 32bytes */
@@ -492,6 +493,16 @@ static int aml_i2s_open(struct snd_pcm_substream *substream)
 		}
 		prtd->substream = substream;
 		runtime->private_data = prtd;
+	}
+	if(!prtd->buf){
+		buffer = kzalloc(buffersize, GFP_KERNEL);
+		if (buffer==NULL){
+			printk("alloc aml_runtime_data buffer error\n");
+			kfree(prtd);
+			ret = -ENOMEM;
+			goto out;
+		}
+		prtd->buf = buffer;
 	}
 //	WRITE_MPEG_REG_BITS( HHI_MPLL_CNTL8, 1,14, 1);
 #if USE_HRTIMER == 0
@@ -544,8 +555,15 @@ static int aml_i2s_close(struct snd_pcm_substream *substream)
 #else
     hrtimer_cancel(&prtd->hrtimer);
 #endif
-	if(prtd)
-		kfree(prtd);
+	if(prtd->buf){
+		kfree(prtd->buf);
+		prtd->buf = NULL;
+	}
+	if(prtd){
+ 		kfree(prtd);
+		prtd = NULL;
+		substream->runtime->private_data = NULL;
+	}
 	return 0;
 }
 
@@ -559,16 +577,22 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
     int i = 0, j = 0;
     int  align = runtime->channels * 32 / runtime->byte_align;
     char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos);
-	aml_i2s_alsa_write_addr = frames_to_bytes(runtime, pos);
+    struct aml_runtime_data *prtd = runtime->private_data;
+    void *ubuf = prtd->buf;
+    audio_stream_t *s = &prtd->s;
+    if(s->device_type == AML_AUDIO_I2SOUT){
+        aml_i2s_alsa_write_addr = frames_to_bytes(runtime, pos);
+    }
     n = frames_to_bytes(runtime, count);
-    if(aml_i2s_playback_enable == 0)
-      return res;
-	if(access_ok(VERIFY_READ, buf, frames_to_bytes(runtime, count)))
-	{
-		if(1/*runtime->channels == 2*/){
-			if(runtime->format == SNDRV_PCM_FORMAT_S16_LE ){
+    if(aml_i2s_playback_enable == 0 && s->device_type == AML_AUDIO_I2SOUT)
+        return res;
+    res = copy_from_user(ubuf, buf, n);
+    if (res) return -EFAULT;
+    if(access_ok(VERIFY_READ, buf, frames_to_bytes(runtime, count)))
+    {
+      if(runtime->format == SNDRV_PCM_FORMAT_S16_LE ){
         int16_t * tfrom, *to, *left, *right;
-        tfrom = (int16_t*)buf;
+        tfrom = (int16_t*)ubuf;
         to = (int16_t*)hwbuf;
 
         left = to;
@@ -586,7 +610,7 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 		 }
       }else if(runtime->format == SNDRV_PCM_FORMAT_S24_LE && I2S_MODE == AIU_I2S_MODE_PCM24){
         int32_t *tfrom, *to, *left, *right;
-        tfrom = (int32_t*)buf;
+        tfrom = (int32_t*)ubuf;
         to = (int32_t*) hwbuf;
 
         left = to;
@@ -606,7 +630,7 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 
       }else if(runtime->format == SNDRV_PCM_FORMAT_S32_LE /*&& I2S_MODE == AIU_I2S_MODE_PCM32*/){
         int32_t *tfrom, *to, *left, *right;
-        tfrom = (int32_t*)buf;
+        tfrom = (int32_t*)ubuf;
         to = (int32_t*) hwbuf;
 
         left = to;
@@ -662,11 +686,10 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 	}else{
 	  res = -EFAULT;
 	}
-    }
     return res;
 }
 
-static unsigned int aml_get_in_wr_ptr(){
+static unsigned int aml_get_in_wr_ptr(void){
 	return (audio_in_i2s_wr_ptr() - aml_i2s_capture_phy_start_addr);
 }
 
@@ -674,36 +697,30 @@ static int aml_i2s_copy_capture(struct snd_pcm_runtime *runtime, int channel,
 		    snd_pcm_uframes_t pos,
 		    void __user *buf, snd_pcm_uframes_t count)
 {
-		unsigned int *tfrom, *left, *right;
-		unsigned short *to;
-		int res = 0;
-		int n;
-    int i = 0, j = 0;
-    unsigned int t1, t2;
+	unsigned int *tfrom, *left, *right;
+	unsigned short *to;
+	int res = 0, n = 0, i = 0, j = 0, size = 0;
+	unsigned int t1, t2;
+	unsigned char r_shift = 8;
 	struct aml_runtime_data *prtd = runtime->private_data;
 	audio_stream_t *s = &prtd->s;
 	char *hwbuf = runtime->dma_area + frames_to_bytes(runtime, pos)*2;
-	int size = 0;
+	void *ubuf = prtd->buf;
 	if(s->device_type == AML_AUDIO_I2SIN){
-		unsigned int buffersize = (unsigned int)runtime->buffer_size*8;  //512*4*4*2
+		unsigned int buffersize = (unsigned int)runtime->buffer_size*8;  //framesize*8
 		unsigned int hw_ptr = aml_get_in_wr_ptr();
 		unsigned int alsa_read_ptr = frames_to_bytes(runtime, pos)*2;
 		size = (buffersize + hw_ptr - alsa_read_ptr)%buffersize;
 	}
-    unsigned char r_shift = 8;
 	if(s->device_type == AML_AUDIO_SPDIFIN) //spdif in
     {
     	r_shift = 12;
     }
-    to = (unsigned short *)snd_i2s_tmp;//buf;
+    to = (unsigned short *)ubuf;//tmp buf;
     tfrom = (unsigned int *)hwbuf;	// 32bit buffer
     n = frames_to_bytes(runtime, count);
-    if(n > 32*1024){
-		printk("Too many datas to read,please enlarge the snd_i2s_tmp buffer size\n");
-      return -EINVAL;
-    }
 	if(size < 2*n && s->device_type == AML_AUDIO_I2SIN){
-		printk(KERN_DEBUG "~~~Reset ALSA!~~~\n");
+		printk("Alsa ptr is too close to HW ptr, Reset ALSA!\n");
 		return -EPIPE;
 	}
 	if(access_ok(VERIFY_WRITE, buf, frames_to_bytes(runtime, count)))
@@ -721,21 +738,16 @@ static int aml_i2s_copy_capture(struct snd_pcm_runtime *runtime, int channel,
 		        for (i = 0; i < 8; i++) {
 		        	t1 = (*left++);
 		        	t2 = (*right++);
-		        	//printk("%08x,%08x,", t1, t2);
 	              *to++ = (unsigned short)((t1>>r_shift)&0xffff);
-	           //   *to++ = (unsigned short)((t1>>8)&0xffff);//copy left channel to right
 	              *to++ = (unsigned short)((t2>>r_shift)&0xffff);
 		         }
-		         //printk("\n");
 		        left += 8;
 		        right += 8;
 			}
 		}
-		else{
-		    }
-		}
-        res = copy_to_user(buf, snd_i2s_tmp,n);
-		return res;
+	}
+    res = copy_to_user(buf, ubuf, n);
+	return res;
 }
 
 static int aml_i2s_copy(struct snd_pcm_substream *substream, int channel,
@@ -835,9 +847,9 @@ static void aml_i2s_free_dma_buffers(struct snd_pcm *pcm)
 				  buf->area, buf->addr);
 		buf->area = NULL;
 		if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
-			aml_i2s_playback_start_addr = NULL;
+			aml_i2s_playback_start_addr = 0;
 		}else{
-			aml_i2s_capture_start_addr = NULL;
+			aml_i2s_capture_start_addr = 0;
 		}
 	}
 }

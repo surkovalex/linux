@@ -272,8 +272,7 @@ static long audiodsp_ioctl(struct file *file, unsigned int cmd,
 	unsigned long pts;
 	int ret=0;
 	unsigned long drop_size;
-	unsigned long *val=(unsigned long *)args;
-	static int wait_format_times=0;	
+	static int wait_format_times=0;
 	switch(cmd)
 		{
 		case AUDIODSP_SET_FMT:						
@@ -385,46 +384,46 @@ static long audiodsp_ioctl(struct file *file, unsigned int cmd,
 			  audiodsp_microcode_free(priv);
 			break;
 		case AUDIODSP_GET_CHANNELS_NUM: 
-			*val=-1;/*mask data is not valid*/
+			put_user(-1,(__s32 __user *)args);/*mask data is not valid*/
 			if(priv->frame_format.valid & CHANNEL_VALID)
-				{
-				*val=priv->frame_format.channel_num; 
+				{ 
+				put_user(priv->frame_format.channel_num,(__s32 __user *)args);
 				}
 			break;
 		case AUDIODSP_GET_SAMPLERATE: 
-			*val=-1;/*mask data is not valid*/
+			put_user(-1,(__s32 __user *)args);/*mask data is not valid*/
 			if(priv->frame_format.valid & SAMPLE_RATE_VALID)
-				{
-				*val=priv->frame_format.sample_rate; 
+				{ 
+				put_user(priv->frame_format.sample_rate,(__s32 __user *)args);
 				} 
 			break;
 		case AUDIODSP_GET_DECODED_NB_FRAMES: 			
-				*val=priv->decoded_nb_frames;					
+				put_user(priv->decoded_nb_frames,(__s32 __user *)args);
 			break;
 		case AUDIODSP_GET_BITS_PER_SAMPLE: 
-			*val=-1;/*mask data is not valid*/
+			put_user(-1,(__s32 __user *)args);/*mask data is not valid*/
 			if(priv->frame_format.valid & DATA_WIDTH_VALID)
 				{
-				*val=priv->frame_format.data_width; 
+				put_user(priv->frame_format.data_width,(__s32 __user *)args);
 				} 
 			break;
 		case AUDIODSP_GET_PTS:
 			/*val=-1 is not valid*/
-			*val=dsp_codec_get_current_pts(priv);
+			put_user(dsp_codec_get_current_pts(priv),(__u32 __user *)args);
 			break;
-                case AUDIODSP_LOOKUP_APTS:
-                    	{
-                        	u32 pts, offset;
-                        	offset=*val;
-                        	pts_lookup_offset(PTS_TYPE_AUDIO, offset, &pts, 300);
-                        	*val=pts;
-                    	}
-                        break;
+		case AUDIODSP_LOOKUP_APTS:
+			{
+				u32 pts, offset;
+				get_user(offset,(__u32 __user *)args);
+				pts_lookup_offset(PTS_TYPE_AUDIO, offset, &pts, 300);
+				put_user(pts,(__u32 __user *)args);
+			}
+			break;
 		case AUDIODSP_GET_FIRST_PTS_FLAG:
 			if(priv->stream_fmt == MCODEC_FMT_COOK || priv->stream_fmt == MCODEC_FMT_RAAC)
-				*val = 1;
+				put_user(1,(__s32 __user *)args);
 			else
-				*val = first_pts_checkin_complete(PTS_TYPE_AUDIO);
+				put_user(first_pts_checkin_complete(PTS_TYPE_AUDIO),(__s32 __user *)args);
 			break;
 			
 		case AUDIODSP_SYNC_AUDIO_START:
