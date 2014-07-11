@@ -38,8 +38,6 @@ s32 vdec_dev_register(void);
 s32 vdec_dev_unregister(void);
 void vdec_power_mode(int level);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
-
 typedef enum {
     VDEC_1 = 0,
     VDEC_HCODEC,
@@ -48,6 +46,7 @@ typedef enum {
     VDEC_MAX
 } vdec_type_t;
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 extern void vdec2_power_mode(int level);
 extern void vdec_poweron(vdec_type_t core);
 extern void vdec_poweroff(vdec_type_t core);

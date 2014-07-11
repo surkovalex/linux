@@ -517,7 +517,9 @@ static ssize_t amrisc_regs_show(struct class *class, struct class_attribute *att
     int rsize = sizeof(am_risc) / sizeof(struct am_reg);
     int i;
     unsigned  val;
-	unsigned long flags;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+    unsigned long flags;
+#endif
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
     spin_lock_irqsave(&lock, flags);

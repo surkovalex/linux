@@ -40,10 +40,7 @@ extern void hcodec_clock_on(void);
 extern void hcodec_clock_off(void);
 extern void hevc_clock_on(void);
 extern void hevc_clock_off(void);
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 extern int vdec_clock_level(vdec_type_t core);
-#endif
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
 extern void vdec_clock_prepare_switch(void);
