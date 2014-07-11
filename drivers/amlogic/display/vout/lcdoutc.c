@@ -1795,7 +1795,7 @@ static void set_venc_ttl(Lcd_Config_t *pConf)
 		WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 0x44, 4, 8);//Select encT clock to VDIN, Enable VIU of ENC_T domain to VDIN
 		WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 3, 0, 2);//viu1 select enct
 #else
-    WRITE_LCD_REG(VPU_VIU_VENC_MUX_CTRL, (3<<0) | (3<<2));	// viu1 & viu2 select enct
+	WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 0xf, 0, 4);	// viu1 & viu2 select enct
 #endif
     WRITE_LCD_REG(ENCT_VIDEO_MODE,        0);
     WRITE_LCD_REG(ENCT_VIDEO_MODE_ADV,    0x0008);
@@ -1844,7 +1844,7 @@ static void set_venc_mlvds(Lcd_Config_t *pConf)
 		WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 0, 0, 2);//viu1 select encl
     }
 #else
-    WRITE_LCD_REG(VPU_VIU_VENC_MUX_CTRL, (0<<0) | (0<<2));//viu1,viu2 select encl
+	WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 0, 0, 4);	// viu1 & viu2 select encl
 #endif	
 
 	WRITE_LCD_REG(ENCL_VIDEO_MODE,             0x0040 | (1<<14)); // Enable Hsync and equalization pulse switch in center; bit[14] cfg_de_v = 1
@@ -1896,7 +1896,7 @@ static void set_venc_lcd(Lcd_Config_t *pConf)
 		WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 0, 0, 2);//viu1 select encl
 	}
 #else
-	WRITE_LCD_REG(VPU_VIU_VENC_MUX_CTRL, (0<<0) | (0<<2));	// viu1 & viu2 select encl
+	WRITE_LCD_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 0, 0, 4);	// viu1 & viu2 select encl
 #endif
 	
 	WRITE_LCD_REG(ENCL_VIDEO_MODE,			0);
