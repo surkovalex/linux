@@ -424,6 +424,23 @@ int gpio_amlogic_requst(struct gpio_chip *chip,unsigned offset)
 	return ret;
 }
 /* amlogic request gpio interface*/
+#ifdef CONFIG_GPIO_TEST
+int gpio_amlogic_requst_force(struct gpio_chip *chip,unsigned offset)
+{
+	unsigned int i,reg,bit;
+	unsigned int *gpio_reg=&gpio_to_pin[offset][0];
+	for(i=0;i<sizeof(gpio_to_pin[offset])/sizeof(gpio_to_pin[offset][0]);i++){
+		if(gpio_reg[i]!=NONE)
+		{
+			reg=GPIO_REG(gpio_reg[i]);
+			bit=GPIO_BIT(gpio_reg[i]);
+			aml_clr_reg32_mask(p_pin_mux_reg_addr[reg],1<<bit);
+			gpio_print("clr reg=%d,bit =%d\n",reg,bit);
+		}
+	}
+	return 0;
+}
+#endif /* CONFIG_GPIO_TEST */
 
 void	 gpio_amlogic_free(struct gpio_chip *chip,unsigned offset)
 {	

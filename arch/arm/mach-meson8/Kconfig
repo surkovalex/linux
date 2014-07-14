@@ -63,5 +63,11 @@ config MESON_TRUSTZONE
 	default n
 	help
 		Enable ARM Trustzone secure extension
+		
+config GPIO_TEST
+	bool "support gpio group test"
+	default n
+	help
+		support gpio group test
 
 endif # ARCH_MESON8
