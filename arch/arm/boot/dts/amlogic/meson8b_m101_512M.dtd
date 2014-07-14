@@ -963,8 +963,6 @@ void root_func(){
 			port-config = <0>; /** 0: default */
 			port-dma = <0>; /** 0: default, 1: single, 2: incr, 3: incr4, 4: incr8, 5: incr16, 6: disable*/
 			port-id-mode = <1>; /** 0: hardware, 1: sw_host, 2: sw_slave*/
-			host-only-core = <1>;
-			pmu-apply-power = <1>;
 			status = "okay";
 		};
 		
