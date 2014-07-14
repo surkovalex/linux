@@ -54,16 +54,6 @@ bit8: vdec.gate
 #define VDEC_CLOCK_GATE_ON()  WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 8, 1, 1)
 #define VDEC_CLOCK_GATE_OFF() WRITE_MPEG_REG_BITS(HHI_VDEC_CLK_CNTL, 8, 0, 1)
 
-#define vdec_clock_enable() \
-    VDEC_200M(); \
-    clock_level = 0; \
-    WRITE_VREG(DOS_GCLK_EN0, 0xffffffff)
-
-#define vdec_clock_hi_enable() \
-    VDEC_250M(); \
-    clock_level = 1; \
-    WRITE_VREG(DOS_GCLK_EN0, 0xffffffff)
-
 static int clock_level[VDEC_MAX+1];
 
 void vdec_clock_enable(void)
@@ -78,14 +68,6 @@ void vdec_clock_hi_enable(void)
     VDEC_250M();
     clock_level[VDEC_1] = 1;
     WRITE_VREG(DOS_GCLK_EN0, 0xffffffff);
-}
-
-void vdec2_clock_enable(void)
-{
-    VDEC2_CLOCK_OFF();
-    VDEC2_255M();
-    VDEC2_CLOCK_ON();
-    clock_level[VDEC_2] = 0;
 }
 
 int vdec_clock_level(vdec_type_t core)
