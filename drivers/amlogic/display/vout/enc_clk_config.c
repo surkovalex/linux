@@ -1,10 +1,10 @@
 #include <linux/delay.h>
 #include <linux/kernel.h>
 #include <linux/amlogic/vout/vinfo.h>
-#include <linux/amlogic/vout/enc_clk_config.h>
 #include <mach/register.h>
 #include <mach/am_regs.h>
 #include <mach/clock.h>
+#include <linux/amlogic/vout/enc_clk_config.h>
 
 #define check_div() \
     if(div == -1)\
@@ -58,7 +58,7 @@ static void set_hpll_clk_out(unsigned clk)
             aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x00016385);   // optimise HPLL VCO 2.97GHz performance
             break;
 #endif
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
         case 2160:
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c80000);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x0a563823);
@@ -72,7 +72,7 @@ static void set_hpll_clk_out(unsigned clk)
             break;
 #endif
         case 1488:
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
             aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x4023d100);
             aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x8a7ad023);
@@ -83,7 +83,7 @@ static void set_hpll_clk_out(unsigned clk)
                 ;
             }
 #endif
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2)
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
 
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
@@ -136,7 +136,7 @@ static void set_hpll_clk_out(unsigned clk)
             break;
     }
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-
+    aml_write_reg32(P_HHI_VID_PLL_CNTL5, (aml_read_reg32(P_HHI_VID_PLL_CNTL5) & (~(0xf << 12))) | (0x6 << 12));
 #endif
     printk("config HPLL done\n");
 }
