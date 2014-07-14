@@ -86,9 +86,15 @@ void root_func(){
 
         cma_0:region@0 {
            region_name = "cma_0";
-           reg = <0 0x02700000>;
+           reg = <0 0x01800000>;
            linux,contiguous-region;
         };
+        cma_1:region@0 {
+           region_name = "cma_1";
+           reg = <0 0x00F00000>;
+           linux,contiguous-region;
+        };
+
 	};
 /// ***************************************************************************************
 ///	-	GIC
@@ -201,7 +207,7 @@ void root_func(){
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
-        linux,contiguous-region = <&cma_0>;
+        linux,contiguous-region = <&cma_1>;
 	};
 
 /// ***************************************************************************************

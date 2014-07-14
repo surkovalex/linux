@@ -86,9 +86,15 @@ void root_func(){
 
         cma_0:region@0 {
            region_name = "cma_0";
-           reg = <0 0x02700000>;
+           reg = <0 0x01800000>;
            linux,contiguous-region;
         };
+        cma_1:region@0 {
+           region_name = "cma_1";
+           reg = <0 0x00F00000>;
+           linux,contiguous-region;
+        };
+
 	};
 /// ***************************************************************************************
 ///	-	GIC
@@ -197,12 +203,11 @@ void root_func(){
 //$$ DEVICE="amvenc_avc"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-    amvenc_avc{
+	amvenc_avc{
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
-		linux,contiguous-region = <&cma_0>;
-		reserve-iomap = "true";
+        linux,contiguous-region = <&cma_1>;
 	};
 /// ***************************************************************************************
 ///	-	DISP&MM-VDIN
