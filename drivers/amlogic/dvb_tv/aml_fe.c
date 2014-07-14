@@ -390,6 +390,7 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 					printk("[%s] afc end  :p->frequency=[%d] has lock,search success.\n",__func__,p->frequency);
 					if(std_bk != 0){/*avoid sound format is not match after search over*/
 						p->analog.std = std_bk;
+						p->frequency -=1;/*avoid std unenable*/
 						fe->ops.set_frontend(fe);
 						std_bk = 0;
 					}
@@ -984,7 +985,7 @@ static void aml_fe_man_run(struct aml_dvb *dvb, struct aml_fe *fe)
 		demod_cap |= fe->atv_demod->drv->capability;
 		fe->init = 1;
 	}
-	
+
 	if(fe->dtv_demod && fe->dtv_demod->drv){
 		demod_cap |= fe->dtv_demod->drv->capability;
 		fe->init = 1;
