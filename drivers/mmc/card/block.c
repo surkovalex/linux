@@ -571,6 +571,8 @@ cmd_err:
 	return err;
 }
 
+static int mmc_wipe_part_ioctl(struct block_device *bdev);
+
 static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
 	unsigned int cmd, unsigned long arg)
 {
@@ -602,7 +604,13 @@ static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
        case MEMLOCK:
        case MEMUNLOCK:
        case MEMGETBADBLOCK:
+            return 0;
 	   case BLKWIPEPART:
+        //add erase function here
+            ret = mmc_wipe_part_ioctl(bdev);
+            if(ret){
+                dev_err("wipe part error ret:%d\n", ret);
+            }
            return 0;
        default:
            ret = -EINVAL;
@@ -2057,6 +2065,99 @@ static inline int mmc_blk_readonly(struct mmc_card *card)
 	return mmc_card_readonly(card) ||
 	       !(card->csd.cmdclass & CCC_BLOCK_WRITE);
 }
+
+static int mmc_wipe_part_ioctl(struct block_device *bdev)
+{
+	struct mmc_blk_data *md;
+	struct mmc_card *card;    
+    struct gendisk *disk = bdev->bd_disk;
+    __u64 offset, size;
+    int err, part_num, arg, i;
+
+    part_num = MINOR(bdev->bd_dev)-disk->first_minor;
+    size = (disk->part_tbl->part[part_num]->nr_sects<<9);
+    offset = (disk->part_tbl->part[part_num]->start_sect<<9);
+
+    pr_err("%s, %d part_num:%d, size:%012llx, offset:%012llx, disk->disk_name:%s\n",
+        __func__, __LINE__, part_num, size, offset, disk->disk_name);
+    
+    md = mmc_blk_get(bdev->bd_disk);
+    if (!md) {
+        pr_err("%s, failed to get mmc blk\n", __func__);
+        err = -EINVAL;
+        goto blk_get_err;
+    }
+
+    card = md->queue.card;
+
+    if(!mmc_card_mmc(card)){
+        pr_err("No mmc, do nothing\n");
+        err = 0;
+        goto dev_card_err;
+    }
+
+
+    if (!mmc_can_erase(card)) {
+        pr_err("device do not support erase, do nothing\n");
+		err = 0;
+		goto cmd_rel_host;
+	}
+    
+	mmc_claim_host(card->host);
+
+	err = mmc_blk_part_switch(card, md);
+	if (err){
+        pr_err("Part switch failed\n");
+		goto cmd_rel_host;
+     }
+
+	if (mmc_can_discard(card))
+		arg = MMC_DISCARD_ARG;
+	else if (mmc_can_trim(card))
+		arg = MMC_TRIM_ARG;
+	else
+		arg = MMC_ERASE_ARG;
+
+retry:
+#if 1   
+	if (card->quirks & MMC_QUIRK_INAND_CMD38) {
+                pr_err("checked MMC_QUIRK_INAND_CMD38 here\n");
+		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+				 INAND_CMD38_ARG_EXT_CSD,
+				 arg == MMC_TRIM_ARG ?
+				 INAND_CMD38_ARG_TRIM :
+				 INAND_CMD38_ARG_ERASE,
+				 0);
+		if (err)
+			goto out;
+	}
+ #endif  
+ 
+	err = mmc_erase(card, offset, size, arg);
+out:
+	if (err == -EIO && !mmc_blk_reset(md, card->host, MMC_BLK_DISCARD)){
+        pr_err("Erase failed and retry here\n");
+		goto retry;
+	}
+    
+	if (!err){
+        mmc_blk_reset_success(md, MMC_BLK_DISCARD);
+	}
+    else{
+        pr_err("Erase failed and err:%d\n", err);
+    }
+    
+cmd_rel_host:
+    mmc_release_host(card->host);
+
+dev_card_err:
+    mmc_blk_put(md);
+
+blk_get_err:
+	pr_err("%s completed, err:%d\n", __func__, err);
+    return err;  
+}
+
 
 static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 					      struct device *parent,

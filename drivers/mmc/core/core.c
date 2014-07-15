@@ -2040,6 +2040,10 @@ int mmc_can_erase(struct mmc_card *card)
 	if ((card->host->caps & MMC_CAP_ERASE) &&
 	    (card->csd.cmdclass & CCC_ERASE) && card->erase_size)
 		return 1;
+
+    pr_debug("%s, card->host->caps:%d,card->csd.cmdclass:%d card->erase_size:0x%x\n", 
+        __func__, (card->host->caps & MMC_CAP_ERASE), (card->csd.cmdclass & CCC_ERASE), card->erase_size);
+    
 	return 0;
 }
 EXPORT_SYMBOL(mmc_can_erase);
