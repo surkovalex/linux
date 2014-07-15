@@ -1046,7 +1046,41 @@ static inline int _get_backlight_config(struct platform_device *pdev)
         }
         DPRINT("bl control_method: %s(%u)\n", bl_ctrl_method_table[bl_config.method], bl_config.method);
 
-        if ((bl_config.method == BL_CTL_PWM_NEGATIVE) || (bl_config.method == BL_CTL_PWM_POSITIVE)) {
+        if (bl_config.method == BL_CTL_GPIO) {
+            ret = of_property_read_string(pdev->dev.of_node, "bl_gpio_port", &str);
+            if (ret) {
+                printk("faild to get bl_gpio_port!\n");
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
+                str = "GPIOD_1";
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
+                str = "GPIODV_28";
+#endif
+            }
+            val = amlogic_gpio_name_map_num(str);
+            if (val > 0) {
+                ret = bl_gpio_request(val);
+                if (ret) {
+                    printk("faild to alloc bl gpio (%s)!\n", str);
+                }
+                bl_config.gpio = val;
+                DPRINT("bl gpio = %s(%d)\n", str, bl_config.gpio);
+            }
+            else {
+                bl_config.gpio = -1;
+            }
+            ret = of_property_read_u32_array(pdev->dev.of_node,"bl_gpio_dim_max_min",&bl_para[0],2);
+            if (ret) {
+                printk("faild to get bl_gpio_dim_max_min\n");
+                bl_config.dim_max = 0x0;
+                bl_config.dim_min = 0xf;
+            }
+            else {
+                bl_config.dim_max = bl_para[0];
+                bl_config.dim_min = bl_para[1];
+            }
+            DPRINT("bl dim max=%u, min=%u\n", bl_config.dim_max, bl_config.dim_min);
+        }
+        else if ((bl_config.method == BL_CTL_PWM_NEGATIVE) || (bl_config.method == BL_CTL_PWM_POSITIVE)) {
             ret = of_property_read_string_index(pdev->dev.of_node, "bl_pwm_port_gpio_used", 1, &str);
             if (ret) {
                 printk("faild to get bl_pwm_port_gpio_used!\n");
@@ -1058,6 +1092,29 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                 else
                     bl_config.pwm_gpio_used = 0;
                 DPRINT("bl_pwm gpio_used: %u\n", bl_config.pwm_gpio_used);
+            }
+            if (bl_config.pwm_gpio_used == 1) {
+                ret = of_property_read_string(pdev->dev.of_node, "bl_gpio_port", &str);
+                if (ret) {
+                    printk("faild to get bl_gpio_port!\n");
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
+                    str = "GPIOD_1";
+#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
+                    str = "GPIODV_28";
+#endif
+                }
+                val = amlogic_gpio_name_map_num(str);
+                if (val > 0) {
+                    ret = bl_gpio_request(val);
+                    if (ret) {
+                      printk("faild to alloc bl gpio (%s)!\n", str);
+                    }
+                    bl_config.gpio = val;
+                    DPRINT("bl gpio = %s(%d)\n", str, bl_config.gpio);
+                }
+                else {
+                    bl_config.gpio = -1;
+                }
             }
             ret = of_property_read_string_index(pdev->dev.of_node, "bl_pwm_port_gpio_used", 0, &str);
             if (ret) {
@@ -1083,40 +1140,6 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                     bl_config.pwm_port = BL_PWM_MAX;
                 DPRINT("bl pwm_port: %s(%u)\n", str, bl_config.pwm_port);
             }
-            if ((bl_config.method == BL_CTL_GPIO) || ((bl_config.pwm_gpio_used == 1) && ((bl_config.method == BL_CTL_PWM_NEGATIVE) || (bl_config.method == BL_CTL_PWM_POSITIVE)))) {
-                ret = of_property_read_string(pdev->dev.of_node, "bl_gpio_port", &str);
-                if (ret) {
-                    printk("faild to get bl_gpio_port!\n");
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
-                    str = "GPIOD_1";
-#elif ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
-                    str = "GPIODV_28";
-#endif
-                }
-                val = amlogic_gpio_name_map_num(str);
-                if (val > 0) {
-                    ret = bl_gpio_request(val);
-                    if (ret) {
-                      printk("faild to alloc bl gpio (%s)!\n", str);
-                    }
-                    bl_config.gpio = val;
-                    DPRINT("bl gpio = %s(%d)\n", str, bl_config.gpio);
-                }
-                else {
-                    bl_config.gpio = -1;
-                }
-            }
-            ret = of_property_read_u32_array(pdev->dev.of_node,"bl_gpio_dim_max_min",&bl_para[0],2);
-            if (ret) {
-                printk("faild to get bl_gpio_dim_max_min\n");
-                bl_config.dim_max = 0x0;
-                bl_config.dim_min = 0xf;
-            }
-            else {
-                bl_config.dim_max = bl_para[0];
-                bl_config.dim_min = bl_para[1];
-            }
-            DPRINT("bl dim max=%u, min=%u\n", bl_config.dim_max, bl_config.dim_min);
             ret = of_property_read_u32(pdev->dev.of_node,"bl_pwm_freq",&val);
             if (ret) {
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6)
