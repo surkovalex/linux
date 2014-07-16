@@ -1152,7 +1152,6 @@ static void __ref handle_up_cpu(struct work_struct *work)
 		if(cpu_online(i))
 			continue;
 		cpu_up(i);
-		break;
 	}
 }
 
