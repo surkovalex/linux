@@ -2,11 +2,7 @@
 #define MIPI_DSI_UTIL_H
 
 #include <mach/register.h>
-#include <mach/cpu.h>
 #include <linux/amlogic/vout/lcdoutc.h>
-
-#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
-#include <mach/mipi_dsi_reg.h>
 
 // --------------------------------------------------------
 // MIPI DSI Data Type/ MIPI DCS Command Type Definitions
@@ -421,14 +417,7 @@ typedef struct DSI_Phy_s{
 }DSI_Phy_t;
 //********************************************************************************
 
-extern unsigned char *get_dsi_init_table(int flag);
-
 #define DSI_CMD_SIZE_MAX		2000
-//payload struct:
-//data_type, command, para_num, parameters...
-//data_type=0xff, command=0xff, means ending flag
-//data_type=0xff, command<0xff, means delay time(unit ms)
-extern void dsi_write_cmd(unsigned char* payload);
 
 extern void set_mipi_dsi_control_config(Lcd_Config_t *pConf);
 extern void set_mipi_dsi_control_config_post(Lcd_Config_t *pConf);
@@ -438,5 +427,4 @@ extern void mipi_dsi_off(void);
 extern void dsi_probe(Lcd_Config_t *pConf);
 extern void dsi_remove(void);
 
-#endif
 #endif

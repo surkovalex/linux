@@ -11,21 +11,16 @@
 #include <linux/platform_device.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
-#include <mach/am_regs.h>
 #include <linux/delay.h>
 #include <mach/am_regs.h>
-#include <linux/amlogic/vout/lcd_reg.h>
-#if ((MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2))
+#include <mach/lcd_reg.h>
 #include <mach/edp_tx_reg.h>
+#include <linux/amlogic/vout/lcdoutc.h>
 #include "edp_drv.h"
 
-//#define PRINT_DEBUG_INFO
-#ifdef PRINT_DEBUG_INFO
-#define DBG_PRINT(...)		printk(__VA_ARGS__)
-#else
-#define DBG_PRINT(...)
-#endif
 #define DPRINT(...)		printk(__VA_ARGS__)
+
+static struct class *edp_debug_class = NULL;
 
 //*************************************//
 // dptx for operation eDP Host (Tx) 
@@ -72,9 +67,9 @@ static EDP_Link_Config_t lconfig = {
 	.bit_rate = 0,
 };
 
-unsigned char preset_vswing_tx, preset_vswing_rx;
-unsigned char preset_preemp_tx, preset_preemp_rx;
-unsigned char adj_req_lane01, adj_req_lane23;
+static unsigned char preset_vswing_tx, preset_vswing_rx;
+static unsigned char preset_preemp_tx, preset_preemp_rx;
+static unsigned char adj_req_lane01, adj_req_lane23;
 
 static inline void trdp_wait(unsigned n)
 {
@@ -107,20 +102,20 @@ static int dptx_wait_phy_ready(void)
 
 static void dptx_dump_link_config(void)
 {
-	EDP_Link_Config_t *link_config = dptx_get_link_config();
-	
-	DPRINT("********************************************\n");
-	DPRINT(" Link Config:\n"
+    EDP_Link_Config_t *link_config = dptx_get_link_config();
+
+    DPRINT("********************************************\n");
+    DPRINT(" Link Config:\n"
            "    Link Rate               : 0x%02x\n"
            "    Lane Count              : %u\n"
            "    Vswing                  : 0x%02x\n"
            "    Preemphasis             : 0x%02x\n"
            "    Spread Spectrum level   : %u\n"
-		   "    Use DPCD Caps           : %u\n"
+           "    Use DPCD Caps           : %u\n"
            "    Training Settings       : %u\n"
            "    Link Rate Adjust        : %u\n"
            "    Link Adaptive           : %u\n"
-		   "    Main Stream Enable      : %u\n",
+           "    Main Stream Enable      : %u\n",
            READ_DPTX_REG(EDP_TX_LINK_BW_SET),
            READ_DPTX_REG(EDP_TX_LINK_COUNT_SET),
            READ_DPTX_REG(EDP_TX_PHY_VOLTAGE_DIFF_LANE_0),
@@ -131,13 +126,13 @@ static void dptx_dump_link_config(void)
            link_config->link_rate_adjust_en,
            link_config->link_adaptive,
            READ_DPTX_REG(EDP_TX_MAIN_STREAM_ENABLE));
-	DPRINT("********************************************\n");
+    DPRINT("********************************************\n");
 }
 
 static void dptx_dump_MSA(void)
 {
-	DPRINT("********************************************\n");
-	DPRINT(" Main Stream Attributes TX\n"
+    DPRINT("********************************************\n");
+    DPRINT(" Main Stream Attributes TX\n"
            "    Clocks, H Total         : %u\n"
            "    Clocks, V Total         : %u\n"
            "    Polarity (V / H)        : %u\n"
@@ -170,7 +165,7 @@ static void dptx_dump_MSA(void)
            READ_DPTX_REG(EDP_TX_MAIN_STREAM_N_VID),
            READ_DPTX_REG(EDP_TX_MAIN_STREAM_TRANSFER_UNIT_SIZE), 
            READ_DPTX_REG(EDP_TX_MAIN_STREAM_DATA_COUNT_PER_LANE));
-	DPRINT("********************************************\n");
+    DPRINT("********************************************\n");
 }
 
 static int dptx_set_link_rate(unsigned char link_rate)
@@ -224,52 +219,52 @@ static int dptx_set_lane_count(unsigned char lane_count)
 }
 
 //Main Stream Attributes
-static void dptx_set_video_mode(EDP_Video_Mode_t *vm)
+static void dptx_set_MSA(EDP_MSA_t *vm)
 {
     unsigned lane_count;
     unsigned data_per_lane;
     unsigned misc0_data;
-	unsigned n_vid;
-	EDP_Link_Config_t *link_config = dptx_get_link_config();
-	
-	switch (link_config->link_rate) {
-		case VAL_EDP_TX_LINK_BW_SET_162:
-			n_vid = 16200;
-			break;
-		case VAL_EDP_TX_LINK_BW_SET_270:
-			n_vid = 27000;
-			break;
-		case VAL_EDP_TX_LINK_BW_SET_540:
-			n_vid = 54000;
-			break;
-		default:
-			n_vid = 27000;
-			break;
-	}
-	
-	lane_count = READ_DPTX_REG(EDP_TX_LINK_COUNT_SET);
-    data_per_lane = ((vm->h_active * vm->bpc * 3) + 15) / 16 - lane_count;//1;//lane_count;
-	
-	misc0_data = ((vm->cformat << 1) | (1 << 0));	//always sync mode
-	switch (vm->bpc) {
-        case 6:
-			misc0_data = (misc0_data & 0x1f) | (0x0 << 5);
-			break;
-        case 10:
-			misc0_data = (misc0_data & 0x1f) | (0x2 << 5);
-			break;
-        case 12:
-			misc0_data = (misc0_data & 0x1f) | (0x3 << 5);
-			break;
-        case 16:
-			misc0_data = (misc0_data & 0x1f) | (0x4 << 5);
-			break;
-		case 8:
+    unsigned n_vid;
+    EDP_Link_Config_t *link_config = dptx_get_link_config();
+
+    switch (link_config->link_rate) {
+        case VAL_EDP_TX_LINK_BW_SET_162:
+            n_vid = 162000;
+            break;
+        case VAL_EDP_TX_LINK_BW_SET_270:
+            n_vid = 270000;
+            break;
+        case VAL_EDP_TX_LINK_BW_SET_540:
+            n_vid = 540000;
+            break;
         default:
-			misc0_data = (misc0_data & 0x1f) | (0x1 << 5);
-			break;
+            n_vid = 270000;
+            break;
     }
-	
+
+    lane_count = READ_DPTX_REG(EDP_TX_LINK_COUNT_SET);
+    data_per_lane = ((vm->h_active * vm->bpc * 3) + 15) / 16 - lane_count;//1;//lane_count;
+
+    misc0_data = ((vm->cformat << 1) | (vm->sync_clock_mode << 0)); //bit[0] sync mode (1=sync 0=async)
+    switch (vm->bpc) {
+        case 6:
+            misc0_data = (misc0_data & 0x1f) | (0x0 << 5);
+            break;
+        case 10:
+            misc0_data = (misc0_data & 0x1f) | (0x2 << 5);
+            break;
+        case 12:
+            misc0_data = (misc0_data & 0x1f) | (0x3 << 5);
+            break;
+        case 16:
+            misc0_data = (misc0_data & 0x1f) | (0x4 << 5);
+            break;
+        case 8:
+        default:
+            misc0_data = (misc0_data & 0x1f) | (0x1 << 5);
+            break;
+    }
+
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_HTOTAL, vm->h_period);
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_VTOTAL, vm->v_period);
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_POLARITY, ((vm->vsync_pol & 0x1) << 1) | (vm->vsync_pol & 0x1));
@@ -277,17 +272,15 @@ static void dptx_set_video_mode(EDP_Video_Mode_t *vm)
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_VSWIDTH, vm->vsync_width);
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_HRES, vm->h_active);
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_VRES, vm->v_active);
-    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_HSTART, vm->de_hstart);	//need to tune
-    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_VSTART, vm->de_vstart);	//need to tune
-    //WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_MISC0, ((vm->cformat << 1) | (1 << 0)));	//always sync mode
-	WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_MISC0, misc0_data);
+    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_HSTART, vm->hsync_bp);
+    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_VSTART, vm->vsync_bp);
+    //WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_MISC0, ((vm->cformat << 1) | (1 << 0))); //always sync mode
+    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_MISC0, misc0_data);
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_MISC1, 0x00000000);
-    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_M_VID, (vm->clk / 10000));	//10kHz
-	WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_N_VID, n_vid);	//10kHz
+    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_M_VID, (vm->clk / 1000)); //unit: 1kHz
+    WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_N_VID, n_vid);             //unit: 10kHz
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_TRANSFER_UNIT_SIZE, 32);    
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_DATA_COUNT_PER_LANE, data_per_lane);// bytes per lane
-	//WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_USER_PIXEL_WIDTH, 2);
-	//mdelay(5);
     WRITE_DPTX_REG(EDP_TX_MAIN_STREAM_USER_PIXEL_WIDTH, vm->ppc);
 }
 
@@ -425,7 +418,10 @@ static int trdp_AUXRead(unsigned long address, unsigned long byte_count, unsigne
 						reply_state = VAL_EDP_TX_AUX_OPERATION_ERROR;
 					break;
 			}
-		}		
+		}
+		else {
+			DPRINT("AUXRead timeout\n");
+		}
 	}
 	
 	if (reply_state == VAL_EDP_TX_AUX_OPERATION_SUCCESS) {
@@ -511,7 +507,7 @@ static int trdp_AUXWrite(unsigned long address, unsigned long byte_count, unsign
 		//write AUX command
 		WRITE_DPTX_REG(EDP_TX_AUX_ADDRESS, address);
 		for(i=0; i<byte_count; i++ )
-			 WRITE_DPTX_REG(EDP_TX_AUX_WRITE_FIFO, data[i] );
+			WRITE_DPTX_REG(EDP_TX_AUX_WRITE_FIFO, data[i] );
 
 		WRITE_DPTX_REG(EDP_TX_AUX_COMMAND, (VAL_EDP_TX_AUX_CMD_WRITE | ((byte_count-1) & 0xF)));
 		
@@ -548,6 +544,9 @@ static int trdp_AUXWrite(unsigned long address, unsigned long byte_count, unsign
 						reply_state = VAL_EDP_TX_AUX_OPERATION_ERROR;
 					break;
 			}
+		}
+		else {
+			DPRINT("AUXWrite time out\n");
 		}
 	}
 	
@@ -829,60 +828,26 @@ static int trdp_dump_DPCD_training_status(void)
 	return VAL_EDP_TX_AUX_OPERATION_SUCCESS;
 }
 
-static unsigned char trdp_select_edp_lane_count(unsigned char link_rate)
+static void trdp_edp_link_rate_update(unsigned char link_rate)
 {
-	unsigned int bit_rate, lane_capacity;
-	unsigned char lane_count;
 	EDP_Link_Config_t *link_config = dptx_get_link_config();
 	
-	lane_count = link_config->lane_count;
 	switch (link_rate) {
 		case VAL_EDP_TX_LINK_BW_SET_162:
 		case VAL_EDP_TX_LINK_BW_SET_270:
 			link_config->link_rate = link_rate;
-			bit_rate = edp_clk_config_update(link_rate);
 			break;
 		default:
-			lane_count = 0;
 			break;
 	}
-	
-	if (lane_count > 0) {
-		switch (link_rate) {
-			case VAL_EDP_TX_LINK_BW_SET_162:
-				lane_capacity = EDP_TX_LINK_CAPACITY_162;
-				break;
-			case VAL_EDP_TX_LINK_BW_SET_270:
-				lane_capacity = EDP_TX_LINK_CAPACITY_270;
-				break;
-			case VAL_EDP_TX_LINK_BW_SET_540:
-				lane_capacity = EDP_TX_LINK_CAPACITY_540;
-				break;
-			default:
-				lane_capacity = EDP_TX_LINK_CAPACITY_162;
-				break;
-		}
-		
-		if (bit_rate < lane_capacity * 1)
-			lane_count = 1;
-		else if (bit_rate < lane_capacity * 2)
-			lane_count = 2;
-		else if (bit_rate < lane_capacity * 4)
-			lane_count = 4;
-		else
-			lane_count = 0;
-
-		link_config->lane_count = lane_count;
-	}
-	return lane_count;
 }
 
 static int trdp_set_link_rate(unsigned char link_rate)
 {
 	int status = VAL_EDP_TX_AUX_OPERATION_SUCCESS;
 	
-	DBG_PRINT("set link rate\n");	
-	if (link_rate != READ_DPTX_REG(EDP_TX_LINK_BW_SET)) {	
+	DBG_PRINT("set link rate\n");
+	if (link_rate != READ_DPTX_REG(EDP_TX_LINK_BW_SET)) {
 		WRITE_DPTX_REG(EDP_TX_LINK_BW_SET, link_rate);
 		if (status)
 			return status;
@@ -1374,12 +1339,12 @@ static int trdp_update_status(void)
 	return status;
 }
 
-static int trdp_run_training_loop(unsigned training_settings, unsigned link_rate_adjust_en, unsigned adaptive)
+static int trdp_run_training_loop(unsigned training_settings, unsigned link_rate_adjust_en, unsigned adaptive, unsigned retry_num)
 {
 	int status = 0;
 	unsigned lanes = 0;
 	unsigned char aux_data[4];
-	unsigned done = 0;
+	unsigned done = 0, link_rate_adjust = 0;
 	unsigned training_state = VAL_EDP_TS_CLOCK_REC;
 	unsigned link_speed;
 	
@@ -1452,30 +1417,22 @@ static int trdp_run_training_loop(unsigned training_settings, unsigned link_rate
 			// the state of the status variable should not be changed in this state allowing a failure condition to report the proper status.
 			//**************************************
 			case VAL_EDP_TS_ADJUST_SPD:
-				link_speed = READ_DPTX_REG(EDP_TX_LINK_BW_SET);
-				lanes = READ_DPTX_REG(EDP_TX_LINK_COUNT_SET);
-				
-				if (link_speed != VAL_EDP_TX_LINK_BW_SET_162) {
-					if (link_speed == VAL_EDP_TX_LINK_BW_SET_270) {
-						link_speed = VAL_EDP_TX_LINK_BW_SET_162;
+				if (retry_num == 1) {
+					link_speed = READ_DPTX_REG(EDP_TX_LINK_BW_SET);
+					lanes = READ_DPTX_REG(EDP_TX_LINK_COUNT_SET);
+					if (link_speed != VAL_EDP_TX_LINK_BW_SET_162) {
+						if (link_speed == VAL_EDP_TX_LINK_BW_SET_270) {
+							link_speed = VAL_EDP_TX_LINK_BW_SET_162;
+						}
+						else {
+							link_speed = VAL_EDP_TX_LINK_BW_SET_270;
+						}
+						DPRINT("[warning]: reduce edp link rate\n");
+						trdp_edp_link_rate_update(link_speed);
+						link_rate_adjust = 1;
 					}
-					else {
-						link_speed = VAL_EDP_TX_LINK_BW_SET_270;
-					}
-					lanes = trdp_select_edp_lane_count(link_speed);
-					if (lanes > 0) {
-						trdp_set_link_rate(link_speed);
-						trdp_set_lane_count(lanes);
-					}
-					else {
-						DPRINT("couldn't reduce link rate\n");
-						done = 1;
-					}
-					training_state = VAL_EDP_TS_CLOCK_REC;
 				}
-				else {
-					done = 1;
-				}
+				done = 1;
 				break;
 		}
 	}
@@ -1484,6 +1441,9 @@ static int trdp_run_training_loop(unsigned training_settings, unsigned link_rate
 	WRITE_DPTX_REG(EDP_TX_SCRAMBLING_DISABLE, 0x00);	//turn on scrambling after training
 	
 	//if (status == VAL_EDP_TX_OPERATION_SUCCESS)
+	if (link_rate_adjust)
+		status = VAL_EDP_LPM_STATUS_LINK_RATE_ADJUST;
+	else
 		status = trdp_update_status();
 
 	return status;
@@ -1505,8 +1465,8 @@ static int trdp_set_link_config(unsigned char link_rate, unsigned char lane_coun
 			break;
 	}
 	switch (lane_count) {
-		case 1:			
-		case 2:			
+		case 1:
+		case 2:
 		case 4:
 			enhance_framing_mode = (READ_DPTX_REG(EDP_TX_ENHANCED_FRAME_EN) & 0x01);
 			if (enhance_framing_mode)
@@ -1584,44 +1544,47 @@ static int trdp_set_data_lane_config(EDP_Link_Config_t *link_config)
 	return status;
 }
 
-static void dplpm_get_training_status_string(int status, char *status_string)
+static void dplpm_print_training_status(int status)
 {
+	char status_string[80];
+
 	switch (status) {
 		case VAL_EDP_TRAINING_CR_FAILED:
-			sprintf(status_string, "displayport training: Clock Recovery failed");
+			sprintf(status_string, "Clock Recovery failed");
 			break;
 		case VAL_EDP_TRAINING_CHAN_EQ_FAILED:
-			sprintf(status_string, "displayport training: Symbol Lock failed");
+			sprintf(status_string, "Symbol Lock failed");
 			break;
 		case VAL_EDP_TX_AUX_OPERATION_FAILED:
-			sprintf(status_string, "displayport training: AUX operation failure during training");
+			sprintf(status_string, "AUX operation failure during training");
 			break;
 		case VAL_EDP_CONFIG_INVALID_LINK_RATE:
-			sprintf(status_string, "displayport training: Invalid link rate selected");
+			sprintf(status_string, "Invalid link rate selected");
 			break;
 		case VAL_EDP_CONFIG_INVALID_LANE_COUNT:
-			sprintf(status_string, "displayport training: Invalid lane count selected");
+			sprintf(status_string, "Invalid lane count selected");
 			break;
 		case VAL_EDP_CONFIG_HPD_DEASSERTED:
-			sprintf(status_string, "displayport training: HPD deasserted");
+			sprintf(status_string, "HPD deasserted");
 			break;
 		case VAL_EDP_TX_OPERATION_SUCCESS:
-			sprintf(status_string, "displayport training: Success");
+			sprintf(status_string, "Success");
 			break;
 		case VAL_EDP_LPM_STATUS_RETRAIN:
-			sprintf(status_string, "displayport training: Retrain");
+			sprintf(status_string, "Retrain");
 			break;
 		default:
-			sprintf(status_string, "displayport training: Error 0x%08x", status);
+			sprintf(status_string, "Error 0x%08x", status);
 			break;
 	}
+	DPRINT("displayport training: %s\n", status_string);
 }
 
 static void dplpm_main_stream_enable(unsigned enable)
 {
 	EDP_Link_Config_t *link_config = dptx_get_link_config();
 	
-	enable = (enable > 0) ? 1 : 0;	
+	enable = (enable > 0) ? 1 : 0;
 	link_config->main_stream_enable = enable;
 	
 	if (enable) {
@@ -1669,11 +1632,10 @@ static int dplpm_verify_link_status(void)
 
 static int dplpm_maintain_link(void)
 {
-	unsigned max_training_attempts = VAL_EDP_MAX_TRAINING_ATTEMPTS;
+	unsigned training_attempts = VAL_EDP_MAX_TRAINING_ATTEMPTS;
 	unsigned training_successful = 0, retrain = 0;
 	int status = VAL_EDP_LPM_STATUS_RETRAIN;
 	EDP_Link_Config_t *link_config = dptx_get_link_config();
-	char training_string[80];
 	
 	//status = dplpm_verify_link_status();
 	if (status == VAL_EDP_LPM_STATUS_RETRAIN) {
@@ -1682,15 +1644,15 @@ static int dplpm_maintain_link(void)
 	}
 
 	if (retrain == 1) {
-		while ((max_training_attempts > 0) && (training_successful != 1)) {
-			status = trdp_run_training_loop(link_config->training_settings, link_config->link_rate_adjust_en, link_config->link_adaptive);
+		while ((training_attempts > 0) && (training_successful != 1)) {
+			status = trdp_run_training_loop(link_config->training_settings, link_config->link_rate_adjust_en, link_config->link_adaptive, training_attempts);
 			status = dplpm_verify_link_status();
 			if (status == VAL_EDP_TX_OPERATION_SUCCESS) {
 				training_successful = 1;
-				dplpm_main_stream_enable(1);
+				//dplpm_main_stream_enable(1);
 			}
 			else {
-				max_training_attempts--;
+				training_attempts--;
 				link_config->link_update = 0;
 			}
 		}
@@ -1699,15 +1661,13 @@ static int dplpm_maintain_link(void)
 		dplpm_main_stream_enable(1);
 	}
 	
-	dplpm_get_training_status_string(status, &training_string);
-	DPRINT("%s\n", training_string);
-	
+	dplpm_print_training_status(status);
 	return status;
 }
 
 static int dplpm_link_init(EDP_Link_Config_t *link_config)
 {
-	unsigned status = 0;	
+	unsigned status = 0;
 	unsigned char link_rate = link_config->link_rate & 0xff;
 	unsigned char lane_count = link_config->lane_count & 0x7;
 	unsigned char ss_level = link_config->ss_level & 0xf;
@@ -1770,7 +1730,7 @@ static int dplpm_link_init(EDP_Link_Config_t *link_config)
 	return status;
 }
 
-int dplpm_link_policy_maker(EDP_Link_Config_t *mlconfig, EDP_Video_Mode_t *vm)
+int dplpm_link_policy_maker(EDP_Link_Config_t *mlconfig, EDP_MSA_t *vm)
 {
 	int status = 0;
 	EDP_Link_Config_t *link_config = dptx_get_link_config();
@@ -1786,14 +1746,14 @@ int dplpm_link_policy_maker(EDP_Link_Config_t *mlconfig, EDP_Video_Mode_t *vm)
 	link_config->bit_rate = mlconfig->bit_rate;
 	
 	status = dplpm_link_init(link_config);
-	
+
 	if (status == VAL_EDP_TX_OPERATION_SUCCESS) {
 		status = dplpm_maintain_link();
-#ifdef PRINT_DEBUG_INFO
+#ifdef LCD_DEBUG_INFO
 		trdp_dump_DPCD();
 		trdp_dump_DPCD_training_status();
 #endif
-		dptx_set_video_mode(vm);
+		dptx_set_MSA(vm);
 		WRITE_LCD_REG(ENCL_VIDEO_EN, 1);
 		dplpm_main_stream_enable(1);
 	}
@@ -1801,7 +1761,7 @@ int dplpm_link_policy_maker(EDP_Link_Config_t *mlconfig, EDP_Video_Mode_t *vm)
 		DPRINT("displayport initial failed\n");
 		status = VAL_EDP_TX_OPERATION_FAILED;
 	}
-#ifdef PRINT_DEBUG_INFO
+#ifdef LCD_DEBUG_INFO
 	dptx_dump_link_config();
 	dptx_dump_MSA();
 #endif
@@ -1962,27 +1922,50 @@ static ssize_t edp_debug(struct class *class, struct class_attribute *attr, cons
 static struct class_attribute edp_debug_class_attrs[] = {
 	__ATTR(debug, S_IRUGO | S_IWUSR, edp_debug_help, edp_debug),
 	__ATTR(help, S_IRUGO | S_IWUSR, edp_debug_help, NULL),
-	__ATTR_NULL
 };
 
-static struct class aml_edp_debug_class = {
-	.name = "edp",
-	.class_attrs = edp_debug_class_attrs,
-};
+static int creat_edp_attr(void)
+{
+	int i;
+
+	edp_debug_class = class_create(THIS_MODULE, "edp");
+	if(IS_ERR(edp_debug_class)) {
+		printk("create edp debug class fail\n");
+		return -1;
+	}
+	//create class attr
+	for(i=0;i<ARRAY_SIZE(edp_debug_class_attrs);i++) {
+		if (class_create_file(edp_debug_class, &edp_debug_class_attrs[i])) {
+			printk("create edp debug attribute %s fail\n",edp_debug_class_attrs[i].attr.name);
+		}
+	}
+
+	return 0;
+}
+static int remove_edp_attr(void)
+{
+    int i;
+
+    if (edp_debug_class == NULL)
+        return -1;
+
+    for(i=0;i<ARRAY_SIZE(edp_debug_class_attrs);i++) {
+        class_remove_file(edp_debug_class, &edp_debug_class_attrs[i]);
+    }
+    class_destroy(edp_debug_class);
+
+    return 0;
+}
 //*********************************************************//
 
 void edp_probe(void)
 {
 	int ret;
 	
-	ret = class_register(&aml_edp_debug_class);
-	if(ret){
-		DPRINT("class register aml_edp_debug_class fail!\n");
-	}
+	creat_edp_attr();
 }
 
 void edp_remove(void)
 {
-	//to do
+	remove_edp_attr();
 }
-#endif

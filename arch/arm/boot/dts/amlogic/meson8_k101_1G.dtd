@@ -925,7 +925,7 @@ sdio{
 //$$ L3 PROP_U32 2 = "dither_user_ctrl"
 //$$ L3 PROP_U32 3 = "vadj_brightness_contrast_saturation"
 
-//$$ L3 PROP_U32 2 = "gamma_en_revert"
+//$$ L3 PROP_U32 2 = "gamma_en_reverse"
 //$$ L4 PROP_U32 4 = "gamma_multi_rgb_coeff"
 //$$ L3 PROP_U32 256 = "gamma_table"
 
@@ -936,6 +936,7 @@ sdio{
 //$$ L4 PROP_U32 2 = "lvds_user_repack"
 //$$ L4 PROP_U32 3 = "edp_user_link_rate_lane_count"
 //$$ L4 PROP_U32 2 = "edp_link_adaptive_vswing"
+//$$ L4 PROP_U32 = "edp_sync_clock_mode"
 //$$ L4 PROP_U32 2 = "rgb_base_coeff"
 
 //$$ L2 PROP_STR 3 = "power_on_uboot"
@@ -1002,7 +1003,7 @@ sdio{
 		dither_user_ctrl=<0 0x000>;	/**  dither_user(0=auto setting, 1=user define), dither_ctrl(user defined dither control, only valid when user_define=1) */
 		vadj_brightness_contrast_saturation=<0x0 0x80 0x100>;	/** video adjust brightness, contrast, saturation */
 
-		gamma_en_revert=<1 0>;	/** gamma_en(0=disable gamma table, 1=enable gamma table), gamma_table_revert(0=normal, 1=revert) */
+		gamma_en_reverse=<1 0>;	/** gamma_en(0=disable gamma table, 1=enable gamma table), gamma_table_revert(0=normal, 1=reverse) */
 		gamma_multi_rgb_coeff=<0 100 100 100>;	/** gamma_multi(0=single gamma, RGB are same, 1=multi gamma, RGB are different), gamma_r_coeff(%), gamma_g_coeff(%), gamma_b_coeff(%) */
 		/** if gamma_multi=1, there must be 3 gamma tables, named as gamma_table_r, gamma_table_g, gamma_table_b */
 		gamma_table=<0 1 2 3 4 5 6 7 8 8 9 10 11 12 13 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 
@@ -1022,6 +1023,7 @@ sdio{
 		lvds_user_repack=<0 0>;	/** lvds_repack_user(0=auto setting, 1=user define), lvds_repack(0=JEIDA mode data mapping, 1=VESA mode data mapping. only valid when lvds_repack_user=1) */
 		edp_user_link_rate_lane_count=<1 1 4>;	/** edp_user(0=auto setting, 1=user define), link_rate(0=1.62G, 1=2.7G, only valid when edp_user=1), lane_count(support 1,2,4, only valid when edp_user=1) */
 		edp_link_adaptive_vswing=<0 0>;	/** adaptive(0=fixed user defined vswing, 1=auto setting vswing by training), vswing(support level 0,1,2,3, user defined vswing, only valid when adaptive=0) */
+		edp_sync_clock_mode=<1>; /** clocking mode for the user data: (0=asyncronous clock, 1=synchronous clock. default 1) */
 		rgb_base_coeff=<0xf0 0x74a>;	/** rgb_base, rgb_coeff */
 
 		//lcd power ctrl	//support up to 15 steps for each sequence
@@ -1071,7 +1073,8 @@ sdio{
 //$$ L2 PROP_U32 2 = "clock_hz_pol"
 //$$ L2 PROP_U32 2 = "hsync_width_backporch"
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
-//$$ L2 PROP_U32 2 = "pol_hsync_vsync"		
+//$$ L2 PROP_U32 2 = "pol_hsync_vsync"
+//$$ L2 PROP_U32 = "max_lane_count"
 //	lcd_LP097QX1:lcd_LP097QX1{	//k100
 //		model_name="LP097QX1";	/** lcd model name */
 //		interface="edp";		/** lcd_interface(mipi, lvds, edp, ttl) */
@@ -1085,6 +1088,8 @@ sdio{
 //		hsync_width_backporch=<5 120>;	/** hsync_width, hsync_backporch(include hsync_width) */
 //		vsync_width_backporch=<1 22>;	/** vsync_width, vsync_backporch(include vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+		
+//		max_lane_count=<4>; /** max lane count supported */
 //	};
 
 //$$ MATCH "lcd_model_config_match" = <&lcd_B080XAN01>
