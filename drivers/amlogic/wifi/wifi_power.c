@@ -37,6 +37,7 @@ static struct device *devp=NULL;
 struct wifi_power_platform_data *pdata = NULL;
 int wifi_power_on_pin2 = 0;
 static int power = 1;
+static int usb_wifi = 0;
     
 static int wifi_power_probe(struct platform_device *pdev);
 static int wifi_power_remove(struct platform_device *pdev);
@@ -315,6 +316,7 @@ static int wifi_power_probe(struct platform_device *pdev)
     pdata->usb_set_power = &usb_wifi_power;
     if(pdev->dev.of_node)
     {
+    	usb_wifi = 1;
     	ret = of_property_read_string(pdev->dev.of_node, "valid", &str);
 		if(ret)
 		{
@@ -412,7 +414,9 @@ static int wifi_power_remove(struct platform_device *pdev)
 
 static int wifi_power_suspend(struct platform_device *pdev, pm_message_t state)
 {	
-	usb_wifi_power(!power);
+  if(usb_wifi)
+    usb_wifi_power(!power);
+   
 	return 0;
 }
 
@@ -420,15 +424,17 @@ static int wifi_power_resume(struct platform_device *pdev)
 {
 	//wifi_usb_set_power(!power);
     //mdelay(500);
-    usb_wifi_power(power);   
-     		
+    if(usb_wifi)
+      usb_wifi_power(power);   
+
 	return 0;
 }
 
 static int wifi_power_reboot_notify(struct notifier_block *nb, unsigned long event,void *dummy)
 {
-	usb_wifi_power(!power);
-	
+	if(usb_wifi)
+		usb_wifi_power(!power);
+
 	return NOTIFY_OK;
 }
 
