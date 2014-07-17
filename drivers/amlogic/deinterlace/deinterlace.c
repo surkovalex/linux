@@ -6113,8 +6113,10 @@ static void di_reg_process(void)
             di_set_power_control(1,1);
 
 /* add for di Reg re-init */
-#if defined(NEW_DI_TV)
+#ifdef NEW_DI_TV
 di_set_para_by_tvinfo(vframe);
+#else
+di_load_nr_setting();
 #endif
             if(di_printk_flag&2){
                 di_printk_flag=1;
