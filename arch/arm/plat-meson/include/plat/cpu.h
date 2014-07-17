@@ -38,6 +38,23 @@
 #define MESON_CPU_TYPE_MESON8M2		0x8D
 #define MESON_CPU_TYPE_MESONG9TV	0x90
 
+/*
+ *	Read back value for P_ASSIST_HW_REV
+ *
+ *	Please note: M8M2 readback value same as M8 (0x19)
+ *			     We changed it to 0x1D in software,
+ *			     Please ALWAYS use get_meson_cpu_version()
+ *			     to get the version of Meson CPU
+ */
+#define MESON_CPU_MAJOR_ID_M6		0x16
+#define MESON_CPU_MAJOR_ID_M6TV		0x17
+#define MESON_CPU_MAJOR_ID_M6TVL	0x18
+#define MESON_CPU_MAJOR_ID_M8		0x19
+#define MESON_CPU_MAJOR_ID_MTVD		0x1A
+#define MESON_CPU_MAJOR_ID_M8B		0x1B
+#define MESON_CPU_MAJOR_ID_MG9TV	0x1C
+#define MESON_CPU_MAJOR_ID_M8M2		0x1D
+
 
 #define MESON_CPU_VERSION_LVL_MAJOR	0
 #define MESON_CPU_VERSION_LVL_MINOR	1
@@ -47,5 +64,11 @@
 
 int  meson_cpu_version_init(void);
 int get_meson_cpu_version(int level);
+
+#define IS_MESON_M8_CPU 		(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MAJOR) == MESON_CPU_MAJOR_ID_M8)
+#define IS_MESON_MTVD_CPU		(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MAJOR) == MESON_CPU_MAJOR_ID_MTVD)
+#define IS_MESON_M8B_CPU		(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MAJOR) == MESON_CPU_MAJOR_ID_M8B)
+#define IS_MESON_M8M2_CPU		(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MAJOR) == MESON_CPU_MAJOR_ID_M8M2)
+#define IS_MESON_MG9TV_CPU		(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MAJOR) == MESON_CPU_MAJOR_ID_MG9TV)
 
 #endif
