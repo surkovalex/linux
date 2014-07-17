@@ -1529,9 +1529,14 @@ static s32 reload_mc(void)
 	
     udelay(10);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8M2
-    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-    dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if(IS_MESON_M8M2_CPU){
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+        dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+    }else{
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
+        dblk_fix_flag = false;
+    }
 #else
     WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
     dblk_fix_flag = false;
@@ -1581,11 +1586,14 @@ static s32 avc_init(void)
         default:
             break;
     }
-#endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8M2
-    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-    dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+    if(IS_MESON_M8M2_CPU){
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+        dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+    }else{
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
+        dblk_fix_flag = false;
+    }
 #else
     WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
     dblk_fix_flag = false;
@@ -1948,11 +1956,14 @@ static u32 amvenc_avc_light_reset(unsigned value)
         default:
             break;
     }
-#endif
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8M2
-    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-    dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+    if(IS_MESON_M8M2_CPU){
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+        dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+    }else{
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
+        dblk_fix_flag = false;
+    }
 #else
     WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
     dblk_fix_flag = false;

@@ -1428,11 +1428,11 @@ static s32 jpegenc_init(void)
     int r;   
     jpegenc_poweron();
     jpegenc_canvas_init();
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8M2
-    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-#else
-    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
-#endif
+
+    if(IS_MESON_M8M2_CPU)
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+    else
+        WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
     debug_level(1,"start to load microcode\n");
     if (jpegenc_loadmc(jpeg_encoder_mc) < 0) {
         //amvdec_disable();
