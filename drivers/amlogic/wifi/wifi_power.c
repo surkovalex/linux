@@ -279,6 +279,10 @@ EXPORT_SYMBOL(wifi_usb_set_power);
 static void usb_wifi_power(int is_power)
 {    
 #ifdef CONFIG_OF
+	if(!pdata){
+		printk("%s pdata is not inited!\n",__FUNCTION__);
+		return;
+	}
 	if(pdata->power_gpio > 0)
 		amlogic_gpio_direction_output(pdata->power_gpio, is_power, WIFI_POWER_MODULE_NAME); 	  
 
