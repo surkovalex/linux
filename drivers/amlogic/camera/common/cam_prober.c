@@ -1440,12 +1440,65 @@ end:
 	return -EINVAL;	
 }
 
+static LIST_HEAD(info_head);
+
+static ssize_t cam_info_show(struct class* class, 
+			struct class_attribute* attr, char* buf)
+{
+	struct list_head* p;
+	aml_cam_info_t* cam_info = NULL;
+	int count = 0;
+	if (!list_empty(&info_head)) {
+		count += sprintf(&buf[count], "name\t\tversion\t\t\t\tface_dir\t"
+					"i2c_addr\n");
+		list_for_each(p, &info_head) {
+			cam_info = list_entry(p, aml_cam_info_t, info_entry);
+			if (cam_info) {
+				count += sprintf(&buf[count], "%s\t\t%s\t\t%s"
+					"\t\t0x%x\n", 
+					cam_info->name, cam_info->version, 
+					cam_info->front_back?"front":"back",
+					cam_info->i2c_addr);
+			}
+		}
+	}
+	return count;
+}
 
 static struct class_attribute aml_cam_attrs[]={
 	__ATTR(i2c_debug,  S_IRUGO | S_IWUSR, show_help, store_i2c_debug),
+	__ATTR_RO(cam_info),
 	__ATTR(help,  S_IRUGO | S_IWUSR, show_help, NULL),
 	__ATTR_NULL,
 };
+
+int aml_cam_info_reg(aml_cam_info_t* cam_info)
+{
+	int ret = -1;
+	if (cam_info) {
+		//printk("reg camera %s\n", cam_info->name);
+		list_add(&cam_info->info_entry, &info_head);
+		ret = 0;
+	}
+	return ret;
+}
+
+int aml_cam_info_unreg(aml_cam_info_t* cam_info)
+{
+	int ret = -1;
+	struct list_head* p, *n;
+	aml_cam_info_t* tmp_info = NULL;
+	if (cam_info) {
+		list_for_each_safe(p, n, &info_head) {
+			tmp_info = list_entry(p, aml_cam_info_t, info_entry);
+			if (tmp_info == cam_info) {
+				list_del(cam_info);
+				return 0;
+			}
+		}
+	}
+	return ret;
+}
 
 static int aml_cams_probe(struct platform_device *pdev)
 {

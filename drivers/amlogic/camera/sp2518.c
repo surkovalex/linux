@@ -58,6 +58,8 @@
 #define SP2518_CAMERA_RELEASE 0
 #define SP2518_CAMERA_VERSION \
 	KERNEL_VERSION(SP2518_CAMERA_MAJOR_VERSION, SP2518_CAMERA_MINOR_VERSION, SP2518_CAMERA_RELEASE)
+	
+#define SP2518_DRIVER_VERSION "SP2518-COMMON-01-140717"
 
 //unsigned short DGain_shutter,AGain_shutter,DGain_shutterH,DGain_shutterL,AGain_shutterH,AGain_shutterL,shutterH,shutterL,shutter;
 //unsigned short UXGA_Cap = 0;
@@ -2911,6 +2913,10 @@ static int sp2518_probe(struct i2c_client *client,
 	    return -1; 	
 	}
 	
+	t->cam_info.version = SP2518_DRIVER_VERSION;
+	if (aml_cam_info_reg(&t->cam_info) < 0)
+		printk("reg caminfo error\n");
+	
 	err = video_register_device(t->vdev, VFL_TYPE_GRABBER, video_nr);
 	if (err < 0) {
 		video_device_release(t->vdev);
@@ -2947,6 +2953,7 @@ static int sp2518_remove(struct i2c_client *client)
 	video_unregister_device(t->vdev);
 	v4l2_device_unregister_subdev(sd);
 	wake_lock_destroy(&(t->wake_lock));
+	aml_cam_info_unreg(&t->cam_info);
 	kfree(t);
 	return 0;
 }

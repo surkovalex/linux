@@ -73,7 +73,7 @@
 #define AR0833_CAMERA_VERSION \
 	KERNEL_VERSION(AR0833_CAMERA_MAJOR_VERSION, AR0833_CAMERA_MINOR_VERSION, AR0833_CAMERA_RELEASE)
 
-
+#define AR0833_DRIVER_VERSION "AR0833-COMMON-01-140717"
 
 MODULE_DESCRIPTION("ar0833 On Board");
 MODULE_AUTHOR("amlogic-sh");
@@ -5869,7 +5869,12 @@ static int ar0833_probe(struct i2c_client *client,
 		kfree(client);
 		return -1;
 	}
-   printk("register device\n");	
+	
+	t->cam_info.version = AR0833_DRIVER_VERSION;
+	if (aml_cam_info_reg(&t->cam_info) < 0)
+		printk("reg caminfo error\n");
+	
+	printk("register device\n");	
 	err = video_register_device(t->vdev, VFL_TYPE_GRABBER, video_nr);
 	if (err < 0) {
 		video_device_release(t->vdev);
@@ -5888,6 +5893,7 @@ static int ar0833_remove(struct i2c_client *client)
 	video_unregister_device(t->vdev);
 	v4l2_device_unregister_subdev(sd);
 	wake_lock_destroy(&(t->wake_lock));
+	aml_cam_info_unreg(&t->cam_info);
 	kfree(t);
 	return 0;
 }

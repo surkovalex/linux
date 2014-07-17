@@ -75,7 +75,7 @@ static int capture_proc = 0;
 #define OV5647_CAMERA_VERSION \
 	KERNEL_VERSION(OV5647_CAMERA_MAJOR_VERSION, OV5647_CAMERA_MINOR_VERSION, OV5647_CAMERA_RELEASE)
 
-
+#define OV5647_DRIVER_VERSION "OV5647-COMMON-01-140717"
 
 MODULE_DESCRIPTION("ov5647 On Board");
 MODULE_AUTHOR("amlogic-sh");
@@ -4508,7 +4508,12 @@ static int ov5647_probe(struct i2c_client *client,
                 printk("camera ov5647: have no platform data\n");
                 ret = -EINVAL;
                 goto unreg_dev;
-        }	
+        }
+        
+        t->cam_info.version = OV5647_DRIVER_VERSION;
+        if (aml_cam_info_reg(&t->cam_info) < 0)
+		printk("reg caminfo error\n");
+			
         ret = video_register_device(vfd, VFL_TYPE_GRABBER, video_nr);
         if (ret < 0) {
                 goto unreg_dev;
@@ -4535,6 +4540,7 @@ static int ov5647_remove(struct i2c_client *client)
 	v4l2_device_unregister_subdev(sd);
 	v4l2_device_unregister(&t->v4l2_dev);
 	wake_lock_destroy(&(t->wake_lock));
+	aml_cam_info_unreg(&t->cam_info);
 	kfree(t);
 	return 0;
 }

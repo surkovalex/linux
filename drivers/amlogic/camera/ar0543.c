@@ -73,7 +73,7 @@ static int capture_proc = 0;
 #define AR0543_CAMERA_VERSION \
 	KERNEL_VERSION(AR0543_CAMERA_MAJOR_VERSION, AR0543_CAMERA_MINOR_VERSION, AR0543_CAMERA_RELEASE)
 
-
+#define AR0543_DRIVER_VERSION "AR0543-COMMON-01-140717"
 
 MODULE_DESCRIPTION("ar0543 On Board");
 MODULE_AUTHOR("amlogic-sh");
@@ -5039,6 +5039,11 @@ static int ar0543_probe(struct i2c_client *client,
 		kfree(client);
 		return -1;
 	}
+	
+	t->cam_info.version = AR0543_DRIVER_VERSION;
+	if (aml_cam_info_reg(&t->cam_info) < 0)
+		printk("reg caminfo error\n");
+		
 	printk("register device\n");	
 	err = video_register_device(t->vdev, VFL_TYPE_GRABBER, video_nr);
 	if (err < 0) {
@@ -5060,6 +5065,7 @@ static int ar0543_remove(struct i2c_client *client)
 	video_unregister_device(t->vdev);
 	v4l2_device_unregister_subdev(sd);
 	wake_lock_destroy(&(t->wake_lock));
+	aml_cam_info_unreg(&t->cam_info);
 	kfree(t);
 	return 0;
 }
