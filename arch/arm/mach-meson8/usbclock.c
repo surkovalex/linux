@@ -57,9 +57,7 @@ int clk_enable_usb(struct clk *clk)
 	usb_peri_reg_t * peri_a,* peri_b,*peri;
 	usb_config_data_t config;
 	usb_ctrl_data_t control;
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2
-        usb_adp_bc_data_t adp_bc;
-#endif
+  usb_adp_bc_data_t adp_bc;
 	int clk_sel,clk_div,clk_src;
 	int time_dly = 500; //usec
 	
@@ -118,9 +116,9 @@ int clk_enable_usb(struct clk *clk)
 	if(!control.b.clk_detected){
 		printk(KERN_ERR"USB (%d) PHY Clock not detected!\n",port_idx);
 	}
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2
+
 	/* force ACA enable */
-	if(port_idx == USB_PORT_IDX_B){
+	if(IS_MESON_M8M2_CPU && port_idx == USB_PORT_IDX_B){
 		adp_bc.d32 = peri->adp_bc;
 		adp_bc.b.aca_enable = 1;
 		peri->adp_bc = adp_bc.d32;
@@ -132,7 +130,6 @@ int clk_enable_usb(struct clk *clk)
 			return -1;
 		}
 	}
-#endif	
 	dmb();
 	return 0;
 }
