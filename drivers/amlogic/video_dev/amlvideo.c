@@ -60,7 +60,7 @@
 
 #define AMLVIDEO_POOL_SIZE 16
 static vfq_t q_ready;
-extern omx_secret_mode;
+extern bool omx_secret_mode;
 static u8 first_frame;
 static u32 vpts_last;
 
@@ -629,7 +629,7 @@ static int freerun_dqbuf(struct v4l2_buffer *p) {
 }
 
 static int normal_dqbuf(struct v4l2_buffer *p) {
-    static last_pcrscr = 0;
+    static int last_pcrscr = 0;
     int ret = 0;
     int diff = 0;
     int a = 0;

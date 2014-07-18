@@ -328,7 +328,7 @@ int do_gpio_test_work(char argn ,char **argv )
 
 #define MAX_ARG_NUM 4
 
-#endif /*CONFIG_GPIO_TEST/*
+#endif /*CONFIG_GPIO_TEST*/
 
 
 
