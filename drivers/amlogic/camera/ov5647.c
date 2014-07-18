@@ -3886,7 +3886,7 @@ static int vidioc_querybuf(struct file *file, void *priv, struct v4l2_buffer *p)
         struct ov5647_device *dev = video_drvdata(file);
 
         int ret = vb2_ioctl_querybuf(file, priv, p);
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
         if(ret == 0){
                 p->reserved  = convert_canvas_index(dev->fmt->fourcc, OV5647_RES0_CANVAS_INDEX+p->index*3);
         }else{

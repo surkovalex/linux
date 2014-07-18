@@ -2946,11 +2946,11 @@ buffer_setup(struct videobuf_queue *vq, unsigned int *count, unsigned int *size)
         struct videobuf_res_privdata *res = vq->priv_data;
         struct gc2035_fh *fh  = container_of(res, struct gc2035_fh, res);
 	struct gc2035_device *dev  = fh->dev;
-    //int bytes = fh->fmt->depth >> 3 ;
-       int height = fh->height;
-       if(height==1080)
-                   height = 1088;
-       *size = (fh->width*height*fh->fmt->depth)>>3;
+	//int bytes = fh->fmt->depth >> 3 ;
+	int height = fh->height;
+	if(height==1080)
+		height = 1088;
+	*size = (fh->width*height*fh->fmt->depth)>>3;
 	if (0 == *count)
 		*count = 32;
 
@@ -2972,11 +2972,11 @@ static void free_buffer(struct videobuf_queue *vq, struct gc2035_buffer *buf)
 	struct gc2035_device *dev  = fh->dev;
 
 	dprintk(dev, 1, "%s, state: %i\n", __func__, buf->vb.state);
-    videobuf_waiton(vq, &buf->vb, 0, 0);
+	videobuf_waiton(vq, &buf->vb, 0, 0);
 	if (in_interrupt())
 		BUG();
 
-       videobuf_res_free(vq, &buf->vb);
+	videobuf_res_free(vq, &buf->vb);
 
 	dprintk(dev, 1, "free_buffer: freed\n");
 	buf->vb.state = VIDEOBUF_NEEDS_INIT;
@@ -3075,7 +3075,8 @@ static void buffer_release(struct videobuf_queue *vq,
 	//printk("----------- %s \n",__func__);
 
 	struct gc2035_buffer   *buf  = container_of(vb, struct gc2035_buffer, vb);
-	struct gc2035_fh       *fh   = vq->priv_data;
+	struct videobuf_res_privdata *res = vq->priv_data;
+	struct gc2035_fh *fh = container_of(res, struct gc2035_fh, res);
 	struct gc2035_device      *dev  = (struct gc2035_device *)fh->dev;
 
 	dprintk(dev, 1, "%s\n", __func__);
@@ -3215,13 +3216,14 @@ static int vidioc_s_fmt_vid_cap(struct file *file, void *priv,
 	struct gc2035_fh *fh = priv;
 	struct videobuf_queue *q = &fh->vb_vidq;
 	struct gc2035_device *dev = fh->dev;
+	int ret;
 
         f->fmt.pix.width = (f->fmt.pix.width + (CANVAS_WIDTH_ALIGN-1) ) & (~(CANVAS_WIDTH_ALIGN-1));
 	if ((f->fmt.pix.pixelformat==V4L2_PIX_FMT_YVU420) ||
             (f->fmt.pix.pixelformat==V4L2_PIX_FMT_YUV420)){
                 f->fmt.pix.width = (f->fmt.pix.width + (CANVAS_WIDTH_ALIGN*2-1) ) & (~(CANVAS_WIDTH_ALIGN*2-1));
         }
-	int ret = vidioc_try_fmt_vid_cap(file, fh, f);
+	ret = vidioc_try_fmt_vid_cap(file, fh, f);
 	if (ret < 0)
 		return ret;
 
@@ -3270,12 +3272,12 @@ static int vidioc_querybuf(struct file *file, void *priv, struct v4l2_buffer *p)
 	struct gc2035_fh  *fh = priv;
 
         int ret = videobuf_querybuf(&fh->vb_vidq, p);
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
-                if(ret == 0){
-                            p->reserved  = convert_canvas_index(fh->fmt->fourcc, GC2035_RES0_CANVAS_INDEX + p->index*3);
-                        }else{
-                                    p->reserved = 0;
-                                }
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+	if(ret == 0){
+		p->reserved  = convert_canvas_index(fh->fmt->fourcc, GC2035_RES0_CANVAS_INDEX + p->index*3);
+	}else{
+		p->reserved = 0;
+	}
 #endif
         return ret;
 }
@@ -3319,7 +3321,8 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 		return -EINVAL;
 	if (i != fh->type)
 		return -EINVAL;
-
+	
+	memset( &para, 0, sizeof( para ));
 	para.port  = TVIN_PORT_CAMERA;
 	para.fmt = TVIN_SIG_FMT_MAX;
 	para.frame_rate = gc2035_frmintervals_active.denominator;

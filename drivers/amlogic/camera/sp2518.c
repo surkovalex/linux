@@ -29,7 +29,7 @@
 #include <linux/kthread.h>
 #include <linux/highmem.h>
 #include <linux/freezer.h>
-#include <media/videobuf-vmalloc.h>
+#include <media/videobuf-res.h>
 #include <media/v4l2-device.h>
 #include <media/v4l2-ioctl.h>
 #include <linux/wakelock.h>
@@ -45,6 +45,7 @@
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 #include <mach/mod_gate.h>
 #endif
+#include "common/vm.h"
 
 #define SP2518_CAMERA_MODULE_NAME "sp2518"
 
@@ -382,6 +383,8 @@ struct sp2518_buffer {
 	struct videobuf_buffer vb;
 
 	struct sp2518_fmt        *fmt;
+	
+	unsigned int canvas_id;
 };
 
 struct sp2518_dmaqueue {
@@ -440,6 +443,7 @@ struct sp2518_fh {
 	unsigned int               width, height;
 	struct videobuf_queue      vb_vidq;
 
+	struct videobuf_res_privdata res;
 	enum v4l2_buf_type         type;
 	int			   input; 	/* Input Number on bars */
 	int  stream_on;
@@ -1704,6 +1708,38 @@ unsigned char v4l_2_sp2518(int val)
 	else return 0;
 }
 
+static int convert_canvas_index(unsigned int v4l2_format, unsigned int start_canvas)
+{
+	int canvas = start_canvas;
+
+	switch(v4l2_format){
+	case V4L2_PIX_FMT_RGB565X:
+	case V4L2_PIX_FMT_VYUY:
+		canvas = start_canvas;
+		break;
+	case V4L2_PIX_FMT_YUV444:
+	case V4L2_PIX_FMT_BGR24:
+	case V4L2_PIX_FMT_RGB24:
+		canvas = start_canvas;
+		break; 
+	case V4L2_PIX_FMT_NV12:
+	case V4L2_PIX_FMT_NV21: 
+		canvas = start_canvas | ((start_canvas+1)<<8);
+		break;
+	case V4L2_PIX_FMT_YVU420:
+	case V4L2_PIX_FMT_YUV420:
+		if(V4L2_PIX_FMT_YUV420 == v4l2_format){
+			canvas = start_canvas|((start_canvas+1)<<8)|((start_canvas+2)<<16);
+		}else{
+			canvas = start_canvas|((start_canvas+2)<<8)|((start_canvas+1)<<16);
+		}
+		break;
+	default:
+		break;
+	}
+	return canvas;
+}
+
 static int sp2518_setting(struct sp2518_device *dev,int PROP_ID,int value )
 {
 #if 1 //zyy test
@@ -1841,18 +1877,23 @@ static void power_down_sp2518(struct sp2518_device *dev)
 static void sp2518_fillbuff(struct sp2518_fh *fh, struct sp2518_buffer *buf)
 {
 	struct sp2518_device *dev = fh->dev;
-	void *vbuf = videobuf_to_vmalloc(&buf->vb);
+	void *vbuf = (void *)videobuf_to_res(&buf->vb);
 	vm_output_para_t para = {0};
 	dprintk(dev,1,"%s\n", __func__);
 	if (!vbuf)
 		return;
 	/*  0x18221223 indicate the memory type is MAGIC_VMAL_MEM*/
+	if(buf->canvas_id == 0)
+           buf->canvas_id = convert_canvas_index(fh->fmt->fourcc, CAMERA_USER_CANVAS_INDEX+buf->vb.i*3);
 	para.mirror = sp2518_qctrl[5].default_value&3;// not set
 	para.v4l2_format = fh->fmt->fourcc;
-	para.v4l2_memory = 0x18221223;
+	para.v4l2_memory = MAGIC_RE_MEM;
 	para.zoom = sp2518_qctrl[7].default_value;
 	para.angle = sp2518_qctrl[8].default_value;
 	para.vaddr = (unsigned)vbuf;
+	para.ext_canvas = buf->canvas_id;
+        para.width = buf->vb.width;
+        para.height = buf->vb.height;
 	vm_fill_buffer(&buf->vb,&para);
 	buf->vb.state = VIDEOBUF_DONE;
 }
@@ -1994,10 +2035,14 @@ static void sp2518_stop_thread(struct sp2518_dmaqueue  *dma_q)
 static int
 buffer_setup(struct videobuf_queue *vq, unsigned int *count, unsigned int *size)
 {
-	struct sp2518_fh  *fh = vq->priv_data;
+	struct videobuf_res_privdata *res = vq->priv_data;
+	struct sp2518_fh *fh = container_of(res, struct sp2518_fh, res);
 	struct sp2518_device *dev  = fh->dev;
     //int bytes = fh->fmt->depth >> 3 ;
-	*size = (fh->width*fh->height*fh->fmt->depth)>>3;
+	int height = fh->height;
+	if(height==1080)
+		height = 1088;
+	*size = (fh->width*height*fh->fmt->depth)>>3;
 	if (0 == *count)
 		*count = 32;
 
@@ -2012,7 +2057,8 @@ buffer_setup(struct videobuf_queue *vq, unsigned int *count, unsigned int *size)
 
 static void free_buffer(struct videobuf_queue *vq, struct sp2518_buffer *buf)
 {
-	struct sp2518_fh  *fh = vq->priv_data;
+	struct videobuf_res_privdata *res = vq->priv_data;
+	struct sp2518_fh *fh = container_of(res, struct sp2518_fh, res);
 	struct sp2518_device *dev  = fh->dev;
 
 	dprintk(dev, 1, "%s, state: %i\n", __func__, buf->vb.state);
@@ -2020,7 +2066,7 @@ static void free_buffer(struct videobuf_queue *vq, struct sp2518_buffer *buf)
 	if (in_interrupt())
 		BUG();
 
-	videobuf_vmalloc_free(&buf->vb);
+	videobuf_res_free(vq, &buf->vb);
 	dprintk(dev, 1, "free_buffer: freed\n");
 	buf->vb.state = VIDEOBUF_NEEDS_INIT;
 }
@@ -2031,7 +2077,8 @@ static int
 buffer_prepare(struct videobuf_queue *vq, struct videobuf_buffer *vb,
 						enum v4l2_field field)
 {
-	struct sp2518_fh     *fh  = vq->priv_data;
+	struct videobuf_res_privdata *res = vq->priv_data;
+	struct sp2518_fh *fh = container_of(res, struct sp2518_fh, res);
 	struct sp2518_device    *dev = fh->dev;
 	struct sp2518_buffer *buf = container_of(vb, struct sp2518_buffer, vb);
 	int rc;
@@ -2075,7 +2122,8 @@ static void
 buffer_queue(struct videobuf_queue *vq, struct videobuf_buffer *vb)
 {
 	struct sp2518_buffer    *buf  = container_of(vb, struct sp2518_buffer, vb);
-	struct sp2518_fh        *fh   = vq->priv_data;
+	struct videobuf_res_privdata *res = vq->priv_data;
+	struct sp2518_fh *fh = container_of(res, struct sp2518_fh, res);
 	struct sp2518_device       *dev  = fh->dev;
 	struct sp2518_dmaqueue *vidq = &dev->vidq;
 
@@ -2088,7 +2136,8 @@ static void buffer_release(struct videobuf_queue *vq,
 			   struct videobuf_buffer *vb)
 {
 	struct sp2518_buffer   *buf  = container_of(vb, struct sp2518_buffer, vb);
-	struct sp2518_fh       *fh   = vq->priv_data;
+	struct videobuf_res_privdata *res = vq->priv_data;
+	struct sp2518_fh *fh = container_of(res, struct sp2518_fh, res);
 	struct sp2518_device      *dev  = (struct sp2518_device *)fh->dev;
 
 	dprintk(dev, 1, "%s\n", __func__);
@@ -2113,7 +2162,7 @@ static int vidioc_querycap(struct file *file, void  *priv,
 	struct sp2518_device *dev = fh->dev;
 
 	strcpy(cap->driver, "sp2518");
-	strcpy(cap->card, "sp2518");
+	strcpy(cap->card, "sp2518.canvas");
 	strlcpy(cap->bus_info, dev->v4l2_dev.name, sizeof(cap->bus_info));
 	cap->version = SP2518_CAMERA_VERSION;
 	cap->capabilities =	V4L2_CAP_VIDEO_CAPTURE |
@@ -2222,8 +2271,15 @@ static int vidioc_s_fmt_vid_cap(struct file *file, void *priv,
 	struct sp2518_fh *fh = priv;
 	struct videobuf_queue *q = &fh->vb_vidq;
 	struct sp2518_device *dev = fh->dev;
+	int ret;
 
-	int ret = vidioc_try_fmt_vid_cap(file, fh, f);
+	f->fmt.pix.width = (f->fmt.pix.width + (CANVAS_WIDTH_ALIGN-1) ) & (~(CANVAS_WIDTH_ALIGN-1));
+	if ((f->fmt.pix.pixelformat==V4L2_PIX_FMT_YVU420) ||
+			(f->fmt.pix.pixelformat==V4L2_PIX_FMT_YUV420)){
+		f->fmt.pix.width = (f->fmt.pix.width + (CANVAS_WIDTH_ALIGN*2-1) ) & (~(CANVAS_WIDTH_ALIGN*2-1));
+	}
+
+	ret = vidioc_try_fmt_vid_cap(file, fh, f);
 	if (ret < 0)
 		return ret;
 
@@ -2291,7 +2347,15 @@ static int vidioc_querybuf(struct file *file, void *priv, struct v4l2_buffer *p)
 {
 	struct sp2518_fh  *fh = priv;
 
-	return (videobuf_querybuf(&fh->vb_vidq, p));
+        int ret = videobuf_querybuf(&fh->vb_vidq, p);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+	if(ret == 0){
+		p->reserved  = convert_canvas_index(fh->fmt->fourcc, CAMERA_USER_CANVAS_INDEX + p->index*3);
+	}else{
+		p->reserved = 0;
+	}
+#endif
+	return ret;
 }
 
 static int vidioc_qbuf(struct file *file, void *priv, struct v4l2_buffer *p)
@@ -2340,6 +2404,7 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	para.hs_bp = 0;
 	para.vs_bp = 2;
 	para.cfmt = TVIN_YUV422;
+        para.dfmt = TVIN_NV21;
 	para.scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;	
 	para.skip_count =  2; //skip_num
 
@@ -2509,6 +2574,8 @@ static int sp2518_open(struct file *file)
 	struct sp2518_device *dev = video_drvdata(file);
 	struct sp2518_fh *fh = NULL;
 	int retval = 0;
+	resource_size_t mem_start = 0;
+	unsigned int mem_size = 0;
 #if CONFIG_CMA
     retval = vm_init_buf(16*SZ_1M);
     if(retval <0)
@@ -2567,9 +2634,14 @@ static int sp2518_open(struct file *file)
 //    TVIN_SIG_FMT_CAMERA_1920X1080P_30Hz,
 //    TVIN_SIG_FMT_CAMERA_1280X720P_30Hz,
 
-	videobuf_queue_vmalloc_init(&fh->vb_vidq, &sp2518_video_qops,
+	get_vm_buf_info(&mem_start, &mem_size, NULL);
+	fh->res.start = mem_start;
+	fh->res.end = mem_start+mem_size-1;
+	fh->res.magic = MAGIC_RE_MEM;
+	fh->res.priv = NULL;
+	videobuf_queue_res_init(&fh->vb_vidq, &sp2518_video_qops,
 			NULL, &dev->slock, fh->type, V4L2_FIELD_INTERLACED,
-			sizeof(struct sp2518_buffer), fh,NULL);
+	sizeof(struct sp2518_buffer), (void*)&fh->res, NULL);
 
 	sp2518_start_thread(fh);
 	sp2518_have_open = 1;

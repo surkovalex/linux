@@ -2127,12 +2127,12 @@ static int vidioc_querybuf(struct file *file, void *priv, struct v4l2_buffer *p)
 	struct bf3720_fh  *fh = priv;
 
         int ret = videobuf_querybuf(&fh->vb_vidq, p);
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
-                if(ret == 0){
-                            p->reserved  = convert_canvas_index(fh->fmt->fourcc, BF3720_RES0_CANVAS_INDEX + p->index*3);
-                        }else{
-                                    p->reserved = 0;
-                                }
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+	if(ret == 0){
+		p->reserved  = convert_canvas_index(fh->fmt->fourcc, BF3720_RES0_CANVAS_INDEX + p->index*3);
+	}else{
+		p->reserved = 0;
+	}
 #endif
         return ret;
 }
