@@ -989,6 +989,16 @@ void aml_cam_flash(aml_cam_info_t* cam_dev, int is_on)
 	}
 }
 
+void aml_cam_torch(aml_cam_info_t* cam_dev, int is_on)
+{
+	if (cam_dev->torch_support) {
+		printk( "aml_cams: %s torch %s.\n", 
+				cam_dev->name, is_on ? "on" : "off");
+		amlogic_gpio_direction_output(cam_dev->torch_ctrl_pin, 
+			cam_dev->torch_ctrl_level ? is_on : !is_on, "camera");
+	} 
+}
+
 static struct list_head cam_head = LIST_HEAD_INIT(cam_head);
 
 #define DEBUG_DUMP_CAM_INFO
@@ -1149,32 +1159,43 @@ static int fill_cam_dev(struct device_node* p_node, aml_cam_info_t* cam_dev)
 	}
 	printk("vcm mode is %d\n", cam_dev->vcm_mode);
 	
-	ret = of_property_read_string(p_node, "flash_support", &str);
-	if (ret) {
-		printk("failed to read camera flash_support\n");
-		cam_dev->flash_support = 0;
-	} else {
-		printk("camera interface:%s\n", str);
-		if (strncmp("flash_support", str, 1) == 0){
-                        cam_dev->flash_support = 1;
-                        of_property_read_u32(p_node, "flash_ctrl_level", &cam_dev->flash_ctrl_level);
-                        ret = of_property_read_string(p_node, "flash_ctrl_pin", &str);
-			if (ret) {
-				printk("%s: faild to get flash_ctrl_pin!\n", cam_dev->name);
+	ret = of_property_read_u32(p_node, "flash_support", &cam_dev->flash_support);
+	if (cam_dev->flash_support){
+                of_property_read_u32(p_node, "flash_ctrl_level", &cam_dev->flash_ctrl_level);
+                ret = of_property_read_string(p_node, "flash_ctrl_pin", &str);
+		if (ret) {
+			printk("%s: faild to get flash_ctrl_pin!\n", cam_dev->name);
+			cam_dev->flash_support = 0;
+		} else {
+			ret = amlogic_gpio_name_map_num(str);
+			if (ret < 0) {
+				printk("%s: faild to map flash_ctrl_pin !\n", cam_dev->name);
 				cam_dev->flash_support = 0;
-			} else {
-				ret = amlogic_gpio_name_map_num(str);
-				if (ret < 0) {
-					printk("%s: faild to map flash_ctrl_pin !\n", cam_dev->name);
-					cam_dev->flash_support = 0;
-					cam_dev->flash_ctrl_level = 0;
-				}
-				cam_dev->flash_ctrl_pin = ret;  
+				cam_dev->flash_ctrl_level = 0;
 			}
-                }else{
-                        cam_dev->flash_support = 0;
-                }
-	}
+			cam_dev->flash_ctrl_pin = ret;  
+			amlogic_gpio_request(cam_dev->flash_ctrl_pin,"camera");
+		}
+        }
+        
+        ret = of_property_read_u32(p_node, "torch_support", &cam_dev->torch_support);
+	if (cam_dev->torch_support){
+                of_property_read_u32(p_node, "torch_ctrl_level", &cam_dev->torch_ctrl_level);
+                ret = of_property_read_string(p_node, "torch_ctrl_pin", &str);
+		if (ret) {
+			printk("%s: faild to get torch_ctrl_pin!\n", cam_dev->name);
+			cam_dev->torch_support = 0;
+		} else {
+			ret = amlogic_gpio_name_map_num(str);
+			if (ret < 0) {
+				printk("%s: faild to map flash_ctrl_pin !\n", cam_dev->name);
+				cam_dev->torch_support = 0;
+				cam_dev->torch_ctrl_level = 0;
+			}
+			cam_dev->torch_ctrl_pin = ret;  
+			amlogic_gpio_request(cam_dev->torch_ctrl_pin,"camera");
+		}
+        }
 
 	ret = of_property_read_string(p_node, "interface", &str);
 	if (ret) {

@@ -1076,9 +1076,31 @@ static int HM5065_FlashCtrl(struct hm5065_device *dev, int flash_mode)
 {
 	//struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	int ret = 0;
-    //int i = 0;
-    return ret;
-
+    
+	switch (flash_mode) {
+	case FLASHLIGHT_ON:
+	case FLASHLIGHT_AUTO:
+		if (dev->cam_info.torch_support)
+			aml_cam_torch(&dev->cam_info, 1);
+		aml_cam_flash(&dev->cam_info, 1);
+		break;
+	case FLASHLIGHT_TORCH:
+		if (dev->cam_info.torch_support) {
+			aml_cam_torch(&dev->cam_info, 1);
+			aml_cam_flash(&dev->cam_info, 0);
+		} else 
+			aml_cam_torch(&dev->cam_info, 1);
+		break;
+	case FLASHLIGHT_OFF:
+		aml_cam_flash(&dev->cam_info, 0);
+		if (dev->cam_info.torch_support)
+			aml_cam_torch(&dev->cam_info, 0);
+		break;
+	default:
+		printk("this flash mode not support yet\n");
+		break;
+	}
+	return ret;
 }    /* HM5065_FlashCtrl */
 
 static resolution_size_t get_size_type(int width, int height)

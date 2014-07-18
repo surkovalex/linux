@@ -2099,13 +2099,21 @@ static int OV5642_FlashCtrl(struct ov5642_device *dev, int flash_mode)
 	switch (flash_mode) {
 	case FLASHLIGHT_ON:
 	case FLASHLIGHT_AUTO:
-	case FLASHLIGHT_TORCH:
+		if (dev->cam_info.torch_support)
+			aml_cam_torch(&dev->cam_info, 1);
 		aml_cam_flash(&dev->cam_info, 1);
-		printk("flash on\n");
+		break;
+	case FLASHLIGHT_TORCH:
+		if (dev->cam_info.torch_support) {
+			aml_cam_torch(&dev->cam_info, 1);
+			aml_cam_flash(&dev->cam_info, 0);
+		} else 
+			aml_cam_torch(&dev->cam_info, 1);
 		break;
 	case FLASHLIGHT_OFF:
 		aml_cam_flash(&dev->cam_info, 0);
-		printk("flash off\n");
+		if (dev->cam_info.torch_support)
+			aml_cam_torch(&dev->cam_info, 0);
 		break;
 	default:
 		printk("this flash mode not support yet\n");

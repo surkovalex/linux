@@ -77,6 +77,8 @@ typedef struct {
 	unsigned mclk;
 	unsigned flash_support;
 	unsigned flash_ctrl_level;
+	unsigned torch_support;
+	unsigned torch_ctrl_level;
 	unsigned vcm_mode;
 	unsigned spread_spectrum;
 	bt_path_t bt_path;
@@ -85,6 +87,7 @@ typedef struct {
 	gpio_t pwdn_pin;
 	gpio_t rst_pin;
 	gpio_t flash_ctrl_pin;
+	gpio_t torch_ctrl_pin;
 	resolution_size_t max_cap_size;
 	tvin_color_fmt_t bayer_fmt;
 	const char* config;
@@ -108,7 +111,7 @@ typedef struct aml_camera_i2c_fig1_s{
 extern void aml_cam_init(aml_cam_info_t* cam_dev);
 extern void aml_cam_uninit(aml_cam_info_t* cam_dev);
 extern void aml_cam_flash(aml_cam_info_t* cam_dev, int is_on);
-
+extern void aml_cam_torch(aml_cam_info_t* cam_dev, int is_on);
 extern int aml_cam_info_reg(aml_cam_info_t* cam_info);
 extern int aml_cam_info_unreg(aml_cam_info_t* cam_info);
 
