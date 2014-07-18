@@ -478,7 +478,7 @@ sdio{
             port = <2>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
             pinname = "emmc";
             ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
-            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
+            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE","MMC_CAP_ERASE", "MMC_CAP_HW_RESET"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
             f_min = <300000>;
             f_max = <50000000>;
             f_max_w = <50000000>;
@@ -574,14 +574,15 @@ sdio{
 //            status = "okay";
 //            port = <5>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
 //            pinname = "emmc";
-//            ocr_avail = <0x200000>;          /**VDD voltage 3.3 ~ 3.4 */
-//            caps = "MMC_CAP_8_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
+//            ocr_avail = <0x00200080>; // 3.3:0x200000, 1.8+3.3:0x00200080
+//            caps = "MMC_CAP_8_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE","MMC_CAP_ERASE", "MMC_CAP_HW_RESET"; // MMC_CAP_NEEDS_POLL -- for detect, MMC_CAP_NONREMOVABLE -- for eMMC/TSD
+//            caps2 = "MMC_CAP2_HS200_1_8V_SDR";
 //            f_min = <300000>;
-//            f_max = <50000000>;
+//            f_max = <100000000>;
 //            max_req_size = <0x20000>;          /**128KB*/
 //            gpio_dat3 = "BOOT_3";
 //            card_type = <1>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-//        };   
+//        };  
 
 //$$ DEVICE="sdio"
 //$$ L2 PROP_STR = "status"
@@ -1032,6 +1033,8 @@ sdio{
     audio_spdif_codec{
         compatible = "amlogic,aml-spdif-codec";
         dev_name = "spdif-dit.0";
+        pinctrl-names = "aml_audio_spdif";
+        pinctrl-0 = <&audio_spdif_pins>;
         status = "okay";
     };
 
@@ -1155,6 +1158,7 @@ sdio{
         key_name = "power";
 		key_code = <116>;
 		key_pin = "GPIOAO_3";
+                gpio_high_z;
         irq_keyup = <6>;
         irq_keydown = <7>;
 	};
@@ -1713,19 +1717,26 @@ sdio{
 		};
 
 //$$ MATCH "Audio_pin_0_match" = "&audio_pins"
-//$$ L2 PROP_U32 6 = "amlogic,setmask"
-//$$ L2 PROP_U32 10 = "amlogic,clrmask"
-//$$ L2 PROP_STR 10 = "amlogic,pins"
+//$$ L2 PROP_U32 4 = "amlogic,setmask"
+//$$ L2 PROP_U32 4 = "amlogic,clrmask"
+//$$ L2 PROP_STR 8 = "amlogic,pins"
         audio_pins:audio_pin{
-            amlogic,setmask=<1 0x80
-                             1 0x75
-                             10 0x78000000>;
-            amlogic,clrmask=<1 0x10000
-                             1 0x0a
-                             3 0x389
-                             4 0x3c00000
-                             9 0xd>;
-            amlogic,pins = "GPIOY_3","GPIOY_4","GPIOY_5","GPIOY_6","GPIOY_7","GPIOY_8","GPIOAO_8","GPIOAO_9","GPIOAO_10","GPIOAO_11";
+            amlogic,setmask=<3 0x78000000      /*bt pcm*/
+                             10 0x78000000>;  /*external audio codec*/
+            amlogic,clrmask=<4 0x3c000         /*bt pcm*/            
+                             5 0x1000>;        /*bt pcm*/
+            amlogic,pins = "GPIOX_4","GPIOX_5","GPIOX_6","GPIOX_7",        /*bt pcm*/
+                           "GPIOAO_8","GPIOAO_9","GPIOAO_10","GPIOAO_11";  /*external audio codec*/
+        };
+
+//$$ MATCH "Audio_pin_0_match" = "&audio_spdif_pins"
+//$$ L2 PROP_U32 2 = "amlogic,setmask"
+//$$ L2 PROP_U32 2 = "amlogic,clrmask"
+//$$ L2 PROP_STR 1 = "amlogic,pins"
+        audio_spdif_pins:audio_pin1{
+            amlogic,setmask=<1 0x80>;       /*spdif_out*/
+            amlogic,clrmask=<1 0x10000>;    /*spdif_out*/
+            amlogic,pins ="GPIOY_3";        /*spdif_out*/
         };
 
 //$$ MATCH "Spi_pin_0_match" = "&aml_spi_nor_pins"
@@ -1786,11 +1797,6 @@ sdio{
 		status = "okay";
 		ethbaseaddr = <0xfe0c0000>;
 		interruptnum = <40>;
-                savepowermode = <0>;
-                phy_interface = <1>;
-                reset_pin_enable = <0>;
-                reset_pin = "GPI0H_4";
-                reset_delay = <100>;
 	};
 
 /// ***************************************************************************************
@@ -1826,7 +1832,6 @@ sdio{
 //$$ L2 PROP_U32 = "fe0_dev"
 //$$ L2 PROP_STR 6 = "pinctrl-names"
 //$$ L2 PROP_CHOICE "dvb_fe_pins_match" = "pinctrl-0"
-
 	dvbfe{
 		compatible = "amlogic,dvbfe";
 		dtv_demod0 = "Avl6211";
