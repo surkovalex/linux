@@ -2749,7 +2749,7 @@ static int eth_pwol_store(struct class *class, struct class_attribute *attr, con
 	}
 	return count;
 }
-#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8
+#if(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 
 static int am_net_cali(int argc, char **argv,int gate)
 {
@@ -2777,7 +2777,6 @@ static int am_net_cali(int argc, char **argv,int gate)
  			printk("value == %x,  cali_len == %d, cali_idx == %d,  cali_sel =%d,  cali_rise = %d\n",value,(value>>5)&0x1f,(value&0x1f),(value>>11)&0x7,(value>>14)&0x1);
 		}
 	}
-
 	return 0;
 }
 static ssize_t eth_cali_store(struct class *class, struct class_attribute *attr,
@@ -2790,6 +2789,10 @@ static ssize_t eth_cali_store(struct class *class, struct class_attribute *attr,
 
 	buff = kstrdup(buf, GFP_KERNEL);
 	p = buff;
+	if(IS_MESON_M8_CPU){
+		printk("Sorry ,this cpu is not support cali!\n");
+		goto end;
+	}
 	for (argc = 0; argc < 6; argc++) {
 		para = strsep(&p, " ");
 		if (para == NULL)
@@ -2833,7 +2836,7 @@ static CLASS_ATTR(macreg, S_IWUSR | S_IRUGO, eth_macreg_help, eth_macreg_func);
 static CLASS_ATTR(wol, S_IWUSR | S_IRUGO, eth_wol_show, eth_wol_store);
 static CLASS_ATTR(pwol, S_IWUSR | S_IRUGO, eth_pwol_show, eth_pwol_store);
 static CLASS_ATTR(linkspeed, S_IWUSR | S_IRUGO, eth_linkspeed_show, NULL);
-#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 static CLASS_ATTR(cali, S_IWUSR | S_IRUGO, NULL,eth_cali_store);
 #endif
 
@@ -2857,7 +2860,7 @@ static int __init am_eth_class_init(void)
 	ret = class_create_file(eth_sys_class, &class_attr_wol);
 	ret = class_create_file(eth_sys_class, &class_attr_pwol);
 	ret = class_create_file(eth_sys_class, &class_attr_linkspeed);
-#if MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	ret = class_create_file(eth_sys_class, &class_attr_cali);
 #endif
 
