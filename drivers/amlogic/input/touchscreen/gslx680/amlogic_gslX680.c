@@ -710,7 +710,8 @@ static void gslX680_ts_worker(struct work_struct *work)
 #ifdef GSL_NOID_VERSION
 	u32 tmp1;
 	u8 buf[4] = {0};
-	struct gsl_touch_info cinfo = {0};
+	struct gsl_touch_info cinfo;
+	memset(&cinfo,0,sizeof(struct gsl_touch_info));
 #endif
 
 	rc = gsl_ts_read(ts->client, 0x80, ts->touch_data, ts->dd->data_size);

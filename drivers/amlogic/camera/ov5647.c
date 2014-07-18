@@ -2824,7 +2824,7 @@ void OV5647_set_param_effect(struct ov5647_device *dev,enum camera_effect_flip_e
     int index = 0;
     int i = 0;
     while(i < ARRAY_SIZE(effect_pair)){
-        if(effect_pair[i].effect == para){
+        if((unsigned int)effect_pair[i].effect == (unsigned int)para){
             break;
         }else
             i++;
