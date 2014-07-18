@@ -994,6 +994,7 @@ sdio{
 //$$ L4 PROP_U32 2 = "lvds_user_repack"
 //$$ L4 PROP_U32 3 = "edp_user_link_rate_lane_count"
 //$$ L4 PROP_U32 2 = "edp_link_adaptive_vswing"
+//$$ L4 PROP_U32 = "edp_sync_clock_mode"
 //$$ L4 PROP_U32 2 = "rgb_base_coeff"
 
 //$$ L2 PROP_STR 3 = "power_on_uboot"
@@ -1131,6 +1132,7 @@ sdio{
 //$$ L2 PROP_U32 2 = "hsync_width_backporch"
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
+//$$ L2 PROP_U32 = "max_lane_count"
 	lcd_LP097QX1:lcd_LP097QX1{	//k100
 		model_name="LP097QX1";	/** lcd model name */
 		interface="edp";		/** lcd_interface(mipi, lvds, edp, ttl) */
