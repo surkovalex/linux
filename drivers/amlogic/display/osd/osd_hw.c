@@ -1076,6 +1076,13 @@ void osd_set_window_axis_hw(u32 index, s32 x0, s32 y0, s32 x1, s32 y1)
 	osd_hw.free_dst_data[index].y_start = y0;
 	osd_hw.free_dst_data[index].y_end = y1/2;
 #endif
+
+#if defined(CONFIG_FB_OSD2_CURSOR)
+	osd_hw.cursor_dispdata[index].x_start = x0;
+	osd_hw.cursor_dispdata[index].x_end = x1;
+	osd_hw.cursor_dispdata[index].y_start = y0;
+	osd_hw.cursor_dispdata[index].y_end = y1;
+#endif
 }
 
 
@@ -1944,7 +1951,9 @@ static   void  osd2_update_enable(void)
                 aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
                 aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
             }else{
+				#ifndef CONFIG_FB_OSD2_CURSOR
                 aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
+				#endif
                 aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
                 aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
             }
@@ -2693,7 +2702,16 @@ void osd_cursor_hw(s16 x, s16 y, s16 xstart, s16 ystart, u32 osd_w, u32 osd_h, i
 	if (index != 1)
 		return;
 
-	memcpy(&disp_tmp, &osd_hw.dispdata[OSD1], sizeof(dispdata_t));
+	if(osd_hw.free_scale_mode[OSD1]){
+		if(osd_hw.free_scale_enable[OSD1]){
+			memcpy(&disp_tmp, &osd_hw.cursor_dispdata[OSD1], sizeof(dispdata_t));
+		}else{
+			memcpy(&disp_tmp, &osd_hw.dispdata[OSD1], sizeof(dispdata_t));
+		}
+	}else{
+		memcpy(&disp_tmp, &osd_hw.dispdata[OSD1], sizeof(dispdata_t));
+	}
+	
 	if (osd_hw.scale[OSD2].h_enable && (osd_hw.scaledata[OSD2].x_start > 0)
 			&& (osd_hw.scaledata[OSD2].x_end > 0)) {
 		x = x * osd_hw.scaledata[OSD2].x_end / osd_hw.scaledata[OSD2].x_start;
