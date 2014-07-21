@@ -116,17 +116,10 @@ static unsigned int gpio_to_pin[][5]={
 	[GPIOAO_11]={P_PIN_MUX_REG(10,27),NONE,NONE,NONE,NONE,},
 	[GPIOAO_12]={P_PIN_MUX_REG(10,17),NONE,NONE,NONE,NONE,},
 	[GPIOAO_13]={P_PIN_MUX_REG(10,31),NONE,NONE,NONE,NONE,},
-#ifdef CONFIG_ARCH_MESON8
 	[GPIOZ_0]={P_PIN_MUX_REG(5,31),P_PIN_MUX_REG(9,18),P_PIN_MUX_REG(7,25),P_PIN_MUX_REG(9,16),NONE,},
 	[GPIOZ_1]={P_PIN_MUX_REG(9,15),P_PIN_MUX_REG(5,30),P_PIN_MUX_REG(7,24),NONE,NONE,},
 	[GPIOZ_2]={P_PIN_MUX_REG(5,27),NONE,NONE,NONE,NONE,},
 	[GPIOZ_3]={P_PIN_MUX_REG(5,26),NONE,NONE,NONE,NONE,},
-#else
-	[GPIOZ_0]={P_PIN_MUX_REG(5,31),P_PIN_MUX_REG(9,18),P_PIN_MUX_REG(7,25),P_PIN_MUX_REG(9,16),P_PIN_MUX_REG(6,0),},
-	[GPIOZ_1]={P_PIN_MUX_REG(9,15),P_PIN_MUX_REG(5,30),P_PIN_MUX_REG(7,24),P_PIN_MUX_REG(6,1),NONE,},
-	[GPIOZ_2]={P_PIN_MUX_REG(5,27),P_PIN_MUX_REG(6,2),NONE,NONE,NONE,},
-	[GPIOZ_3]={P_PIN_MUX_REG(5,26),P_PIN_MUX_REG(6,3),NONE,NONE,NONE,},
-#endif
 	[GPIOZ_4]={P_PIN_MUX_REG(5,25),P_PIN_MUX_REG(6,15),NONE,NONE,NONE,},
 	[GPIOZ_5]={P_PIN_MUX_REG(5,24),P_PIN_MUX_REG(6,14),NONE,NONE,NONE,},
 	[GPIOZ_6]={P_PIN_MUX_REG(6,13),P_PIN_MUX_REG(3,21),P_PIN_MUX_REG(3,21),NONE,NONE,},
@@ -147,11 +140,7 @@ static unsigned int gpio_to_pin[][5]={
 	[GPIOH_6]={P_PIN_MUX_REG(9,10),NONE,NONE,NONE,NONE,},
 	[GPIOH_7]={P_PIN_MUX_REG(4,3),NONE,NONE,NONE,NONE,},
 	[GPIOH_8]={P_PIN_MUX_REG(4,2),NONE,NONE,NONE,NONE,},
-#ifdef CONFIG_ARCH_MESON8
 	[GPIOH_9]={P_PIN_MUX_REG(4,1),NONE,NONE,NONE,NONE,},
-#else
-	[GPIOH_9]={P_PIN_MUX_REG(4,1),P_PIN_MUX_REG(3,19),NONE,NONE,NONE,},
-#endif
 	[BOOT_0]={P_PIN_MUX_REG(4,30),P_PIN_MUX_REG(2,26),P_PIN_MUX_REG(6,29),NONE,NONE,},
 	[BOOT_1]={P_PIN_MUX_REG(4,29),P_PIN_MUX_REG(2,26),P_PIN_MUX_REG(6,28),NONE,NONE,},
 	[BOOT_2]={P_PIN_MUX_REG(2,26),P_PIN_MUX_REG(6,27),P_PIN_MUX_REG(4,29),NONE,NONE,},
@@ -175,13 +164,8 @@ static unsigned int gpio_to_pin[][5]={
 	[CARD_1]={P_PIN_MUX_REG(2,7),P_PIN_MUX_REG(2,15),NONE,NONE,NONE,},
 	[CARD_2]={P_PIN_MUX_REG(2,11),P_PIN_MUX_REG(2,5),NONE,NONE,NONE,},
 	[CARD_3]={P_PIN_MUX_REG(2,4),P_PIN_MUX_REG(2,10),NONE,NONE,NONE,},
-#ifdef CONFIG_ARCH_MESON8
 	[CARD_4]={P_PIN_MUX_REG(2,6),P_PIN_MUX_REG(2,12),P_PIN_MUX_REG(8,10),NONE,NONE,},
 	[CARD_5]={P_PIN_MUX_REG(2,13),P_PIN_MUX_REG(8,9),P_PIN_MUX_REG(2,6),NONE,NONE,},
-#else
-	[CARD_4]={P_PIN_MUX_REG(2,6),P_PIN_MUX_REG(2,12),P_PIN_MUX_REG(8,10),P_PIN_MUX_REG(8,8),NONE,},
-	[CARD_5]={P_PIN_MUX_REG(2,13),P_PIN_MUX_REG(8,9),P_PIN_MUX_REG(2,6),P_PIN_MUX_REG(8,7),NONE,},
-#endif
 	[CARD_6]={NONE,NONE,NONE,NONE,NONE,},
 	[GPIODV_0]={P_PIN_MUX_REG(8,27),P_PIN_MUX_REG(7,0),P_PIN_MUX_REG(0,1),P_PIN_MUX_REG(0,6),NONE,},
 	[GPIODV_1]={P_PIN_MUX_REG(0,6),P_PIN_MUX_REG(7,1),P_PIN_MUX_REG(0,1),NONE,NONE,},
@@ -207,13 +191,8 @@ static unsigned int gpio_to_pin[][5]={
 	[GPIODV_21]={P_PIN_MUX_REG(0,4),P_PIN_MUX_REG(0,6),NONE,NONE,NONE,},
 	[GPIODV_22]={P_PIN_MUX_REG(0,4),P_PIN_MUX_REG(0,6),NONE,NONE,NONE,},
 	[GPIODV_23]={P_PIN_MUX_REG(0,4),P_PIN_MUX_REG(0,6),NONE,NONE,NONE,},
-#ifdef CONFIG_ARCH_MESON8
 	[GPIODV_24]={P_PIN_MUX_REG(0,9),P_PIN_MUX_REG(0,19),P_PIN_MUX_REG(0,21),P_PIN_MUX_REG(6,23),P_PIN_MUX_REG(8,24),},
 	[GPIODV_25]={P_PIN_MUX_REG(6,22),P_PIN_MUX_REG(0,20),P_PIN_MUX_REG(0,8),P_PIN_MUX_REG(8,23),P_PIN_MUX_REG(0,18),},
-#else
-	[GPIODV_24]={P_PIN_MUX_REG(0,9),P_PIN_MUX_REG(0,19),P_PIN_MUX_REG(6,23),P_PIN_MUX_REG(8,24),NONE,},
-	[GPIODV_25]={P_PIN_MUX_REG(6,22),P_PIN_MUX_REG(0,8),P_PIN_MUX_REG(8,23),P_PIN_MUX_REG(0,18),NONE,},
-#endif
 	[GPIODV_26]={P_PIN_MUX_REG(6,21),P_PIN_MUX_REG(8,21),P_PIN_MUX_REG(0,7),P_PIN_MUX_REG(8,22),P_PIN_MUX_REG(8,20),},
 	[GPIODV_27]={P_PIN_MUX_REG(0,10),P_PIN_MUX_REG(6,20),P_PIN_MUX_REG(8,28),P_PIN_MUX_REG(8,19),NONE,},
 	[GPIODV_28]={P_PIN_MUX_REG(7,27),P_PIN_MUX_REG(3,26),NONE,NONE,NONE,},
@@ -221,11 +200,7 @@ static unsigned int gpio_to_pin[][5]={
 	[GPIOY_0]={P_PIN_MUX_REG(1,19),P_PIN_MUX_REG(1,10),P_PIN_MUX_REG(3,2),P_PIN_MUX_REG(9,9),P_PIN_MUX_REG(1,15),},
 	[GPIOY_1]={P_PIN_MUX_REG(9,8),P_PIN_MUX_REG(3,1),P_PIN_MUX_REG(1,18),P_PIN_MUX_REG(1,14),P_PIN_MUX_REG(1,19),},
 	[GPIOY_2]={P_PIN_MUX_REG(3,18),P_PIN_MUX_REG(1,8),P_PIN_MUX_REG(1,17),NONE,NONE,},
-#ifdef CONFIG_ARCH_MESON8
 	[GPIOY_3]={P_PIN_MUX_REG(1,16),P_PIN_MUX_REG(1,7),NONE,NONE,NONE,},
-#else
-	[GPIOY_3]={P_PIN_MUX_REG(1,16),P_PIN_MUX_REG(1,7),P_PIN_MUX_REG(3,11),NONE,NONE,},
-#endif
 	[GPIOY_4]={P_PIN_MUX_REG(4,25),P_PIN_MUX_REG(3,3),P_PIN_MUX_REG(1,6),NONE,NONE,},
 	[GPIOY_5]={P_PIN_MUX_REG(4,24),P_PIN_MUX_REG(3,15),P_PIN_MUX_REG(1,5),P_PIN_MUX_REG(9,7),NONE,},
 	[GPIOY_6]={P_PIN_MUX_REG(4,23),P_PIN_MUX_REG(3,16),P_PIN_MUX_REG(1,3),P_PIN_MUX_REG(1,4),P_PIN_MUX_REG(9,6),},
@@ -263,6 +238,18 @@ static unsigned int gpio_to_pin[][5]={
 	[GPIOX_21]={NONE,NONE,NONE,NONE,NONE,},
 	[GPIO_BSD_EN]={NONE,NONE,NONE,NONE,NONE,},
 	[GPIO_TEST_N]={P_PIN_MUX_REG(9,19),NONE,NONE,NONE,NONE,},
+};
+static unsigned int gpio_to_pin_m8m2[][5]={
+	[GPIOZ_0]={P_PIN_MUX_REG(5,31),P_PIN_MUX_REG(9,18),P_PIN_MUX_REG(7,25),P_PIN_MUX_REG(9,16),P_PIN_MUX_REG(6,0)},
+	[GPIOZ_1]={P_PIN_MUX_REG(9,15),P_PIN_MUX_REG(5,30),P_PIN_MUX_REG(7,24),P_PIN_MUX_REG(6,1),NONE},
+	[GPIOZ_2]={P_PIN_MUX_REG(5,27),P_PIN_MUX_REG(6,2),NONE,NONE,NONE},
+	[GPIOZ_3]={P_PIN_MUX_REG(5,26),P_PIN_MUX_REG(6,3),NONE,NONE,NONE},
+	[GPIOH_9]={P_PIN_MUX_REG(4,1),P_PIN_MUX_REG(3,19),NONE,NONE,NONE},	
+	[CARD_4]={P_PIN_MUX_REG(2,6),P_PIN_MUX_REG(2,12),P_PIN_MUX_REG(8,10),P_PIN_MUX_REG(8,8),NONE},
+	[CARD_5]={P_PIN_MUX_REG(2,13),P_PIN_MUX_REG(8,9),P_PIN_MUX_REG(2,6),P_PIN_MUX_REG(8,7),NONE},
+	[GPIODV_24]={P_PIN_MUX_REG(0,9),P_PIN_MUX_REG(0,19),P_PIN_MUX_REG(6,23),P_PIN_MUX_REG(8,24),NONE},
+	[GPIODV_25]={P_PIN_MUX_REG(6,22),P_PIN_MUX_REG(0,8),P_PIN_MUX_REG(8,23),P_PIN_MUX_REG(0,18),NONE},
+	[GPIOY_3]={P_PIN_MUX_REG(1,16),P_PIN_MUX_REG(1,7),P_PIN_MUX_REG(3,11),NONE,NONE},
 };
 struct amlogic_gpio_desc amlogic_pins[]=
 {
@@ -666,7 +653,27 @@ static int amlogic_gpio_probe(struct platform_device *pdev)
 	amlogic_gpio_chip.ngpio=ARRAY_SIZE(amlogic_pins);
 	gpiochip_add(&amlogic_gpio_chip);
 	pullup_ops.meson_set_pullup=m8_set_pullup;
+	if(IS_MESON_M8M2_CPU){
+		memcpy(gpio_to_pin[GPIOZ_0],gpio_to_pin_m8m2[GPIOZ_0],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIOZ_1],gpio_to_pin_m8m2[GPIOZ_1],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIOZ_2],gpio_to_pin_m8m2[GPIOZ_2],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIOZ_3],gpio_to_pin_m8m2[GPIOZ_3],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIOH_9],gpio_to_pin_m8m2[GPIOH_9],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[CARD_4],gpio_to_pin_m8m2[CARD_4],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[CARD_5],gpio_to_pin_m8m2[CARD_5],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIODV_24],gpio_to_pin_m8m2[GPIODV_24],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIODV_25],gpio_to_pin_m8m2[GPIODV_25],5*sizeof(unsigned int));
+		memcpy(gpio_to_pin[GPIOY_3],gpio_to_pin_m8m2[GPIOY_3],5*sizeof(unsigned int));
+	}
 	dev_info(&pdev->dev, "Probed amlogic GPIO driver\n");
+#if 0
+	int i,j;
+	for(i=0;i<=GPIO_TEST_N;i++){
+		for (j=0;j<5;j++)
+		printk( "%d,%d\t",GPIO_REG(gpio_to_pin[i][j]),GPIO_BIT(gpio_to_pin[i][j]));
+	printk("\n");
+	}
+#endif
 #ifdef gpio_dump
 	int i;
 	for(i=0;i<GPIO_TEST_N;i++)

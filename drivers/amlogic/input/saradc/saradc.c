@@ -142,9 +142,8 @@ void temp_sensor_adc_init(int triming)
 {
 	select_temp();
 	set_trimming(triming&0xf);
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
-	set_trimming1(triming>>4);
-#endif
+	if(!IS_MESON_M8_CPU)
+		set_trimming1(triming>>4);
 	enable_temp();
 	enable_temp__();
 }
