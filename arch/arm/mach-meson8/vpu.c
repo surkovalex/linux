@@ -11,6 +11,7 @@
 #include <linux/err.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
+#include <linux/delay.h>
 #include <plat/io.h>
 #include <mach/am_regs.h>
 #include <mach/vpu.h>
@@ -63,21 +64,19 @@ typedef struct {
 }VPU_Conf_t;
 
 #define CLK_LEVEL_DFT		4
-#define CLK_LEVEL_MAX		8	//limit max clk to 364M
+#define CLK_LEVEL_MAX		8	//limit max clk to 425M
 static unsigned int vpu_clk_setting[][3] = {
 	//frequency		clk_mux		div
 	{106250000,		1,			7},	//0
 	{127500000,		2,			3},	//1
 	{159375000,		0,			3},	//2
-	{182150000,		3,			1},	//3
-	{212500000,		1,			3},	//4
-	{255000000,		2,			1},	//5
+	{212500000,		1,			3},	//3
+	{255000000,		2,			1},	//4
+	{283333000,		1,			2},	//5
 	{318750000,		0,			1},	//6
-	{364300000,		3,			0},	//7
-	{425000000,		1,			1},	//8
-	{510000000,		2,			0},	//9
-	{637500000,		0,			0},	//10
-	//{850000000,		1,			0},	//11
+	{425000000,		1,			1},	//7
+	{510000000,		2,			0},	//8
+	{637500000,		0,			0},	//9
 };
 
 static unsigned int vpu_clk_vmod[] = {
@@ -195,7 +194,7 @@ static unsigned int get_vpu_clk_level(unsigned int video_clk)
 	video_bw = video_clk + 1000000;
 
 	for (i=0; i<CLK_LEVEL_MAX; i++) {
-		if (video_bw <= vpu_clk_setting[i][0])			
+		if (video_bw <= vpu_clk_setting[i][0])
 			break;
 	}
 	clk_level = i;
@@ -634,23 +633,51 @@ static struct class aml_vpu_debug_class = {
 //*********************************************************//
 
 static void vpu_driver_init(void)
-{	
-	set_vpu_clk(vpu_config.clk_level);
-	
-	//VPU MEM_PD, need to modify
-	aml_write_reg32(P_HHI_VPU_MEM_PD_REG0, vpu_config.mem_pd0);
+{
+    set_vpu_clk(vpu_config.clk_level);
+
+    aml_set_reg32_bits(P_AO_RTI_GEN_PWR_SLEEP0, 0, 8, 1); // [8] power on
+    aml_write_reg32(P_HHI_VPU_MEM_PD_REG0, vpu_config.mem_pd0);
     aml_write_reg32(P_HHI_VPU_MEM_PD_REG1, vpu_config.mem_pd1);
+    aml_set_reg32_bits(P_HHI_MEM_PD_REG0, 0, 8, 8); // MEM-PD
+    udelay(2);
+
+    //Reset VIU + VENC
+    //Reset VENCI + VENCP + VADC + VENCL
+    //Reset HDMI-APB + HDMI-SYS + HDMI-TX + HDMI-CEC
+    aml_write_reg32(P_RESET0_MASK, aml_read_reg32(P_RESET0_MASK) & (~((0x1 << 5) | (0x1<<10))));
+    aml_write_reg32(P_RESET4_MASK, aml_read_reg32(P_RESET4_MASK) & (~((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13))));
+    aml_write_reg32(P_RESET2_MASK, aml_read_reg32(P_RESET2_MASK) & (~((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15))));
+    aml_write_reg32(P_RESET2_REGISTER, ((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15)));
+    aml_write_reg32(P_RESET4_REGISTER, ((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13)));    // reset this will cause VBUS reg to 0
+    aml_write_reg32(P_RESET0_REGISTER, ((0x1 << 5) | (0x1<<10)));
+    aml_write_reg32(P_RESET4_REGISTER, ((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13)));
+    aml_write_reg32(P_RESET2_REGISTER, ((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15)));
+    aml_write_reg32(P_RESET0_MASK, aml_read_reg32(P_RESET0_MASK) | ((0x1 << 5) | (0x1<<10)));
+    aml_write_reg32(P_RESET4_MASK, aml_read_reg32(P_RESET4_MASK) | ((0x1 << 6) | (0x1<<7) | (0x1<<9) | (0x1<<13)));
+    aml_write_reg32(P_RESET2_MASK, aml_read_reg32(P_RESET2_MASK) | ((0x1 << 2) | (0x1<<3) | (0x1<<11) | (0x1<<15)));
+
+    //Remove VPU_HDMI ISO
+    aml_set_reg32_bits(P_AO_RTI_GEN_PWR_SLEEP0, 0, 9, 1); // [9] VPU_HDMI
 }
 
 static void vpu_driver_disable(void)
 {
-	vpu_config.mem_pd0 = aml_read_reg32(P_HHI_VPU_MEM_PD_REG0);
-	vpu_config.mem_pd1 = aml_read_reg32(P_HHI_VPU_MEM_PD_REG1);
-	
-	aml_write_reg32(P_HHI_VPU_MEM_PD_REG0, 0xffffffff);
+    vpu_config.mem_pd0 = aml_read_reg32(P_HHI_VPU_MEM_PD_REG0);
+    vpu_config.mem_pd1 = aml_read_reg32(P_HHI_VPU_MEM_PD_REG1);
+
+    // Power down VPU_HDMI
+    // Enable Isolation
+    aml_set_reg32_bits(P_AO_RTI_GEN_PWR_SLEEP0, 1, 9, 1); // ISO
+    //Power off memory
+    aml_write_reg32(P_HHI_VPU_MEM_PD_REG0, 0xffffffff);
     aml_write_reg32(P_HHI_VPU_MEM_PD_REG1, 0xffffffff);
-	
-	aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, 0, 8, 1);
+    aml_set_reg32_bits(P_HHI_MEM_PD_REG0, 0xff, 8, 8); // HDMI MEM-PD
+
+    //Power down VPU domain
+    aml_set_reg32_bits(P_AO_RTI_GEN_PWR_SLEEP0, 1, 8, 1); //PDN
+
+    aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, 0, 8, 1);
 }
 
 #ifdef CONFIG_PM
