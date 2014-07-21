@@ -388,7 +388,10 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
     // sdhc_err("vclk2_bak=%#x\n", vclk2_bak);
 	
     if (pdata->is_in) {
-        schedule_delayed_work(&pdata->retuning, 15*HZ);
+        if(aml_card_type_mmc(pdata))
+            schedule_delayed_work(&pdata->retuning, 60*HZ);
+        else
+            schedule_delayed_work(&pdata->retuning, 15*HZ);
     }
 
 	return ret;
@@ -507,7 +510,7 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
 
     /*Send Stop Cmd automatically*/
 #if (defined CONFIG_ARCH_MESON8M2)
-    misc.txstart_thres = 4; // [29:31] = 7
+    misc.txstart_thres = 6;//4; // [29:31] = 7
 #else
     misc.reserved2 = 7; // [29:31] = 7
 #endif
@@ -635,6 +638,10 @@ void aml_sdhc_set_pdma(struct amlsd_platform* pdata, struct mmc_request* mrq)
     BUG_ON(!mrq->data);
 #if 1
     pdma->dma_mode = 1;
+#if (defined CONFIG_ARCH_MESON8M2)
+    writel(*(u32*)pdma, host->base+SDHC_PDMA);
+    return;
+#endif
     if(mrq->data->flags & MMC_DATA_WRITE){
         /*self-clear-fill, recommend to write before sd send*/
         //init sets rd_burst to 15
@@ -834,11 +841,15 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
          * wait dma done interrupt(int[11]), don't need care about
          * dat0 busy or not.
          */
+#if (defined CONFIG_ARCH_MESON8M2)
+        ictl.dma_done = 1; // for hardware automatical flush
+#else         
         if((mrq->data->flags & MMC_DATA_WRITE) 
             || aml_card_type_sdio(pdata))
             ictl.dma_done = 1; // for hardware automatical flush
         else
             ictl.data_xfer_ok = 1; // for software flush
+#endif             
     }else
         ictl.resp_ok = 1;
 
@@ -881,6 +892,7 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
     }
 #endif
 
+#ifndef CONFIG_ARCH_MESON8M2
     loop_limit = 100;
     for (i = 0; i < loop_limit; i++) {
         vesta = readl(host->base + SDHC_ESTA);
@@ -915,6 +927,7 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
         }
 
     }
+#endif
 
     writel(*(u32*)&send, host->base+SDHC_SEND); /*Command send*/
 }
@@ -1215,7 +1228,9 @@ timeout_handle:
     //writel(vista, host->base+SDHC_ISTA);
  
     //do not send stop for sdio wifi case 
-    if(host->mrq->stop && aml_card_type_mmc(pdata) && !host->cmd_is_stop){
+    if(host->mrq->stop && aml_card_type_mmc(pdata) && !host->cmd_is_stop
+        && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK) 
+                    && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK_HS200)){
     //if((host->mrq->cmd->opcode != SD_IO_RW_DIRECT) && (host->mrq->cmd->opcode != SD_IO_RW_EXTENDED) 
    //         && (!mmc_card_removed(pdata->mmc->card)) && (!mrq->data)){
         //spin_lock_irqsave(&host->mrq_lock, flags);
@@ -1640,19 +1655,13 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
             xfer_bytes = mrq->data->blksz*mrq->data->blocks;
             /* copy buffer from dma to data->sg in read cmd*/
             if(host->mrq->data->flags & MMC_DATA_READ){
-                
+#ifndef CONFIG_ARCH_MESON8M2
                 if(!aml_card_type_sdio(pdata)){
                     for(i=0; i< STAT_POLL_TIMEOUT; i++){
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
-                        dmc_sts = readl(P_MMC_CHAN_STS);
-                        dmc_sts = (dmc_sts >> 11)&1;
-#elif(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B)    
-                        dmc_sts = readl(P_DMC_CHAN_STS);
-                        dmc_sts = (dmc_sts >> 15)&1;                        
-#endif                           
+                          
                         esta = readl(host->base + SDHC_ESTA);
                         esta = readl(host->base + SDHC_ESTA); // read twice, we just focus on the second result
-                        if ((((esta >> 11) & 7) == 0) && dmc_sts) // REGC_ESTA[13:11]=0? then OK
+                        if(((esta >> 11) & 0x7) == 0) // REGC_ESTA[13:11]=0? then OK
                             break;
                         else if (i == 10)
                             sdhc_err("SDHC_ESTA=0x%x\n", esta);
@@ -1663,7 +1672,30 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
     
                     pdma->rxfifo_manual_flush |= 0x02; // bit[30]
                     writel(vpdma, host->base+SDHC_PDMA);
-                }
+                     //check ddr dma status after controller dma status OK
+                    for(i=0; i< STAT_POLL_TIMEOUT; i++){
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
+                        dmc_sts = readl(P_MMC_CHAN_STS);
+                        dmc_sts = (dmc_sts >> 11)&1;
+#elif(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B)    
+#if (defined CONFIG_ARCH_MESON8M2)
+                        dmc_sts = 1;
+#else  
+                        dmc_sts = readl(P_DMC_CHAN_STS);
+                        dmc_sts = (dmc_sts >> 15)&1;     
+#endif                                              
+#endif  
+                        if(dmc_sts)
+                            break;
+                        else if (i == 10)
+                            sdhc_err("SDHC_ESTA=0x%x\n", esta);
+                    }
+                   
+                    if (i == STAT_POLL_TIMEOUT) // error
+                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x dmc_sts:%d\n", dmc_sts);                                                                        
+                  
+                }                              
+#endif
 
                 aml_sg_copy_buffer(mrq->data->sg, mrq->data->sg_len, host->bn_buf,
                             xfer_bytes, 0);
@@ -1757,7 +1789,9 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
             spin_unlock_irqrestore(&host->mrq_lock, flags);
                           
             //do not send stop for sdio wifi case 
-            if(host->mrq->stop && aml_card_type_mmc(pdata) && pdata->is_in){
+            if(host->mrq->stop && aml_card_type_mmc(pdata) && pdata->is_in
+                && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK) 
+                    && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK_HS200)){
             //if((host->mrq->cmd->opcode != SD_IO_RW_DIRECT) && (host->mrq->cmd->opcode != SD_IO_RW_EXTENDED) 
            //         && (!mmc_card_removed(pdata->mmc->card)) && (!mrq->data)){
                 aml_sdhc_send_stop(host);                
