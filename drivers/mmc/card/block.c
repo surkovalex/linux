@@ -2076,6 +2076,7 @@ static int mmc_wipe_part_ioctl(struct block_device *bdev)
     struct gendisk *disk = bdev->bd_disk;
     __u64 offset, size;
     int err, part_num, arg, i;
+    unsigned long time_start_cnt = READ_CBUS_REG(ISA_TIMERE);
 
     part_num = MINOR(bdev->bd_dev)-disk->first_minor;
     size = (disk->part_tbl->part[part_num]->nr_sects<<9);
@@ -2114,11 +2115,12 @@ static int mmc_wipe_part_ioctl(struct block_device *bdev)
 		goto cmd_rel_host;
      }
 
-	if (mmc_can_discard(card))
-		arg = MMC_DISCARD_ARG;
-	else if (mmc_can_trim(card))
-		arg = MMC_TRIM_ARG;
-	else
+//force erase here
+//	if (mmc_can_discard(card))
+//		arg = MMC_DISCARD_ARG;
+//	else if (mmc_can_trim(card))
+//		arg = MMC_TRIM_ARG;
+//	else
 		arg = MMC_ERASE_ARG;
 
 retry:
@@ -2157,7 +2159,7 @@ dev_card_err:
     mmc_blk_put(md);
 
 blk_get_err:
-	pr_err("%s completed, err:%d\n", __func__, err);
+	pr_err("%s completed, err:%d time cost:%duS\n", __func__, err, (READ_CBUS_REG(ISA_TIMERE)-time_start_cnt));
     return err;  
 }
 

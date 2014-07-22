@@ -387,11 +387,9 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
     // pdata->clk2 = vclk2_bak;
     // sdhc_err("vclk2_bak=%#x\n", vclk2_bak);
 	
-    if (pdata->is_in) {
-        if(aml_card_type_mmc(pdata))
-            schedule_delayed_work(&pdata->retuning, 60*HZ);
-        else
-            schedule_delayed_work(&pdata->retuning, 15*HZ);
+	//do not dynamical tuning for eMMC
+    if ((pdata->is_in)&&!aml_card_type_mmc(pdata)) {
+        schedule_delayed_work(&pdata->retuning, 15*HZ);
     }
 
 	return ret;
