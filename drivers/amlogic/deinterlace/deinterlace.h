@@ -32,10 +32,10 @@
 #define NEW_DI_TV
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
-#elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8 || MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B || MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8M2)
+#elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8 || MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B)
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
-#elif (MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8M2)
+#elif (MESON_CPU_TYPE > MESON_CPU_TYPE_MESON8B)
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
 #endif
