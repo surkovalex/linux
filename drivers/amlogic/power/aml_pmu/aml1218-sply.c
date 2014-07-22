@@ -510,6 +510,7 @@ int aml1218_set_long_press_time(int ms)
      
     aml1218_read16(0x90, &val);
     tmp = ms/100 -1; 
+    val &= ~0x7f;
     val |= tmp;                                        // set power key long press to 10s
     return aml1218_set_bits(0x0090, val, 0x7f);
 }
@@ -1508,7 +1509,7 @@ static int aml1218_battery_probe(struct platform_device *pdev)
     int      ret;
     uint32_t tmp2;
 
-	AML1218_INFO("---> PMU driver version:v0.91_B\n");
+	AML1218_INFO("---> PMU driver version:v0.92_C\n");
 	AML1218_DBG("call %s in", __func__);
     g_aml1218_init = pdev->dev.platform_data;
     if (g_aml1218_init == NULL) {
