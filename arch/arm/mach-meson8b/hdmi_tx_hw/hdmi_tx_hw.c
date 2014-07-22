@@ -118,6 +118,7 @@ static void hdmi_tx_mode_ctrl(HDMI_Video_Codes_t vic)
     case HDMI_576i50:
     case HDMI_576i50_16x9:
         CLK_GATE_ON(CTS_ENCI);
+        CLK_GATE_ON(VCLK2_VENCI1);
         CLK_GATE_OFF(CTS_ENCP);
         CLK_GATE_ON(CTS_HDMI_TX_PIXEL);
         hdmi_set_reg_bits(OTHER_BASE_ADDR + HDMI_OTHER_CTRL1, 1, 15, 1);
