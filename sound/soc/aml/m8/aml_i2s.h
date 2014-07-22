@@ -27,6 +27,11 @@ typedef struct aml_audio {
     audio_stream_t s[2];
 } aml_audio_t;
 
+typedef struct aml_audio_buffer {
+    void *buffer_start;
+    unsigned int buffer_size;
+} aml_audio_buffer_t;
+
 typedef struct audio_mixer_control {
     int output_devide;
     int input_device;
