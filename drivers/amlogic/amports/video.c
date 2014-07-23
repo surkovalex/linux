@@ -3509,7 +3509,7 @@ static long amvideo_ioctl(struct file *file,
         break;
 
     case AMSTREAM_IOC_TRICK_STAT:
-        *((u32 *)arg) = atomic_read(&trickmode_framedone);
+        put_user(atomic_read(&trickmode_framedone),(unsigned long __user *)arg);
         break;
 
     case AMSTREAM_IOC_VPAUSE:
@@ -3758,7 +3758,7 @@ static long amvideo_ioctl(struct file *file,
         break;
 
     case AMSTREAM_IOC_GET_VSYNC_SLOW_FACTOR:
-        *((unsigned int *)arg) = vsync_slow_factor;
+        put_user(vsync_slow_factor,(unsigned long __user *)arg);
         break;
 
     case AMSTREAM_IOC_SET_VSYNC_SLOW_FACTOR:

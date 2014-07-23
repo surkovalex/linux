@@ -1541,17 +1541,18 @@ static long amstream_ioctl(struct file *file,
         if (this->type & PORT_TYPE_SUB || this->type & PORT_TYPE_SUB_RD) {
             u32 sub_wp, sub_rp;
             stream_buf_t *psbuf = &bufs[BUF_TYPE_SUBTITLE];
-
+            int val;
             sub_wp = stbuf_sub_wp_get();
             sub_rp = stbuf_sub_rp_get();
 
             if (sub_wp == sub_rp) {
-                *((u32 *)arg) = 0;
+                val= 0;
             } else if (sub_wp > sub_rp) {
-                *((u32 *)arg) = sub_wp - sub_rp;
+                val = sub_wp - sub_rp;
             } else {
-                *((u32 *)arg) = psbuf->buf_size - (sub_rp - sub_wp);
+                val = psbuf->buf_size - (sub_rp - sub_wp);
             }
+            put_user(val,(unsigned long __user *)arg);
         } else {
             r = -EINVAL;
         }
@@ -1577,29 +1578,28 @@ static long amstream_ioctl(struct file *file,
              if (this->type & PORT_TYPE_AUDIO)
              {
                       u32 pts=0,offset;
-                      offset=*((u32 *)arg);
+                      get_user(offset, (unsigned long __user *)arg);
                       pts_lookup_offset(PTS_TYPE_AUDIO, offset, &pts, 300);
-                      *((u32 *)arg)=pts;
+                      put_user(pts,(unsigned long __user *)arg);
                  }
                  return 0;
     case GET_FIRST_APTS_FLAG:
         if (this->type & PORT_TYPE_AUDIO)
         {
-            unsigned long *val=(unsigned long *)arg;
-            *val = first_pts_checkin_complete(PTS_TYPE_AUDIO);
+            put_user(first_pts_checkin_complete(PTS_TYPE_AUDIO),(unsigned long __user *)arg);
         }
         break;
 
     case AMSTREAM_IOC_APTS:
-        *((u32 *)arg) = timestamp_apts_get();
+        put_user(timestamp_apts_get(),(unsigned long __user *)arg);
         break;
 
     case AMSTREAM_IOC_VPTS:
-        *((u32 *)arg) = timestamp_vpts_get();
+        put_user(timestamp_vpts_get(),(unsigned long __user *)arg);
         break;
 
     case AMSTREAM_IOC_PCRSCR:
-        *((u32 *)arg) = timestamp_pcrscr_get();
+        put_user(timestamp_pcrscr_get(),(unsigned long __user *)arg);
         break;
 		
     case AMSTREAM_IOC_SET_PCRSCR:
