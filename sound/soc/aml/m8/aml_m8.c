@@ -703,7 +703,7 @@ static void aml_m8_pinmux_init(struct snd_soc_card *card)
     
     p_audio = p_aml_audio;
 //#if USE_EXTERNAL_DAC
-    if(ext_codec){
+  //  if(ext_codec){
 #ifndef CONFIG_MESON_TRUSTZONE
     //aml_write_reg32(P_AO_SECURE_REG1,0x00000000);
         aml_clr_reg32_mask(P_AO_SECURE_REG1, ((1<<8) | (1<<1)));
@@ -712,7 +712,7 @@ static void aml_m8_pinmux_init(struct snd_soc_card *card)
     //meson_secure_reg_write(P_AO_SECURE_REG1, 0x00000000);
 	meson_secure_reg_write(P_AO_SECURE_REG1, meson_secure_reg_read(P_AO_SECURE_REG1) & (~((1<<8) | (1<<1))));
 #endif /* CONFIG_MESON_TRUSTZONE */
-    }
+//    }
 //#endif
 	ret = of_property_read_string(card->dev->of_node, "mute_gpio", &str);
 	if (ret < 0) {
