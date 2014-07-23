@@ -1121,7 +1121,7 @@ static int amstream_open(struct inode *inode, struct file *file)
     this->vid = 0;
     this->aid = 0;
     this->sid = 0;
-    this->pcrid = 0;
+    this->pcrid = 0xffff;
     file->f_op = this->fops;
     file->private_data = this;
 
