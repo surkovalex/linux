@@ -104,6 +104,7 @@ static irqreturn_t cec_isr_handler(int irq, void *dev_instance);
 static struct early_suspend hdmitx_cec_early_suspend_handler;
 static void hdmitx_cec_early_suspend(struct early_suspend *h)
 {
+    hdmi_print(INF, CEC "early suspend!\n");
     if(!hdmitx_device->hpd_state) { //if none HDMI out,no CEC features.
         hdmi_print(INF, CEC "HPD low!\n");
         return;
@@ -120,16 +121,19 @@ static void hdmitx_cec_early_suspend(struct early_suspend *h)
             rc_long_press_pwr_key = 0;
         }
     }
+    cec_disable_irq();
 }
 
 static void hdmitx_cec_late_resume(struct early_suspend *h)
 {
+    cec_enable_irq();
     if(!hdmitx_device->hpd_state) { //if none HDMI out,no CEC features.
         hdmi_print(INF, CEC "HPD low!\n");
         return;
     }
-    cec_hw_reset();//for M8 CEC standby.
+    
     if(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) {
+        cec_hw_reset();//for M8 CEC standby.
         cec_imageview_on_smp();
         cec_active_source_smp();
         msleep(200);
@@ -1729,7 +1733,7 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
     if((1 == (param[0] & 1)) && (0x0 == (value & 0x2)) && (0x2 == (param[0] & 0x2))){
         cec_active_source_smp();
     }
-    hdmirx_cec_dbg_print("cec: cec_func_config:0x%x : 0x%x\n",hdmitx_device->cec_func_config, aml_read_reg32(P_AO_DEBUG_REG0));
+    hdmi_print(INF, CEC "cec_func_config:0x%x : 0x%x\n",hdmitx_device->cec_func_config, aml_read_reg32(P_AO_DEBUG_REG0));
 }
 
 
