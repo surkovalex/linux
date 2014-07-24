@@ -1155,7 +1155,7 @@ sdio{
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
 //$$ L2 PROP_U32 = "dsi_lane_num"
-//$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
+//$$ L2 PROP_U32 = "dsi_bit_rate_max"
 //$$ L2 PROP_U32 12 = "dsi_init_on"
 //$$ L2 PROP_U32 12 = "dsi_init_off"
 	lcd_KD079D1:lcd_KD079D1{	//k102
@@ -1173,7 +1173,7 @@ sdio{
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 		
 		dsi_lane_num=<4>;/** mipi dsi data lane number */
-		dsi_bit_rate_min_max=<500 600>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+		dsi_bit_rate_max=<550>;/** mipi-dsi data lane bit rate limit(unit: MHz) */
 		dsi_init_on=<0x05 0x11 0 //sleep out
 					0xff 20      //delay 20ms
 					0x05 0x29 0  //display on
@@ -1200,7 +1200,7 @@ sdio{
 //$$ L2 PROP_U32 = "vsync_horizontal_phase"
 //$$ L2 PROP_U32 = "dsi_lane_num"
 //$$ L2 PROP_U32 2 = "dsi_operation_mode"
-//$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
+//$$ L2 PROP_U32 = "dsi_bit_rate_max"
 //$$ L2 PROP_U32 42 = "dsi_init_on"
 //$$ L2 PROP_U32 12 = "dsi_init_off"
 lcd_LD070WX4:lcd_LD070WX4{
@@ -1220,7 +1220,7 @@ lcd_LD070WX4:lcd_LD070WX4{
 		
 		dsi_lane_num=<4>;/** mipi dsi data lane number */
 		dsi_operation_mode=<0 0>; /** operation mode when init and display: (0=video mode, 1=command mode). default is <1 0> */
-		dsi_bit_rate_min_max=<400 500>; /** range of mipi dsi data lane bit rate(unit: MHz) */
+		dsi_bit_rate_max=<500>; /** mipi-dsi data lane bit rate limit(unit: MHz) */
 		dsi_init_on=<0x15 0x01 1 0x0 
 				0xff 20     //delay 20ms
 				0x15 0xAE 1 0x0B 
@@ -1332,7 +1332,7 @@ lcd_LD070WX4:lcd_LD070WX4{
 //$$ L2 PROP_U32 2 = "vsync_width_backporch"
 //$$ L2 PROP_U32 2 = "pol_hsync_vsync"
 //$$ L2 PROP_U32 = "dsi_lane_num"
-//$$ L2 PROP_U32 2 = "dsi_bit_rate_min_max"
+//$$ L2 PROP_U32 = "dsi_bit_rate_max"
 //$$ L2 PROP_U32 = "pclk_lanebyteclk_factor"
 //$$ L2 PROP_U32 2 = "dsi_transfer_ctrl"
 //$$ L2 PROP_U32 12 = "dsi_init_on"
@@ -1352,7 +1352,7 @@ lcd_LD070WX4:lcd_LD070WX4{
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
 		dsi_lane_num=<4>;/** mipi dsi data lane number */
-		dsi_bit_rate_min_max=<900 1000>;/** range of mipi dsi data lane bit rate(unit: MHz) */
+		dsi_bit_rate_max=<1000>; /** mipi-dsi data lane bit rate limit(unit: MHz) */
 		pclk_lanebyteclk_factor =<15>;/** special adjust, default is 0 */
 		dsi_transfer_ctrl=<1 0>; /** clk_lane auto stop in LP mode: (0=disable, 1=enable), transfer switch between LP and HS: (0=auto, 1=standard, 2=slow). default is <0 0> */
 		dsi_init_on=<0x05 0x11 0 //sleep out

@@ -1495,15 +1495,15 @@ static int _get_lcd_model_timing(Lcd_Config_t *pConf, struct platform_device *pd
                 pConf->lcd_control.mipi_config->lane_num = (unsigned char)val;
             }
             DBG_PRINT("dsi_lane_num= %d\n",  pConf->lcd_control.mipi_config->lane_num);
-            ret = of_property_read_u32_array(lcd_model_node,"dsi_bit_rate_min_max",&lcd_para[0], 2);
+            ret = of_property_read_u32(lcd_model_node,"dsi_bit_rate_max",&val);
             if(ret){
-                printk("faild to get dsi_bit_rate_min_max\n");
-                lcd_para[0] = 0;
-                lcd_para[1] = 0;
+                printk("faild to get dsi_bit_rate_max\n");
+                pConf->lcd_control.mipi_config->bit_rate_max = 0;
             }
-            pConf->lcd_control.mipi_config->bit_rate_min = lcd_para[0];
-            pConf->lcd_control.mipi_config->bit_rate_max = lcd_para[1];
-            DBG_PRINT("dsi bit_rate min = %dMHz max = %dMHz\n", lcd_para[0], lcd_para[1]);
+            else {
+                pConf->lcd_control.mipi_config->bit_rate_max = val;
+            }
+            DBG_PRINT("dsi bit_rate max = %dMHz\n", pConf->lcd_control.mipi_config->bit_rate_max);
             ret = of_property_read_u32(lcd_model_node,"pclk_lanebyteclk_factor",&val);
             if(ret){
                 printk("faild to get pclk_lanebyteclk_factor\n");
