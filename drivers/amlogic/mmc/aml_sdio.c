@@ -446,7 +446,7 @@ static void aml_sdio_timeout(struct work_struct *work)
 	static int timeout_cmd_cnt = 0;
 	int is_mmc_stop = 0;
 
-	struct timeval ts_current;
+//	struct timeval ts_current;
 	unsigned long time_start_cnt = READ_CBUS_REG(ISA_TIMERE);
 	
     
@@ -487,7 +487,7 @@ static void aml_sdio_timeout(struct work_struct *work)
             timeout_cnt++;
             if (timeout_cnt > 30)
                 goto timeout_handle;
-            sdio_err("%s: cmd%d, ISR have been run, xfer_step=%d, time_start_cnt=%dmS, timeout_cnt=%d\n",
+            sdio_err("%s: cmd%d, ISR have been run, xfer_step=%d, time_start_cnt=%ldmS, timeout_cnt=%d\n",
                 mmc_hostname(host->mmc), host->mrq->cmd->opcode, host->xfer_step, time_start_cnt, timeout_cnt);        
         }
         else
@@ -516,7 +516,7 @@ timeout_handle:
     if(!aml_card_type_mmc(pdata)){
         sdio_error_flag |= (1<<30);
         host->mrq->cmd->retries = 0;
-    }else if((sdio_error_flag & (1<<3) == 0) && (host->mrq->data != NULL) 
+    }else if(((sdio_error_flag & (1<<3))== 0) && (host->mrq->data != NULL) 
             && pdata->is_in ){  //set cmd retry cnt when first error.
         sdio_error_flag |= (1<<3);
         host->mrq->cmd->retries = AML_TIMEOUT_RETRY_COUNTER; 
@@ -531,7 +531,7 @@ timeout_handle:
     host->mrq->cmd->error = -ETIMEDOUT;
     spin_unlock_irqrestore(&host->mrq_lock, flags);
     
-    sdio_err("time_start_cnt:%d\n", time_start_cnt);
+    sdio_err("time_start_cnt:%ld\n", time_start_cnt);
     aml_sdio_print_err(host, "Timeout error");
     // if (pdata->port == MESON_SDIO_PORT_A) {
         // sdio_err("power_on_pin=%d\n",
@@ -1226,7 +1226,7 @@ static const struct mmc_host_ops aml_sdio_ops = {
 
 static ssize_t sdio_debug_func(struct class *class, struct class_attribute *attr, const char *buf, size_t count)
 {
-    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
+//    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
     
     sscanf(buf, "%x", &sdio_debug_flag);    
     printk("sdio_debug_flag: %d\n", sdio_debug_flag);
@@ -1237,7 +1237,7 @@ static ssize_t sdio_debug_func(struct class *class, struct class_attribute *attr
 static ssize_t show_sdio_debug(struct class *class,
                     struct class_attribute *attr,	char *buf)
 {
-    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
+//    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
     
     printk("sdio_debug_flag: %d\n", sdio_debug_flag);
     printk("1 : Force sdio cmd crc error \n");
@@ -1293,7 +1293,7 @@ static struct amlsd_host* aml_sdio_init_host(void)
 #endif
 
 	host->debug.name = kzalloc(strlen((const char*)AML_SDIO_MAGIC)+1, GFP_KERNEL);
-	strcpy(host->debug.name, (char*)AML_SDIO_MAGIC);
+	strcpy((char *)(host->debug.name), (const char*)AML_SDIO_MAGIC);
 	host->debug.class_attrs = sdio_class_attrs;
 	if(class_register(&host->debug))
 		printk(" class register nand_class fail!\n");

@@ -609,7 +609,7 @@ static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
         //add erase function here
             ret = mmc_wipe_part_ioctl(bdev);
             if(ret){
-                dev_err("wipe part error ret:%d\n", ret);
+                pr_err("wipe part error ret:%d\n", ret);
             }
            return 0;
        default:
@@ -2075,7 +2075,7 @@ static int mmc_wipe_part_ioctl(struct block_device *bdev)
 	struct mmc_card *card;    
     struct gendisk *disk = bdev->bd_disk;
     __u64 offset, size;
-    int err, part_num, arg, i;
+    int err, part_num, arg;
     unsigned long time_start_cnt = READ_CBUS_REG(ISA_TIMERE);
 
     part_num = MINOR(bdev->bd_dev)-disk->first_minor;
@@ -2159,7 +2159,7 @@ dev_card_err:
     mmc_blk_put(md);
 
 blk_get_err:
-	pr_err("%s completed, err:%d time cost:%duS\n", __func__, err, (READ_CBUS_REG(ISA_TIMERE)-time_start_cnt));
+	pr_err("%s completed, err:%d time cost:%lduS\n", __func__, err, (READ_CBUS_REG(ISA_TIMERE)-time_start_cnt));
     return err;  
 }
 

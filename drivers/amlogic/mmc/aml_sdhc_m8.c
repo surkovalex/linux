@@ -81,7 +81,7 @@ static const u8 tuning_blk_pattern_8bit[] = {
 	0xff, 0x77, 0x77, 0xff, 0x77, 0xbb, 0xdd, 0xee,
 };
 
-static void sdhc_debug_status(struct amlsd_host* host)
+static void  __attribute__((unused))sdhc_debug_status(struct amlsd_host* host)
 {
     switch (sdhc_debug_flag)
     {
@@ -468,7 +468,7 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
 
     aml_sdhc_host_reset(host);
     
-#if DMC_URGENT_PERIPH
+#ifdef DMC_URGENT_PERIPH
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
     dmc_ctl = readl(P_MMC_QOS11_CTRL0);
     dmc_ctl |= (1<<26);
@@ -630,7 +630,7 @@ void aml_sdhc_set_pdma(struct amlsd_platform* pdata, struct mmc_request* mrq)
     struct amlsd_host* host = pdata->host;
     u32 vpdma = readl(host->base+SDHC_PDMA);
     struct sdhc_pdma* pdma = (struct sdhc_pdma*)&vpdma;
-    u32 venhc = readl(host->base+SDHC_ENHC);
+//    u32 venhc = readl(host->base+SDHC_ENHC);
     //struct sdhc_enhc *enhc = (struct sdhc_enhc *)&venhc;
 
     BUG_ON(!mrq->data);
@@ -761,11 +761,14 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
     u32 vstat;
     struct sdhc_stat* stat = (struct sdhc_stat*)&vstat;
     u32 vsrst;
-    u32 vesta;
     struct sdhc_srst *srst = (struct sdhc_srst *)&vsrst;
     u32 vmisc = readl(host->base + SDHC_MISC);
-    struct sdhc_misc* misc = (struct sdhc_misc*)&vmisc;        
-    int i, loop_limit;
+    struct sdhc_misc* misc = (struct sdhc_misc*)&vmisc;     
+#ifndef CONFIG_ARCH_MESON8M2           
+    int i;
+    int loop_limit;
+    u32 vesta;
+#endif
 
     /*Set clock for each port, change clock before wait ready*/
     aml_sdhc_set_clkc(pdata);
@@ -1110,7 +1113,7 @@ static void aml_sdhc_timeout(struct work_struct *work)
     
     unsigned long flags;
 
-	struct timeval ts_current;
+//	struct timeval ts_current;
 	unsigned long time_start_cnt = READ_CBUS_REG(ISA_TIMERE);
 	
     time_start_cnt = (time_start_cnt - host->time_req_sta) / 1000;
@@ -1135,7 +1138,7 @@ static void aml_sdhc_timeout(struct work_struct *work)
 
         spin_unlock_irqrestore(&host->mrq_lock, flags);
 
-        sdhc_err("%s: cmd%d, ISR have been run, xfer_step=%d, time_start_cnt=%dmS, timeout_cnt=%d\n",
+        sdhc_err("%s: cmd%d, ISR have been run, xfer_step=%d, time_start_cnt=%ldmS, timeout_cnt=%d\n",
                 mmc_hostname(host->mmc), host->mrq->cmd->opcode, host->xfer_step, time_start_cnt, timeout_cnt);
         return;
     }
@@ -1152,7 +1155,7 @@ timeout_handle:
         sdhc_error_flag = 0;
         mrq->cmd->retries = 0;         
     }
-    else if((sdhc_error_flag & (1<<3) == 0)  && (mrq->data != NULL) 
+    else if(((sdhc_error_flag & (1<<3)) == 0)  && (mrq->data != NULL) 
             && pdata->is_in){  //set cmd retry cnt when first error.
         sdhc_error_flag |= (1<<3);
         mrq->cmd->retries = AML_TIMEOUT_RETRY_COUNTER; 
@@ -1169,7 +1172,7 @@ timeout_handle:
 
     spin_unlock_irqrestore(&host->mrq_lock, flags);
     aml_sdhc_read_response(host->mmc, mrq->cmd);
-    sdhc_err("time_start_cnt:%d\n", time_start_cnt);
+    sdhc_err("time_start_cnt:%ld\n", time_start_cnt);
 
     aml_sdhc_print_err(host);
 
@@ -1381,7 +1384,7 @@ static int aml_sdhc_status (struct amlsd_host* host)
     u32 vista = readl(host->base + SDHC_ISTA);
     struct sdhc_ista* ista = (struct sdhc_ista*)&vista;
     struct mmc_request* mrq = host->mrq;
-    unsigned long flags;
+//    unsigned long flags;
 
     if(!mrq){
         sdhc_err("NULL mrq\n");
@@ -1599,11 +1602,14 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
     u32 vstat, status;
     struct sdhc_stat* stat = (struct sdhc_stat*)&vstat;
     struct amlsd_platform* pdata = mmc_priv(host->mmc);
-    int cnt=0, i;
+    int cnt=0;
+#ifndef CONFIG_ARCH_MESON8M2        
     u32 esta = readl(host->base + SDHC_ESTA);
+    int i;        
     u32 dmc_sts = 0;
     u32 vpdma = readl(host->base+SDHC_PDMA);   
     struct sdhc_pdma* pdma = (struct sdhc_pdma*)&vpdma;
+#endif
 
     spin_lock_irqsave(&host->mrq_lock, flags);
     mrq = host->mrq;
@@ -1673,7 +1679,7 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
                      //check ddr dma status after controller dma status OK
                     for(i=0; i< STAT_POLL_TIMEOUT; i++){
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
-                        dmc_sts = readl(P_MMC_CHAN_STS);
+                        dmc_sts = readl((unsigned int *)P_MMC_CHAN_STS);
                         dmc_sts = (dmc_sts >> 11)&1;
 #elif(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B)    
 #if (defined CONFIG_ARCH_MESON8M2)
@@ -1690,7 +1696,7 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
                     }
                    
                     if (i == STAT_POLL_TIMEOUT) // error
-                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x dmc_sts:%d\n", dmc_sts);                                                                        
+                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x dmc_sts:%d\n", esta,dmc_sts);                                                                        
                   
                 }                              
 #endif
@@ -2214,7 +2220,7 @@ static struct mmc_claim aml_sdhc_claim;
 
 static ssize_t sdhc_debug_func(struct class *class, struct class_attribute *attr, const char *buf, size_t count)
 {
-    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
+//    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
     
     sscanf(buf, "%x", &sdhc_debug_flag);    
     printk("sdhc_debug_flag: %d\n", sdhc_debug_flag);
@@ -2225,7 +2231,7 @@ static ssize_t sdhc_debug_func(struct class *class, struct class_attribute *attr
 static ssize_t show_sdhc_debug(struct class *class,
                     struct class_attribute *attr,	char *buf)
 {
-    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
+//    struct amlsd_host *host = container_of(class, struct amlsd_host, debug);
     
     printk("sdhc_debug_flag: %d\n", sdhc_debug_flag);
     
@@ -2299,7 +2305,7 @@ static struct amlsd_host* aml_sdhc_init_host(void)
 #endif
 
 	host->debug.name = kzalloc(strlen((const char*)AML_SDHC_MAGIC)+1, GFP_KERNEL);
-	strcpy(host->debug.name, (char*)AML_SDHC_MAGIC);
+	strcpy((char *)(host->debug.name), (const char*)AML_SDHC_MAGIC);
 	host->debug.class_attrs = sdhc_class_attrs;
 	if(class_register(&host->debug))
 		printk(" class register nand_class fail!\n");
