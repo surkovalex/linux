@@ -1866,9 +1866,7 @@ static int setup_net_device(struct net_device *dev)
 	               (1 << 6) |           //Receive Interrupt Enable
 	               (1 << 2) |           //Transmit Buffer Unavailable Enable
 	               (1 << 3) |           //TJT: Transmit Jabber Timeout
-	               (1 << 4) |           //OVF: Receive Overflow
 	               (1 << 5) |           //UNF: Transmit Underflow
-	               (1 << 7) |           //RU: Receive Buffer Unavailable
 	               (1 << 8) |           //RPS: Receive Process Stopped
 	               (1 << 13) |          //FBI: Fatal Bus Error Interrupt
 	               (1) | 		        //tx interrupt
