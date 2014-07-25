@@ -832,6 +832,7 @@ static void hdmi_tvenc_set(Hdmi_tx_video_para_t *param)
         break;
     case HDMI_1080p60:
     case HDMI_1080p30:
+    default:
         INTERLACE_MODE      = 0;
         PIXEL_REPEAT_VENC   = 0;
         PIXEL_REPEAT_HDMI   = 0;
@@ -846,8 +847,6 @@ static void hdmi_tvenc_set(Hdmi_tx_video_para_t *param)
         VSYNC_LINES         = 5;
         SOF_LINES           = 36;
         TOTAL_FRAMES        = 4;
-        break;
-    default:
         break;
     }
 

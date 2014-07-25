@@ -217,7 +217,7 @@ static int gpio_key_probe(struct platform_device *pdev)
     struct gpio_key *key;
     struct gpio_platform_data *pdata = NULL;
     int *key_param = NULL;
-	int state;
+	int state=-EINVAL;
 #ifdef USE_IRQ
     int irq_keyup;
     int irq_keydown;

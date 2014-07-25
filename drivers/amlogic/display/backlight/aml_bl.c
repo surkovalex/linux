@@ -989,7 +989,7 @@ static inline int _get_backlight_config(struct platform_device *pdev)
     int val;
     const char *str;
     unsigned int bl_para[3];
-    unsigned pwm_freq, pwm_cnt, pwm_pre_div;
+    unsigned pwm_freq=0, pwm_cnt, pwm_pre_div;
     int i;
 
     if (pdev->dev.of_node) {

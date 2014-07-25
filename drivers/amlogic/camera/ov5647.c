@@ -2338,7 +2338,7 @@ bool OV5647_set_af_new_step(void *priv, unsigned int af_step){
     if(af_step == last_af_step)
         return true;
     if(vcm_mod == 0){
-	    unsigned int diff,vcm_data,codes;
+	    unsigned int diff,vcm_data=0,codes;
 	    diff = (af_step > last_af_step) ? af_step - last_af_step : last_af_step - af_step;
 	    last_af_step = af_step;
 	    if(diff < 256){
@@ -2542,7 +2542,7 @@ static ssize_t vcm_manual_store(struct class *cls,struct class_attribute *attr, 
 	char buff[3];
 	unsigned int af_step = 0;
 	unsigned int diff = 0;
-	int codes,vcm_data;
+	int codes,vcm_data=0;
 	unsigned char byte_h, byte_l;
 	sscanf(buf,"%d",&af_step);
     if(af_step == last_af_step)

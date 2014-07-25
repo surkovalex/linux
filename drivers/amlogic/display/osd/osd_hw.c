@@ -1533,7 +1533,7 @@ static  void  osd1_update_disp_freescale_enable(void)
 	int dst_w, dst_h;
 	int bot_ini_phase;
 	int vsc_ini_rcv_num, vsc_ini_rpt_p0_num;
-	int vsc_bot_rcv_num, vsc_bot_rpt_p0_num;
+	int vsc_bot_rcv_num=0, vsc_bot_rpt_p0_num=0;
 	int hsc_ini_rcv_num, hsc_ini_rpt_p0_num;
 
 	int hf_bank_len = 4;
@@ -1901,7 +1901,7 @@ static   void  osd1_update_enable(void)
         }
         spin_unlock_irqrestore(&osd_onoff_lock, flags);
     }else{
-        u32  video_enable;
+        u32  video_enable=0;
         spin_lock_irqsave(&osd_onoff_lock, flags);
         video_enable |=aml_read_reg32(P_VPP_MISC)&VPP_VD1_PREBLEND;
 
@@ -1966,7 +1966,7 @@ static   void  osd2_update_enable(void)
         }
         spin_unlock_irqrestore(&osd_onoff_lock, flags);
     }else{
-        u32  video_enable;
+        u32  video_enable=0;
         video_enable |=VSYNCOSD_RD_MPEG_REG(VPP_MISC)&VPP_VD1_PREBLEND;
         spin_lock_irqsave(&osd_onoff_lock, flags);
         if(osd_hw.enable[OSD2]==ENABLE)

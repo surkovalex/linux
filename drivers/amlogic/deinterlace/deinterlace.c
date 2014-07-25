@@ -1283,7 +1283,7 @@ static void queue_init(int local_buffer_num)
 static di_buf_t* get_di_buf(int queue_idx, int* start_pos)
 {
     queue_t* q = &(queue[queue_idx]);
-    int idx;
+    int idx=0;
     unsigned int pool_idx, di_buf_idx;
     di_buf_t* di_buf = NULL;
     int start_pos_init = *start_pos;
@@ -4636,7 +4636,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
     di_buf_t* di_buf = (di_buf_t*)arg;
     int di_width, di_height, di_start_x, di_end_x, di_start_y, di_end_y;
     int hold_line = post_hold_line;
-   	int post_blend_en, post_blend_mode, blend_mtn_en, ei_en;
+   	int post_blend_en=0, post_blend_mode=0, blend_mtn_en=0, ei_en;
 
     if(di_get_power_control(1)==0){
         return 0;

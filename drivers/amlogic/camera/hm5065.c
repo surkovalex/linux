@@ -1212,7 +1212,6 @@ static int set_focus_zone(struct hm5065_device *dev, int value)
 			int retry_count = 9;
 			int reg_value = 0;
 			int ret = -1;
-			printk("xc = %d, yc = %d\n", xc, yc);	
 			xc = ((value >> 16) & 0xffff) * 80 / 2000;
 			yc = (value & 0xffff) * 60 / 2000;
 			printk("xc1 = %d, yc1 = %d\n", xc, yc); 	

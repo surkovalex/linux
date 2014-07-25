@@ -2619,7 +2619,7 @@ static struct device_attribute attributes_interrupt_com[] = {
 static int create_sysfs_interfaces(struct lsm303d_status *stat)
 {
 	int err;
-	int i;
+	int i=0;
 //	struct lsm303d_status *stat = dev_get_drvdata(dev);
 
 	struct kobject *acc_kobj = &stat->input_dev_acc->dev.kobj ;
