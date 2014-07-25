@@ -366,11 +366,13 @@ int aml1218_get_dcdc_voltage(int dcdc, uint32_t *uV)
     //int start;
 	
     if (dcdc == 4) {
+        addr = 0x5d;
         ret = aml1218_read(addr, &val);
         if (ret) {
             return ret;    
         }
-        return VDDEE_voltage_table[(val >> 2) & 0x1f] * 1000;
+        *uV = VDDEE_voltage_table[(val >> 2) & 0x1f] * 1000;
+        return 0;
     }
     if (dcdc > 3 || dcdc < 0) {
         return -EINVAL;    
