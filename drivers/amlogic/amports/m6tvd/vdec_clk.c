@@ -126,7 +126,7 @@ void vdec2_clock_off(void)
 void hcodec_clock_enable(void)
 {
     HCODEC_CLOCK_OFF();
-    HCODEC_255M();
+    HCODEC_250M();
     HCODEC_CLOCK_ON();
 }
 
