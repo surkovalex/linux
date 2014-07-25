@@ -1314,8 +1314,10 @@ static int aml1218_update_state(struct aml_charger *charger)
 
     charger->ibat = aml1218_get_battery_current();
     if (val & 0x18) {
-        if (charger->ibat >= 20) {
+        if (charger->ibat >= 20 && adc_sign_bit) {                      // current sign bit 1 <- charging
             charger->charge_status = CHARGER_CHARGING;                  // charging
+        } else if (!adc_sign_bit) {
+            charger->charge_status = CHARGER_DISCHARGING;               // Not charging 
         } else {
             charger->charge_status = CHARGER_NONE;                      // Not charging 
         } 
