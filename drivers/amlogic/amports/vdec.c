@@ -627,7 +627,7 @@ static ssize_t clock_level_show(struct class *class, struct class_attribute *att
 {
     char *pbuf = buf;
 
-    pbuf += sprintf(pbuf, "%d %d\n", vdec_clock_level(VDEC_1), vdec_clock_level(VDEC_2));
+    pbuf += sprintf(pbuf, "%d\n", vdec_clock_level(VDEC_1));
 
     if (HAS_VDEC2) {
         pbuf += sprintf(pbuf, "%d\n", vdec_clock_level(VDEC_2));

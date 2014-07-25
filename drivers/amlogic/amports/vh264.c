@@ -343,7 +343,9 @@ static inline int fifo_level(void)
 
 static void vdec_dfs(void)
 {
-    ///vdec_power_mode((fifo_level() > DFS_HIGH_THEASHOLD) ? 0 : 1);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+    vdec_power_mode((fifo_level() > DFS_HIGH_THEASHOLD) ? 0 : 1);
+#endif
 }
 
 void spec_set_canvas(buffer_spec_t *spec,

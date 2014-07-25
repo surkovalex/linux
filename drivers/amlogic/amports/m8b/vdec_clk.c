@@ -105,7 +105,7 @@ static int clock_level[VDEC_MAX+1];
 void vdec_clock_enable(void)
 {
     VDEC1_CLOCK_OFF();
-    VDEC1_255M();
+    VDEC1_182M();
     VDEC1_CLOCK_ON();
     clock_level[VDEC_1] = 0;
 }
@@ -131,7 +131,7 @@ void vdec_clock_off(void)
 void vdec2_clock_enable(void)
 {
     VDEC2_CLOCK_OFF();
-    VDEC2_255M();
+    VDEC2_182M();
     VDEC2_CLOCK_ON();
     clock_level[VDEC_2] = 0;
 }
@@ -213,7 +213,7 @@ void hevc_clock_prepare_switch(void)
 
 int vdec_clock_level(vdec_type_t core)
 {
-    if (core < VDEC_MAX)
+    if (core >= VDEC_MAX)
         return 0; 
 
     return clock_level[core];
