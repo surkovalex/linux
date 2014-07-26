@@ -1890,6 +1890,7 @@ sdhc_sd_clk_cmd_pins:sdhc_sd_clk_cmd_pins{
 		status = "okay";
 		ethbaseaddr = <0xfe0c0000>;
 		interruptnum = <40>;
+		new_maclogic = <1>;
 	};
 
 }; /* end of / */

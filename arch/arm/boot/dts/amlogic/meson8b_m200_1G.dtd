@@ -1889,6 +1889,7 @@ void root_func(){
 		interruptnum = <40>;
                 savepowermode = <0>;
                 phy_interface = <0>;
+                new_maclogic = <1>;
                 reset_pin_enable = <0>;
                 reset_pin = "GPI0H_4";
                 reset_delay = <100>;

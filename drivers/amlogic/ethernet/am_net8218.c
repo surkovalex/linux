@@ -101,7 +101,6 @@ MODULE_PARM_DESC(amlog_level, "ethernet debug level\n");
 //#define PHY_LOOPBACK_TEST
 
 static int running = 0;
-//static struct ethtool_wol *syswol =NULL;
 static struct net_device *my_ndev = NULL;
 static struct aml_eth_platdata *eth_pdata = NULL;
 static unsigned int g_ethernet_registered = 0;
@@ -117,6 +116,7 @@ static char DEFMAC[] = "\x00\x01\x23\xcd\xee\xaf";
 void start_test(struct net_device *dev);
 static void write_mac_addr(struct net_device *dev, char *macaddr);
 static int ethernet_reset(struct net_device *dev);
+static int reset_mac(struct net_device *dev);
 static void am_net_dump_macreg(void);
 static void read_macreg(void);
 
@@ -416,6 +416,11 @@ static inline int update_status(struct net_device *dev, unsigned long status,
 	int need_reset = 0;
 	int need_rx_restart = 0;
 	int res = 0;
+	if(status & GMAC_MMC_Interrupt){
+			printk("ETH_MMC_ipc_intr_rx = %x\n",readl((void*)(np->base_addr + ETH_MMC_ipc_intr_rx)));
+			printk("ETH_MMC_intr_rx = %x\n",readl((void*)(np->base_addr + ETH_MMC_intr_rx)));
+	}
+
 	if (status & NOR_INTR_EN) {	//Normal Interrupts Process
 		if (status & TX_INTR_EN) {	//Transmit Interrupt Process
 			writel(1,(void*)(np->base_addr + ETH_DMA_1_Tr_Poll_Demand));
@@ -509,7 +514,9 @@ static inline int update_status(struct net_device *dev, unsigned long status,
 	if (need_reset) {
 		printk(KERN_WARNING DRV_NAME "system reset\n");
 		free_ringdesc(dev);
-		ethernet_reset(dev);
+		writel(0, (void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
+		writel(0, (void*)(np->base_addr + ETH_DMA_7_Interrupt_Enable));
+		reset_mac(dev);
 	} else if (need_rx_restart) {
 		writel(1, (void*)(np->base_addr + ETH_DMA_2_Re_Poll_Demand));
 	}
@@ -883,7 +890,7 @@ static int mac_pmt_enable(unsigned int enable)
  * @return
  */
 /* --------------------------------------------------------------------------*/
-#undef CONFIG_AML_NAND_KEY
+//#undef CONFIG_AML_NAND_KEY
 #ifdef CONFIG_AML_NAND_KEY
 extern int get_aml_key_kernel(const char* key_name, unsigned char* data, int ascii_flag);
 extern int extenal_api_key_set_version(char *devvesion);
@@ -1043,7 +1050,7 @@ static void aml_adjust_link(struct net_device *dev)
 	}
 
 	if (new_state){
-		if(priv->phy_interface == PHY_INTERFACE_MODE_RGMII)
+		if(new_maclogic == 1)
 			read_macreg();
 		phy_print_status(phydev);
 	}
@@ -1132,6 +1139,36 @@ static void read_macreg(void)
 	}
 }
 
+static int reset_mac(struct net_device *dev)
+{
+	struct am_net_private *np = netdev_priv(dev);
+	int res;
+	unsigned long flags;
+	int tmp;
+
+	spin_lock_irqsave(&np->lock, flags);
+	res = alloc_ringdesc(dev);
+	spin_unlock_irqrestore(&np->lock, flags);
+	if (res != 0) {
+		printk(KERN_INFO "can't alloc ring desc!err=%d\n", res);
+		goto out_err;
+	}
+	aml_mac_init(dev);
+	np->first_tx = 1;
+	tmp = readl((void*)(np->base_addr + ETH_DMA_6_Operation_Mode));//tx enable
+	tmp |= (7 << 14) | (1 << 13);
+	writel(tmp, (void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
+	tmp = readl((void*)(np->base_addr + ETH_MAC_6_Flow_Control));
+	tmp |= (1 << 1) | (1 << 0);
+	writel(tmp, (void*)(np->base_addr + ETH_MAC_6_Flow_Control));
+
+	tmp = readl((void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
+	tmp |= (1 << 1); /*start receive*/
+	writel(tmp, (void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
+out_err:
+	return res;
+}
+
 /* --------------------------------------------------------------------------*/
 /**
  * @brief  ethernet_reset
@@ -1218,7 +1255,10 @@ static int netdev_open(struct net_device *dev)
 	val |= (1 << 1); /*start receive*/
 	writel(val, (void*)(np->base_addr + ETH_DMA_6_Operation_Mode));
 	running = 1;
-
+	if(new_maclogic == 1){	
+		writel(0xffffffff,(void*)(np->base_addr + ETH_MMC_ipc_intr_mask_rx));
+		writel(0xffffffff,(void*)(np->base_addr + ETH_MMC_intr_mask_rx));
+	}
 	netif_start_queue(dev);
 
 	return 0;
@@ -1296,7 +1336,7 @@ static int start_tx(struct sk_buff *skb, struct net_device *dev)
 	unsigned long flags;
 	dev->trans_start = jiffies;
 	if (np->first_tx) {
-		if(np->phy_interface == PHY_INTERFACE_MODE_RGMII)
+		if(new_maclogic == 1)
 			read_macreg();
 	}
 	if (!running) {
@@ -1472,7 +1512,6 @@ static void tx_timeout(struct net_device *dev)
 {
 	struct am_net_private *np = netdev_priv(dev);
 	int val;
-
 	spin_lock_irq(&np->lock);
 	val = mdio_read(np->mii, np->phy_addr, MII_BMSR);
 	spin_unlock_irq(&np->lock);
@@ -1485,7 +1524,6 @@ static void tx_timeout(struct net_device *dev)
 		dev->trans_start = jiffies;
 		np->stats.tx_errors++;
 	}
-	return;
 }
 
 /* --------------------------------------------------------------------------*/
@@ -1881,8 +1919,6 @@ static int probe_init(struct net_device *ndev)
 	if (g_debug > 0) {
 		printk("ethernet base addr is %x\n", (unsigned int)ndev->base_addr);
 	}
-	if(phy_interface == 1)
-	 	new_maclogic=1;
 	res = setup_net_device(ndev);
 	if (res != 0) {
 		printk("setup net device error !\n");
@@ -2786,6 +2822,8 @@ static ssize_t eth_cali_store(struct class *class, struct class_attribute *attr,
 
 }
 #endif
+
+/* --------------------------------------------------------------------------*/
 static struct class *eth_sys_class;
 static CLASS_ATTR(mdcclk, S_IWUSR | S_IRUGO, eth_mdcclk_show, eth_mdcclk_store);
 static CLASS_ATTR(debug, S_IWUSR | S_IRUGO, eth_debug_show, eth_debug_store);
@@ -2811,7 +2849,6 @@ static int __init am_eth_class_init(void)
 	int ret = 0;
 
 	eth_sys_class = class_create(THIS_MODULE, DRIVER_NAME);
-
 	ret = class_create_file(eth_sys_class, &class_attr_mdcclk);
 	ret = class_create_file(eth_sys_class, &class_attr_debug);
 	ret = class_create_file(eth_sys_class, &class_attr_count);
@@ -2902,6 +2939,10 @@ static int ethernet_probe(struct platform_device *pdev)
 	ret = of_property_read_string(pdev->dev.of_node,"reset_pin",&reset_pin);
 	if (ret) {
 		printk("Please config reset_pin.\n");
+	}
+	ret = of_property_read_u32(pdev->dev.of_node,"new_maclogic",&new_maclogic);
+	if (ret) {
+		printk("Please config new_maclogic.\n");
 	}
 	if(reset_pin_enable){
 		reset_pin_num = amlogic_gpio_name_map_num(reset_pin);
