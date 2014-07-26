@@ -389,7 +389,7 @@ void vdec_poweroff(vdec_type_t core)
 
     if (core == VDEC_1) {
         // disable vdec1 clock
-        vdec1_clock_off();
+        vdec_clock_off();
     } else if (core == VDEC_2) {
         // disable vdec2 clock
         vdec2_clock_off();
