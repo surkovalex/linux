@@ -52,56 +52,56 @@
 #define SP0838_CAMERA_MODULE_NAME "sp0838"
 
 
-#define  Pre_Value_P0_0x30  0x00
+#define  SP0838_P0_0x30  0x00
 //Filter en&dis
-#define  Pre_Value_P0_0x56  0x70
-#define  Pre_Value_P0_0x57  0x10  //filter outdoor
-#define  Pre_Value_P0_0x58  0x10  //filter indoor
-#define  Pre_Value_P0_0x59  0x10  //filter night
-#define  Pre_Value_P0_0x5a  0x02  //smooth outdoor
-#define  Pre_Value_P0_0x5b  0x02  //smooth indoor
-#define  Pre_Value_P0_0x5c  0x20  //smooht night
+#define  SP0838_P0_0x56  0x70
+#define  SP0838_P0_0x57  0x10  //filter outdoor
+#define  SP0838_P0_0x58  0x10  //filter indoor
+#define  SP0838_P0_0x59  0x10  //filter night
+#define  SP0838_P0_0x5a  0x02  //smooth outdoor
+#define  SP0838_P0_0x5b  0x02  //smooth indoor
+#define  SP0838_P0_0x5c  0x20  //smooht night
 //outdoor sharpness
-#define  Pre_Value_P0_0x65  0x03
-#define  Pre_Value_P0_0x66  0x01
-#define  Pre_Value_P0_0x67  0x03
-#define  Pre_Value_P0_0x68  0x46
+#define  SP0838_P0_0x65  0x03
+#define  SP0838_P0_0x66  0x01
+#define  SP0838_P0_0x67  0x03
+#define  SP0838_P0_0x68  0x46
 //indoor sharpness
-#define  Pre_Value_P0_0x6b  0x04
-#define  Pre_Value_P0_0x6c  0x01
-#define  Pre_Value_P0_0x6d  0x03 //03
-#define  Pre_Value_P0_0x6e  0x46 //46
+#define  SP0838_P0_0x6b  0x04
+#define  SP0838_P0_0x6c  0x01
+#define  SP0838_P0_0x6d  0x03
+#define  SP0838_P0_0x6e  0x46
 //night sharpness
-#define  Pre_Value_P0_0x71  0x05
-#define  Pre_Value_P0_0x72  0x01
-#define  Pre_Value_P0_0x73  0x02
-#define  Pre_Value_P0_0x74  0x44
+#define  SP0838_P0_0x71  0x05
+#define  SP0838_P0_0x72  0x01
+#define  SP0838_P0_0x73  0x03
+#define  SP0838_P0_0x74  0x46
 //color
-#define  Pre_Value_P0_0x7f  0xd7  //R 
-#define  Pre_Value_P0_0x87  0xf8  //B
+#define  SP0838_P0_0x7f  0xd7  //R 
+#define  SP0838_P0_0x87  0xf8  //B
 //satutation
-#define  Pre_Value_P0_0xd8  0x48
-#define  Pre_Value_P0_0xd9  0x48
-#define  Pre_Value_P0_0xda  0x48
-#define  Pre_Value_P0_0xdb  0x48
+#define  SP0838_P0_0xd8  0x48
+#define  SP0838_P0_0xd9  0x48
+#define  SP0838_P0_0xda  0x48
+#define  SP0838_P0_0xdb  0x48
 //AE target
-#define  Pre_Value_P0_0xf7  0x78
-#define  Pre_Value_P0_0xf8  0x63
-#define  Pre_Value_P0_0xf9  0x68
-#define  Pre_Value_P0_0xfa  0x53
+#define  SP0838_P0_0xf7  0x78
+#define  SP0838_P0_0xf8  0x63
+#define  SP0838_P0_0xf9  0x68
+#define  SP0838_P0_0xfa  0x53
 //HEQ
-#define  Pre_Value_P0_0xdd  0x80
-#define  Pre_Value_P0_0xde  0x98
+#define  SP0838_P0_0xdd  0x70
+#define  SP0838_P0_0xde  0x90
 //AWB pre gain
-#define  Pre_Value_P1_0x28  0x75
-#define  Pre_Value_P1_0x29  0x4e
+#define  SP0838_P1_0x28  0x5a
+#define  SP0838_P1_0x29  0x62
 
 //VBLANK
-#define  Pre_Value_P0_0x05  0x00
-#define  Pre_Value_P0_0x06  0x00
+#define  SP0838_P0_0x05  0x00
+#define  SP0838_P0_0x06  0x00
 //HBLANK
-#define  Pre_Value_P0_0x09  0x01
-#define  Pre_Value_P0_0x0a  0x80
+#define  SP0838_P0_0x09  0x01
+#define  SP0838_P0_0x0a  0x76
 
 
 
@@ -122,7 +122,7 @@ MODULE_DESCRIPTION("sp0838 On Board");
 MODULE_AUTHOR("amlogic-sh");
 MODULE_LICENSE("GPL v2");
 
-#define SP0838_DRIVER_VERSION "SP0838-COMMON-01-140717"
+#define SP0838_DRIVER_VERSION "SP0838-COMMON-01-140722"
 
 static unsigned video_nr = -1;  /* videoX start number, -1 is autodetect. */
 
@@ -512,190 +512,187 @@ static struct v4l2_frmsize_discrete sp0838_pic_resolution[]=
 
 struct aml_camera_i2c_fig1_s SP0838_script[] = {
 //INIT
-    
-    {0xfd,0x00},
-    {0x1B,0x02},
-    {0x1c,0x07},
-    {0x27,0xe8},
-    {0x28,0x0B},
-    {0x32,0x00},
-    {0x22,0xc0},
-    {0x26,0x10},
-    {0x31,0x10},
-    {0x5f,0x11},
-    {0xfd,0x01},
-    {0x25,0x1a},
-    {0x26,0xfb},
-    {0x28,0x75},
-    {0x29,0x4e},
-    {0xfd,0x00},
-    {0xe7,0x03},
-    {0xe7,0x00},
-    {0xfd,0x01},
-    {0x31,0x00},
-    {0x32,0x18},
-    {0x4d,0xdc},
-    {0x4e,0x53},
-    {0x41,0x8c},
-    {0x42,0x57},
-    {0x55,0xff},
-    {0x56,0x00},
-    {0x59,0x82},
-    {0x5a,0x00},
-    {0x5d,0xff},
-    {0x5e,0x6f},
-    {0x57,0xff},
-    {0x58,0x00},
-    {0x5b,0xff},
-    {0x5c,0xa8},
-    {0x5f,0x75},
-    {0x60,0x00},
-    {0x2d,0x00},
-    {0x2e,0x00},
-    {0x2f,0x00},
-    {0x30,0x00},
-    {0x33,0x00},
-    {0x34,0x00},
-    {0x37,0x00},
-    {0x38,0x00},
-    {0xfd,0x00},
-    {0x33,0x6f},
-    {0x51,0x3f},
-    {0x52,0x09},
-    {0x53,0x00},
-    {0x54,0x00},
-    {0x55,0x10},
-    {0x4f,0x08},
-    {0x50,0x08},
-    {0x57,0x10},
-    {0x58,0x10},
-    {0x59,0x10},
-    {0x56,0x70},
-    //smooth
-    {0x5a,0x08},
-    {0x5b,0x0c},
-    {0x5c,0x30},
-    //sharp
-    {0x65,0x03},//03
-    {0x66,0x01},
-    {0x67,0x02},//06
-    {0x68,0x44},//46
-    {0x69,0x7f},
-    {0x6a,0x01},
-    {0x6b,0x04},//04
-    {0x6c,0x01},
-    {0x6d,0x02}, //03
-    {0x6e,0x44}, //46
-    {0x6f,0x7f},
-    {0x70,0x01},
-    {0x71,0x05},//05
-    {0x72,0x01},
-    {0x73,0x02},
-    {0x74,0x44},
-    {0x75,0x7f},
-    {0x76,0x01},
-    {0xcb,0x07},
-    {0xcc,0x04},
-    {0xce,0xff},
-    {0xcf,0x10},
-    {0xd0,0x20},
-    {0xd1,0x00},
-    {0xd2,0x1c},
-    {0xd3,0x16},
-    {0xd4,0x00},
-    {0xd6,0x1c},
-    {0xd7,0x16},
-    {0xdd,0x70},//70
-    {0xde,0x90},
-    #if 0
-    {0x7f,0xd7},
-    {0x80,0xbc},
-    {0x81,0xed},
-    {0x82,0xd7},
-    {0x83,0xd4},
-    {0x84,0xd6},
-    {0x85,0xff},
-    {0x86,0x89},
-    {0x87,0xf8},
-    {0x88,0x3c},
-    {0x89,0x33},
-    {0x8a,0x0f},
-    #else //sp_yc 20140626
-	{0x7f,0xc3},
-    {0x80,0xbc},
-    {0x81,0x00},
-    {0x82,0xd7},
-    {0x83,0xf0},
-    {0x84,0xb9},
-    {0x85,0xff},
-    {0x86,0x89},
-    {0x87,0xf8},
-    {0x88,0x0c},
-    {0x89,0x33},
-    {0x8a,0x0f},
+	
+	{0xfd,0x00},
+	{0x1B,0x02},
+	{0x27,0xe8},
+	{0x28,0x0B},
+	{0x32,0x00},
+	{0x22,0xc0},
+	{0x26,0x10},
+	{0x31,0x10},
+	{0x5f,0x11},
+	{0xfd,0x01},
+	{0x25,0x1a},
+	{0x26,0xfb},
+	{0x28,SP0838_P1_0x28},
+	{0x29,SP0838_P1_0x29},
+	{0xfd,0x00},
+	{0xe7,0x03},
+	{0xe7,0x00},
+	{0xfd,0x01},
+	{0x31,0x00},
+	{0x32,0x18},
+	{0x4d,0xdc},
+	{0x4e,0x53},
+	{0x41,0x8c},
+	{0x42,0x57},
+	{0x55,0xff},
+	{0x56,0x00},
+	{0x59,0x82},
+	{0x5a,0x00},
+	{0x5d,0xff},
+	{0x5e,0x6f},
+	{0x57,0xff},
+	{0x58,0x00},
+	{0x5b,0xff},
+	{0x5c,0xa8},
+	{0x5f,0x75},
+	{0x60,0x00},
+	/*{0x2d,0x00},
+	{0x2e,0x00},
+	{0x30,0x00},
+	{0x33,0x00},
+	{0x34,0x00},
+	{0x37,0x00},
+	{0x38,0x00},*/
+	{0x2f,0x80},
+	{0xfd,0x00},
+	{0x33,0x6f},
+	{0x51,0x3f},
+	{0x52,0x09},
+	{0x53,0x00},
+	{0x54,0x00},
+	{0x55,0x10},
+	{0x4f,0x08},
+	{0x50,0x08},
+	{0x57,SP0838_P0_0x57},//Raw filter debut start
+	{0x58,SP0838_P0_0x58},
+	{0x59,SP0838_P0_0x59},
+	{0x56,SP0838_P0_0x56},
+	{0x5a,SP0838_P0_0x5a},
+	{0x5b,SP0838_P0_0x5b},
+	{0x5c,SP0838_P0_0x5c},//Raw filter debut end 
+	{0x65,SP0838_P0_0x65},//Sharpness debug start
+	{0x66,SP0838_P0_0x66},
+	{0x67,SP0838_P0_0x67},
+	{0x68,SP0838_P0_0x68},
+	{0x69,0x7f},
+	{0x6a,0x01},
+	{0x6b,SP0838_P0_0x6b},
+	{0x6c,SP0838_P0_0x6c},
+	{0x6d,SP0838_P0_0x6d},//Edge gain normal
+	{0x6e,SP0838_P0_0x6e},//Edge gain normal
+	{0x6f,0x7f},
+	{0x70,0x01},
+	{0x71,SP0838_P0_0x71}, //锐化阈值          
+	{0x72,SP0838_P0_0x72}, //弱轮廓阈值        
+	{0x73,SP0838_P0_0x73}, //边缘正向增益值    
+	{0x74,SP0838_P0_0x74}, //边缘反向增益值    
+	{0x75,0x7f},
+	{0x76,0x01},
+	{0xcb,0x07},
+	{0xcc,0x04},
+	{0xce,0xff},
+	{0xcf,0x10},
+	{0xd0,0x20},
+	{0xd1,0x00},
+	{0xd2,0x1c},
+	{0xd3,0x16},
+	{0xd4,0x00},
+	{0xd6,0x1c},
+	{0xd7,0x16},
+	{0xdd,SP0838_P0_0xdd},//Contrast
+	{0xde,SP0838_P0_0xde},//HEQ&Saturation debug end
+	#if 0
+	{0x7f,0xd7},
+	{0x80,0xbc},
+	{0x81,0xed},
+	{0x82,0xd7},
+	{0x83,0xd4},
+	{0x84,0xd6},
+	{0x85,0xff},
+	{0x86,0x89},
+	{0x87,0xf8},
+	{0x88,0x3c},
+	{0x89,0x33},
+	{0x8a,0x0f},
+	#else //sp_yc 20140626
+	{0x7f,SP0838_P0_0x7f},//Color Correction start
+	{0x80,0xbc},
+	{0x81,0x00},
+	{0x82,0xd7},
+	{0x83,0xf0},
+	{0x84,0xb9},
+	{0x85,0xff},
+	{0x86,0x89},
+	{0x87,SP0838_P0_0x87},                        
+	{0x88,0x0c},
+	{0x89,0x33},
+	{0x8a,0x0f},
 	#endif
-    {0x8b,0x0 },
-    {0x8c,0x1a},
-    {0x8d,0x29},
-    {0x8e,0x41},
-    {0x8f,0x62},
-    {0x90,0x7c},
-    {0x91,0x90},
-    {0x92,0xa2},
-    {0x93,0xaf},
-    {0x94,0xbc},
-    {0x95,0xc5},
-    {0x96,0xcd},
-    {0x97,0xd5},
-    {0x98,0xdd},
-    {0x99,0xe5},
-    {0x9a,0xed},
-    {0x9b,0xf5},
-    {0xfd,0x01},
-    {0x8d,0xfd},
-    {0x8e,0xff},
-    {0xfd,0x00},
-    {0xca,0xcf},
-    {0xd8,0x48},
-    {0xd9,0x48},
-    {0xda,0x40},
-    {0xdb,0x38},
-    {0xb9,0x00},
-    {0xba,0x04},
-    {0xbb,0x08},
-    {0xbc,0x10},
-    {0xbd,0x20},
-    {0xbe,0x30},
-    {0xbf,0x40},
-    {0xc0,0x50},
-    {0xc1,0x60},
-    {0xc2,0x70},
-    {0xc3,0x80},
-    {0xc4,0x90},
-    {0xc5,0xA0},
-    {0xc6,0xB0},
-    {0xc7,0xC0},
-    {0xc8,0xD0},
-    {0xc9,0xE0},
-    {0xfd,0x01},
-    {0x89,0xf0},
-    {0x8a,0xff},
-    {0xfd,0x00},
-    {0xe8,0x30},
-    {0xe9,0x30},
-    {0xea,0x40},
-    {0xf4,0x1b},
-    {0xf5,0x80},
-    {0xf7,0x78},
-    {0xf8,0x63},
-    {0xf9,0x68},
-    {0xfa,0x53},
-    {0xfd,0x01},
-    {0x09,0x31},
-    {0x0a,0x85},
-    {0x0b,0x0b},
-    {0x14,0x20},
-    {0x15,0x0f},
+	{0x8b,0x0 },
+	{0x8c,0x1a},
+	{0x8d,0x29},
+	{0x8e,0x41},
+	{0x8f,0x62},
+	{0x90,0x7c},
+	{0x91,0x90},
+	{0x92,0xa2},
+	{0x93,0xaf},
+	{0x94,0xbc},
+	{0x95,0xc5},
+	{0x96,0xcd},
+	{0x97,0xd5},
+	{0x98,0xdd},
+	{0x99,0xe5},
+	{0x9a,0xed},
+	{0x9b,0xf5},
+	{0xfd,0x01},
+	{0x8d,0xfd},
+	{0x8e,0xff},
+	{0xfd,0x00},
+	{0xca,0xcf},
+	{0xd8,SP0838_P0_0xd8},//UV outdoor
+	{0xd9,SP0838_P0_0xd9},//UV indoor 
+	{0xda,SP0838_P0_0xda},//UV dummy
+	{0xdb,SP0838_P0_0xdb},//UV lowlight
+	{0xb9,0x00},
+	{0xba,0x04},
+	{0xbb,0x08},
+	{0xbc,0x10},
+	{0xbd,0x20},
+	{0xbe,0x30},
+	{0xbf,0x40},
+	{0xc0,0x50},
+	{0xc1,0x60},
+	{0xc2,0x70},
+	{0xc3,0x80},
+	{0xc4,0x90},
+	{0xc5,0xA0},
+	{0xc6,0xB0},
+	{0xc7,0xC0},
+	{0xc8,0xD0},
+	{0xc9,0xE0},
+	{0xfd,0x01},
+	{0x89,0xf0},
+	{0x8a,0xff},
+	{0xfd,0x00},
+	{0xe8,0x30},
+	{0xe9,0x30},
+	{0xea,0x40},
+	{0xf4,0x1b},
+	{0xf5,0x80},
+	{0xf7,SP0838_P0_0xf7},//AE target
+	{0xf8,SP0838_P0_0xf8},
+	{0xf9,SP0838_P0_0xf9},//AE target 
+	{0xfa,SP0838_P0_0xfa},
+	{0xfd,0x01},
+	{0x09,0x31},
+	{0x0a,0x85},
+	{0x0b,0x0b},
+	{0x14,0x20},
+	{0x15,0x0f},
 
 	//sensor AE settings:
 	/*
@@ -737,43 +734,43 @@ struct aml_camera_i2c_fig1_s SP0838_script[] = {
 	{0xcb,0x0c},
 	{0xfd,0x00},
 	*/
-{0xfd,0x00},
-{0x05,0x00},
-{0x06,0x00},
-{0x09,0x04},
-{0x0a,0xa0},
-{0xf0,0x3b},
-{0xf1,0x00},
-{0xf2,0x56},
-{0xf5,0x6f},
-{0xfd,0x01},
-{0x00,0xa5},
-{0x0f,0x57},
-{0x16,0x57},
-{0x17,0x95},
-{0x18,0x9d},
-{0x1b,0x57},
-{0x1c,0x9d},
-{0xb4,0x21},
-{0xb5,0x39},
-{0xb6,0x39},
-{0xb9,0x40},
-{0xba,0x4f},
-{0xbb,0x47},
-{0xbc,0x45},
-{0xbd,0x43},
-{0xbe,0x42},
-{0xbf,0x42},
-{0xc0,0x42},
-{0xc1,0x41},
-{0xc2,0x41},
-{0xc3,0x70},
-{0xc4,0x41},
-{0xc5,0x41},
-{0xc6,0x41},
-{0xca,0x70},
-{0xcb,0x0a},
-{0xfd,0x00},
+	{0xfd,0x00},
+	{0x05,0x00},
+	{0x06,0x00},
+	{0x09,0x01},
+	{0x0a,0x76},
+	{0xf0,0x62},
+	{0xf1,0x00},
+	{0xf2,0x5f},
+	{0xf5,0x78},
+	{0xfd,0x01},//P1
+	{0x00,0xba},
+	{0x0f,0x60},
+	{0x16,0x60},
+	{0x17,0xa2},
+	{0x18,0xaa},
+	{0x1b,0x60},
+	{0x1c,0xaa},
+	{0xb4,0x20},
+	{0xb5,0x3a},
+	{0xb6,0x5e},
+	{0xb9,0x40},
+	{0xba,0x4f},
+	{0xbb,0x47},
+	{0xbc,0x45},
+	{0xbd,0x43},
+	{0xbe,0x42},
+	{0xbf,0x42},
+	{0xc0,0x42},
+	{0xc1,0x41},
+	{0xc2,0x41},
+	{0xc3,0x41},
+	{0xc4,0x41},
+	{0xc5,0x78},
+	{0xc6,0x41},
+	{0xca,0x70},
+	{0xcb,0xc },
+	{0xfd,0x00},
 
 
 	{0xfd,0x00},
@@ -782,16 +779,14 @@ struct aml_camera_i2c_fig1_s SP0838_script[] = {
 	{0x35,0x40},
 	{0x36,0x80},
 	{0xFF,0xFF},
-
-     
 };
 
 //load GT2005 parameters
 void SP0838_init_regs(struct sp0838_device *dev)
 {
-    int i=0;//,j;
-    unsigned char buf[2];
-    struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+	int i=0;//,j;
+	unsigned char buf[2];
+	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
 	
 	while (1) {
 		buf[0] = SP0838_script[i].addr;
@@ -828,18 +823,18 @@ static struct aml_camera_i2c_fig1_s resolution_320x240_script[] = {
 #endif
 static struct aml_camera_i2c_fig1_s resolution_640x480_script[] = {
 #if 1
-		{0xfd, 0x00},
-		{0x47, 0x00},
-		{0x48, 0x00},
-		{0x49, 0x01},
-		{0x4a, 0xe0},
-		{0x4b, 0x00},
-		{0x4c, 0x00},
-		{0x4d, 0x02},
-		{0x4e, 0x80},
-			
-			
-		{0xff, 0xff}
+	{0xfd, 0x00},
+	{0x47, 0x00},
+	{0x48, 0x00},
+	{0x49, 0x01},
+	{0x4a, 0xe0},
+	{0x4b, 0x00},
+	{0x4c, 0x00},
+	{0x4d, 0x02},
+	{0x4e, 0x80},
+		
+		
+	{0xff, 0xff}
  #endif
 
 
@@ -848,20 +843,20 @@ static struct aml_camera_i2c_fig1_s resolution_640x480_script[] = {
 
 static int set_flip(struct sp0838_device *dev)
 {
-    struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-    unsigned char temp;
-    unsigned char buf[2];
-    temp = i2c_get_byte_add8(client, 0x31);
-    temp &= 0x9f;
-    temp |= dev->cam_info.m_flip << 5;
-    temp |= dev->cam_info.v_flip << 6;
-    buf[0] = 0x31;
-    buf[1] = temp;
-    if((i2c_put_byte_add8(client,buf, 2)) < 0) {
-        printk("fail in setting sensor orientation\n");
-        return -1;
-    }
-    return 0;
+	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+	unsigned char temp;
+	unsigned char buf[2];
+	temp = i2c_get_byte_add8(client, 0x31);
+	temp &= 0x9f;
+	temp |= dev->cam_info.m_flip << 5;
+	temp |= dev->cam_info.v_flip << 6;
+	buf[0] = 0x31;
+	buf[1] = temp;
+	if((i2c_put_byte_add8(client,buf, 2)) < 0) {
+		printk("fail in setting sensor orientation\n");
+		return -1;
+	}
+	return 0;
 }
 
 static void sp0838_set_resolution(struct sp0838_device *dev,int height,int width)
@@ -909,157 +904,156 @@ static void sp0838_set_resolution(struct sp0838_device *dev,int height,int width
 *
 *************************************************************************/
 void set_SP0838_param_wb(struct sp0838_device *dev,enum  camera_wb_flip_e para)
-	{
-	//	kal_uint16 rgain=0x80, ggain=0x80, bgain=0x80;
-		struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-	
-		unsigned char buf[4];
-	
-		unsigned char  temp_reg;
-		//temp_reg=sp0a19_read_byte(0x22);
-		//buf[0]=0x22; //SP0A19 enable auto wb
+{
+//	kal_uint16 rgain=0x80, ggain=0x80, bgain=0x80;
+	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+
+	unsigned char buf[4];
+
+	unsigned char  temp_reg;
+	//temp_reg=sp0a19_read_byte(0x22);
+	//buf[0]=0x22; //SP0A19 enable auto wb
+	buf[0]=0x32;
+	temp_reg=i2c_get_byte_add8(client,buf[0]);
+
+	printk(" camera set_SP0A19_param_wb=%d. \n ",para);
+	switch (para) {
+	case CAM_WB_AUTO:
+		buf[0]=0xfd;
+		buf[1]=0x01;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x28;
+		buf[1]=0x5a;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x29;
+		buf[1]=0x62;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
 		buf[0]=0x32;
-		temp_reg=i2c_get_byte_add8(client,buf[0]);
-	
-		printk(" camera set_SP0A19_param_wb=%d. \n ",para);
-		switch (para)
-		{
-			case CAM_WB_AUTO:
-				buf[0]=0xfd;
-				buf[1]=0x01;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x28;
-				buf[1]=0x75;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x29;
-				buf[1]=0x4e;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-				//buf[0]=0x32;
-				//buf[1]=0x15;  //temp_reg|0x10;	  // SP0A19 AWB enable bit[1]	ie. 0x02;
-				//i2c_put_byte_add8(client,buf,2);
-				break;
-	
-			case CAM_WB_CLOUD:
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-	
-				buf[0]=0x32;
-				buf[1]=0x05;//temp_reg&~0x10;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x01;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x28;
-				buf[1]=0x88;//71
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x29;
-				buf[1]=0x42;//41
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-				break;
-	
-			case CAM_WB_DAYLIGHT:	// tai yang guang
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-	
-				buf[0]=0x32;
-				buf[1]=0x05;//temp_reg&~0x10;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x01;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x28;
-				buf[1]=0x6b;//b0
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x29;
-				buf[1]=0x48;//70
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-				break;
-	
-			case CAM_WB_INCANDESCENCE:	 // bai re guang
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-	
-				buf[0]=0x32;
-				buf[1]=0x05;//temp_reg&~0x10;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x01;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x28;
-				buf[1]=0x41;//6b
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x29;
-				buf[1]=0x71;//48
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-				break;
-	
-			case CAM_WB_FLUORESCENT:   //ri guang deng
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-	
-				buf[0]=0x32;
-				buf[1]=0x05;//temp_reg&~0x10;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x01;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x28;
-				buf[1]=0x5a;//98
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x29;
-				buf[1]=0x62;//c0
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-				break;
-	
-			case CAM_WB_TUNGSTEN:	// wu si deng
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-	
-				buf[0]=0x32;
-				buf[1]=0x05;//temp_reg&~0x10;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x01;
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x28;
-				buf[1]=0x4e;//41
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0x29;
-				buf[1]=0x68;//71
-				i2c_put_byte_add8(client,buf,2);
-				buf[0]=0xfd;
-				buf[1]=0x00;
-				i2c_put_byte_add8(client,buf,2);
-				break;
-	
-			case CAM_WB_MANUAL:
-				// TODO
-				break;
-			default:
-				break;
-		}
-	//	kal_sleep_task(20);
+		buf[1]=0x15;  //temp_reg|0x10;	  // SP0A19 AWB enable bit[1]	ie. 0x02;
+		i2c_put_byte_add8(client,buf,2);
+		break;
+
+	case CAM_WB_CLOUD:
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+
+		buf[0]=0x32;
+		buf[1]=0x05;//temp_reg&~0x10;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x01;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x28;
+		buf[1]=0x88;//71
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x29;
+		buf[1]=0x42;//41
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+		break;
+
+	case CAM_WB_DAYLIGHT:	// tai yang guang
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+
+		buf[0]=0x32;
+		buf[1]=0x05;//temp_reg&~0x10;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x01;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x28;
+		buf[1]=0x6b;//b0
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x29;
+		buf[1]=0x48;//70
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+		break;
+
+	case CAM_WB_INCANDESCENCE:	 // bai re guang
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+
+		buf[0]=0x32;
+		buf[1]=0x05;//temp_reg&~0x10;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x01;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x28;
+		buf[1]=0x41;//6b
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x29;
+		buf[1]=0x71;//48
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+		break;
+
+	case CAM_WB_FLUORESCENT:   //ri guang deng
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+
+		buf[0]=0x32;
+		buf[1]=0x05;//temp_reg&~0x10;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x01;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x28;
+		buf[1]=0x98;//98
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x29;
+		buf[1]=0xc0;//c0
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+		break;
+
+	case CAM_WB_TUNGSTEN:	// wu si deng
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+
+		buf[0]=0x32;
+		buf[1]=0x05;//temp_reg&~0x10;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x01;
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x28;
+		buf[1]=0x4e;//41
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0x29;
+		buf[1]=0x68;//71
+		i2c_put_byte_add8(client,buf,2);
+		buf[0]=0xfd;
+		buf[1]=0x00;
+		i2c_put_byte_add8(client,buf,2);
+		break;
+
+	case CAM_WB_MANUAL:
+		// TODO
+		break;
+	default:
+		break;
 	}
+//	kal_sleep_task(20);
+}
 
 
 /*************************************************************************
@@ -1123,80 +1117,79 @@ void SP0838_set_param_banding(struct sp0838_device *dev,enum  camera_night_mode_
 *
 *************************************************************************/
 void set_SP0838_param_exposure(struct sp0838_device *dev,enum camera_exposure_e para)//曝光调节
-	{
-		struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
-	
-		unsigned char buf1[2];
-		unsigned char buf2[2];
-	
-		switch (para)
-		{
-				case EXPOSURE_N4_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0xc0;
-				break;
-			case EXPOSURE_N3_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0xd0;
-				break;
-			case EXPOSURE_N2_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0xe0;
-				break;
-			case EXPOSURE_N1_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0xf0;
-				break;
-			case EXPOSURE_0_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0x00;//6a
-				break;
-			case EXPOSURE_P1_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0x10;
-				break;
-			case EXPOSURE_P2_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0x20;
-				break;
-			case EXPOSURE_P3_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0x30;
-				break;
-			case EXPOSURE_P4_STEP:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0x40;
-				break;
-			default:
-				buf1[0]=0xfd;
-				buf1[1]=0x00;
-				buf2[0]=0xdc;
-				buf2[1]=0x00;
-				break; 
-		} 
-		//msleep(300);	
-		i2c_put_byte_add8(client,buf1,2);
-		i2c_put_byte_add8(client,buf2,2);
-	
-	}
+{
+	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
+
+	unsigned char buf1[2];
+	unsigned char buf2[2];
+
+	switch (para) {
+	case EXPOSURE_N4_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0xc0;
+		break;
+	case EXPOSURE_N3_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0xd0;
+		break;
+	case EXPOSURE_N2_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0xe0;
+		break;
+	case EXPOSURE_N1_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0xf0;
+		break;
+	case EXPOSURE_0_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0x00;//6a
+		break;
+	case EXPOSURE_P1_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0x10;
+		break;
+	case EXPOSURE_P2_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0x20;
+		break;
+	case EXPOSURE_P3_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0x30;
+		break;
+	case EXPOSURE_P4_STEP:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0x40;
+		break;
+	default:
+		buf1[0]=0xfd;
+		buf1[1]=0x00;
+		buf2[0]=0xdc;
+		buf2[1]=0x00;
+		break; 
+	} 
+	//msleep(300);	
+	i2c_put_byte_add8(client,buf1,2);
+	i2c_put_byte_add8(client,buf2,2);
+
+}
 
 
 /*************************************************************************
@@ -1391,15 +1384,15 @@ static void sp0838_thread_tick(struct sp0838_fh *fh)
 
 	buf = list_entry(dma_q->active.next,
 			 struct sp0838_buffer, vb.queue);
-    dprintk(dev, 1, "%s\n", __func__);
-    dprintk(dev, 1, "list entry get buf is %x\n",(unsigned)buf);
+	dprintk(dev, 1, "%s\n", __func__);
+	dprintk(dev, 1, "list entry get buf is %x\n",(unsigned)buf);
 
-    if(!(fh->f_flags & O_NONBLOCK)){
-        /* Nobody is waiting on this buffer, return */
-        if (!waitqueue_active(&buf->vb.done))
-            goto unlock;
-    }
-    buf->vb.state = VIDEOBUF_ACTIVE;
+	if(!(fh->f_flags & O_NONBLOCK)){
+		/* Nobody is waiting on this buffer, return */
+		if (!waitqueue_active(&buf->vb.done))
+			goto unlock;
+	}
+	buf->vb.state = VIDEOBUF_ACTIVE;
 
 	list_del(&buf->vb.queue);
 
@@ -1555,7 +1548,7 @@ buffer_prepare(struct videobuf_queue *vq, struct videobuf_buffer *vb,
 	struct sp0838_device    *dev = fh->dev;
 	struct sp0838_buffer *buf = container_of(vb, struct sp0838_buffer, vb);
 	int rc;
-    //int bytes = fh->fmt->depth >> 3 ;
+	//int bytes = fh->fmt->depth >> 3 ;
 	dprintk(dev, 1, "%s, field=%d\n", __func__, field);
 
 	BUG_ON(NULL == fh->fmt);
@@ -1663,21 +1656,20 @@ static int vidioc_enum_frameintervals(struct file *file, void *priv,
 {
         unsigned int k;
 
-    if(fival->index > ARRAY_SIZE(sp0838_frmivalenum))
-        return -EINVAL;
+	if(fival->index > ARRAY_SIZE(sp0838_frmivalenum))
+		return -EINVAL;
+	
+	for(k =0; k< ARRAY_SIZE(sp0838_frmivalenum); k++) {
+		if( (fival->index==sp0838_frmivalenum[k].index)&&
+				(fival->pixel_format ==sp0838_frmivalenum[k].pixel_format )&&
+				(fival->width=sp0838_frmivalenum[k].width)&&
+				(fival->height==sp0838_frmivalenum[k].height)){
+			memcpy( fival, &sp0838_frmivalenum[k], sizeof(struct v4l2_frmivalenum));
+			return 0;
+		}
+	}
 
-    for(k =0; k< ARRAY_SIZE(sp0838_frmivalenum); k++)
-    {
-        if( (fival->index==sp0838_frmivalenum[k].index)&&
-                (fival->pixel_format ==sp0838_frmivalenum[k].pixel_format )&&
-                (fival->width=sp0838_frmivalenum[k].width)&&
-                (fival->height==sp0838_frmivalenum[k].height)){
-            memcpy( fival, &sp0838_frmivalenum[k], sizeof(struct v4l2_frmivalenum));
-            return 0;
-        }
-    }
-
-    return -EINVAL;
+	return -EINVAL;
 
 }
 static int vidioc_g_fmt_vid_cap(struct file *file, void *priv,
@@ -1784,21 +1776,21 @@ out:
 static int vidioc_g_parm(struct file *file, void *priv,
         struct v4l2_streamparm *parms)
 {
-    struct sp0838_fh *fh = priv;
-    struct sp0838_device *dev = fh->dev;
-    struct v4l2_captureparm *cp = &parms->parm.capture;
-
-    dprintk(dev,3,"vidioc_g_parm\n");
-    if (parms->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
-        return -EINVAL;
-
-    memset(cp, 0, sizeof(struct v4l2_captureparm));
-    cp->capability = V4L2_CAP_TIMEPERFRAME;
-
-    cp->timeperframe = sp0838_frmintervals_active;
-    printk("g_parm,deno=%d, numerator=%d\n", cp->timeperframe.denominator,
-            cp->timeperframe.numerator );
-    return 0;
+	struct sp0838_fh *fh = priv;
+	struct sp0838_device *dev = fh->dev;
+	struct v4l2_captureparm *cp = &parms->parm.capture;
+	
+	dprintk(dev,3,"vidioc_g_parm\n");
+	if (parms->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+		return -EINVAL;
+	
+	memset(cp, 0, sizeof(struct v4l2_captureparm));
+	cp->capability = V4L2_CAP_TIMEPERFRAME;
+	
+	cp->timeperframe = sp0838_frmintervals_active;
+	printk("g_parm,deno=%d, numerator=%d\n", cp->timeperframe.denominator,
+	        cp->timeperframe.numerator );
+	return 0;
 }
 static int vidioc_reqbufs(struct file *file, void *priv,
 			  struct v4l2_requestbuffers *p)
@@ -1873,8 +1865,8 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	printk("0a19,h=%d, v=%d, frame_rate=%d\n", sp0838_h_active, sp0838_v_active, sp0838_frmintervals_active.denominator);
 	ret =  videobuf_streamon(&fh->vb_vidq);
 	if(ret == 0){
-	    vops->start_tvin_service(0,&para);
-	    fh->stream_on        = 1;
+		vops->start_tvin_service(0,&para);
+		fh->stream_on        = 1;
 	}
 	return ret;
 }
@@ -2039,9 +2031,9 @@ static int sp0838_open(struct file *file)
 	resource_size_t mem_start = 0;
 	unsigned int mem_size = 0;
 #if CONFIG_CMA
-    retval = vm_init_buf(16*SZ_1M);
-    if(retval <0)
-        return -1;
+	retval = vm_init_buf(16*SZ_1M);
+	if(retval <0)
+		return -1;
 #endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 	switch_mod_gate_by_name("ge2d", 1);
@@ -2065,7 +2057,7 @@ static int sp0838_open(struct file *file)
     	/* init video dma queues */
 	INIT_LIST_HEAD(&dev->vidq.active);
 	init_waitqueue_head(&dev->vidq.wq);
-    spin_lock_init(&dev->slock);
+	spin_lock_init(&dev->slock);
 	/* allocate + initialize per filehandle data */
 	fh = kzalloc(sizeof(*fh), GFP_KERNEL);
 	if (NULL == fh) {
@@ -2090,11 +2082,11 @@ static int sp0838_open(struct file *file)
 	/* Resets frame counters */
 	dev->jiffies = jiffies;
 
-//    TVIN_SIG_FMT_CAMERA_640X480P_30Hz,
-//    TVIN_SIG_FMT_CAMERA_800X600P_30Hz,
-//    TVIN_SIG_FMT_CAMERA_1024X768P_30Hz, // 190
-//    TVIN_SIG_FMT_CAMERA_1920X1080P_30Hz,
-//    TVIN_SIG_FMT_CAMERA_1280X720P_30Hz,
+//	TVIN_SIG_FMT_CAMERA_640X480P_30Hz,
+//	TVIN_SIG_FMT_CAMERA_800X600P_30Hz,
+//	TVIN_SIG_FMT_CAMERA_1024X768P_30Hz, // 190
+//	TVIN_SIG_FMT_CAMERA_1920X1080P_30Hz,
+//	TVIN_SIG_FMT_CAMERA_1280X720P_30Hz,
 
 	get_vm_buf_info(&mem_start, &mem_size, NULL);
 	fh->res.start = mem_start;
