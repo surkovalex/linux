@@ -51,6 +51,7 @@ void root_func(){
           reg = <0xc4200000 0x1000>;
           arm,data-latency = <3 3 3>;
           arm,tag-latency = <2 2 2>;
+          arm,filter-ranges = <0x100000 0xc0000000>;
           cache-unified;
           cache-level = <2>;
           aux-instruction_prefetch;
@@ -78,7 +79,7 @@ void root_func(){
 		device_type = "memory";
 		aml_reserved_start = <0x05000000>; /**reserved memory start */
 		aml_reserved_end = <0x1a5fffff>;/**reserved memory end */
-		linux,usable-memory = <0x00000000 0x04000000 0x1a600000 0x65a00000>;
+		linux,usable-memory = <0x00200000 0x04000000 0x1a600000 0x65a00000>;
 	};
 /// ***************************************************************************************
 ///	-	GIC
