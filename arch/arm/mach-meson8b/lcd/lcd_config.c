@@ -1142,7 +1142,7 @@ static void lcd_sync_duration(Lcd_Config_t *pConf)
 	lcd_clk = pll_out_clk  / (pre_div * post_div * xd);
 	if (pConf->lcd_basic.lcd_type == LCD_DIGITAL_MIPI) {
 		pConf->lcd_control.mipi_config->bit_rate = pll_out_clk;
-		printf("mipi-dsi bit rate: %d.%03dMHz\n", (pConf->lcd_control.mipi_config->bit_rate / 1000000), ((pConf->lcd_control.mipi_config->bit_rate / 1000) % 1000));
+		printk("mipi-dsi bit rate: %d.%03dMHz\n", (pConf->lcd_control.mipi_config->bit_rate / 1000000), ((pConf->lcd_control.mipi_config->bit_rate / 1000) % 1000));
 	}
 	pConf->lcd_timing.lcd_clk = lcd_clk;
 	sync_duration = ((lcd_clk / h_period) * 100) / v_period;

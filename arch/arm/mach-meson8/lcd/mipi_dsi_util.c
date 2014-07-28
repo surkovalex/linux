@@ -709,8 +709,8 @@ static void dsi_video_config(Lcd_Config_t *pConf)
 #define DSI_PACKET_HEADER_CRC      6 //4(header)+2(CRC)
 static void dsi_non_burst_chunk_config(Lcd_Config_t *pConf)
 {
-    int pixel_per_chunk, num_of_chunk, vid_null_size;
-    int byte_per_chunk, total_bytes_per_chunk, chunk_overhead;
+    int pixel_per_chunk=0, num_of_chunk=0, vid_null_size=0;
+    int byte_per_chunk=0, total_bytes_per_chunk=0, chunk_overhead=0;
     int bit_rate_pclk_factor;
     int lane_num;
     int i, done;
