@@ -911,28 +911,11 @@ void aml_cs_dont_care (struct amlsd_platform * pdata) // chip select don't care
 
 static int aml_is_card_insert (struct amlsd_platform * pdata)
 {
-	int ret=0,i;
-	int card_in = 0;
-	int card_out = 0;
-	if(pdata->gpio_cd){
-		for(i=0;;i++){
-			ret = amlogic_get_value(pdata->gpio_cd, MODULE_NAME); // 1: no inserted  0: inserted
-			if(ret){
-				card_in = 0;
-				card_out++;
-				if(card_out>10)
-					break;
-			}
-			else{
-				card_out = 0;
-				card_in++;
-				if(card_in>10)
-					break;
-			}
-			mdelay(5);		
-		}
-	}
-     sdio_err("card %s\n", ret?"OUT":"IN");
+	int ret=0;
+
+	if(pdata->gpio_cd)
+		ret = amlogic_get_value(pdata->gpio_cd, MODULE_NAME); // 1: no inserted  0: inserted
+    // sdio_err("card %s\n", ret?"OUT":"IN");
 
     if(!pdata->gpio_cd_level)
         ret = !ret; // reverse, so ---- 0: no inserted  1: inserted
@@ -972,30 +955,44 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
 	return 0;
 #else
     int dat3, i;
-	int is_sd = 0;
-	int is_uart =0;
-	
+    int cnt=0;
+
     if(pdata->is_sduart)
         return 1;
-        
-	CLEAR_CBUS_REG_MASK(PERIPHS_PIN_MUX_2, 0x3f<<10);  // need clear card pinmux
-	
-    for (i = 0;;i++) {
+
+    for (i = 0; i < 10; i++) {
         dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
         if(dat3 == 1){
-            is_sd++;
-            is_uart = 0;
-            if(is_sd >10)
-            	return 0; // NOT uart
+            // if (cnt)
+                // sdhc_err("cnt=%d\n", cnt);
+            return 0; // NOT uart
         }
-        else{
-        	is_sd = 0;
-        	is_uart++;
-        	if(is_uart > 10)
-        		return 1;
-        }
-        mdelay(5);
+        cnt++;
+        msleep(10);
     }
+    // sdhc_err("cnt=%d\n", cnt);
+    return 1; // uart in
+
+    // dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
+    // if(dat3 == 0){
+        // return 1;
+    // }
+
+    // if (pdata->gpio_dat3 != 0){
+        // ret = amlogic_gpio_request_one(pdata->gpio_dat3, GPIOF_IN, MODULE_NAME);
+        // if(ret){
+            // printk("DAT3 pinmux used, return no uart\n");
+            // return 0;
+        // }
+        // CHECK_RET(ret);
+        // dat3 = amlogic_get_value(pdata->gpio_dat3, MODULE_NAME);
+        // // print_tmp("sd gpio_dat3=%d\n", amlogic_get_value(pdata->gpio_dat3, MODULE_NAME));
+        // amlogic_gpio_free(pdata->gpio_dat3, MODULE_NAME);
+        // if(dat3 == 0){
+            // return 1;
+        // }
+    // }
+    // return 0;
 #endif
 }
 
@@ -1154,24 +1151,24 @@ void aml_sd_uart_detect (struct amlsd_platform* pdata)
 
 irqreturn_t aml_irq_cd_thread(int irq, void *data)
 {
-	
 	struct amlsd_platform *pdata = (struct amlsd_platform*)data;
 
+    mdelay(20);
     aml_sd_uart_detect(pdata);
     
     if((pdata->is_in == 0) && aml_card_type_sd(pdata)) {
         pdata->host->init_flag = 0;
     }
-    
+        
+    //mdelay(500);
     mmc_detect_change(pdata->mmc, msecs_to_jiffies(200));
-	
-	
+
 	return IRQ_HANDLED;
 }
 
 irqreturn_t aml_sd_irq_cd(int irq, void *dev_id)
 {
-    printk("cd dev_id %x\n", dev_id);
+    // printk("cd dev_id %x\n", dev_id);
 	return IRQ_WAKE_THREAD;
 }
 
