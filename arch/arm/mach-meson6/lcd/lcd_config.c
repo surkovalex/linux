@@ -76,7 +76,7 @@ static void lcd_ports_ctrl_lvds(Bool_t status)
 		WRITE_LCD_REG_BITS(LVDS_GEN_CNTL, 0, 3, 1);	//disable lvds fifo
 	}
 
-	DBG_PRINT("%s: %s\n", __FUNCTION__, (status ? "ON" : "OFF"));
+	lcd_print("%s: %s\n", __FUNCTION__, (status ? "ON" : "OFF"));
 }
 
 static void lcd_ports_ctrl_ttl(Bool_t status)
@@ -145,7 +145,7 @@ static void lcd_ports_ctrl_ttl(Bool_t status)
 			return;
 		}
 	}
-	DBG_PRINT("%s: %s\n", __FUNCTION__, (status ? "ON" : "OFF"));
+	lcd_print("%s: %s\n", __FUNCTION__, (status ? "ON" : "OFF"));
 }
 
 static void lcd_ports_ctrl_mlvds(Bool_t status)
@@ -220,7 +220,7 @@ static void write_gamma_table(u16 *data, u32 rgb_mask, u16 gamma_coeff, u32 gamm
 
 static void set_gamma_table_lcd(unsigned gamma_en)
 {
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
 
 	lcd_gamma_init_err = 0;
 	if (lcd_Conf->lcd_basic.lcd_type == LCD_DIGITAL_TTL)
@@ -335,7 +335,7 @@ static void set_tcon_lvds(Lcd_Config_t *pConf)
 	Lcd_Timing_t *tcon_adr = &(pConf->lcd_timing);
 	unsigned hs_pol_adj, vs_pol_adj;
 
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
 	
 	set_gamma_table_lcd(((pConf->lcd_effect.gamma_ctrl >> GAMMA_CTRL_EN) & 1));
 	
@@ -387,7 +387,7 @@ static void set_tcon_ttl(Lcd_Config_t *pConf)
 	Lcd_Timing_t *tcon_adr = &(pConf->lcd_timing);
 	unsigned hs_pol_adj, vs_pol_adj;
 	
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
 
 	set_gamma_table_lcd(((pConf->lcd_effect.gamma_ctrl >> GAMMA_CTRL_EN) & 1));
 
@@ -465,7 +465,7 @@ static void set_tcon_mlvds(Lcd_Config_t *pConf)
     int dual_wr_rd_start;
     int i = 0;
 	
-	DBG_PRINT("%s.\n", __FUNCTION__);
+	lcd_print("%s.\n", __FUNCTION__);
 
 	set_gamma_table_lcd(((pConf->lcd_effect.gamma_ctrl >> GAMMA_CTRL_EN) & 1));
 
@@ -586,7 +586,7 @@ static void set_tcon_mlvds(Lcd_Config_t *pConf)
 	WRITE_LCD_REG(MLVDS_DUAL_GATE_CTL_HI,  (data32 >> 16));
 	WRITE_LCD_REG(MLVDS_DUAL_GATE_CTL_LO, (data32 & 0xffff));
 
-	DBG_PRINT("write minilvds tcon 0~7.\n");
+	lcd_print("write minilvds tcon 0~7.\n");
 	for(i = 0; i < 8; i++) {
 		write_tcon_double(&mlvds_tconfig_l[i]);
 	}
@@ -601,7 +601,7 @@ static void set_tcon_mlvds(Lcd_Config_t *pConf)
 static void set_lcd_spread_spectrum(int ss_level)
 {
 	unsigned pll_ctrl2, pll_ctrl3, pll_ctrl4;
-	DBG_PRINT("%s.\n", __FUNCTION__);
+	lcd_print("%s.\n", __FUNCTION__);
 	
 	switch (ss_level) {
 		case 1:  //about 0.5%
@@ -655,7 +655,7 @@ static void vclk_set_lcd(int lcd_type, unsigned long pll_reg, unsigned long vid_
 	unsigned long flags = 0;
 	spin_lock_irqsave(&lcd_clk_lock, flags);
 	
-	DBG_PRINT("%s.\n", __FUNCTION__);
+	lcd_print("%s.\n", __FUNCTION__);
 
 	vid_div_reg = ((vid_div_reg & 0x1ffff) | (1 << 16) | (1 << 15) | (0x3 << 0));	//select vid2_pll and enable clk
 	xd = (clk_ctrl_reg >> CLK_CTRL_XD) & 0xff;
@@ -735,7 +735,7 @@ static void set_pll_lcd(Lcd_Config_t *pConf)
     int lcd_type, ss_level;
     unsigned pll_div_post = 0, phy_clk_div2 = 0;
 
-    DBG_PRINT("%s\n", __FUNCTION__);
+    lcd_print("%s\n", __FUNCTION__);
 
     pll_reg = pConf->lcd_timing.pll_ctrl;
     div_reg = pConf->lcd_timing.div_ctrl;
@@ -800,7 +800,7 @@ static void set_pll_mlvds(Lcd_Config_t *pConf)
     int xd;
 	int lcd_type, ss_level;
 	
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
 	
     pll_reg = pConf->lcd_timing.pll_ctrl;
     div_reg = pConf->lcd_timing.div_ctrl;
@@ -853,7 +853,7 @@ static void set_pll_mlvds(Lcd_Config_t *pConf)
 	
 	div_reg = (div_reg | (1 << DIV_CTRL_POST_SEL) | (1 << DIV_CTRL_LVDS_CLK_EN) | ((pll_div_post-1) << DIV_CTRL_DIV_POST) | (phy_clk_div2 << DIV_CTRL_PHY_CLK_DIV2));
 	clk_reg = (pConf->lcd_timing.clk_ctrl & ~(0xff << CLK_CTRL_XD)) | (xd << CLK_CTRL_XD);
-	DBG_PRINT("ss_level=%u(%s), pll_reg=0x%x, div_reg=0x%x, xd=%d.\n", ss_level, lcd_ss_level_table[ss_level], pll_reg, div_reg, xd);
+	lcd_print("ss_level=%u(%s), pll_reg=0x%x, div_reg=0x%x, xd=%d.\n", ss_level, lcd_ss_level_table[ss_level], pll_reg, div_reg, xd);
 	vclk_set_lcd(lcd_type, pll_reg, div_reg, clk_reg);
 	set_lcd_spread_spectrum(ss_level);
 	
@@ -957,7 +957,7 @@ static void set_pll_mlvds(Lcd_Config_t *pConf)
 
 static void set_venc_ttl(Lcd_Config_t *pConf)
 {
-    DBG_PRINT("%s\n", __FUNCTION__);
+    lcd_print("%s\n", __FUNCTION__);
     WRITE_LCD_REG(ENCT_VIDEO_EN,		0);
 #ifdef CONFIG_AM_TV_OUTPUT2
     if(pConf->lcd_misc_ctrl.vpp_sel)
@@ -994,7 +994,7 @@ static void set_venc_ttl(Lcd_Config_t *pConf)
 
 static void set_venc_lvds(Lcd_Config_t *pConf)
 {
-	DBG_PRINT("%s\n",__FUNCTION__);
+	lcd_print("%s\n",__FUNCTION__);
 
 	WRITE_LCD_REG(ENCL_VIDEO_EN, 0);
 #ifdef CONFIG_AM_TV_OUTPUT2
@@ -1042,7 +1042,7 @@ static void set_venc_mlvds(Lcd_Config_t *pConf)
 	int height = pConf->lcd_basic.v_active;
 	int max_height = pConf->lcd_basic.v_period;
 	
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
 
     WRITE_LCD_REG(ENCL_VIDEO_EN,           0);
 
@@ -1092,7 +1092,7 @@ static void set_control_lvds(Lcd_Config_t *pConf)
 	unsigned lvds_repack, pn_swap, bit_num;
 	unsigned data32;
 	
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
 
 	WRITE_LCD_REG_BITS(LVDS_GEN_CNTL, 0, 3, 1); // disable lvds fifo
 	
@@ -1164,7 +1164,7 @@ static void set_control_mlvds(Lcd_Config_t *pConf)
 
     unsigned long data32;
 	
-	DBG_PRINT("%s\n", __FUNCTION__);
+	lcd_print("%s\n", __FUNCTION__);
     
     mlvds_insert_start = test_dual_gate ?
                            ((test_bit_num == 8) ? ((test_pair_num == 6) ? 0x9f : 0xa9) :
@@ -1242,7 +1242,7 @@ static void set_control_mlvds(Lcd_Config_t *pConf)
 static void init_phy_lvds(Lcd_Config_t *pConf)
 {
     unsigned swing_ctrl;
-    DBG_PRINT("%s\n", __FUNCTION__);
+    lcd_print("%s\n", __FUNCTION__);
 	
     WRITE_LCD_REG(LVDS_PHY_CNTL3, 0xee1);
     WRITE_LCD_REG(LVDS_PHY_CNTL4 ,0);
@@ -1279,7 +1279,7 @@ static void init_phy_lvds(Lcd_Config_t *pConf)
 
 static void set_video_adjust(Lcd_Config_t *pConf)
 {
-	DBG_PRINT("vadj_brightness = 0x%x, vadj_contrast = 0x%x, vadj_saturation = 0x%x.\n", pConf->lcd_effect.vadj_brightness, pConf->lcd_effect.vadj_contrast, pConf->lcd_effect.vadj_saturation);
+	lcd_print("vadj_brightness = 0x%x, vadj_contrast = 0x%x, vadj_saturation = 0x%x.\n", pConf->lcd_effect.vadj_brightness, pConf->lcd_effect.vadj_contrast, pConf->lcd_effect.vadj_saturation);
 	WRITE_LCD_REG(VPP_VADJ2_Y, (pConf->lcd_effect.vadj_brightness << 8) | (pConf->lcd_effect.vadj_contrast << 0));
 	WRITE_LCD_REG(VPP_VADJ2_MA_MB, (pConf->lcd_effect.vadj_saturation << 16));
 	WRITE_LCD_REG(VPP_VADJ2_MC_MD, (pConf->lcd_effect.vadj_saturation << 0));
@@ -1732,9 +1732,9 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
     pConf->lcd_timing.de_ve_addr = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
 #endif
 
-    //DBG_PRINT("hs_hs_addr=%d, hs_he_addr=%d, hs_vs_addr=%d, hs_ve_addr=%d\n", pConf->lcd_timing.hs_hs_addr, pConf->lcd_timing.hs_he_addr, pConf->lcd_timing.hs_vs_addr, pConf->lcd_timing.hs_ve_addr);
-    //DBG_PRINT("vs_hs_addr=%d, vs_he_addr=%d, vs_vs_addr=%d, vs_ve_addr=%d\n", pConf->lcd_timing.vs_hs_addr, pConf->lcd_timing.vs_he_addr, pConf->lcd_timing.vs_vs_addr, pConf->lcd_timing.vs_ve_addr);
-    //DBG_PRINT("de_hs_addr=%d, de_he_addr=%d, de_vs_addr=%d, de_ve_addr=%d\n", pConf->lcd_timing.de_hs_addr, pConf->lcd_timing.de_he_addr, pConf->lcd_timing.de_vs_addr, pConf->lcd_timing.de_ve_addr);
+    //lcd_print("hs_hs_addr=%d, hs_he_addr=%d, hs_vs_addr=%d, hs_ve_addr=%d\n", pConf->lcd_timing.hs_hs_addr, pConf->lcd_timing.hs_he_addr, pConf->lcd_timing.hs_vs_addr, pConf->lcd_timing.hs_ve_addr);
+    //lcd_print("vs_hs_addr=%d, vs_he_addr=%d, vs_vs_addr=%d, vs_ve_addr=%d\n", pConf->lcd_timing.vs_hs_addr, pConf->lcd_timing.vs_he_addr, pConf->lcd_timing.vs_vs_addr, pConf->lcd_timing.vs_ve_addr);
+    //lcd_print("de_hs_addr=%d, de_he_addr=%d, de_vs_addr=%d, de_ve_addr=%d\n", pConf->lcd_timing.de_hs_addr, pConf->lcd_timing.de_he_addr, pConf->lcd_timing.de_vs_addr, pConf->lcd_timing.de_ve_addr);
 }
 
 static void lcd_control_config_pre(Lcd_Config_t *pConf)
