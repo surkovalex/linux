@@ -883,6 +883,16 @@ void audio_i2s_mute(void)
     WRITE_MPEG_REG_BITS(AIU_958_CTRL, 3, 3, 2);
 }
 
+void audio_mute_left_right(unsigned flag)
+{
+    if (flag == 0) //right
+    {
+        WRITE_MPEG_REG_BITS(AIU_958_CTRL, 1, 3, 2);
+    } else if (flag == 1) //left
+    {
+        WRITE_MPEG_REG_BITS(AIU_958_CTRL, 2, 3, 2);
+    }
+}
 void audio_hw_958_reset(unsigned slow_domain, unsigned fast_domain)
 {
 	WRITE_MPEG_REG(AIU_958_DCU_FF_CTRL,0);

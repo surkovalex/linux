@@ -68,6 +68,9 @@ extern unsigned int read_i2s_mute_swap_reg(void);
 extern void audio_i2s_swap_left_right(unsigned int flag);
 extern void audio_in_i2s_set_buf(u32 addr, u32 size);
 extern void audio_in_i2s_enable(int flag);
+extern void audio_mute_left_right(unsigned flag);
+extern void audio_i2s_unmute(void);
+extern void audio_i2s_mute(void);
 extern int audio_out_buf_ready ;
 extern int audio_in_buf_ready;
 
@@ -108,7 +111,8 @@ extern unsigned int timestamp_resample_type_flag;
 static unsigned short* dump_buf = 0;
 static unsigned int dump_size = 512*1024;
 static unsigned int dump_off = 0;
-
+static unsigned int mute_left_right = 0;
+static unsigned int mute_unmute = 0;
 
 extern int aml_i2s_playback_enable;
 extern unsigned int dac_mute_const;
@@ -1500,6 +1504,17 @@ static long amaudio_ioctl(struct file *file,
         case AMAUDIO_IOC_DIRECT_RIGHT_GAIN:
             direct_audio_right_gain(arg);
             break;
+        case AMAUDIO_IOC_MUTE_LEFT_RIGHT_CHANNEL:
+            audio_mute_left_right(arg);
+            break;
+        case AMAUDIO_IOC_MUTE_UNMUTE:
+            if (arg == 1) {
+                audio_i2s_mute();
+            } else if (arg == 0) {
+                audio_i2s_unmute();
+            }
+            break;
+
 		default:
 			break;
 		
@@ -1600,6 +1615,17 @@ static long amaudio_utils_ioctl(struct file *file,
             put_user(resample_delta,(__s32 __user *)arg);
             printk("set resample_delta=%d\n ",resample_delta);
             break;
+        case AMAUDIO_IOC_MUTE_LEFT_RIGHT_CHANNEL:
+            audio_mute_left_right(arg);
+            break;
+        case AMAUDIO_IOC_MUTE_UNMUTE:
+            if (arg == 1) {
+                audio_i2s_mute();
+            } else if (arg == 0) {
+                audio_i2s_unmute();
+            }
+            break;
+
         default:
         	break;
     };
@@ -1977,6 +2003,62 @@ static ssize_t show_debug(struct class* class, struct class_attribute* attr,  ch
       return 0;
 }
 
+static ssize_t show_mute_left_right(struct class* class, struct class_attribute* attr, char* buf)
+{
+    ssize_t ret = 0;
+
+    ret = sprintf(buf, "echo l/r/s/c to /sys/class/amaudio/mute_left_right file to mute left or right channel\n"
+                         " 1: mute left channel \n"
+                         " 0: mute right channel \n"
+                         " mute_left_right:%d \n", mute_left_right);
+
+    return ret;
+}
+
+static ssize_t store_mute_left_right(struct class* class, struct class_attribute* attr, const char* buf, size_t count)
+{
+    switch(buf[0]) {
+        case '1':
+            audio_mute_left_right(1);
+            break;
+
+        case '0':
+            audio_mute_left_right(0);
+            break;
+
+        default:
+            printk("unknow command!\n");
+    }
+
+    return count;
+}
+
+static ssize_t show_mute_unmute(struct class* class, struct class_attribute* attr, char* buf)
+{
+    ssize_t ret = 0;
+
+    ret = sprintf(buf, " 1: mute, 0:unmute: mute_unmute:%d,\n", mute_unmute);
+
+    return ret;
+}
+
+static ssize_t store_mute_unmute(struct class* class, struct class_attribute* attr, const char* buf, size_t count)
+{
+    switch(buf[0]) {
+        case '1':
+            audio_i2s_mute();
+            break;
+
+        case '0':
+            audio_i2s_unmute();
+            break;
+
+        default:
+            printk("unknow command!\n");
+    }
+
+    return count;
+}
 
 static struct class_attribute amaudio_attrs[]={
   __ATTR(enable_direct_audio,  S_IRUGO | S_IWUSR, show_direct_flag, store_direct_flag),
@@ -1993,7 +2075,9 @@ static struct class_attribute amaudio_attrs[]={
   __ATTR(dac_mute_const, S_IRUGO | S_IWUSR, dac_mute_const_show, dac_mute_const_store),
   __ATTR_RO(output_enable),
   __ATTR(record_type, S_IRUGO | S_IWUSR, record_type_show, record_type_store),  
-   __ATTR(debug, S_IRUGO | S_IWUSR | S_IWGRP, show_debug, store_debug),
+  __ATTR(debug, S_IRUGO | S_IWUSR | S_IWGRP, show_debug, store_debug),
+  __ATTR(mute_left_right, S_IRUGO | S_IWUSR, show_mute_left_right, store_mute_left_right),  
+  __ATTR(mute_unmute, S_IRUGO | S_IWUSR, show_mute_unmute, store_mute_unmute),  
   __ATTR_NULL
 };
 
