@@ -50,7 +50,13 @@
 #define ERROR_LOCAL_RESET_COUNT   100
 #define ERROR_SYSTEM_RESET_COUNT   200
 
+#define PTS_NORMAL                0
+#define PTS_NONE_REF_USE_DURATION 1
 
+#define PTS_MODE_SWITCHING_THRESHOLD           3
+#define PTS_MODE_SWITCHING_RECOVERY_THREASHOLD 3
+
+#define DUR2PTS(x) ((x)*90/96)
 
 static int  vh265_vf_states(vframe_states_t *states, void*);
 static vframe_t *vh265_vf_peek(void*);
@@ -76,6 +82,7 @@ static const struct vframe_operations_s vh265_vf_provider = {
 static struct vframe_provider_s vh265_vf_prov;
 
 static u32 frame_width, frame_height, frame_dur, frame_ar;
+static bool get_frame_dur;
 static struct timer_list recycle_timer;
 static u32 stat;
 static u32 error_watchdog_count;
@@ -93,6 +100,7 @@ static u32 error_watchdog_count;
 #define H265_DEBUG_DIS_SYS_ERROR_PROC   0x20000
 #define H265_DEBUG_DUMP_PIC_LIST       0x40000
 #define H265_DEBUG_TRIG_SLICE_SEGMENT_PROC 0x80000
+#define H265_DEBUG_OUT_PTS                  0x100000
 
 static u32 debug = 0;
 /*for debug*/
@@ -132,8 +140,6 @@ static int fatal_error;
 static DEFINE_MUTEX(vh265_mutex);
 
 static struct device *cma_dev;
-
-static int  prepare_display_buf(int index, int stream_offset);
 
 /**************************************************
 
@@ -408,7 +414,13 @@ typedef union PARAM_{
         unsigned short first_slice_segment_in_pic_flag;       
         unsigned short m_temporalId;                          
         unsigned short m_nalUnitType;  
-        unsigned short reserved[8];
+        
+        unsigned short vui_num_units_in_tick_hi;
+        unsigned short vui_num_units_in_tick_lo;
+        unsigned short vui_time_scale_hi;
+        unsigned short vui_time_scale_lo;
+        unsigned short reserved[4];
+        
         unsigned short modification_list[0x20];                      
     }p;
 }param_t;
@@ -730,8 +742,17 @@ typedef struct hevc_state_{
     unsigned char ignore_bufmgr_error; /* bit 0, for decoding; bit 1, for displaying */
     int PB_skip_mode;
     int PB_skip_count_after_decoding;
+
+    int pts_mode;
+    int last_lookup_pts;
+    int last_pts;
+    u64 last_lookup_pts_us64;
+    u64 last_pts_us64;
+    int pts_mode_switching_count;
+    int pts_mode_recovery_count;
 }hevc_stru_t;
 
+static int  prepare_display_buf(hevc_stru_t* hevc, int index, int stream_offset, unsigned short slice_type);
 
 static void hevc_init_stru(hevc_stru_t* hevc, BuffInfo_t* buf_spec_i, buff_t* mc_buf_i)
 {
@@ -770,7 +791,15 @@ static void hevc_init_stru(hevc_stru_t* hevc, BuffInfo_t* buf_spec_i, buff_t* mc
     hevc->have_sps = 0;
     hevc->have_pps = 0;
     hevc->have_valid_start_slice = 0;
-    
+
+    hevc->pts_mode = PTS_NORMAL;
+    hevc->last_pts = 0;
+    hevc->last_lookup_pts = 0;
+    hevc->last_pts_us64 = 0;
+    hevc->last_lookup_pts_us64 = 0;
+    hevc->pts_mode_switching_count = 0;
+    hevc->pts_mode_recovery_count = 0;
+
     hevc->PB_skip_mode = nal_skip_policy&0x3;
     hevc->PB_skip_count_after_decoding = (nal_skip_policy>>16)&0xffff;
     if(hevc->PB_skip_mode==0){
@@ -977,7 +1006,7 @@ static void dump_pic_list(hevc_stru_t* hevc)
 	}
 }
 
-static reset_pic_list(hevc_stru_t* hevc)
+static void reset_pic_list(hevc_stru_t* hevc)
 {
     
 	PIC_t* pic = hevc->decode_pic_list;
@@ -2353,7 +2382,7 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
                             if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d ==> Debug mode or error, recycle it\n", pic_display->POC, pic_display->decode_idx);
                         }
                         else{                    
-                            prepare_display_buf(pic_display->index, pic_display->stream_offset);
+                            prepare_display_buf(hevc, pic_display->index, pic_display->stream_offset, pic_display->slice_type);
                             if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d\n", pic_display->POC, pic_display->decode_idx);
                         }
                     }
@@ -2396,7 +2425,7 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
                              if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d ==> Debug mode or error, recycle it\n", pic_display->POC, pic_display->decode_idx);
                         }
                         else{
-                            prepare_display_buf(pic_display->index, pic_display->stream_offset);
+                            prepare_display_buf(hevc, pic_display->index, pic_display->stream_offset, pic_display->slice_type);
                             if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d\n", pic_display->POC, pic_display->decode_idx);
                         }
                     }
@@ -2415,7 +2444,7 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
             }            
             if(debug&H265_DEBUG_DISPLAY_CUR_FRAME){
                 hevc->cur_pic->output_ready = 1;
-                prepare_display_buf(hevc->cur_pic->index, READ_VREG(HEVC_SHIFT_BYTE_COUNT));    
+                prepare_display_buf(hevc, hevc->cur_pic->index, READ_VREG(HEVC_SHIFT_BYTE_COUNT), hevc->cur_pic->slice_type);    
                 hevc->wait_buf = 2;
                 return -1;
             }        
@@ -2602,7 +2631,8 @@ static param_t  rpm_param;
 
 static void hevc_local_init(void)
 {
-    BuffInfo_t* cur_buf_info;
+    memset(&rpm_param, 0, sizeof(rpm_param));
+    BuffInfo_t* cur_buf_info = NULL;
     if (frame_width <= 1920 &&  frame_height <= 1088) {
         cur_buf_info = &amvh265_workbuff_spec[0]; //1080p work space
     }
@@ -2621,7 +2651,7 @@ static void hevc_local_init(void)
         gHevc.rpm_ptr = (unsigned short*)ioremap_nocache(cur_buf_info->rpm.buf_start, cur_buf_info->rpm.buf_size);
         if (!gHevc.rpm_ptr) {
                 printk("%s: failed to remap rpm.buf_start\n", __func__);
-                return 0;
+                return;
         }
     }    
     
@@ -2788,7 +2818,7 @@ static int vh265_event_cb(int type, void *data, void *private_data)
     return 0;
 }
 
-static int prepare_display_buf(int display_buff_id, int stream_offset)
+static int prepare_display_buf(hevc_stru_t* hevc, int display_buff_id, int stream_offset, unsigned short slice_type)
 {
     vframe_t *vf = NULL;
     if (kfifo_get(&newframe_q, &vf) == 0) {
@@ -2800,17 +2830,61 @@ static int prepare_display_buf(int display_buff_id, int stream_offset)
         /*
         vfbuf_use[display_buff_id]++;
          */
-        if (pts_lookup_offset(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0) != 0) {
+        //if (pts_lookup_offset(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0) != 0) {
+        if (pts_lookup_offset_us64(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0, &vf->pts_us64)!= 0){
 #ifdef DEBUG_PTS
             pts_missed++;
 #endif
             vf->pts = 0;
+            vf->pts_us64 = 0;
         }
 #ifdef DEBUG_PTS
         else {
             pts_hit++;
         }
 #endif
+
+        if ((hevc->pts_mode == PTS_NORMAL) && (vf->pts != 0) && get_frame_dur) {
+            int pts_diff = (int)vf->pts - hevc->last_lookup_pts;
+
+            if (pts_diff < 0) {
+               hevc->pts_mode_switching_count++;
+               hevc->pts_mode_recovery_count = 0;
+
+               if (hevc->pts_mode_switching_count >= PTS_MODE_SWITCHING_THRESHOLD) {
+                   hevc->pts_mode = PTS_NONE_REF_USE_DURATION;
+                   printk("HEVC: pts lookup switch to none_ref_use_duration mode.\n");
+               }
+
+            } else {
+               hevc->pts_mode_recovery_count++;
+               if (hevc->pts_mode_recovery_count > PTS_MODE_SWITCHING_RECOVERY_THREASHOLD) {
+                   hevc->pts_mode_switching_count = 0;
+                   hevc->pts_mode_recovery_count = 0;
+               }
+            }
+        }
+
+        if (vf->pts != 0) {
+            hevc->last_lookup_pts = vf->pts;
+        }
+
+        if ((hevc->pts_mode == PTS_NONE_REF_USE_DURATION) && (slice_type != 2)) {
+            vf->pts = hevc->last_pts + DUR2PTS(frame_dur);
+        }
+        hevc->last_pts = vf->pts;
+
+        if (vf->pts_us64 != 0) {
+            hevc->last_lookup_pts_us64 = vf->pts_us64;
+        }
+
+        if ((hevc->pts_mode == PTS_NONE_REF_USE_DURATION) && (slice_type != 2)) {
+            vf->pts_us64 = hevc->last_pts_us64 + (DUR2PTS(frame_dur)*100/9);
+        }
+        hevc->last_pts_us64 = vf->pts_us64;
+        if((debug&H265_DEBUG_OUT_PTS)!=0){
+            printk("H265 decoder out pts: vf->pts=%d, vf->pts_us64 = %lld\n", vf->pts, vf->pts_us64);
+        }
 
         vf->index = display_buff_id;
         vf->type = VIDTYPE_PROGRESSIVE | VIDTYPE_VIU_FIELD;
@@ -2935,6 +3009,9 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
     }
     else if(dec_status == HEVC_SLICE_SEGMENT_DONE){
         if(hevc->wait_buf == 0){
+            u32 vui_time_scale = (u32)(rpm_param.p.vui_time_scale_hi << 16) | rpm_param.p.vui_time_scale_lo;
+            u32 vui_num_units_in_tick = (u32)(rpm_param.p.vui_num_units_in_tick_hi << 16) | rpm_param.p.vui_num_units_in_tick_lo;
+
             if(debug&H265_DEBUG_SEND_PARAM_WITH_REG){
                 get_rpm_param(&rpm_param);      
             }
@@ -2954,6 +3031,16 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
                     if(((i+1)&0xf)==0)
                         printk("\n");
                 } 
+                
+                printk("vui_timing_info: %x, %x, %x, %x\r\n",         rpm_param.p.vui_num_units_in_tick_hi,
+                            rpm_param.p.vui_num_units_in_tick_lo,
+                            rpm_param.p.vui_time_scale_hi,
+                            rpm_param.p.vui_time_scale_lo);
+            }
+
+            if ((vui_time_scale != 0) && (vui_num_units_in_tick != 0)) {
+                frame_dur = div_u64(96000ULL * vui_num_units_in_tick, vui_time_scale);
+                get_frame_dur = true;
             }
         }    
         ret = hevc_slice_segment_header_process(hevc, &rpm_param, decode_pic_begin);
@@ -3131,7 +3218,7 @@ static void vh265_local_init(void)
     pts_missed = 0;
     pts_hit = 0;
 #endif
-
+    get_frame_dur = false;
     frame_width = vh265_amstream_dec_info.width;
     frame_height = vh265_amstream_dec_info.height;
     frame_dur = (vh265_amstream_dec_info.rate == 0) ? 3600 : vh265_amstream_dec_info.rate;

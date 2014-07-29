@@ -832,6 +832,8 @@ static int video_receiver_event_fun(int type, void* data, void* private_data) {
         dev->receiver_register = 1;
         dev->ppmgr2_dev.interlaced_num = 0;
         printk("reg:ionvideo\n");
+    }else if (type == VFRAME_EVENT_PROVIDER_QUREY_STATE) {
+        return RECEIVER_ACTIVE ;
     }
     return 0;
 }
