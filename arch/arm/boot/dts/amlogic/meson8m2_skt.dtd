@@ -86,7 +86,7 @@ void root_func(){
 
         cma_0:region@0 {
            region_name = "cma_0";
-           reg = <0 0x02700000>;
+           reg = <0 0x02a00000>;
            linux,contiguous-region;
         };
 	};

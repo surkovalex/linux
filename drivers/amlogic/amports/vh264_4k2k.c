@@ -1363,7 +1363,7 @@ static int vh264_4k2k_stop(void)
 }
 
 #ifndef CONFIG_H264_4K2K_SINGLE_CORE
-#ifdef CONFIG_AM_ENCODER
+#if (HAS_VDEC2)&&(HAS_HDEC)
 extern void AbortEncodeWithVdec2(int abort);
 #endif
 #endif
@@ -1373,9 +1373,6 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
     struct resource *mem;
 
     printk("amvdec_h264_4k2k probe start.\n");
-#ifndef CONFIG_H264_4K2K_SINGLE_CORE
-    int count = 0;
-#endif
     mutex_lock(&vh264_4k2k_mutex);
     
     fatal_error = 0;
@@ -1397,6 +1394,10 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
     cma_dev = (struct device *)mem[2].start;
 
 #ifndef CONFIG_H264_4K2K_SINGLE_CORE
+#if (HAS_VDEC2)&&(HAS_HDEC)
+    if(get_vdec2_usage() != USAGE_NONE)
+        AbortEncodeWithVdec2(1);
+    int count = 0;
     while((get_vdec2_usage() != USAGE_NONE)&&(count < 10)){
         msleep(50);
         count++;
@@ -1414,8 +1415,9 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
     }
 
     set_vdec2_usage(USAGE_DEC_4K2K);
-
+    AbortEncodeWithVdec2(0);
     vdec_poweron(VDEC_2);
+#endif
 #endif
 
     vdec_power_mode(1);
@@ -1451,7 +1453,9 @@ static int amvdec_h264_4k2k_remove(struct platform_device *pdev)
 
 #ifndef CONFIG_H264_4K2K_SINGLE_CORE
     vdec_poweroff(VDEC_2);
+#if HAS_VDEC2
     set_vdec2_usage(USAGE_NONE);
+#endif
 #endif
 
 #ifdef DEBUG_PTS

@@ -32,9 +32,6 @@
 #define MicroCode mix_sw_mc
 #include "h264_enc_mix_sw.h"
 
-#undef MicroCode
-#define MicroCode mix_sw_mc_vdec2_dblk
-#include "h264_enc_mix_sw_vdec2_dblk.h"
 
 #undef MicroCode
 #define MicroCode mix_sw_mc_hdec_dblk
@@ -44,6 +41,3 @@
 #define MicroCode mix_dump_mc_dblk
 #include "h264_enc_mix_dump_dblk.h"
 
-#undef MicroCode
-#define MicroCode vdec2_encoder_mc
-#include "vdec2_encoder.h"
