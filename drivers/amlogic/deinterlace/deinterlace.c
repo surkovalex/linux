@@ -310,7 +310,7 @@ static int skip_wrong_field = 1;
 static int frame_count = 0;
 static int provider_vframe_level = 0;
 static int disp_frame_count = 0;
-static int start_frame_drop_count = 1;
+static int start_frame_drop_count = 2;
 //static int start_frame_hold_count = 0;
 
 static int force_trig_cnt = 0;
