@@ -1078,9 +1078,9 @@ void cec_set_menu_language(cec_rx_message_t* pcec_message)
 
         switch_set_state(&lang_dev, cec_global_info.cec_node_info[index].menu_lang);
         cec_global_info.cec_node_info[index].real_info_mask |= INFO_MASK_MENU_LANGUAGE;
-        hdmirx_cec_dbg_print("cec_set_menu_language:%c.%c.%c\n", (cec_global_info.cec_node_info[index].menu_lang >>16) & 0xff,
-                                                                 (cec_global_info.cec_node_info[index].menu_lang >> 8) & 0xff,
-                                                                 (cec_global_info.cec_node_info[index].menu_lang >> 0) & 0xff);
+        hdmi_print(INF, CEC "cec_set_menu_language:%c.%c.%c\n", (cec_global_info.cec_node_info[index].menu_lang >>16) & 0xff,
+                                                                (cec_global_info.cec_node_info[index].menu_lang >> 8) & 0xff,
+                                                                (cec_global_info.cec_node_info[index].menu_lang >> 0) & 0xff);
     }
 }
 
@@ -1188,7 +1188,7 @@ void cec_handle_message(cec_rx_message_t* pcec_message)
             cec_menu_status(pcec_message);
             break;
         case CEC_OC_PLAY:
-            hdmi_print(INF,CEC, "CEC_OC_PLAY:0x%x\n",pcec_message->content.msg.operands[0]);
+            hdmi_print(INF, CEC "CEC_OC_PLAY:0x%x\n",pcec_message->content.msg.operands[0]);
             switch(pcec_message->content.msg.operands[0]){
                 case 0x24:
                     input_event(cec_global_info.remote_cec_dev, EV_KEY, KEY_PLAYPAUSE, 1);
@@ -1713,13 +1713,13 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
         while ( buf[i] != ' ' )
             i ++;
     }
-    value = aml_read_reg32(P_AO_DEBUG_REG0) & 0x1;
-    aml_set_reg32_bits(P_AO_DEBUG_REG0, param[0], 0, 4);
+    value = aml_read_reg32(P_AO_DEBUG_REG0);
+    aml_set_reg32_bits(P_AO_DEBUG_REG0, param[0], 0, 32);
     hdmitx_device->cec_func_config = aml_read_reg32(P_AO_DEBUG_REG0);
     if(!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) || !hdmitx_device->hpd_state ) {
         return ;
     }
-    if((0 == value) && (1 == (param[0] & 1))){
+    if((0 == value & 0x1) && (1 == (param[0] & 1))){
         hdmitx_device->cec_init_ready = 1;
         hdmitx_device->hpd_state = 1;
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
@@ -1732,6 +1732,9 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
     }
     if((1 == (param[0] & 1)) && (0x0 == (value & 0x2)) && (0x2 == (param[0] & 0x2))){
         cec_active_source_smp();
+    }
+    if((0x20 == (param[0] & 0x20)) && (0x0 == (value & 0x20)) ){
+        cec_get_menu_language_smp();
     }
     hdmi_print(INF, CEC "cec_func_config:0x%x : 0x%x\n",hdmitx_device->cec_func_config, aml_read_reg32(P_AO_DEBUG_REG0));
 }
