@@ -2459,8 +2459,8 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
     int i, local_buf_num_available, local_buf_num_valid;
     int canvas_height = height + 8;
 #ifdef D2D3_SUPPORT
-    unsigned dp_buf_size;
-    unsigned dp_mem_start;
+    unsigned dp_buf_size = 0;
+    unsigned dp_mem_start = 0;
 #endif
     frame_count = 0;
     disp_frame_count = 0;
