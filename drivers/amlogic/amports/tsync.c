@@ -1024,6 +1024,19 @@ int tsync_set_av_threshold_max(int max)
     return tsync_av_threshold_max=max;
 }
 EXPORT_SYMBOL(tsync_set_av_threshold_max);
+
+int tsync_get_vpause_flag()
+{
+    return vpause_flag;
+}
+EXPORT_SYMBOL(tsync_get_vpause_flag);
+
+int tsync_set_vpause_flag(int mode)
+{
+    return vpause_flag=mode;
+}
+EXPORT_SYMBOL(tsync_set_vpause_flag);
+
 static ssize_t store_pcr_recover(struct class *class,
                                  struct class_attribute *attr,
                                  const char *buf,
@@ -1489,6 +1502,28 @@ static ssize_t show_firstvpts(struct class *class,
     return sprintf(buf, "0x%x\n", timestamp_firstvpts_get());
 }
 
+static ssize_t show_vpause_flag(struct class *class,
+                         struct class_attribute *attr,
+                         char *buf)
+{
+    return sprintf(buf, "0x%x\n", tsync_get_vpause_flag());
+}
+
+static ssize_t store_vpause_flag(struct class *class,
+                         struct class_attribute *attr,
+                         const char *buf,
+                         size_t size)
+{
+    unsigned mode;
+    ssize_t r;
+    r = sscanf(buf, "%d", &mode);
+    if (r != 1) {
+        return -EINVAL;
+    }
+    tsync_set_vpause_flag(mode);
+    return size;
+}
+
 static struct class_attribute tsync_class_attrs[] = {
     __ATTR(pts_video,  S_IRUGO | S_IWUSR | S_IWGRP, show_vpts,    store_vpts),
     __ATTR(pts_audio,  S_IRUGO | S_IWUSR | S_IWGRP, show_apts,    store_apts),
@@ -1507,6 +1542,7 @@ static struct class_attribute tsync_class_attrs[] = {
     __ATTR(av_threshold_max, S_IRUGO | S_IWUSR | S_IWGRP, show_av_threshold_max,  store_av_threshold_max),
     __ATTR(last_checkin_apts, S_IRUGO | S_IWUSR, show_last_checkin_apts, NULL),
     __ATTR(firstvpts, S_IRUGO | S_IWUSR, show_firstvpts, NULL),
+    __ATTR(vpause_flag, S_IRUGO | S_IWUSR, show_vpause_flag, store_vpause_flag),
     __ATTR_NULL
 };
 
