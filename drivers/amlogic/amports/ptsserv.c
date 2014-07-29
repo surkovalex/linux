@@ -640,6 +640,8 @@ static int pts_lookup_offset_inline(
 
         if ((p2) &&
             (OFFSET_DIFF(offset, p2->offset) < lookup_threshold)) {
+            if (p2->val==0) //FFT: set valid vpts
+                p2->val = 1;            
             if (tsync_get_debug_pts_checkout()) {
                 if (tsync_get_debug_vpts() && (type == PTS_TYPE_VIDEO)) {
                     printk("vpts look up offset<0x%x> --> <0x%x:0x%x>, look_cnt = %d\n",
