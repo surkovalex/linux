@@ -509,11 +509,7 @@ struct sdhc_misc{
 	u32 burst_num:6; /*[21:16] Burst Number*/
 	u32 thread_id:6; /*[27:22] Thread ID*/
 	u32 manual_stop:1; /*[28] 0:auto stop mode, 1:manual stop mode*/
-#if (defined CONFIG_ARCH_MESON8M2)
 	u32 txstart_thres:3; /*[31:29] txstart_thres(if (txfifo_cnt/4)>(threshold*2), Tx will start)*/
-#else
-    u32 reserved2:3; /*[31:29] reserved*/
-#endif
 };
 
 struct sdhc_ictl{
@@ -571,26 +567,29 @@ struct sdhc_srst{
 	u32 reserved:26; /*[31:6] reserved*/
 };
 
-struct sdhc_enhc{
-#if (defined CONFIG_ARCH_MESON8M2)
-	u32 wrrsp_mode:1; /*[0] 0:Wrrsp Check in DMA Rx FSM 1:No Check in FSM*/
-    u32 chk_wrrsp:1; /*[1] Rx Done without checking if Wrrsp count is 0*/
-    u32 chk_dma:1; /*[2] Rx Done without checking if DMA is IDLE*/
-    u32 debug:3;  /*[5:3] debug only*/
-    u32 reserved:2;
-    u32 sdio_irq_period:8; /*[15:8] SDIO IRQ Period Setting*/
-    u32 reserved1:2;
-    u32 rxfifo_th:7; /*[24:18] RXFIFO Full Threshold,default 60*/
-	u32 txfifo_th:7; /*[31:25] TXFIFO Empty Threshold,default 0*/
-#else
-	u32 rx_timeout:8; /*[7:0] Data Rx Timeout Setting*/
-	u32 sdio_irq_period:8; /*[15:8] SDIO IRQ Period Setting
-			(IRQ checking window length)*/
-	u32 dma_rd_resp:1; /*[16] No Read DMA Response Check*/
-	u32 dma_wr_resp:1; /*[16] No Write DMA Response Check*/
-	u32 rxfifo_th:7; /*[24:18] RXFIFO Full Threshold,default 60*/
-	u32 txfifo_th:7; /*[31:25] TXFIFO Empty Threshold,default 0*/
-#endif
+struct  sdhc_enhc{	
+	union  {		
+		struct  {			
+			u32 wrrsp_mode:1; /*[0] 0:Wrrsp Check in DMA Rx FSM 1:No Check in FSM*/		    	
+			u32 chk_wrrsp:1; /*[1] Rx Done without checking if Wrrsp count is 0*/		    	
+			u32 chk_dma:1; /*[2] Rx Done without checking if DMA is IDLE*/		    	
+			u32 debug:3;  /*[5:3] debug only*/		    	
+			u32 reserved:2;		    	
+			u32 sdio_irq_period:8; /*[15:8] SDIO IRQ Period Setting*/		    	
+			u32 reserved1:2;		    	
+			u32 rxfifo_th:7; /*[24:18] RXFIFO Full Threshold,default 60*/		    	
+			u32 txfifo_th:7; /*[31:25] TXFIFO Empty Threshold,default 0*/				
+		}  meson8m2;		
+		struct  {			
+			u32 rx_timeout:8; /*[7:0] Data Rx Timeout Setting*/			
+			u32 sdio_irq_period:8; /*[15:8] SDIO IRQ Period Setting					
+				(IRQ checking window length)*/			
+			u32 dma_rd_resp:1; /*[16] No Read DMA Response Check*/			
+			u32 dma_wr_resp:1; /*[16] No Write DMA Response Check*/			
+			u32 rxfifo_th:7; /*[24:18] RXFIFO Full Threshold,default 60*/			
+			u32 txfifo_th:7; /*[31:25] TXFIFO Empty Threshold,default 0*/				
+		}  meson;		
+	}reg;
 };
 
 struct sdhc_clk2{

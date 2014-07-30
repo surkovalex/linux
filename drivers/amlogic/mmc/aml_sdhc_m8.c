@@ -469,14 +469,17 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
     aml_sdhc_host_reset(host);
     
 #ifdef DMC_URGENT_PERIPH
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
-    dmc_ctl = readl(P_MMC_QOS11_CTRL0);
-    dmc_ctl |= (1<<26);
-    writel(dmc_ctl, P_MMC_QOS11_CTRL0);
-#elif(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B)    
-    dmc_ctl = readl(P_DMC_AM7_CHAN_CTRL);
-    dmc_ctl |= (1<<18);
-    writel(dmc_ctl, P_DMC_AM7_CHAN_CTRL);
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+    if(IS_MESON_M8_CPU()){
+	    dmc_ctl = readl(P_MMC_QOS11_CTRL0);
+	    dmc_ctl |= (1<<26);
+	    writel(dmc_ctl, P_MMC_QOS11_CTRL0);
+    }
+    else{    
+	    dmc_ctl = readl(P_DMC_AM7_CHAN_CTRL);
+	    dmc_ctl |= (1<<18);
+	    writel(dmc_ctl, P_DMC_AM7_CHAN_CTRL);
+    }
 #endif
 #endif
 
@@ -507,11 +510,10 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
     writel(vpdma, host->base+SDHC_PDMA);
 
     /*Send Stop Cmd automatically*/
-#if (defined CONFIG_ARCH_MESON8M2)
-    misc.txstart_thres = 6;//4; // [29:31] = 7
-#else
-    misc.reserved2 = 7; // [29:31] = 7
-#endif
+    if(IS_MESON_M8M2_CPU)
+         misc.txstart_thres = 4; // [29:31] = 7
+    else
+         misc.txstart_thres = 7; // [29:31] = 7
     misc.manual_stop = 0;
     misc.wcrc_err_patt = 5;
     misc.wcrc_ok_patt = 2;
@@ -519,20 +521,21 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
 
     venhc = readl(host->base+SDHC_ENHC);
     
-#if (defined CONFIG_ARCH_MESON8M2)
-    enhc->rxfifo_th = 64;
-    enhc->sdio_irq_period = 12;
-    enhc->debug = 1;
-    enhc->chk_dma = 0;
-    enhc->chk_wrrsp = 0;
-    enhc->wrrsp_mode = 1;
-#else
-    enhc->rxfifo_th = 63;
-    enhc->dma_rd_resp = 0;
-    enhc->dma_wr_resp = 1;
-    enhc->sdio_irq_period = 12;
-    enhc->rx_timeout = 255;
-#endif
+    if(IS_MESON_M8M2_CPU){
+	    enhc->reg.meson8m2.rxfifo_th = 64;
+	    enhc->reg.meson8m2.sdio_irq_period = 12;
+	    enhc->reg.meson8m2.debug = 1;
+	    enhc->reg.meson8m2.chk_dma = 0;
+	    enhc->reg.meson8m2.chk_wrrsp = 0;
+	    enhc->reg.meson8m2.wrrsp_mode = 1;
+    }
+   else{
+	    enhc->reg.meson.rxfifo_th = 63;
+	    enhc->reg.meson.dma_rd_resp = 0;
+	    enhc->reg.meson.dma_wr_resp = 1;
+	    enhc->reg.meson.sdio_irq_period = 12;
+	    enhc->reg.meson.rx_timeout = 255;
+    }
     writel(venhc, host->base + SDHC_ENHC);
 
     /*Disable All Irq*/
@@ -636,10 +639,10 @@ void aml_sdhc_set_pdma(struct amlsd_platform* pdata, struct mmc_request* mrq)
     BUG_ON(!mrq->data);
 #if 1
     pdma->dma_mode = 1;
-#if (defined CONFIG_ARCH_MESON8M2)
-    writel(*(u32*)pdma, host->base+SDHC_PDMA);
-    return;
-#endif
+    if(IS_MESON_M8M2_CPU){
+	    writel(*(u32*)pdma, host->base+SDHC_PDMA);
+	    return;
+    }
     if(mrq->data->flags & MMC_DATA_WRITE){
         /*self-clear-fill, recommend to write before sd send*/
         //init sets rd_burst to 15
@@ -763,12 +766,11 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
     u32 vsrst;
     struct sdhc_srst *srst = (struct sdhc_srst *)&vsrst;
     u32 vmisc = readl(host->base + SDHC_MISC);
-    struct sdhc_misc* misc = (struct sdhc_misc*)&vmisc;     
-#ifndef CONFIG_ARCH_MESON8M2           
+    struct sdhc_misc* misc = (struct sdhc_misc*)&vmisc;               
     int i;
     int loop_limit;
     u32 vesta;
-#endif
+
 
     /*Set clock for each port, change clock before wait ready*/
     aml_sdhc_set_clkc(pdata);
@@ -842,15 +844,15 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
          * wait dma done interrupt(int[11]), don't need care about
          * dat0 busy or not.
          */
-#if (defined CONFIG_ARCH_MESON8M2)
-        ictl.dma_done = 1; // for hardware automatical flush
-#else         
-        if((mrq->data->flags & MMC_DATA_WRITE) 
-            || aml_card_type_sdio(pdata))
-            ictl.dma_done = 1; // for hardware automatical flush
-        else
-            ictl.data_xfer_ok = 1; // for software flush
-#endif             
+        if(IS_MESON_M8M2_CPU)
+        	ictl.dma_done = 1; // for hardware automatical flush
+	 else{         
+	        if((mrq->data->flags & MMC_DATA_WRITE) 
+	            || aml_card_type_sdio(pdata))
+	            ictl.dma_done = 1; // for hardware automatical flush
+	        else
+	            ictl.data_xfer_ok = 1; // for software flush
+	 }            
     }else
         ictl.resp_ok = 1;
 
@@ -893,42 +895,42 @@ void aml_sdhc_start_cmd(struct amlsd_platform* pdata, struct mmc_request* mrq)
     }
 #endif
 
-#ifndef CONFIG_ARCH_MESON8M2
-    loop_limit = 100;
-    for (i = 0; i < loop_limit; i++) {
-        vesta = readl(host->base + SDHC_ESTA);
-        if (vesta == 0) {
-            // sdhc_err("ok: %s: cmd%d, SDHC_ESTA=%#x, i=%d\n", 
-                    // mmc_hostname(host->mmc), mrq->cmd->opcode, vesta, i);
-            break;
-        }
-        if (i > 50) {
-            sdhc_err("udelay\n");
-            udelay(1);
-        }
-    }
-    if (i >= loop_limit) {
-        sdhc_err("Warning: %s: cmd%d, SDHC_ESTA=%#x\n", 
-                mmc_hostname(host->mmc), mrq->cmd->opcode, vesta);
-    }
+    if(!IS_MESON_M8M2_CPU){
+	    loop_limit = 100;
+	    for (i = 0; i < loop_limit; i++) {
+	        vesta = readl(host->base + SDHC_ESTA);
+	        if (vesta == 0) {
+	            // sdhc_err("ok: %s: cmd%d, SDHC_ESTA=%#x, i=%d\n", 
+	                    // mmc_hostname(host->mmc), mrq->cmd->opcode, vesta, i);
+	            break;
+	        }
+	        if (i > 50) {
+	            sdhc_err("udelay\n");
+	            udelay(1);
+	        }
+	    }
+	    if (i >= loop_limit) {
+	        sdhc_err("Warning: %s: cmd%d, SDHC_ESTA=%#x\n", 
+	                mmc_hostname(host->mmc), mrq->cmd->opcode, vesta);
+	    }
 
-    if (mrq->data && (mrq->data->flags & MMC_DATA_WRITE)) {
-        for (i = 0; i < loop_limit; i++) {
-            vstat = readl(host->base + SDHC_STAT);
-            if (stat->txfifo_cnt != 0) {
-                // sdhc_err("OK: %s: cmd%d, txfifo_cnt=%d, i=%d\n", 
-                        // mmc_hostname(host->mmc), mrq->cmd->opcode, stat->txfifo_cnt, i);
-                break;
-            }
-            udelay(1);
-        }
-        if (i >= loop_limit) {
-            sdhc_err("Warning: %s: cmd%d, txfifo_cnt=%d\n", 
-                    mmc_hostname(host->mmc), mrq->cmd->opcode, stat->txfifo_cnt);
-        }
+	    if (mrq->data && (mrq->data->flags & MMC_DATA_WRITE)) {
+	        for (i = 0; i < loop_limit; i++) {
+	            vstat = readl(host->base + SDHC_STAT);
+	            if (stat->txfifo_cnt != 0) {
+	                // sdhc_err("OK: %s: cmd%d, txfifo_cnt=%d, i=%d\n", 
+	                        // mmc_hostname(host->mmc), mrq->cmd->opcode, stat->txfifo_cnt, i);
+	                break;
+	            }
+	            udelay(1);
+	        }
+	        if (i >= loop_limit) {
+	            sdhc_err("Warning: %s: cmd%d, txfifo_cnt=%d\n", 
+	                    mmc_hostname(host->mmc), mrq->cmd->opcode, stat->txfifo_cnt);
+	        }
 
+	    }
     }
-#endif
 
     writel(*(u32*)&send, host->base+SDHC_SEND); /*Command send*/
 }
@@ -1603,13 +1605,13 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
     struct sdhc_stat* stat = (struct sdhc_stat*)&vstat;
     struct amlsd_platform* pdata = mmc_priv(host->mmc);
     int cnt=0;
-#ifndef CONFIG_ARCH_MESON8M2        
+       
     u32 esta = readl(host->base + SDHC_ESTA);
     int i;        
     u32 dmc_sts = 0;
     u32 vpdma = readl(host->base+SDHC_PDMA);   
     struct sdhc_pdma* pdma = (struct sdhc_pdma*)&vpdma;
-#endif
+
 
     spin_lock_irqsave(&host->mrq_lock, flags);
     mrq = host->mrq;
@@ -1659,47 +1661,46 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
             xfer_bytes = mrq->data->blksz*mrq->data->blocks;
             /* copy buffer from dma to data->sg in read cmd*/
             if(host->mrq->data->flags & MMC_DATA_READ){
-#ifndef CONFIG_ARCH_MESON8M2
-                if(!aml_card_type_sdio(pdata)){
-                    for(i=0; i< STAT_POLL_TIMEOUT; i++){
-                          
-                        esta = readl(host->base + SDHC_ESTA);
-                        esta = readl(host->base + SDHC_ESTA); // read twice, we just focus on the second result
-                        if(((esta >> 11) & 0x7) == 0) // REGC_ESTA[13:11]=0? then OK
-                            break;
-                        else if (i == 10)
-                            sdhc_err("SDHC_ESTA=0x%x\n", esta);
-                    }
-                   
-                    if (i == STAT_POLL_TIMEOUT) // error
-                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x\n", esta);
-    
-                    pdma->rxfifo_manual_flush |= 0x02; // bit[30]
-                    writel(vpdma, host->base+SDHC_PDMA);
-                     //check ddr dma status after controller dma status OK
-                    for(i=0; i< STAT_POLL_TIMEOUT; i++){
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
-                        dmc_sts = readl((unsigned int *)P_MMC_CHAN_STS);
-                        dmc_sts = (dmc_sts >> 11)&1;
-#elif(MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B)    
-#if (defined CONFIG_ARCH_MESON8M2)
-                        dmc_sts = 1;
-#else  
-                        dmc_sts = readl(P_DMC_CHAN_STS);
-                        dmc_sts = (dmc_sts >> 15)&1;     
-#endif                                              
+	     	    if(!IS_MESON_M8M2_CPU){
+	                if(!aml_card_type_sdio(pdata)){
+	                    for(i=0; i< STAT_POLL_TIMEOUT; i++){
+	                          
+	                        esta = readl(host->base + SDHC_ESTA);
+	                        esta = readl(host->base + SDHC_ESTA); // read twice, we just focus on the second result
+	                        if(((esta >> 11) & 0x7) == 0) // REGC_ESTA[13:11]=0? then OK
+	                            break;
+	                        else if (i == 10)
+	                            sdhc_err("SDHC_ESTA=0x%x\n", esta);
+	                    }
+	                   
+	                    if (i == STAT_POLL_TIMEOUT) // error
+	                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x\n", esta);
+	    
+	                    pdma->rxfifo_manual_flush |= 0x02; // bit[30]
+	                    writel(vpdma, host->base+SDHC_PDMA);
+	                     //check ddr dma status after controller dma status OK
+	                    for(i=0; i< STAT_POLL_TIMEOUT; i++){
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8) 
+				    if(IS_MESON_M8_CPU){
+		                        dmc_sts = readl((unsigned int *)P_MMC_CHAN_STS);
+		                        dmc_sts = (dmc_sts >> 11)&1;
+				    } 
+				    else{
+		                        dmc_sts = readl(P_DMC_CHAN_STS);
+		                        dmc_sts = (dmc_sts >> 15)&1;  
+				    }
 #endif  
-                        if(dmc_sts)
-                            break;
-                        else if (i == 10)
-                            sdhc_err("SDHC_ESTA=0x%x\n", esta);
-                    }
-                   
-                    if (i == STAT_POLL_TIMEOUT) // error
-                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x dmc_sts:%d\n", esta,dmc_sts);                                                                        
-                  
-                }                              
-#endif
+	                        if(dmc_sts)
+	                            break;
+	                        else if (i == 10)
+	                            sdhc_err("SDHC_ESTA=0x%x\n", esta);
+	                    }
+	                   
+	                    if (i == STAT_POLL_TIMEOUT) // error
+	                        sdhc_err("Warning: DMA state is wrong! SDHC_ESTA=0x%x dmc_sts:%d\n", esta,dmc_sts);                                                                        
+	                  
+	                }                              
+		   }
 
                 aml_sg_copy_buffer(mrq->data->sg, mrq->data->sg_len, host->bn_buf,
                             xfer_bytes, 0);
