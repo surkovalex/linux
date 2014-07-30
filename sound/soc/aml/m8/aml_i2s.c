@@ -297,6 +297,7 @@ static int aml_i2s_trigger(struct snd_pcm_substream *substream,
 	  add_timer(&prtd->timer);
 #endif
 
+	  s->xrun_num = 0;
 	  s->active = 1;
 	  spin_unlock(&s->lock);
 	  break;		/* SNDRV_PCM_TRIGGER_START */
@@ -306,6 +307,7 @@ static int aml_i2s_trigger(struct snd_pcm_substream *substream,
 		// TODO
 	    spin_lock(&s->lock);
 	    s->active = 0;
+	    s->xrun_num = 0;
 	    spin_unlock(&s->lock);
 	    break;
 	default:
@@ -411,7 +413,7 @@ static void aml_i2s_timer_callback(unsigned long data)
     struct aml_runtime_data *prtd = runtime->private_data;
 		audio_stream_t *s = &prtd->s;
 
-    unsigned int last_ptr, size;
+    unsigned int last_ptr, size = 0;
 	if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 	{
 		if(s->active == 1)
@@ -451,6 +453,12 @@ static void aml_i2s_timer_callback(unsigned long data)
 				last_ptr = audio_in_spdif_wr_ptr();
 			if (last_ptr < s->last_ptr) {
 				size = runtime->dma_bytes + (last_ptr - (s->last_ptr))/2;
+			} else if (last_ptr == s->last_ptr) {
+				if (s->xrun_num++ > 100) {
+					printk(KERN_INFO "alsa capture long time no data, quit xrun!\n");
+					s->xrun_num = 0;
+					s->size = runtime->period_size;
+				}
 			} else {
 				size = (last_ptr - (s->last_ptr))/2;
 			}
@@ -541,6 +549,7 @@ static int aml_i2s_open(struct snd_pcm_substream *substream)
 #endif
 
 	spin_lock_init(&prtd->s.lock);
+	s->xrun_num = 0;
 	WRITE_MPEG_REG_BITS(MPLL_I2S_CNTL, 1,14, 1);
 	mutex_lock(&gate_mutex);
 	if(!num_clk_gate){

@@ -19,6 +19,7 @@ typedef struct audio_stream {
     struct snd_pcm_substream *stream;
 	unsigned i2s_mode; //0:master, 1:slave,
     unsigned device_type;
+    unsigned int xrun_num;
 } audio_stream_t;
 
 typedef struct aml_audio {
