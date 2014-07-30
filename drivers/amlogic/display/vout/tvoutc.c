@@ -323,7 +323,8 @@ void cvbs_config_vdac(unsigned int flag, unsigned int cfg)
 
 	return ;
 }
-static void cvbs_cntl_output(unsigned int open)
+
+void cvbs_cntl_output(unsigned int open)
 {
 	unsigned int cntl0=0, cntl1=0;
 

@@ -468,9 +468,16 @@ static int tv_module_disable(vmode_t cur_vmod)
 	return 0;
 }
 #ifdef  CONFIG_PM
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+extern void cvbs_cntl_output(unsigned int open);
+#endif
 static int tv_suspend(void)
 {
 	video_dac_disable();
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+	cvbs_cntl_output(0);
+#endif
+
 	return 0;
 }
 static int tv_resume(void)
