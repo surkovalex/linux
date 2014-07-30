@@ -30,13 +30,11 @@
 #include <linux/dma-mapping.h>
 #include <mach/io.h>
 
-#ifdef CONFIG_MESON_TRUSTZONE
 #include <mach/meson-secure.h>
-#endif
 #include <linux/sched.h>
 
 #define MESON_SECURE_DEBUG 0
-#ifdef MESON_SECURE_DEBUG
+#if MESON_SECURE_DEBUG
 #define TZDBG(fmt, args...) printk("meson-secure: " fmt, ## args);
 #else
 #define TZDBG(fmt, args...)
@@ -164,7 +162,6 @@ uint32_t meson_secure_reg_read(uint32_t addr)
 
 	return ret;
 }
-EXPORT_SYMBOL(meson_secure_reg_read);
 
 uint32_t meson_secure_reg_write(uint32_t addr, uint32_t val)
 {
@@ -179,14 +176,34 @@ uint32_t meson_secure_reg_write(uint32_t addr, uint32_t val)
 
 	return ret;
 }
-EXPORT_SYMBOL(meson_secure_reg_write);
 
-uint32_t meson_secure_mem_size(void)
+uint32_t meson_secure_mem_base_start(void)
 {
-	return MESON_TRUSTZONE_MEM_SIZE;
+	return meson_smc1(TRUSTZONE_MON_MEM_BASE, 0);
 }
 
-uint32_t meson_secure_mem_end(void)
+uint32_t meson_secure_mem_total_size(void)
 {
-	return (MESON_TRUSTZONE_MEM_START + MESON_TRUSTZONE_MEM_SIZE);
+	return meson_smc1(TRUSTZONE_MON_MEM_TOTAL_SIZE, 0);
+}
+
+uint32_t meson_secure_mem_flash_start(void)
+{
+	return meson_smc1(TRUSTZONE_MON_MEM_FLASH, 0);
+}
+
+uint32_t meson_secure_mem_flash_size(void)
+{
+	return meson_smc1(TRUSTZONE_MON_MEM_FLASH_SIZE, 0);
+}
+
+int32_t meson_secure_mem_ge2d_access(uint32_t msec)
+{
+	int ret = -1;
+
+	set_cpus_allowed_ptr(current, cpumask_of(0));
+	ret = meson_smc_hal_api(TRUSTZONE_HAL_API_MEMCONFIG_GE2D, msec);
+	set_cpus_allowed_ptr(current, cpu_all_mask);
+
+	return ret;
 }
