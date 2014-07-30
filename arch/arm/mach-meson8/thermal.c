@@ -66,7 +66,7 @@ int thermal_firmware_init()
 }
 int get_cpu_temp(void)
 {
-	int ret=-1,tempa;
+	int ret=-1,tempa=0;
 	if(temps->flag){
 		ret=get_adc_sample(6);
 		if(ret>=0){
