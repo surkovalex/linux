@@ -132,7 +132,7 @@ static const char *m8_common_board_compat[] __initdata = {
 	NULL,
 };
 
-DT_MACHINE_START(AML8726_M8, "Amlogic Meson8B platform")
+DT_MACHINE_START(AML8726_M8, "Amlogic Meson8B")
 	.reserve	= meson8b_reserve,
 //.nr_irqs	= 
 	.smp		= smp_ops(meson_smp_ops),

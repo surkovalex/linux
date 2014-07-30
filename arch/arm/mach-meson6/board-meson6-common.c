@@ -174,7 +174,7 @@ static const char *m6_common_board_compat[] __initdata = {
 	NULL,
 };
 
-DT_MACHINE_START(AML8726_MX, "Amlogic Meson6 platform")
+DT_MACHINE_START(AML8726_MX, "Amlogic Meson6")
 	.reserve	= meson6_reserve,
 //.nr_irqs	= 
 	.smp		= smp_ops(meson_smp_ops),
