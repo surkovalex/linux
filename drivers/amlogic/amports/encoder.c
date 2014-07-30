@@ -1701,6 +1701,7 @@ void amvenc_avc_start_cmd(int cmd, unsigned* input_info, int ucode_mode)
 		}
 		avc_init_ie_me_parameter();
 	}
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	else{
 		if((dblk_buf_canvas&0xff)==ENC_CANVAS_OFFSET){
 			WRITE_HREG(CURRENT_Y_CANVAS_START, gAmvencbuff.buf_start + gAmvencbuff.bufspec->dec0_y.buf_start);
@@ -1766,6 +1767,7 @@ void amvenc_avc_start_cmd(int cmd, unsigned* input_info, int ucode_mode)
 		}
 #endif	    
 	}	    
+#endif
 	encoder_status = cmd;
 	WRITE_HREG(ENCODER_STATUS , cmd);
 	if((cmd == ENCODER_IDR)||(cmd == ENCODER_NON_IDR)){
