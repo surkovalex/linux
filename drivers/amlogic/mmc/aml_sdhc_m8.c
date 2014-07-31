@@ -1680,7 +1680,7 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
 	                    writel(vpdma, host->base+SDHC_PDMA);
 	                     //check ddr dma status after controller dma status OK
 	                    for(i=0; i< STAT_POLL_TIMEOUT; i++){
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8) 
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
 				    if(IS_MESON_M8_CPU){
 		                        dmc_sts = readl((unsigned int *)P_MMC_CHAN_STS);
 		                        dmc_sts = (dmc_sts >> 11)&1;
