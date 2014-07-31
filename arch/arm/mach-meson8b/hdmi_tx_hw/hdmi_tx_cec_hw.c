@@ -152,7 +152,7 @@ static int cec_ll_tx_once(const unsigned char *msg, unsigned char len)
     unsigned int cnt = 30;
     int pos;
 
-    while(aocec_rd_reg(CEC_TX_MSG_STATUS) || aocec_rd_reg(CEC_RX_MSG_STATUS)){
+    while(aocec_rd_reg(CEC_TX_MSG_STATUS)){
         msleep(5);
         if(TX_ERROR == aocec_rd_reg(CEC_TX_MSG_STATUS)){
             //aocec_wr_reg(CEC_TX_MSG_CMD, TX_ABORT);
@@ -196,7 +196,7 @@ int cec_ll_tx_polling(const unsigned char *msg, unsigned char len)
 	unsigned int j = 30;
     int pos;
 
-    while( (aocec_rd_reg(CEC_TX_MSG_STATUS) || aocec_rd_reg(CEC_RX_MSG_STATUS)) && j){
+    while( aocec_rd_reg(CEC_TX_MSG_STATUS)){
         if(TX_ERROR == aocec_rd_reg(CEC_TX_MSG_STATUS)){
             //aocec_wr_reg(CEC_TX_MSG_CMD, TX_ABORT);
             aocec_wr_reg(CEC_TX_MSG_CMD, TX_NO_OP);
@@ -207,6 +207,7 @@ int cec_ll_tx_polling(const unsigned char *msg, unsigned char len)
             hdmi_print(INF, CEC "tx busy time out.\n");
             aocec_wr_reg(CEC_TX_MSG_CMD, TX_ABORT);
             aocec_wr_reg(CEC_TX_MSG_CMD, TX_NO_OP);
+            break;
         }
         msleep(5);
     }
@@ -222,6 +223,7 @@ int cec_ll_tx_polling(const unsigned char *msg, unsigned char len)
     j = 30;
     while((TX_DONE != aocec_rd_reg(CEC_TX_MSG_STATUS)) && (j--)){
         if(TX_ERROR == aocec_rd_reg(CEC_TX_MSG_STATUS))
+            break;
 		msleep(5);
 	}
 
