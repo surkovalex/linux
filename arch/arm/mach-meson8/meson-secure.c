@@ -66,7 +66,7 @@ int meson_secure_memblock(unsigned startaddr, unsigned endaddr, struct secure_me
 }
 */
 
-struct memconfig memsecure[MEMCONFIG_NUM] = {0};
+struct memconfig memsecure[MEMCONFIG_NUM];
 int meson_trustzone_memconfig(void)
 {
 	int ret;

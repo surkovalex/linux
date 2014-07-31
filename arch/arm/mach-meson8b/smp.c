@@ -134,13 +134,13 @@ int __cpuinit meson_boot_secondary(unsigned int cpu, struct task_struct *idle)
 //	check_and_rewrite_cpu_entry();
 	meson_secondary_set(cpu);
 	meson_set_cpu_power_ctrl(cpu, 1);
-#endif
 	timeout = jiffies + (10* HZ);
 	while(meson_get_cpu_ctrl_addr(cpu));
 	{
 		if(!time_before(jiffies, timeout))
 			return -EPERM;
 	}
+#endif
 
 	meson_secondary_set(cpu);
 	dsb_sev();
