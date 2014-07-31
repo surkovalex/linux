@@ -39,7 +39,7 @@
 #include "amports_config.h"
 
 #define MULTI_SLICE_MC
-#if HAS_VDEC2
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
 #define USE_VDEC2
 #endif
 #define ENC_CANVAS_OFFSET  AMVENC_CANVAS_INDEX
@@ -873,8 +873,10 @@ static void encode_isr_tasklet(ulong data)
     if(((encoder_status == ENCODER_IDR_DONE)
 	||(encoder_status == ENCODER_NON_IDR_DONE))&&(process_irq)){
 #ifdef USE_VDEC2
-        if((abort_vdec2_flag)&&(get_vdec2_usage() == USAGE_ENCODE))
-            set_vdec2_usage(USAGE_NONE);
+        if(IS_MESON_M8_CPU){
+            if((abort_vdec2_flag)&&(get_vdec2_usage() == USAGE_ENCODE))
+                set_vdec2_usage(USAGE_NONE);
+        }
 #endif
         atomic_inc(&avc_ready);
         wake_up_interruptible(&avc_wait);
@@ -1441,9 +1443,11 @@ static s32 avc_poweron(int clock)
 	WRITE_VREG(DOS_GEN_CTRL0, data32);
 
 #ifdef USE_VDEC2
-	if (!vdec_on(VDEC_2) && get_vdec2_usage() == USAGE_NONE) {//++++
-		set_vdec2_usage(USAGE_ENCODE);
-		vdec_poweron(VDEC_2);//++++
+	if(IS_MESON_M8_CPU){
+		if (!vdec_on(VDEC_2) && get_vdec2_usage() == USAGE_NONE) {//++++
+			set_vdec2_usage(USAGE_ENCODE);
+			vdec_poweron(VDEC_2);//++++
+		}
 	}
 #endif
 
@@ -1475,9 +1479,11 @@ static s32 avc_poweroff(void)
 #endif
 
 #ifdef USE_VDEC2
-	if (vdec_on(VDEC_2) && get_vdec2_usage() != USAGE_DEC_4K2K) {//++++
-		vdec_poweroff(VDEC_2);//++++
-		set_vdec2_usage(USAGE_NONE);
+	if(IS_MESON_M8_CPU){
+		if (vdec_on(VDEC_2) && get_vdec2_usage() != USAGE_DEC_4K2K) {//++++
+			vdec_poweroff(VDEC_2);//++++
+			set_vdec2_usage(USAGE_NONE);
+		}
 	}
 #endif
 
@@ -1503,18 +1509,26 @@ static s32 reload_mc(void)
                 p = mix_dump_mc;    
             break;
         case UCODE_MODE_SW_MIX:
-#ifdef  USE_VDEC2
-            if(enable_dblk == 1)
-                p = mix_sw_mc_vdec2_dblk;
-            else if (enable_dblk ==2)
-                p = mix_sw_mc_hdec_dblk;
-            else
-                p = mix_sw_mc;
-#else
-            if(enable_dblk == 1)
-                p = mix_sw_mc_hdec_dblk;
-            else
-                p = mix_sw_mc;
+            if(IS_MESON_M8B_CPU){
+                if(enable_dblk)
+                    p = mix_sw_mc_hdec_dblk;
+                else
+                    p = mix_sw_mc;
+            }
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+            else if(IS_MESON_M8_CPU){
+                if(enable_dblk == 1)
+                    p = mix_sw_mc_vdec2_dblk;
+                else if (enable_dblk ==2)
+                    p = mix_sw_mc_hdec_dblk;
+                else
+                    p = mix_sw_mc;
+            }else if(IS_MESON_M8M2_CPU){
+                if(enable_dblk)
+                    p = mix_sw_mc_hdec_m2_dblk;
+                else
+                    p = mix_sw_mc;
+            }
 #endif
             break;
         default:
@@ -1529,10 +1543,10 @@ static s32 reload_mc(void)
 	
     udelay(10);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     if(IS_MESON_M8M2_CPU){
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-        dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
+        dblk_fix_flag = (p==mix_sw_mc_hdec_m2_dblk);
     }else{
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
         dblk_fix_flag = false;
@@ -1569,28 +1583,39 @@ static s32 avc_init(void)
                 p = mix_dump_mc;    
             break;
         case UCODE_MODE_SW_MIX:
-#ifdef  USE_VDEC2
-            if(enable_dblk == 1)
-                p = mix_sw_mc_vdec2_dblk;
-            else if (enable_dblk ==2)
-                p = mix_sw_mc_hdec_dblk;
-            else
-                p = mix_sw_mc;
-#else
-            if(enable_dblk)
-                p = mix_sw_mc_hdec_dblk;
-            else
-                p = mix_sw_mc;
+            if(IS_MESON_M8B_CPU){
+                if(enable_dblk)
+                    p = mix_sw_mc_hdec_dblk;
+                else
+                    p = mix_sw_mc;
+            }
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+            else if(IS_MESON_M8_CPU){
+                if(enable_dblk == 1)
+                    p = mix_sw_mc_vdec2_dblk;
+                else if (enable_dblk ==2)
+                    p = mix_sw_mc_hdec_dblk;
+                else
+                    p = mix_sw_mc;
+            }else if(IS_MESON_M8M2_CPU){
+                if(enable_dblk)
+                    p = mix_sw_mc_hdec_m2_dblk;
+                else
+                    p = mix_sw_mc;
+            }
 #endif
             break;
         default:
             break;
     }
 
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     if(IS_MESON_M8M2_CPU){
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-        dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
-    }else{
+        dblk_fix_flag = (p==mix_sw_mc_hdec_m2_dblk);
+    }else
+#endif
+    {
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
         dblk_fix_flag = false;
     }
@@ -1660,21 +1685,23 @@ void amvenc_avc_start_cmd(int cmd, unsigned* input_info, int ucode_mode)
 {
 	int reload_flag = 0;
 #ifdef USE_VDEC2
-	if(((ucode_mode&0x1) == UCODE_MODE_SW_MIX)&&(enable_dblk>0)){
-		if((get_vdec2_usage() == USAGE_DEC_4K2K)||(abort_vdec2_flag)){
-			enable_dblk = 2;
-			if((abort_vdec2_flag)&&(get_vdec2_usage() == USAGE_ENCODE)){
-				debug_level(1,"switch encode ucode\n");
-				set_vdec2_usage(USAGE_NONE);
+	if(IS_MESON_M8_CPU){
+		if(((ucode_mode&0x1) == UCODE_MODE_SW_MIX)&&(enable_dblk>0)){
+			if((get_vdec2_usage() == USAGE_DEC_4K2K)||(abort_vdec2_flag)){
+				enable_dblk = 2;
+				if((abort_vdec2_flag)&&(get_vdec2_usage() == USAGE_ENCODE)){
+					debug_level(1,"switch encode ucode\n");
+					set_vdec2_usage(USAGE_NONE);
+				}
+			}else{
+				if(get_vdec2_usage() == USAGE_NONE)
+					set_vdec2_usage(USAGE_ENCODE);
+				if(!vdec_on(VDEC_2)){
+					vdec_poweron(VDEC_2);//++++
+					mdelay(10);
+				}
+				enable_dblk = 1;
 			}
-		}else{
-			if(get_vdec2_usage() == USAGE_NONE)
-				set_vdec2_usage(USAGE_ENCODE);
-			if(!vdec_on(VDEC_2)){
-				vdec_poweron(VDEC_2);//++++
-				mdelay(10);
-			}
-			enable_dblk = 1;
 		}
 	}
 #endif
@@ -1721,7 +1748,7 @@ void amvenc_avc_start_cmd(int cmd, unsigned* input_info, int ucode_mode)
 		WRITE_HREG(CANVAS_ROW_SIZE,(((encoder_width+31)>>5)<<5));
 
 #ifdef USE_VDEC2
-		if(enable_dblk == 1){
+		if((enable_dblk == 1)&&(IS_MESON_M8_CPU)){
 			amvdec2_stop();// amvdec2_stop(); //++++
 			WRITE_VREG(VDEC2_AV_SCRATCH_2, 0xffff);
 			// set vdec2 input, clone hcodec input buffer and set to manual mode
@@ -1800,12 +1827,14 @@ void amvenc_avc_start_cmd(int cmd, unsigned* input_info, int ucode_mode)
 void amvenc_avc_stop(void)
 {
 #ifdef USE_VDEC2
-	if(get_vdec2_usage() != USAGE_DEC_4K2K)
-		amvdec2_stop();// amvdec2_stop(); //++++
+    if(IS_MESON_M8_CPU){
+        if(get_vdec2_usage() != USAGE_DEC_4K2K)
+            amvdec2_stop();// amvdec2_stop(); //++++
+    }
 #endif
-	amvenc_stop();
-	avc_poweroff();
-	debug_level(1,"amvenc_avc_stop\n");
+    amvenc_stop();
+    avc_poweroff();
+    debug_level(1,"amvenc_avc_stop\n");
 }
 
 #ifdef CONFIG_CMA
@@ -1917,9 +1946,12 @@ static u32 amvenc_avc_light_reset(unsigned value)
     const u32 * p = mix_dump_mc;
     int r = 0;
     free_irq(INT_AMVENCODER, (void *)avc_dec_id);
+	
 #ifdef USE_VDEC2
-    if(get_vdec2_usage() != USAGE_DEC_4K2K)
-        amvdec2_stop();// amvdec2_stop(); //++++
+    if(IS_MESON_M8_CPU){
+        if(get_vdec2_usage() != USAGE_DEC_4K2K)
+            amvdec2_stop();// amvdec2_stop(); //++++
+    }
 #endif
     amvenc_stop();
     avc_poweroff();
@@ -1939,28 +1971,39 @@ static u32 amvenc_avc_light_reset(unsigned value)
                 p = mix_dump_mc;    
             break;
         case UCODE_MODE_SW_MIX:
-#ifdef  USE_VDEC2
-            if(enable_dblk == 1)
-                p = mix_sw_mc_vdec2_dblk;
-            else if (enable_dblk ==2)
-                p = mix_sw_mc_hdec_dblk;
-            else
-                p = mix_sw_mc;
-#else
-            if(enable_dblk)
-                p = mix_sw_mc_hdec_dblk;
-            else
-                p = mix_sw_mc;
+            if(IS_MESON_M8B_CPU){
+                if(enable_dblk)
+                    p = mix_sw_mc_hdec_dblk;
+                else
+                    p = mix_sw_mc;
+            }
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+            else if(IS_MESON_M8_CPU){
+                if(enable_dblk == 1)
+                    p = mix_sw_mc_vdec2_dblk;
+                else if (enable_dblk ==2)
+                    p = mix_sw_mc_hdec_dblk;
+                else
+                    p = mix_sw_mc;
+            }else if(IS_MESON_M8M2_CPU){
+                if(enable_dblk)
+                    p = mix_sw_mc_hdec_m2_dblk;
+                else
+                    p = mix_sw_mc;
+            }
 #endif
             break;
         default:
             break;
     }
 
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     if(IS_MESON_M8M2_CPU){
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-        dblk_fix_flag = (p==mix_sw_mc_hdec_dblk);
-    }else{
+        dblk_fix_flag = (p==mix_sw_mc_hdec_m2_dblk);
+    }else
+#endif
+    {
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
         dblk_fix_flag = false;
     }

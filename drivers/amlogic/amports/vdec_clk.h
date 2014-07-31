@@ -42,9 +42,7 @@ extern void hevc_clock_on(void);
 extern void hevc_clock_off(void);
 extern int vdec_clock_level(vdec_type_t core);
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
 extern void vdec_clock_prepare_switch(void);
 extern void hevc_clock_prepare_switch(void);
-#endif
 
 #endif /* VDEC_CLK_H */

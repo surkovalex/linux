@@ -56,7 +56,7 @@ extern bool vdec_on(vdec_type_t core);
 #define vdec_poweroff(core)
 #endif
 
-#if HAS_VDEC2
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 typedef enum {
     USAGE_NONE,
     USAGE_DEC_4K2K,

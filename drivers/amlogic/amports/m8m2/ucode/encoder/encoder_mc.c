@@ -34,8 +34,8 @@
 
 
 #undef MicroCode
-#define MicroCode mix_sw_mc_hdec_dblk
-#include "h264_enc_mix_sw_hdec_dblk.h"
+#define MicroCode mix_sw_mc_hdec_m2_dblk
+#include "h264_enc_mix_sw_hdec_m2_dblk.h"
 
 #undef MicroCode
 #define MicroCode mix_dump_mc_dblk

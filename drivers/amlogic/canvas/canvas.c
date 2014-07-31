@@ -44,6 +44,14 @@
 #define CANVAS_NUM	192
 #endif
 
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
+#define GM8_CANVAS_REG 0
+#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#define GM8_CANVAS_REG 1
+#else
+#define GM8_CANVAS_REG 0
+#endif
+
 static struct platform_device *canvas_dev;
 static DEFINE_SPINLOCK(lock);
 static canvas_t canvasPool[CANVAS_NUM];
@@ -61,7 +69,7 @@ void canvas_config(u32 index, ulong addr, u32 width,
     raw_local_save_flags(fiq_flag);
     local_fiq_disable();
     spin_lock_irqsave(&lock, flags);
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
+#if GM8_CANVAS_REG 
 	if (IS_MESON_M8M2_CPU)
 	{
 		CANVAS_WRITE(DC_CAV_LUT_DATAL_M8M2,
@@ -128,7 +136,7 @@ void canvas_copy(u32 src, u32 dst)
     height = canvasPool[src].height;
     wrap = canvasPool[src].wrap;
     blkmode = canvasPool[src].blkmode;
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
+#if GM8_CANVAS_REG
 	if(IS_MESON_M8M2_CPU)
 	{
 
@@ -191,7 +199,7 @@ void canvas_update_addr(u32 index, u32 addr)
     spin_lock_irqsave(&lock, flags);
 
     canvasPool[index].addr = addr;
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) 
+#if GM8_CANVAS_REG
 	if(IS_MESON_M8M2_CPU)
 	{
 

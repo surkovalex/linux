@@ -31,9 +31,6 @@ endif
 ifeq ($(CONFIG_ARCH_MESON8B),y)
 obj-y = m8b/
 endif
-ifeq ($(CONFIG_ARCH_MESON8M2),y)
-obj-y = m8m2/
-endif
 
 obj-$(CONFIG_AM_STREAMING) += amports.o
 
@@ -175,8 +172,3 @@ obj-$(CONFIG_VSYNC_RDMA) += rdma.o
 ifneq ($(CONFIG_AM_DVB),)
 EXTRA_CFLAGS = -DENABLE_DEMUX_DRIVER -DMODIFY_TIMESTAMP_INC_WITH_PLL -DCALC_CACHED_TIME #-DUSE_VMASTER_MODE
 endif
-
-ifeq ($(CONFIG_ARCH_MESON8M2), y)
-EXTRA_CFLAGS += -DCONFIG_H264_4K2K_SINGLE_CORE
-endif
-

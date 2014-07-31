@@ -789,7 +789,8 @@ void vreal_set_fatal_flag(int flag)
     }
 }
 
-#if (HAS_VDEC2)&&(HAS_HDEC)
+
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)&&(HAS_HDEC)
 extern void AbortEncodeWithVdec2(int abort);
 #endif
 
@@ -808,26 +809,29 @@ static int amvdec_real_probe(struct platform_device *pdev)
 
     memcpy(&vreal_amstream_dec_info, (void *)mem[1].start, sizeof(vreal_amstream_dec_info));
 
-#if (HAS_VDEC2)&&(HAS_HDEC)
-    // disable vdec2 dblk when miracast.
-    if(get_vdec2_usage() != USAGE_NONE)
-        AbortEncodeWithVdec2(1);
-    int count = 0;
-    while((get_vdec2_usage() != USAGE_NONE)&&(count < 10)){
-        msleep(50);
-        count++;
-    }
-
-    if(get_vdec2_usage() != USAGE_NONE){
-        printk("\namvdec_real_probe --- stop vdec2 fail.\n");
-        return -EBUSY;
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)&&(HAS_HDEC)
+    if(IS_MESON_M8_CPU){
+        // disable vdec2 dblk when miracast.
+        if(get_vdec2_usage() != USAGE_NONE)
+            AbortEncodeWithVdec2(1);
+        int count = 0;
+        while((get_vdec2_usage() != USAGE_NONE)&&(count < 10)){
+            msleep(50);
+            count++;
+        }
+    
+        if(get_vdec2_usage() != USAGE_NONE){
+            printk("\namvdec_real_probe --- stop vdec2 fail.\n");
+            return -EBUSY;
+        }
     }
 #endif
 
     if (vreal_init() < 0) {
         printk("amvdec_real init failed.\n");
-#if (HAS_VDEC2)&&(HAS_HDEC)
-        AbortEncodeWithVdec2(0);
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)&&(HAS_HDEC)
+        if(IS_MESON_M8_CPU)
+            AbortEncodeWithVdec2(0);
 #endif
         return -ENODEV;
     }
@@ -863,8 +867,9 @@ static int amvdec_real_remove(struct platform_device *pdev)
     rmparser_release();
 	
     amvdec_disable();
-#if (HAS_VDEC2)&&(HAS_HDEC)
-    AbortEncodeWithVdec2(0);
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)&&(HAS_HDEC)
+    if(IS_MESON_M8_CPU)
+        AbortEncodeWithVdec2(0);
 #endif
     printk("frame duration %d, frames %d\n", frame_dur, frame_count);
     return 0;

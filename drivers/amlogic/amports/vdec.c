@@ -204,23 +204,23 @@ void vdec_poweron(vdec_type_t core)
         // reset DOS top registers
         WRITE_VREG(DOS_VDEC_MCRCC_STALL_CTRL, 0);
     } else if (core == VDEC_2) {
-#if HAS_VDEC2
-        // vdec2 power on
-        WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0x30);
-        // wait 10uS
-        udelay(10);
-        // vdec2 soft reset
-        WRITE_VREG(DOS_SW_RESET2, 0xffffffff);
-        WRITE_VREG(DOS_SW_RESET2, 0);
-        // enable vdec1 clock
-        vdec2_clock_enable();
-        // power up vdec memories
-        WRITE_VREG(DOS_MEM_PD_VDEC2, 0);
-        // remove vdec2 isolation
-        WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0x300);
-        // reset DOS top registers
-        WRITE_VREG(DOS_VDEC2_MCRCC_STALL_CTRL, 0);
-#endif
+        if (HAS_VDEC2) {
+            // vdec2 power on
+            WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0x30);
+            // wait 10uS
+            udelay(10);
+            // vdec2 soft reset
+            WRITE_VREG(DOS_SW_RESET2, 0xffffffff);
+            WRITE_VREG(DOS_SW_RESET2, 0);
+            // enable vdec1 clock
+            vdec2_clock_enable();
+            // power up vdec memories
+            WRITE_VREG(DOS_MEM_PD_VDEC2, 0);
+            // remove vdec2 isolation
+            WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0x300);
+            // reset DOS top registers
+            WRITE_VREG(DOS_VDEC2_MCRCC_STALL_CTRL, 0);
+        }
     } else if (core == VDEC_HCODEC) {
 #if HAS_HDEC
         // hcodec power on
@@ -239,21 +239,21 @@ void vdec_poweron(vdec_type_t core)
 #endif		
     }
     else if (core == VDEC_HEVC) {
-#if  HAS_HEVC_VDEC
-        // hevc power on
-        WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0xc0);
-        // wait 10uS
-        udelay(10);
-        // hevc soft reset
-        WRITE_VREG(DOS_SW_RESET3, 0xffffffff);
-        WRITE_VREG(DOS_SW_RESET3, 0);
-        // enable hevc clock
-        hevc_clock_enable();
-        // power up hevc memories
-        WRITE_VREG(DOS_MEM_PD_HEVC, 0);
-        // remove hevc isolation
-        WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0xc00);
-#endif
+        if (HAS_HEVC_VDEC) {
+            // hevc power on
+            WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & ~0xc0);
+            // wait 10uS
+            udelay(10);
+            // hevc soft reset
+            WRITE_VREG(DOS_SW_RESET3, 0xffffffff);
+            WRITE_VREG(DOS_SW_RESET3, 0);
+            // enable hevc clock
+            hevc_clock_enable();
+            // power up hevc memories
+            WRITE_VREG(DOS_MEM_PD_HEVC, 0);
+            // remove hevc isolation
+            WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) & ~0xc00);
+        }
     }
 
     spin_unlock_irqrestore(&lock, flags);
@@ -275,16 +275,16 @@ void vdec_poweroff(vdec_type_t core)
         // vdec1 power off
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0xc);
     } else if (core == VDEC_2) {
-#if  HAS_VDEC2   
-        // enable vdec2 isolation
-        WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0x300);
-        // power off vdec2 memories
-        WRITE_VREG(DOS_MEM_PD_VDEC2, 0xffffffffUL);
-        // disable vdec2 clock
-        vdec2_clock_off();
-        // vdec2 power off
-        WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0x30);
-#endif
+        if (HAS_VDEC2) { 
+            // enable vdec2 isolation
+            WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0x300);
+            // power off vdec2 memories
+            WRITE_VREG(DOS_MEM_PD_VDEC2, 0xffffffffUL);
+            // disable vdec2 clock
+            vdec2_clock_off();
+            // vdec2 power off
+            WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0x30);
+        }
     } else if (core == VDEC_HCODEC) {
 #if  HAS_HDEC    
         // enable hcodec isolation
@@ -297,16 +297,16 @@ void vdec_poweroff(vdec_type_t core)
         WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 3);
 #endif
     } else if (core == VDEC_HEVC) {
-#if  HAS_HEVC_VDEC
-        // enable hevc isolation
-        WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0xc00);
-        // power off hevc memories
-        WRITE_VREG(DOS_MEM_PD_HEVC, 0xffffffffUL);
-        // disable hevc clock
-        hevc_clock_off();
-        // hevc power off
-        WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0xc0);
-#endif        
+        if (HAS_HEVC_VDEC) {
+            // enable hevc isolation
+            WRITE_AOREG(AO_RTI_GEN_PWR_ISO0, READ_AOREG(AO_RTI_GEN_PWR_ISO0) | 0xc00);
+            // power off hevc memories
+            WRITE_VREG(DOS_MEM_PD_HEVC, 0xffffffffUL);
+            // disable hevc clock
+            hevc_clock_off();
+            // hevc power off
+            WRITE_AOREG(AO_RTI_GEN_PWR_SLEEP0, READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) | 0xc0);
+        }
     }
 
     spin_unlock_irqrestore(&lock, flags);
@@ -322,12 +322,12 @@ bool vdec_on(vdec_type_t core)
             ret = true;
         }
     } else if (core == VDEC_2) {
-#if HAS_VDEC2
-        if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0x30) == 0) &&
-            (READ_MPEG_REG(HHI_VDEC2_CLK_CNTL) & 0x100)) {
-            ret = true;
+        if (HAS_VDEC2) {
+            if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0x30) == 0) &&
+                (READ_MPEG_REG(HHI_VDEC2_CLK_CNTL) & 0x100)) {
+                ret = true;
+            }
         }
-#endif
     } else if (core == VDEC_HCODEC) {
 #if  HAS_HDEC 
         if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0x3) == 0) &&
@@ -336,12 +336,12 @@ bool vdec_on(vdec_type_t core)
         }
 #endif
     } else if (core == VDEC_HEVC) {
-#if  HAS_HEVC_VDEC 
-        if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0xc0) == 0) &&
-            (READ_MPEG_REG(HHI_VDEC2_CLK_CNTL) & 0x1000000)) {
-            ret = true;
+        if (HAS_HEVC_VDEC) { 
+            if (((READ_AOREG(AO_RTI_GEN_PWR_SLEEP0) & 0xc0) == 0) &&
+                (READ_MPEG_REG(HHI_VDEC2_CLK_CNTL) & 0x1000000)) {
+                ret = true;
+            }
         }
-#endif
     }
 
     return ret;
@@ -437,8 +437,10 @@ void vdec_power_mode(int level)
     raw_local_save_flags(fiq_flag);
     local_fiq_disable();
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
-    vdec_clock_prepare_switch();
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if (!IS_MESON_M8_CPU) {
+        vdec_clock_prepare_switch();
+    }
 #endif
 
     if (level == 0) {
@@ -451,47 +453,57 @@ void vdec_power_mode(int level)
     spin_unlock_irqrestore(&lock, flags);
 }
 
-#if HAS_VDEC2
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
 void vdec2_power_mode(int level)
 {
-    /* todo: add level routines for clock adjustment per chips */
-    ulong flags;
-    ulong fiq_flag;
+    if (HAS_VDEC2) {
+        /* todo: add level routines for clock adjustment per chips */
+        ulong flags;
+        ulong fiq_flag;
 
-    if (vdec_clock_level(VDEC_2) == level) {
-        return;
-    }
+        if (vdec_clock_level(VDEC_2) == level) {
+            return;
+        }
 
-    spin_lock_irqsave(&lock, flags);
-    raw_local_save_flags(fiq_flag);
-    local_fiq_disable();
+        spin_lock_irqsave(&lock, flags);
+        raw_local_save_flags(fiq_flag);
+        local_fiq_disable();
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
-    vdec_clock_prepare_switch();
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+        if (!IS_MESON_M8_CPU) {
+            vdec_clock_prepare_switch();
+        }
 #endif
 
-    if (level == 0) {
-        vdec2_clock_enable();
-    } else {
-        vdec2_clock_hi_enable();
-    }
+        if (level == 0) {
+            vdec2_clock_enable();
+        } else {
+            vdec2_clock_hi_enable();
+        }
 
-    raw_local_irq_restore(fiq_flag);
-    spin_unlock_irqrestore(&lock, flags);
+        raw_local_irq_restore(fiq_flag);
+        spin_unlock_irqrestore(&lock, flags);
+    }
 }
 
 static vdec2_usage_t vdec2_usage = USAGE_NONE;
 void set_vdec2_usage(vdec2_usage_t usage)
 {
-    ulong flags;
-    spin_lock_irqsave(&lock, flags);
-    vdec2_usage = usage;
-    spin_unlock_irqrestore(&lock, flags);
+    if (HAS_VDEC2) {
+        ulong flags;
+        spin_lock_irqsave(&lock, flags);
+        vdec2_usage = usage;
+        spin_unlock_irqrestore(&lock, flags);
+    }
 }
 
 vdec2_usage_t get_vdec2_usage(void)
 {
-    return vdec2_usage;
+    if (HAS_VDEC2) {
+        return vdec2_usage;
+    } else {
+        return 0;
+    }
 }
 
 #endif
@@ -617,9 +629,9 @@ static ssize_t clock_level_show(struct class *class, struct class_attribute *att
 
     pbuf += sprintf(pbuf, "%d %d\n", vdec_clock_level(VDEC_1), vdec_clock_level(VDEC_2));
 
-#ifdef HAS_VDEC2
-    pbuf += sprintf(pbuf, "%d\n", vdec_clock_level(VDEC_2));
-#endif
+    if (HAS_VDEC2) {
+        pbuf += sprintf(pbuf, "%d\n", vdec_clock_level(VDEC_2));
+    }
 
 #ifdef HAD_VDEC_HEVC
     pbuf += sprintf(pbuf, "%d\n", vdec_clock_level(VDEC_HEVC);

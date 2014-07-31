@@ -68,7 +68,7 @@ typedef struct pts_table_s {
     u32 last_avg_bitrate;
     u32 last_pts_delay_ms;
 #endif
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     u32 hevc;
 #endif
 } pts_table_t;
@@ -187,19 +187,21 @@ int calculation_stream_delayed_ms(u8 type, u32 *latestbitrate, u32 *avg_bitare)
         return 0;
     }
 
-#if HAS_HEVC_VDEC
-    if (type == PTS_TYPE_HEVC) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if (HAS_HEVC_VDEC && (type == PTS_TYPE_HEVC)) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
     } else
 #endif
-    pTable = &pts_table[type];
+    {
+        pTable = &pts_table[type];
+    }
 
     if((pTable->last_checkin_pts==-1) || (pTable->last_checkout_pts==-1)) {
         return 0;
     }
 
-#if HAS_HEVC_VDEC
-    if (type == PTS_TYPE_HEVC) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if (HAS_HEVC_VDEC && (type == PTS_TYPE_HEVC)) {
         outtime = timestamp_vpts_get();
     } else
 #endif
@@ -218,15 +220,20 @@ int calculation_stream_delayed_ms(u8 type, u32 *latestbitrate, u32 *avg_bitare)
         int diff = pTable->last_checkin_offset-pTable->last_checkout_offset;
         int diff2;
         int delay_ms;
-#if HAS_HEVC_VDEC
-        if (pTable->hevc) {
-            diff2 = stbuf_level(get_buf_by_type(PTS_TYPE_HEVC));
-        } else{
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+        if (HAS_HEVC_VDEC) {
+            if (pTable->hevc) {
+                diff2 = stbuf_level(get_buf_by_type(PTS_TYPE_HEVC));
+            } else{
+                diff2 = stbuf_level(get_buf_by_type(type));
+            }
+        } else 
+#endif
+        {
             diff2 = stbuf_level(get_buf_by_type(type));
         }
-#else
-        diff2 = stbuf_level(get_buf_by_type(type));
-#endif
+        
 	if(diff2 > stbuf_space(get_buf_by_type(type)))
             diff = diff2;
         delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
@@ -282,8 +289,8 @@ int calculation_stream_ext_delayed_ms(u8 type)
          return 0;
     }
 
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
-    if (type == PTS_TYPE_HEVC) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if (HAS_HEVC_VDEC && (type == PTS_TYPE_HEVC)) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
     } else
 #endif
@@ -887,16 +894,18 @@ int pts_start(u8 type)
         return -EINVAL;
     }
 
-#if HAS_HEVC_VDEC
-    if (type == PTS_TYPE_HEVC) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if (HAS_HEVC_VDEC && (type == PTS_TYPE_HEVC)) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
         pTable->hevc = 1;
     } else
 #endif
     {
         pTable = &pts_table[type];
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
-        pTable->hevc = 0;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+        if (!IS_MESON_M8_CPU) {
+            pTable->hevc = 0;
+        }
 #endif
     }
 
@@ -911,8 +920,8 @@ int pts_start(u8 type)
             return -ENOMEM;
         }
 
-#if HAS_HEVC_VDEC
-        if (type == PTS_TYPE_HEVC) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+        if (HAS_HEVC_VDEC && (type == PTS_TYPE_HEVC)) {
             pTable->buf_start = READ_VREG(HEVC_STREAM_START_ADDR);
             pTable->buf_size = READ_VREG(HEVC_STREAM_END_ADDR)
                                - pTable->buf_start;
@@ -921,7 +930,7 @@ int pts_start(u8 type)
             pTable->first_checkin_pts = -1;
             pTable->first_lookup_ok = 0;
             pTable->first_lookup_is_fail = 0;
-        } else
+        } else 
 #endif
         if (type == PTS_TYPE_VIDEO) {
             pTable->buf_start = READ_VREG(VLD_MEM_VIFIFO_START_PTR);
@@ -986,13 +995,15 @@ int pts_stop(u8 type)
         return -EINVAL;
     }
 
-#if HAS_HEVC_VDEC
-    if (type == PTS_TYPE_HEVC) {
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    if (HAS_HEVC_VDEC && (type == PTS_TYPE_HEVC)) {
         pTable = &pts_table[PTS_TYPE_VIDEO];
-    } else
+    } else 
 #endif
-    pTable = &pts_table[type];
-
+    {
+        pTable = &pts_table[type];
+    }
+    
     spin_lock_irqsave(&lock, flags);
 
     if (likely((pTable->status == PTS_RUNNING) ||
