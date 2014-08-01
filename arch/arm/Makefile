@@ -161,7 +161,6 @@ machine-$(CONFIG_ARCH_MESON6TV)		+= meson6tv
 machine-$(CONFIG_ARCH_MESON6TVD)	+= meson6tvd
 machine-$(CONFIG_ARCH_MESON8)		+= meson8
 machine-$(CONFIG_ARCH_MESON8B)		+= meson8b
-machine-$(CONFIG_ARCH_MESON8M2)		+= meson8
 machine-$(CONFIG_ARCH_MESONG9TV)	+= mesong9tv
 machine-$(CONFIG_ARCH_MMP)		+= mmp
 machine-$(CONFIG_ARCH_MSM)		+= msm

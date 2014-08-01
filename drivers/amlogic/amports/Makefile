@@ -25,9 +25,6 @@ endif
 ifeq ($(CONFIG_ARCH_MESON8),y)
 obj-y = m8/
 endif
-ifeq ($(CONFIG_ARCH_MESON8M2),y)
-obj-y = m8/
-endif
 ifeq ($(CONFIG_ARCH_MESON8B),y)
 obj-y = m8b/
 endif
@@ -40,10 +37,6 @@ ifeq ($(CONFIG_ARCH_MESON8B),y)
 amports-y    := amstream.o streambuf.o vdec.o adec.o tsdemux.o psparser.o esparser.o rmparser.o amvdec.o amstream_profile.o  tsync_pcr.o
 else
 ifeq ($(CONFIG_ARCH_MESON8),y)
-amports-objs := $(AMPORTS_OBJS)
-amports-y    := $(AMPORTS_OBJS)
-else
-ifeq ($(CONFIG_ARCH_MESON8M2),y)
 amports-objs := $(AMPORTS_OBJS)
 amports-y    := $(AMPORTS_OBJS)
 else
@@ -61,7 +54,6 @@ amports-y    := $(AMPORTS_OBJS)
 else
 amports-objs := $(AMPORTS_OBJS) amve.o amcm.o
 amports-y    := $(AMPORTS_OBJS) amve.o amcm.o
-endif
 endif
 endif
 endif
@@ -118,12 +110,6 @@ ifeq ($(CONFIG_ARCH_MESON8),y)
 obj-$(CONFIG_AM_VDEC_AVS) += amvdec_avs.o
 amvdec_avs-objs := vavs.o
 amvdec_avs-y    := vavs.o
-else
-ifeq ($(CONFIG_ARCH_MESON8M2),y)
-obj-$(CONFIG_AM_VDEC_AVS) += amvdec_avs.o
-amvdec_avs-objs := vavs.o
-amvdec_avs-y    := vavs.o
-endif
 endif
 endif
 endif
@@ -138,13 +124,8 @@ ifeq ($(CONFIG_ARCH_MESON8),y)
 amvideo-objs := video.o vpp.o video_prot.o
 amvideo-y    := video.o vpp.o video_prot.o
 else
-ifeq ($(CONFIG_ARCH_MESON8M2),y)
-amvideo-objs := video.o vpp.o video_prot.o
-amvideo-y    := video.o vpp.o video_prot.o
-else
 amvideo-objs := video.o vpp.o
 amvideo-y    := video.o vpp.o
-endif
 endif
 
 ifeq ($(CONFIG_AM_VIDEOCAPTURE),y)
