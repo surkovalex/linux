@@ -722,6 +722,8 @@ static void vmpeg4_prot_init(void)
     printk("mpeg4 meson8 prot init\n");
     WRITE_VREG(MDEC_PIC_DC_THRESH, 0x404038aa);
 #endif
+
+WRITE_VREG(MP4_PIC_WH, (vmpeg4_amstream_dec_info.width << 16) | vmpeg4_amstream_dec_info.height);
 }
 
 static void vmpeg4_local_init(void)
