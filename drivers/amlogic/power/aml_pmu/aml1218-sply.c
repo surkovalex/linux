@@ -347,9 +347,9 @@ int aml1218_set_charge_enable(int enable)
 //    int ocv = 0;
 
     pmu_version = aml1218_get_pmu_version();
-    printk("---> set charger enable, vbat:%d, vsys:%d\n", 
-           aml1218_get_battery_voltage(),
-           aml1218_get_vsys_voltage());
+  //printk("---> set charger enable, vbat:%d, vsys:%d\n", 
+  //       aml1218_get_battery_voltage(),
+  //       aml1218_get_vsys_voltage());
     if (pmu_version == 0)
     {   
         aml1218_set_full_charge_voltage(4050000);
