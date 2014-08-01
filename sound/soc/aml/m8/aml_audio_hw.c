@@ -88,10 +88,10 @@ unsigned int dac_mute_const = 0x800000;
                       		(N) * (OD+1) * (XD)
 */
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
-int audio_clock_config_table[][12][2]=
+int audio_clock_config_table[][13][2]=
 {
 	/*{HIU Reg , XD - 1)
-	   //7.875k, 8K, 11.025k, 12k, 16k, 22.05k, 24k, 32k, 44.1k, 48k, 96k, 192k
+	   //7.875k, 8K, 11.025k, 12k, 16k, 22.05k, 24k, 32k, 44.1k, 48k, 88.2k, 96k, 192k
 	*/
 	{
 	//256
@@ -105,7 +105,7 @@ int audio_clock_config_table[][12][2]=
 		{0x0007c4e6, (23-1)},  // 48
 #endif	
 		//{0x0006d0a4, (13-1)},  // 96
-        {0x0004c9a0,  (25-1)},// 96k ,24.576M
+        {0x0005cc08,  (20-1)},// 96k ,24.576M
 		//{0x0004e15a, (9 -1)},   // 192
         {0x0005cc08,    (10-1)},   // 192k, 49.152M
 		{0x0007f400, (125-1)}, // 8k
@@ -115,6 +115,7 @@ int audio_clock_config_table[][12][2]=
 		{0x0004c4a4, (87-1)},  // 22.05
 		{0x0007e47f, (43-1)},  // 24
 		{0x0007f3f0, (127-1)}, // 7875
+        {0x0005c88b, (22-1)}, // 88.2k ,22.579M
 #else
 	//512FS
 		{0x0004f880, (25-1)},  // 32
@@ -630,6 +631,9 @@ void audio_set_i2s_clk(unsigned freq, unsigned fs_config, unsigned mpll)
 		case AUDIO_CLK_FREQ_24:
 			index = 10;
 			break;
+        case AUDIO_CLK_FREQ_882:
+			index = 12;
+			break;
 		default:
 			index=0;
 			break;
@@ -710,6 +714,7 @@ void audio_set_958_clk(unsigned freq, unsigned fs_config)
     int (*audio_clock_config)[2];
 
 	int index=0;
+    printk("audio_set_958_clk, freq=%d,\n",freq);
 	switch(freq)
 	{
 		case AUDIO_CLK_FREQ_192:
@@ -744,6 +749,9 @@ void audio_set_958_clk(unsigned freq, unsigned fs_config)
 			break;
 		case AUDIO_CLK_FREQ_24:
 			index = 10;
+			break;
+        case AUDIO_CLK_FREQ_882:
+			index = 12;
 			break;
 		default:
 			index=0;

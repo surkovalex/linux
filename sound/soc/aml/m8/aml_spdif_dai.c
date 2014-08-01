@@ -160,6 +160,7 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 	memset((void*)(&set), 0, sizeof(set));
 	memset((void*)(&chstat), 0, sizeof(chstat));
 	set.chan_stat = &chstat;
+    printk("----aml_hw_iec958_init,runtime->rate=%d--\n",runtime->rate);
 	switch(runtime->rate){
 		case 192000:
 			sample_rate	=	AUDIO_CLK_FREQ_192;
@@ -209,6 +210,7 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
         last_iec_clock = sample_rate;
         audio_set_958_clk(sample_rate, AUDIO_CLK_256FS);
     }
+    printk("----aml_hw_iec958_init,runtime->rate=%d,sample_rate=%d--\n",runtime->rate,sample_rate);
 	audio_util_set_dac_958_format(AUDIO_ALGOUT_DAC_FORMAT_DSP);
 
 	switch(runtime->format){
@@ -248,8 +250,19 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 		iec958_mode == AIU_958_MODE_PCM32){
 		set.chan_stat->chstat0_l = 0x0100;
 		set.chan_stat->chstat0_r = 0x0100;
-		set.chan_stat->chstat1_l = 0X200;
-		set.chan_stat->chstat1_r = 0X200;
+		set.chan_stat->chstat1_l = 0x200;
+		set.chan_stat->chstat1_r = 0x200;
+        if(sample_rate==AUDIO_CLK_FREQ_882){
+            printk("----sample_rate==AUDIO_CLK_FREQ_882---\n");
+            set.chan_stat->chstat1_l = 0x800;
+            set.chan_stat->chstat1_r = 0x800;
+        }
+
+        if(sample_rate==AUDIO_CLK_FREQ_96){
+            printk("----sample_rate==AUDIO_CLK_FREQ_96---\n");
+            set.chan_stat->chstat1_l = 0xa00;
+            set.chan_stat->chstat1_r = 0xa00;
+        }
 		start = buf->addr;
 		size = snd_pcm_lib_buffer_bytes(substream);
 		audio_set_958outbuf(start, size, 0);
@@ -283,8 +296,8 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 				set.chan_stat->chstat1_r = 0;			
 			}
 			else{
-				set.chan_stat->chstat1_l = 0X200;
-				set.chan_stat->chstat1_r = 0X200;			
+				set.chan_stat->chstat1_l = 0x200;
+				set.chan_stat->chstat1_r = 0x200;			
 			}
 		}
 		start = buf->addr;
@@ -475,6 +488,7 @@ static struct snd_soc_dai_driver aml_spdif_dai[] = {
 					SNDRV_PCM_RATE_32000 |
 					SNDRV_PCM_RATE_44100 |
 					SNDRV_PCM_RATE_48000 |
+					SNDRV_PCM_RATE_88200 |
 					SNDRV_PCM_RATE_96000  |
 					SNDRV_PCM_RATE_176400 |
 					SNDRV_PCM_RATE_192000),
