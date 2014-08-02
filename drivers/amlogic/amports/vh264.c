@@ -345,6 +345,10 @@ static void vdec_dfs(void)
 {
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8B
     vdec_power_mode((fifo_level() > DFS_HIGH_THEASHOLD) ? 0 : 1);
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+    if (IS_MESON_M8M2_CPU) {
+        vdec_power_mode((fifo_level() > DFS_HIGH_THEASHOLD) ? 0 : 1);
+    }
 #endif
 }
 
