@@ -30,6 +30,24 @@
         while(i--);     \
     }while(0)
 
+#define WAIT_FOR_PLL_LOCKED(reg)                        \
+    do {                                                \
+        unsigned int st = 0, cnt = 10;                  \
+        while(cnt --) {                                 \
+            msleep_interruptible(10);                   \
+            st = !!(aml_read_reg32(reg) & (1 << 31));   \
+            if(st) {                                    \
+                break;                                  \
+            }                                           \
+            else {  /* reset pll */                     \
+                aml_set_reg32_bits(reg, 0x3, 29, 2);    \
+                aml_set_reg32_bits(reg, 0x2, 29, 2);    \
+            }                                           \
+        }                                               \
+        if(cnt < 9)                                     \
+            printk(KERN_CRIT "pll[0x%x] reset %d times\n", reg, 9 - cnt);\
+    }while(0);
+
 static void set_hpll_clk_out(unsigned clk)
 {
     printk("config HPLL\n");
@@ -124,9 +142,7 @@ static void set_hpll_clk_out(unsigned clk)
             aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x12385);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6001042d);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4001042d);
-            while(!(aml_read_reg32(P_HHI_VID_PLL_CNTL) & (1 << 31))) {
-                ;
-            }
+            WAIT_FOR_PLL_LOCKED(P_HHI_VID_PLL_CNTL);
             break;
         case 1488:
             aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8ce00);
@@ -135,9 +151,7 @@ static void set_hpll_clk_out(unsigned clk)
             aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x12286);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000043d);
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4000043d);
-            while(!(aml_read_reg32(P_HHI_VID_PLL_CNTL) & (1 << 31))) {
-                ;
-            }
+            WAIT_FOR_PLL_LOCKED(P_HHI_VID_PLL_CNTL);
             break;
         case 1080:
             aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x6000042d);
