@@ -1150,6 +1150,12 @@ wait:
             if((st == 1) && (hdmitx_device->hpd_state == 0)) {
                 hdmitx_device->hpd_event = 1;
             }
+// Check audio status
+#ifndef CONFIG_AML_HDMI_TX_HDCP
+            if((hdmitx_device->cur_VIC != HDMI_Unkown) && (!(hdmitx_device->HWOp.GetState(hdmitx_device, STAT_AUDIO_PACK, 0)))) {
+                hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_UNMUTE);
+            }
+#endif
         }
 
         if (hdmitx_device->hpd_event == 1)
