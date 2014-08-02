@@ -3713,8 +3713,10 @@ static int __init amvdec_h265_driver_init_module(void)
     }
 
     #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-    if (!IS_MESON_M8_CPU) {
-        strcpy(amvdec_h265_profile.profile, "4k"); // support 4k
+    if (IS_MESON_M8_CPU) {
+        amvdec_h265_profile.name = "hevc_unsupport"; //not support hevc
+    }else if(IS_MESON_M8M2_CPU){
+        amvdec_h265_profile.profile = "4k"; //m8m2 support 4k
     }
     #endif
 
