@@ -134,7 +134,7 @@ error handling
 */
 static u32 error_handle_policy = 0;  /* bit 0: 1, wait vps/sps/pps after error recovery; */
 static u32 error_skip_nal_count = 6;
-static u32 error_handle_threshold = 10;
+static u32 error_handle_threshold = 30;
 static u32 error_handle_nal_skip_threshold = 10;
 static u32 error_handle_system_threshold = 30;
 
