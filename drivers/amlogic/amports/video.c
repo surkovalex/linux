@@ -4038,21 +4038,24 @@ static ssize_t video_crop_store(struct class *cla, struct class_attribute *attr,
 }
 static ssize_t video_state_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
-	ssize_t len = 0;
-#ifdef TV_3D_FUNCTION_OPEN
-
-	vppfilter_mode_t *vpp_filter = &cur_frame_par->vpp_filter;
-        len += sprintf(buf + len, "zoom_start_x_lines:%u.zoom_end_x_lines:%u.\n", zoom_start_x_lines,zoom_end_x_lines);
-	len += sprintf(buf + len, "zoom_start_y_lines:%u.zoom_end_y_lines:%u.\n", zoom_start_y_lines,zoom_end_y_lines);
-	len += sprintf(buf + len,"frame parameters: pic_in_height %u.\n", cur_frame_par->VPP_pic_in_height_);
-	len += sprintf(buf + len,"vscale_skip_count %u.\n", cur_frame_par->vscale_skip_count);
-	len += sprintf(buf + len,"vpp_2pic_mode %u.\n", cur_frame_par->vpp_2pic_mode);
-	len += sprintf(buf + len,"vpp_3d_scale %u.\n", cur_frame_par->vpp_3d_scale);
-	len += sprintf(buf + len,"vpp_3d_mode %u.\n", cur_frame_par->vpp_3d_mode);
-	len += sprintf(buf + len,"hscale phase step 0x%x.\n", vpp_filter->vpp_hsc_start_phase_step);
-	len += sprintf(buf + len,"vscale phase step 0x%x.\n", vpp_filter->vpp_vsc_start_phase_step);
-#endif
+    ssize_t len = 0;
+    vppfilter_mode_t *vpp_filter = NULL;
+    if(!cur_frame_par)
         return len;
+    vpp_filter = &cur_frame_par->vpp_filter;
+    len += sprintf(buf + len, "zoom_start_x_lines:%u.zoom_end_x_lines:%u.\n", zoom_start_x_lines,zoom_end_x_lines);
+    len += sprintf(buf + len, "zoom_start_y_lines:%u.zoom_end_y_lines:%u.\n", zoom_start_y_lines,zoom_end_y_lines);
+    len += sprintf(buf + len,"frame parameters: pic_in_height %u.\n", cur_frame_par->VPP_pic_in_height_);
+    len += sprintf(buf + len,"vscale_skip_count %u.\n", cur_frame_par->vscale_skip_count);
+    len += sprintf(buf + len,"vscale_skip_count %u.\n", cur_frame_par->hscale_skip_count);
+    #ifdef TV_3D_FUNCTION_OPEN
+    len += sprintf(buf + len,"vpp_2pic_mode %u.\n", cur_frame_par->vpp_2pic_mode);
+    len += sprintf(buf + len,"vpp_3d_scale %u.\n", cur_frame_par->vpp_3d_scale);
+    len += sprintf(buf + len,"vpp_3d_mode %u.\n", cur_frame_par->vpp_3d_mode);
+    #endif
+    len += sprintf(buf + len,"hscale phase step 0x%x.\n", vpp_filter->vpp_hsc_start_phase_step);
+    len += sprintf(buf + len,"vscale phase step 0x%x.\n", vpp_filter->vpp_vsc_start_phase_step);
+    return len;
 }
 
 static ssize_t video_axis_show(struct class *cla, struct class_attribute *attr, char *buf)
