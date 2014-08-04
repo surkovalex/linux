@@ -32,6 +32,7 @@
 #include <mach/io.h>
 #include <linux/io.h>
 #include <plat/lm.h>
+#include <plat/cpu.h>
 #ifdef CONFIG_SMP
 #include <mach/smp.h>
 #endif
@@ -61,6 +62,8 @@ static void __init meson6tv_map_io(void)
 
 static void __init meson6tv_init_early(void)
 {
+
+	meson_cpu_version_init();
 	/*
 	 * Mali or some USB devices allocate their coherent buffers from atomic
 	 * context. Increase size of atomic coherent pool to make sure such
