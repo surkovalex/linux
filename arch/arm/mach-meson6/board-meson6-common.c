@@ -161,6 +161,7 @@ static __init void meson_init_early(void)
 	 * the allocations won't fail.
 	 */
 	init_dma_coherent_pool_size(SZ_4M);
+	meson_cpu_version_init();
 }
 
 static void __init meson_init_irq(void)
