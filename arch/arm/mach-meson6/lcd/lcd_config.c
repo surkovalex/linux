@@ -48,6 +48,7 @@ static spinlock_t gamma_write_lock;
 static spinlock_t lcd_clk_lock;
 
 static Lcd_Config_t *lcd_Conf;
+static struct class *lcd_video_class = NULL;
 static unsigned char lcd_gamma_init_err = 0;
 static unsigned gamma_cntl_port_offset = 0;
 
@@ -1023,10 +1024,10 @@ static void set_venc_lvds(Lcd_Config_t *pConf)
 
 	WRITE_LCD_REG(ENCL_VIDEO_HSO_BEGIN,   10);//pConf->lcd_timing.hs_hs_addr);
 	WRITE_LCD_REG(ENCL_VIDEO_HSO_END,     16);//pConf->lcd_timing.hs_he_addr);
-	WRITE_LCD_REG(ENCL_VIDEO_VSO_BEGIN,   10);//pConf->lcd_timing.vs_hs_addr);
-	WRITE_LCD_REG(ENCL_VIDEO_VSO_END,     10);//pConf->lcd_timing.vs_he_addr);
-	WRITE_LCD_REG(ENCL_VIDEO_VSO_BLINE,   10);//pConf->lcd_timing.vs_vs_addr);
-	WRITE_LCD_REG(ENCL_VIDEO_VSO_ELINE,   12);//pConf->lcd_timing.vs_ve_addr);
+	WRITE_LCD_REG(ENCL_VIDEO_VSO_BEGIN,   pConf->lcd_timing.vso_hstart);
+	WRITE_LCD_REG(ENCL_VIDEO_VSO_END,     pConf->lcd_timing.vso_hstart);
+	WRITE_LCD_REG(ENCL_VIDEO_VSO_BLINE,   pConf->lcd_timing.vso_vstart);
+	WRITE_LCD_REG(ENCL_VIDEO_VSO_ELINE,   pConf->lcd_timing.vso_vstart + 2);
 
 	WRITE_LCD_REG(ENCL_VIDEO_RGBIN_CTRL,  (1 << 0));//(1 << 1) | (1 << 0));	//bit[0] 1:RGB, 0:YUV
 
@@ -1451,6 +1452,77 @@ static void lcd_test(unsigned num)
 	}
 }
 
+//***********************************************
+// sysfs api for video
+//***********************************************
+static ssize_t lcd_video_vso_read(struct class *class, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "read vso start: %u %u\n", lcd_Conf->lcd_timing.vso_hstart, lcd_Conf->lcd_timing.vso_vstart);
+}
+
+static ssize_t lcd_video_vso_write(struct class *class, struct class_attribute *attr, const char *buf, size_t count)
+{
+    unsigned int ret;
+    unsigned int para[2];
+
+    para[0] = 10;
+    para[0] = 10;
+    ret = sscanf(buf, "%u %u", &para[0], &para[1]);
+    lcd_Conf->lcd_timing.vso_hstart = (unsigned short)para[0];
+    lcd_Conf->lcd_timing.vso_vstart = (unsigned short)para[1];
+    lcd_Conf->lcd_timing.vso_user = 1;
+    WRITE_LCD_REG(ENCL_VIDEO_VSO_BEGIN,   lcd_Conf->lcd_timing.vso_hstart);
+    WRITE_LCD_REG(ENCL_VIDEO_VSO_END,     lcd_Conf->lcd_timing.vso_hstart);
+    WRITE_LCD_REG(ENCL_VIDEO_VSO_BLINE,   lcd_Conf->lcd_timing.vso_vstart);
+    WRITE_LCD_REG(ENCL_VIDEO_VSO_ELINE,   lcd_Conf->lcd_timing.vso_vstart + 2);
+    printk("set vso start: %u %u\n", lcd_Conf->lcd_timing.vso_hstart, lcd_Conf->lcd_timing.vso_vstart);
+
+    if (ret != 1 || ret !=2)
+        return -EINVAL;
+
+    return count;
+    //return 0;
+}
+
+static struct class_attribute lcd_video_class_attrs[] = {
+    __ATTR(vso,  S_IRUGO | S_IWUSR, lcd_video_vso_read, lcd_video_vso_write),
+};
+
+static int creat_lcd_video_attr(void)
+{
+    int i;
+
+    lcd_video_class = class_create(THIS_MODULE, "lcd_video");
+    if(IS_ERR(lcd_video_class)) {
+        printk("create lcd_video class fail\n");
+        return -1;
+    }
+
+    for(i=0;i<ARRAY_SIZE(lcd_video_class_attrs);i++) {
+        if (class_create_file(lcd_video_class, &lcd_video_class_attrs[i])) {
+            printk("create lcd_video attribute %s fail\n", lcd_video_class_attrs[i].attr.name);
+        }
+    }
+
+    return 0;
+}
+
+static int remove_lcd_video_attr(void)
+{
+    int i;
+
+    if (lcd_video_class == NULL)
+        return -1;
+
+    for(i=0;i<ARRAY_SIZE(lcd_video_class_attrs);i++) {
+        class_remove_file(lcd_video_class, &lcd_video_class_attrs[i]);
+    }
+    class_destroy(lcd_video_class);
+
+    return 0;
+}
+//***********************************************
+
 static DEFINE_MUTEX(lcd_init_mutex);
 static void lcd_module_enable(void)
 {
@@ -1639,6 +1711,7 @@ static void lcd_sync_duration(Lcd_Config_t *pConf)
 
 static void lcd_tcon_config(Lcd_Config_t *pConf)
 {
+	unsigned short de_hstart, de_vstart;
 	unsigned short hstart, hend, vstart, vend;
 	unsigned short h_delay = 0;
 	unsigned short h_offset = 0, v_offset = 0, vsync_h_phase=0;
@@ -1658,16 +1731,16 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
 	h_offset = (pConf->lcd_timing.h_offset & 0xffff);
 	v_offset = (pConf->lcd_timing.v_offset & 0xffff);
 	if ((pConf->lcd_timing.h_offset >> 31) & 1)
-		pConf->lcd_timing.de_hstart = (pConf->lcd_timing.video_on_pixel + pConf->lcd_basic.h_period + h_delay + h_offset) % pConf->lcd_basic.h_period;
+		de_hstart = (pConf->lcd_timing.video_on_pixel + pConf->lcd_basic.h_period + h_delay + h_offset) % pConf->lcd_basic.h_period;
 	else
-		pConf->lcd_timing.de_hstart = (pConf->lcd_timing.video_on_pixel + pConf->lcd_basic.h_period + h_delay - h_offset) % pConf->lcd_basic.h_period;
+		de_hstart = (pConf->lcd_timing.video_on_pixel + pConf->lcd_basic.h_period + h_delay - h_offset) % pConf->lcd_basic.h_period;
 	if ((pConf->lcd_timing.v_offset >> 31) & 1)
-		pConf->lcd_timing.de_vstart = (pConf->lcd_timing.video_on_line + pConf->lcd_basic.v_period + v_offset) % pConf->lcd_basic.v_period;
+		de_vstart = (pConf->lcd_timing.video_on_line + pConf->lcd_basic.v_period + v_offset) % pConf->lcd_basic.v_period;
 	else
-		pConf->lcd_timing.de_vstart = (pConf->lcd_timing.video_on_line + pConf->lcd_basic.v_period - v_offset) % pConf->lcd_basic.v_period;
+		de_vstart = (pConf->lcd_timing.video_on_line + pConf->lcd_basic.v_period - v_offset) % pConf->lcd_basic.v_period;
 	
-	hstart = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp) % pConf->lcd_basic.h_period;
-	hend = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp + pConf->lcd_timing.hsync_width) % pConf->lcd_basic.h_period;	
+	hstart = (de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp) % pConf->lcd_basic.h_period;
+	hend = (de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp + pConf->lcd_timing.hsync_width) % pConf->lcd_basic.h_period;	
 	pConf->lcd_timing.hs_hs_addr = hstart;
 	pConf->lcd_timing.hs_he_addr = hend;
 	pConf->lcd_timing.hs_vs_addr = 0;
@@ -1680,18 +1753,15 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
 		vsync_h_phase = (hstart + pConf->lcd_basic.h_period + vsync_h_phase) % pConf->lcd_basic.h_period;
 	pConf->lcd_timing.vs_hs_addr = vsync_h_phase;
 	pConf->lcd_timing.vs_he_addr = vsync_h_phase;
-	vstart = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp) % pConf->lcd_basic.v_period;
-	vend = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp + pConf->lcd_timing.vsync_width) % pConf->lcd_basic.v_period;
+	vstart = (de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp) % pConf->lcd_basic.v_period;
+	vend = (de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp + pConf->lcd_timing.vsync_width) % pConf->lcd_basic.v_period;
 	pConf->lcd_timing.vs_vs_addr = vstart;
 	pConf->lcd_timing.vs_ve_addr = vend;
-
-	pConf->lcd_timing.de_hstart = pConf->lcd_timing.de_hstart;
-	pConf->lcd_timing.de_vstart = pConf->lcd_timing.de_vstart;
 	
-	pConf->lcd_timing.de_hs_addr = pConf->lcd_timing.de_hstart;
-	pConf->lcd_timing.de_he_addr = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_active) % pConf->lcd_basic.h_period;
-	pConf->lcd_timing.de_vs_addr = pConf->lcd_timing.de_vstart;
-	pConf->lcd_timing.de_ve_addr = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
+	pConf->lcd_timing.de_hs_addr = de_hstart;
+	pConf->lcd_timing.de_he_addr = (de_hstart + pConf->lcd_basic.h_active) % pConf->lcd_basic.h_period;
+	pConf->lcd_timing.de_vs_addr = de_vstart;
+	pConf->lcd_timing.de_ve_addr = (de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
 #else
     pConf->lcd_timing.video_on_pixel = pConf->lcd_basic.h_period - pConf->lcd_basic.h_active - 1 -h_delay;
     pConf->lcd_timing.video_on_line = pConf->lcd_basic.v_period - pConf->lcd_basic.v_active;
@@ -1699,16 +1769,16 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
     h_offset = (pConf->lcd_timing.h_offset & 0xffff);
     v_offset = (pConf->lcd_timing.v_offset & 0xffff);
     if ((pConf->lcd_timing.h_offset >> 31) & 1)
-        pConf->lcd_timing.de_hstart = (pConf->lcd_basic.h_period - pConf->lcd_basic.h_active - 1 + pConf->lcd_basic.h_period - h_offset) % pConf->lcd_basic.h_period;
+        de_hstart = (pConf->lcd_basic.h_period - pConf->lcd_basic.h_active - 1 + pConf->lcd_basic.h_period - h_offset) % pConf->lcd_basic.h_period;
     else
-        pConf->lcd_timing.de_hstart = (pConf->lcd_basic.h_period - pConf->lcd_basic.h_active - 1 + h_offset) % pConf->lcd_basic.h_period;
+        de_hstart = (pConf->lcd_basic.h_period - pConf->lcd_basic.h_active - 1 + h_offset) % pConf->lcd_basic.h_period;
     if ((pConf->lcd_timing.v_offset >> 31) & 1)
-        pConf->lcd_timing.de_vstart = (pConf->lcd_basic.v_period - pConf->lcd_basic.v_active + pConf->lcd_basic.v_period - v_offset) % pConf->lcd_basic.v_period;
+        de_vstart = (pConf->lcd_basic.v_period - pConf->lcd_basic.v_active + pConf->lcd_basic.v_period - v_offset) % pConf->lcd_basic.v_period;
     else
-        pConf->lcd_timing.de_vstart = (pConf->lcd_basic.v_period - pConf->lcd_basic.v_active + v_offset) % pConf->lcd_basic.v_period;
+        de_vstart = (pConf->lcd_basic.v_period - pConf->lcd_basic.v_active + v_offset) % pConf->lcd_basic.v_period;
 
-    hstart = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp) % pConf->lcd_basic.h_period;
-    hend = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp + pConf->lcd_timing.hsync_width) % pConf->lcd_basic.h_period;	
+    hstart = (de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp) % pConf->lcd_basic.h_period;
+    hend = (de_hstart + pConf->lcd_basic.h_period - pConf->lcd_timing.hsync_bp + pConf->lcd_timing.hsync_width) % pConf->lcd_basic.h_period;	
     pConf->lcd_timing.hs_hs_addr = hstart;
     pConf->lcd_timing.hs_he_addr = hend;
     pConf->lcd_timing.hs_vs_addr = 0;
@@ -1721,16 +1791,21 @@ static void lcd_tcon_config(Lcd_Config_t *pConf)
         vsync_h_phase = (hstart + pConf->lcd_basic.h_period + vsync_h_phase) % pConf->lcd_basic.h_period;
     pConf->lcd_timing.vs_hs_addr = vsync_h_phase;
     pConf->lcd_timing.vs_he_addr = vsync_h_phase;
-    vstart = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp) % pConf->lcd_basic.v_period;
-    vend = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp + pConf->lcd_timing.vsync_width) % pConf->lcd_basic.v_period;
+    vstart = (de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp) % pConf->lcd_basic.v_period;
+    vend = (de_vstart + pConf->lcd_basic.v_period - pConf->lcd_timing.vsync_bp + pConf->lcd_timing.vsync_width) % pConf->lcd_basic.v_period;
     pConf->lcd_timing.vs_vs_addr = vstart;
     pConf->lcd_timing.vs_ve_addr = vend;
 
-    pConf->lcd_timing.de_hs_addr = pConf->lcd_timing.de_hstart;
-    pConf->lcd_timing.de_he_addr = (pConf->lcd_timing.de_hstart + pConf->lcd_basic.h_active) % pConf->lcd_basic.h_period;
-    pConf->lcd_timing.de_vs_addr = pConf->lcd_timing.de_vstart;
-    pConf->lcd_timing.de_ve_addr = (pConf->lcd_timing.de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
+    pConf->lcd_timing.de_hs_addr = de_hstart;
+    pConf->lcd_timing.de_he_addr = (de_hstart + pConf->lcd_basic.h_active) % pConf->lcd_basic.h_period;
+    pConf->lcd_timing.de_vs_addr = de_vstart;
+    pConf->lcd_timing.de_ve_addr = (de_vstart + pConf->lcd_basic.v_active - 1) % pConf->lcd_basic.v_period;
 #endif
+
+    if (pConf->lcd_timing.vso_user == 0) {
+        pConf->lcd_timing.vso_hstart = pConf->lcd_timing.vs_hs_addr;
+        pConf->lcd_timing.vso_vstart = pConf->lcd_timing.vs_vs_addr;
+    }
 
     //lcd_print("hs_hs_addr=%d, hs_he_addr=%d, hs_vs_addr=%d, hs_ve_addr=%d\n", pConf->lcd_timing.hs_hs_addr, pConf->lcd_timing.hs_he_addr, pConf->lcd_timing.hs_vs_addr, pConf->lcd_timing.hs_ve_addr);
     //lcd_print("vs_hs_addr=%d, vs_he_addr=%d, vs_vs_addr=%d, vs_ve_addr=%d\n", pConf->lcd_timing.vs_hs_addr, pConf->lcd_timing.vs_he_addr, pConf->lcd_timing.vs_vs_addr, pConf->lcd_timing.vs_ve_addr);
@@ -1824,6 +1899,10 @@ Lcd_Config_t* get_lcd_config(void)
 
 static void lcd_config_assign(Lcd_Config_t *pConf)
 {
+    pConf->lcd_timing.vso_hstart = 10; //for video process
+    pConf->lcd_timing.vso_vstart = 10; //for video process
+    pConf->lcd_timing.vso_user = 0; //use default config
+
     pConf->lcd_power_ctrl.ports_ctrl = lcd_ports_ctrl;
 
     pConf->lcd_misc_ctrl.vpp_sel = 0;
@@ -1858,9 +1937,11 @@ void lcd_config_probe(Lcd_Config_t *pConf)
 
     lcd_Conf = pConf;
     lcd_config_assign(pConf);
+
+    creat_lcd_video_attr();
 }
 
 void lcd_config_remove(void)
 {
-    //none
+    remove_lcd_video_attr();
 }

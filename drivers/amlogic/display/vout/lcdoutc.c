@@ -955,8 +955,8 @@ static void save_lcd_config(Lcd_Config_t *pConf)
 	temp_lcd_timing.vsync_width = pConf->lcd_timing.vsync_width;
 	temp_lcd_timing.vsync_bp = pConf->lcd_timing.vsync_bp;
 	temp_lcd_timing.hvsync_valid = pConf->lcd_timing.hvsync_valid;
-	temp_lcd_timing.de_hstart = pConf->lcd_timing.de_hstart;
-	temp_lcd_timing.de_vstart = pConf->lcd_timing.de_vstart;
+	//temp_lcd_timing.de_hstart = pConf->lcd_timing.de_hstart;
+	//temp_lcd_timing.de_vstart = pConf->lcd_timing.de_vstart;
 	temp_lcd_timing.de_valid = pConf->lcd_timing.de_valid;
 	temp_lcd_timing.h_offset = pConf->lcd_timing.h_offset;
 	temp_lcd_timing.v_offset = pConf->lcd_timing.v_offset;
@@ -1020,8 +1020,8 @@ static void reset_lcd_config(Lcd_Config_t *pConf)
 	pConf->lcd_timing.vsync_width = temp_lcd_timing.vsync_width;
 	pConf->lcd_timing.vsync_bp = temp_lcd_timing.vsync_bp;
 	pConf->lcd_timing.hvsync_valid = temp_lcd_timing.hvsync_valid;
-	pConf->lcd_timing.de_hstart = temp_lcd_timing.de_hstart;
-	pConf->lcd_timing.de_vstart = temp_lcd_timing.de_vstart;
+	//pConf->lcd_timing.de_hstart = temp_lcd_timing.de_hstart;
+	//pConf->lcd_timing.de_vstart = temp_lcd_timing.de_vstart;
 	pConf->lcd_timing.de_valid = temp_lcd_timing.de_valid;
 	pConf->lcd_timing.h_offset = temp_lcd_timing.h_offset;
 	pConf->lcd_timing.v_offset = temp_lcd_timing.v_offset;
