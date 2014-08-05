@@ -606,13 +606,7 @@ void root_func(){
 		#address-cells = <1>;
 		#size-cells = <0>;
 		use_pio = <0>;
-		master_i2c_speed = <300000>;
-		
-		i2c@40{
-			compatible = "amlogic,gslX680new";
-			status = "okay";
-			reg = <0x40>;
-		};		
+		master_i2c_speed = <300000>;	
 	};
 	
 //$$ DEVICE="I2C_B"
@@ -1234,8 +1228,28 @@ void root_func(){
 /// ***************************************************************************************
 ///	-	Touch
 //$$ MODULE="Touch"
-//$$ DEVICE = "touch"
+//$$ DEVICE="touch"
 //$$ L2 PROP_STR = "status"
+	touch{
+ 		compatible = "amlogic,aml_touch";
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		touch_gslx680:gsl3670{
+			touch_name = "gslx680_compatible";
+			status = "okay";
+			i2c_bus = "i2c_bus_a";
+			reg = <0x40>;
+			irq = <0>;
+			gpio_interrupt = "GPIOY_3";
+			gpio_reset = "GPIOAO_7";
+			xres = <1024>;
+			yres = <768>;
+			pol = <0x4>; /*swap x y */
+			config_file = "/etc/touch/gsl3670_m102.cfg";
+			fw_file = "/etc/touch/gsl3670_m102.fw";
+		};
+	};
 
 /// ***************************************************************************************
 /// -   Audio

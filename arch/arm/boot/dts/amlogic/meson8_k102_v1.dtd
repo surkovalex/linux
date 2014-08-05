@@ -1994,7 +1994,8 @@ lcd_LD070WX4:lcd_LD070WX4{
 			yres = <1024>;
 			pol = <0x2>;
 			status = "okay";
-			fw_file = "/etc/touch/gsl3680b.fw";
+			config_file = "/etc/touch/gsl3680b_k102.cfg";
+			fw_file = "/etc/touch/gsl3680b_k102.fw";
 		};
    };
 

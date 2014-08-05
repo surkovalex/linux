@@ -106,4 +106,5 @@ source "drivers/amlogic/crypto/Kconfig"
 
 source "drivers/amlogic/mhl/Kconfig"
 isource "../hardware/amlogic/pmu/Kconfig"
+isource "../hardware/amlogic/touch/Kconfig"
 endmenu

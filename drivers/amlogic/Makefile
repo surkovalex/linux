@@ -55,6 +55,9 @@ obj-$(CONFIG_I2C) += i2c/
 obj-$(CONFIG_EFUSE)+=efuse/
 obj-$(CONFIG_AM_INPUT)		+= input/
 
+ifneq ($(wildcard $(srctree)/../hardware/amlogic/touch),)
+obj-$(CONFIG_AML_TOUCH_ALGORITHM_SUPPORT) += ../../../hardware/amlogic/touch/
+endif
 obj-$(CONFIG_AMLOGIC_SPI_NOR) += spi_nor/
 
 #obj-$(CONFIG_CARDREADER) += cardreader/
