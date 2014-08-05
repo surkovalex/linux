@@ -1800,7 +1800,7 @@ sdio{
 								3 0x18000
 								4 0x1800000
 								9 0xC0>;
-			amlogic,pins = "GPIOY_5","GPIOY_6";
+			amlogic,pins = "GPIOY_6";
 		};
 
 	};
@@ -1856,7 +1856,7 @@ sdio{
 		dtv_demod0 = "Avl6211";
 		dtv_demod0_i2c_adap_id = <2>;
 		dtv_demod0_i2c_addr = <0xC0>;
-		dtv_demod0_reset_value = <0>;
+		dtv_demod0_reset_value = <1>;
 		dtv_demod0_reset_gpio = "GPIOY_5";
 		fe0_dtv_demod = <0>;
 		fe0_ts = <0>;
