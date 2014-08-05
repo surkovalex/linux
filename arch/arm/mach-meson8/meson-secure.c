@@ -148,6 +148,7 @@ int meson_trustzone_efuse(struct efuse_hal_api_arg* arg)
 
 	return ret;
 }
+EXPORT_SYMBOL(meson_trustzone_efuse);
 
 uint32_t meson_secure_reg_read(uint32_t addr)
 {
