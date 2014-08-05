@@ -272,6 +272,10 @@ static void set_hpll_clk_out(unsigned clk)
             break;
     }
 #endif
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+    // Improve HDMI HPLL Long TIE
+    aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0x8a56d023);
+#endif
     printk("config HPLL done\n");
 }
 
