@@ -106,6 +106,23 @@ static const struct ionvideo_fmt *get_format(struct v4l2_format *f)
 
 static LIST_HEAD (ionvideo_devlist);
 
+static DEFINE_SPINLOCK(ion_states_lock);
+static int  ionvideo_vf_get_states(vframe_states_t *states)
+{
+    int ret = -1;
+    unsigned long flags;
+    struct vframe_provider_s *vfp;
+    vfp = vf_get_provider(RECEIVER_NAME);
+    spin_lock_irqsave(&ion_states_lock, flags);
+    if (vfp && vfp->ops && vfp->ops->vf_states) {
+        ret=vfp->ops->vf_states(states, vfp->op_arg);
+    }
+    spin_unlock_irqrestore(&ion_states_lock, flags);
+    return ret;
+}
+
+
+
 /* ------------------------------------------------------------------
  DMA and thread functions
  ------------------------------------------------------------------*/
@@ -919,6 +936,33 @@ free_dev:
     return ret;
 }
 
+static ssize_t vframe_states_show(struct class *class, struct class_attribute* attr, char* buf)
+{
+    int ret = 0;
+    vframe_states_t states;
+    unsigned long flags;
+	
+    if (ionvideo_vf_get_states(&states) == 0) {
+        ret += sprintf(buf + ret, "vframe_pool_size=%d\n", states.vf_pool_size);
+        ret += sprintf(buf + ret, "vframe buf_free_num=%d\n", states.buf_free_num);
+        ret += sprintf(buf + ret, "vframe buf_recycle_num=%d\n", states.buf_recycle_num);
+        ret += sprintf(buf + ret, "vframe buf_avail_num=%d\n", states.buf_avail_num);
+    } else {
+        ret += sprintf(buf + ret, "vframe no states\n");
+    }
+
+    return ret;
+}
+
+static struct class_attribute ion_video_class_attrs[] = {
+	__ATTR_RO(vframe_states),
+    __ATTR_NULL
+};
+static struct class ionvideo_class = {
+        .name = "ionvideo",
+        .class_attrs = ion_video_class_attrs,
+};
+
 /* This routine allocates from 1 to n_devs virtual drivers.
 
  The real maximum number of virtual drivers will depend on how many drivers
@@ -928,7 +972,9 @@ free_dev:
 static int __init ionvideo_init(void)
 {
     int ret = 0, i;
-
+    ret = class_register(&ionvideo_class);
+    if(ret<0)
+        return ret;
     if (n_devs <= 0)
     n_devs = 1;
 
@@ -953,13 +999,14 @@ static int __init ionvideo_init(void)
 
     /* n_devs will reflect the actual number of allocated devices */
     n_devs = i;
-
+    
     return ret;
 }
 
 static void __exit ionvideo_exit(void)
 {
     ionvideo_release();
+	class_unregister(&ionvideo_class);
 }
 
 MODULE_DESCRIPTION("Video Technology Magazine Ion Video Capture Board");

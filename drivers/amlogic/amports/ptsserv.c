@@ -12,7 +12,7 @@
 
 #include "vdec_reg.h"
 
-#define VIDEO_REC_SIZE  8192
+#define VIDEO_REC_SIZE  (8192*2)
 #define AUDIO_REC_SIZE  8192
 #define VIDEO_LOOKUP_RESOLUTION 2500
 #define AUDIO_LOOKUP_RESOLUTION 1024

@@ -579,8 +579,7 @@ static void vh264_set_params(void)
     unsigned int chroma_format_idc, chroma444;
     unsigned int crop_infor, crop_bottom;
 
-    h264_first_pts_ready = 0;
-    h264_first_valid_pts_ready=0;
+
     buffer_for_recycle_rd = 0;
     buffer_for_recycle_wr = 0;
 
@@ -1066,7 +1065,7 @@ static void vh264_isr(void)
             if (sync_outside == 0) {
                 if (h264_first_pts_ready == 0) {
                     if (pts_valid == 0) {
-                        buffer_for_recycle[buffer_for_recycle_wr++] = buffer_index;
+                        buffer_for_recycle[buffer_for_recycle_wr] = buffer_index;
 
                         if (buffer_for_recycle_wr == VF_BUF_NUM-1) {
                             buffer_for_recycle_wr = 0;
