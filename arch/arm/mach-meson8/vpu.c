@@ -754,7 +754,6 @@ static void vpu_driver_init(void)
     //Remove VPU_HDMI ISO
     aml_set_reg32_bits(P_AO_RTI_GEN_PWR_SLEEP0, 0, 9, 1); // [9] VPU_HDMI
 }
-
 static void vpu_driver_disable(void)
 {
     vpu_config.mem_pd0 = aml_read_reg32(P_HHI_VPU_MEM_PD_REG0);

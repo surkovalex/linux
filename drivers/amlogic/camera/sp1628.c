@@ -964,7 +964,7 @@ void SP1628_init_regs(struct sp1628_device *dev)
 
 #endif
 
-
+#if 0
 static int set_flip(struct sp1628_device *dev)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
@@ -982,7 +982,7 @@ static int set_flip(struct sp1628_device *dev)
         }
         return 0;
 }
-
+#endif
 
 static void sp1628_set_resolution(struct sp1628_device *dev,int height,int width)
 {

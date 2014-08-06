@@ -1995,7 +1995,7 @@ static int sp0a19_setting(struct sp0a19_device *dev,int PROP_ID,int value )
 	return ret;
 
 }
-
+#if 0
 static void power_down_sp0a19(struct sp0a19_device *dev)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
@@ -2010,7 +2010,7 @@ static void power_down_sp0a19(struct sp0a19_device *dev)
 	msleep(5);
 	return;    
 }
-
+#endif
 /* ------------------------------------------------------------------
 	DMA and thread functions
    ------------------------------------------------------------------*/

@@ -54,7 +54,7 @@ struct amlogic_spi {
 #endif
 };
 
-static bool spi_chip_select(bool flag);
+//static bool spi_chip_select(bool flag);
 //static DEFINE_SPINLOCK(pinmux_set_lock);
 
 #if (defined(CONFIG_ARCH_MESON6) || defined(CONFIG_ARCH_MESON8) || defined(CONFIG_ARCH_MESON8B))
@@ -114,12 +114,12 @@ static pinmux_set_t spi_nor_set = {
 };
 #endif
 
-
+#if 0
 static bool spi_chip_select(bool flag)
 {
 	return flag;
 }
-
+#endif
 static void spi_hw_init(struct amlogic_spi	*amlogic_spi)
 {
 #if  defined(ONFIG_AMLOGIC_BOARD_APOLLO) || defined(CONFIG_AMLOGIC_BOARD_APOLLO_H)

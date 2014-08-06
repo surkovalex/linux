@@ -1126,7 +1126,6 @@ static void dump_pic_list(hevc_stru_t* hevc)
 		pic = pic->next;
 	}
 }
-
 static PIC_t* output_pic(hevc_stru_t* hevc, unsigned char flush_flag)
 {
 	int num_pic_not_yet_display = 0;

@@ -1485,6 +1485,7 @@ void hm2057_set_param_banding(struct hm2057_device *dev,enum  camera_banding_fli
 		
 				}
 }
+#if 0
 static int set_flip(struct hm2057_device *dev)
 {
    	struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
@@ -1501,7 +1502,7 @@ static int set_flip(struct hm2057_device *dev)
         }
         return 0;
 }
-
+#endif
 
 
 void hm2057_set_resolution(struct hm2057_device *dev,int height,int width)
@@ -1702,6 +1703,7 @@ static void power_down_hm2057(struct hm2057_device *dev)
 #define TSTAMP_MAX_Y	(TSTAMP_MIN_Y + 15)
 #define TSTAMP_INPUT_X	10
 #define TSTAMP_MIN_X	(54 + TSTAMP_INPUT_X)
+#if 0
 static int getCameraState(){
     int i=get_adc_sample(0);
 	if(i>374&&i<391){
@@ -1710,6 +1712,7 @@ static int getCameraState(){
         return 0;
 	}
 }
+#endif
 static void hm2057_fillbuff(struct hm2057_fh *fh, struct hm2057_buffer *buf)
 {
 	//printk("----------- %s \n",__func__);

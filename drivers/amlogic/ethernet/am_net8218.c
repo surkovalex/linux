@@ -1890,9 +1890,11 @@ M8baby
 G9TV
  28
 */
+#if 0
 static unsigned int get_cpuid(){
 	return READ_CBUS_REG(0x1f53)&0xff;
 }
+#endif
 /* --------------------------------------------------------------------------*/
 /**
  * @brief  probe_init
@@ -3013,13 +3015,14 @@ static int ethernet_remove(struct platform_device *pdev)
  * @return
  */
 /* --------------------------------------------------------------------------*/
+#ifndef  CONFIG_PM
 static int ethernet_suspend(struct platform_device *dev, pm_message_t event)
 {
 	printk("ethernet_suspend!\n");
 	netdev_close(my_ndev);	
 	return 0;
 }
-
+#endif
 
 /* --------------------------------------------------------------------------*/
 /**
@@ -3030,6 +3033,7 @@ static int ethernet_suspend(struct platform_device *dev, pm_message_t event)
  * @return
  */
 /* --------------------------------------------------------------------------*/
+#if 0
 static int ethernet_resume(struct platform_device *dev)
 {
 	int res = 0;
@@ -3042,6 +3046,7 @@ static int ethernet_resume(struct platform_device *dev)
 
 	return 0;
 }
+#endif
 #ifdef CONFIG_OF
 static const struct of_device_id eth_dt_match[]={
 	{	.compatible 	= "amlogic,meson-eth",

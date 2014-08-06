@@ -1827,7 +1827,7 @@ static int write_gen_int(struct lsm303d_status *stat,
 	atomic_set(&ie->enable, val);
 	return err;
 }
-
+#if 0
 static int write_duration_threshold_int(struct lsm303d_status *stat, 
 					struct interrupt_value *ie, int val) 
 {
@@ -1877,7 +1877,6 @@ static int write_threshold_mag_int(struct lsm303d_status *stat,
 
 	return err;
 }
-
 static ssize_t attr_get_gen1_status(struct kobject *kobj,
 						struct kobj_attribute *attr,
 						char *buf)
@@ -2157,7 +2156,8 @@ static ssize_t attr_set_gen_mag_threshold(struct kobject *kobj,
 	
 	return size;
 }
-
+#endif
+#if 0
 static int get_axis(struct lsm303d_status *stat, 
 					int generator, const char *name) {
 
@@ -2234,7 +2234,6 @@ static int set_axis(struct lsm303d_status *stat, int generator,
 
 	return err;
 }
-
 static ssize_t attr_get_gen1_axis(struct kobject *kobj,
 						struct kobj_attribute *attr,
 						char *buf)
@@ -2389,7 +2388,7 @@ static ssize_t attr_set_gen2_and_or(struct kobject *kobj,
 
 	return size;
 }
-
+#endif
 static ssize_t attr_set_pin_conf(struct device *dev, 
 						struct device_attribute *attr,
 						const char *buf, size_t size)

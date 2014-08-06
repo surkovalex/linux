@@ -71,7 +71,7 @@ static int aml_i2c_write(struct i2c_client *i2client,unsigned char *buff, unsign
     
     return res;
 }
-
+#if 0
 static int aml_i2c_read(struct i2c_client *i2client,unsigned char *buff, unsigned len)
 {
     int res = 0;
@@ -96,7 +96,7 @@ static int aml_i2c_read(struct i2c_client *i2client,unsigned char *buff, unsigne
 
     return res;
 }
-
+#endif
 static int bl_extern_set_level(unsigned int level)
 {
     unsigned char tData[3];

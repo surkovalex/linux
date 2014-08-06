@@ -636,7 +636,7 @@ static struct class aml_vpu_debug_class = {
 	.class_attrs = vpu_debug_class_attrs,
 };
 //*********************************************************//
-
+#if 0
 static void vpu_driver_init(void)
 {	
 	set_vpu_clk(vpu_config.clk_level);
@@ -656,7 +656,7 @@ static void vpu_driver_disable(void)
 	
 	aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, 0, 8, 1);
 }
-
+#endif
 #ifdef CONFIG_PM
 static int vpu_suspend(struct platform_device *pdev, pm_message_t state)
 {

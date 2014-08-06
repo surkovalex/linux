@@ -135,7 +135,7 @@ int is_ionvideo_active(void) {
     return is_actived;
 }
 EXPORT_SYMBOL(is_ionvideo_active);
-
+#if 0
 static void videoc_omx_compute_pts(struct ionvideo_dev *dev, struct vframe_s* vf) {
     if (vf->pts) {
         timestamp_vpts_set(vf->pts);
@@ -150,7 +150,7 @@ static void videoc_omx_compute_pts(struct ionvideo_dev *dev, struct vframe_s* vf
         dev->pts = timestamp_vpts_get();
     }
 }
-
+#endif
 static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *buf) {
 
     struct vframe_s* vf;

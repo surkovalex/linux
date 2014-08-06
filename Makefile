@@ -381,7 +381,8 @@ KBUILD_CFLAGS   += -Werror=enum-compare \
 		   -Werror=unused-value \
 		   -Werror=maybe-uninitialized \
 		   -Werror=unused-variable \
-		   -Werror=format
+		   -Werror=format \
+		   -Werror=unused-function
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
