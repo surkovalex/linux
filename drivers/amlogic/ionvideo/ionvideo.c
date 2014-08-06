@@ -671,7 +671,7 @@ static int vidioc_synchronization_dqbuf(struct file *file, void *priv, struct v4
 
     	buf = container_of(vb, struct ionvideo_buffer, vb);
     	if(dev->is_video_started == 0){
-		printk("Execute the VIDEO_START cmd. pts=%x\n", buf->pts);
+		printk("Execute the VIDEO_START cmd. pts=%llx\n", buf->pts);
         	tsync_avevent_locked(VIDEO_START, buf->pts ? buf->pts : timestamp_vpts_get());        
         	d = 0;
         	dev->is_video_started=1;

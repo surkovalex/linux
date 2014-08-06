@@ -2495,9 +2495,9 @@ static ssize_t dg_manual_store(struct class *cls,struct class_attribute *attr, c
 		printk("wrong param\n");
 		return len;	
 	}
-	sscanf(param[0],"%x",&dg.r);
-	sscanf(param[1],"%x",&dg.g);
-	sscanf(param[2],"%x",&dg.b);	
+	sscanf(param[0],"%x",(unsigned int *)&dg.r);
+	sscanf(param[1],"%x",(unsigned int *)&dg.g);
+	sscanf(param[2],"%x",(unsigned int *)&dg.b);	
 	adapter = i2c_get_adapter(4);
 	my_i2c_put_byte(adapter,0x36,0x5186, (unsigned char)((dg.r >> 8) & 0x000f));
 	my_i2c_put_byte(adapter,0x36,0x5187, (unsigned char)((dg.r >> 0) & 0x00ff));

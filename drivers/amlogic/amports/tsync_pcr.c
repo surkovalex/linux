@@ -261,7 +261,7 @@ static unsigned long tsync_pcr_check()
 	 	tsync_pcr_tsdemuxpcr_discontinue=0;	 
     	 	tsync_pcr_discontinue_point=0;
     	 	tsync_pcr_discontinue_waited=0;	
-    	 	printk("[tsync_pcr_check] video discontinue didn't happen, waited=%x\n",abs(tsdemux_pcr-tsync_pcr_discontinue_point));
+    	 	printk("[tsync_pcr_check] video discontinue didn't happen, waited=%lx\n",abs(tsdemux_pcr-tsync_pcr_discontinue_point));
 	}
 	need_recovery=0;
     }

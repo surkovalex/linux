@@ -271,7 +271,7 @@ static int aml_lp8556_probe(struct platform_device *pdev)
     if (!aml_lp8556_i2c_client) {
         ret = i2c_add_driver(&aml_lp8556_i2c_driver);
         if (ret) {
-            printk("[error] %s probe: add i2c_driver failed\n" BL_EXTERN_NAME);
+            printk("[error] %s probe: add i2c_driver failed\n", BL_EXTERN_NAME);
             goto bl_extern_probe_failed;
         }
     }

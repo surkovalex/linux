@@ -886,7 +886,7 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 #endif
 
 	pr_info("Total memory is %4d MiB\n",((unsigned int)total >> 20));
-	pr_info("Reserved low memory from 0x%08llx to 0x%08llx, size: %3d MiB \n",
+	pr_info("Reserved low memory from 0x%08llx to 0x%08llx, size: %3ld MiB \n",
 		aml_reserved_start,aml_reserved_end,
 		((unsigned long)(aml_reserved_end - aml_reserved_start + 1)) >> 20);
 

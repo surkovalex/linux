@@ -1344,7 +1344,7 @@ static int dvb_frontend_asyncwait(struct dvb_frontend *fe, u32 ms_timeout)
 											dvb_frontend_asyncshouldwakeup(fe),
 											ms_timeout * HZ /1000);
 
-	dprintk ("%s:%d/%d\n", __func__, ms_timeout, wait_ret);
+	dprintk ("%s:%d/%ld\n", __func__, ms_timeout, wait_ret);
 
 	if(wait_ret > 0){
 		ret = 1;

@@ -1957,7 +1957,7 @@ int vm_init_buf(size_t size)
 
     if(vm_pages && vm_buf_size != 0)
     {
-        pr_warn("%s cma space already in use, phys %p size %dk\n", __func__, page_to_phys(vm_pages), size/1024);
+        pr_warn("%s cma space already in use, phys %d size %dk\n", __func__, page_to_phys(vm_pages), size/1024);
         dma_release_from_contiguous(&vm_device.pdev->dev, vm_pages, vm_buf_size/PAGE_SIZE); 
     }
 
@@ -1966,7 +1966,7 @@ int vm_init_buf(size_t size)
     {
         dma_addr_t phys;
         phys = page_to_phys(vm_pages);
-        pr_info("%s: allocating phys %p, size %dk\n", __func__, phys, size/1024);
+        pr_info("%s: allocating phys %d, size %dk\n", __func__, phys, size/1024);
         set_vm_buf_info(phys, size);
         vm_buf_size = size;
         return 0;

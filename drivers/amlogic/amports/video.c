@@ -2899,7 +2899,7 @@ static int alloc_keep_buffer(void)
             goto err6;
         }
     }
-    printk("yaddr=%x,u_addr=%x,v_addr=%x\n",keep_y_addr,keep_u_addr,keep_v_addr);	
+    printk("yaddr=%lx,u_addr=%lx,v_addr=%lx\n",keep_y_addr,keep_u_addr,keep_v_addr);	
     return 0;
 
 err6:
