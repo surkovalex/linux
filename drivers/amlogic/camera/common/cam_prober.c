@@ -480,7 +480,7 @@ int ar0833_v4l2_probe(struct i2c_adapter *adapter)
 #endif
 
 #ifdef CONFIG_VIDEO_AMLOGIC_CAPTURE_SP1628
-int __init sp1628_v4l2_probe(struct i2c_adapter *adapter)
+int sp1628_v4l2_probe(struct i2c_adapter *adapter)
 {
     int ret = 0;
 	unsigned char reg[2];   
@@ -493,7 +493,7 @@ int __init sp1628_v4l2_probe(struct i2c_adapter *adapter)
 #endif
 
 #ifdef CONFIG_VIDEO_AMLOGIC_CAPTURE_BF3720
-int __init bf3720_v4l2_probe(struct i2c_adapter *adapter)
+int bf3720_v4l2_probe(struct i2c_adapter *adapter)
 {
     int ret = 0;
 	unsigned char reg[2];   
