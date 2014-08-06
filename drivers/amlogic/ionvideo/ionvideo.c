@@ -943,7 +943,7 @@ static ssize_t vframe_states_show(struct class *class, struct class_attribute* a
 {
     int ret = 0;
     vframe_states_t states;
-    unsigned long flags;
+//    unsigned long flags;
 	
     if (ionvideo_vf_get_states(&states) == 0) {
         ret += sprintf(buf + ret, "vframe_pool_size=%d\n", states.vf_pool_size);

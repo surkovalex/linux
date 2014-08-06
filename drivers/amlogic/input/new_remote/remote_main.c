@@ -57,6 +57,9 @@
 static struct early_suspend early_suspend;
 #endif
 
+static bool key_pointer_switch = true;
+static unsigned int FN_KEY_SCANCODE = 0x3ff;
+static unsigned int OK_KEY_SCANCODE = 0x3ff;
 type_printk input_dbg;
 static DEFINE_MUTEX(remote_enable_mutex);
 static DEFINE_MUTEX(remote_file_mutex);
@@ -70,6 +73,65 @@ static struct remote *gp_remote = NULL;
 char *remote_log_buf;
 // use 20 map for this driver
 static __u16 key_map[20][512];
+static  irqreturn_t (*remote_bridge_sw_isr[])(int irq, void *dev_id)={
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	remote_bridge_isr,
+	remote_bridge_isr,
+};
+
+static  int (*remote_report_key[])(struct remote *remote_data)={
+	remote_hw_reprot_key,
+	remote_hw_reprot_key,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	remote_sw_reprot_key		
+};
+
+static  void (*remote_report_release_key[])(struct remote *remote_data)={
+	remote_nec_report_release_key,
+	remote_duokan_report_release_key,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	remote_sw_reprot_release_key
+};
 static __u16 mouse_map[20][6];
 int remote_printk(const char *fmt, ...)
 {

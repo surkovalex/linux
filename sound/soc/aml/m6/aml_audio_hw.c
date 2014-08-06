@@ -372,7 +372,7 @@ int if_audio_in_i2s_enable()
 
 void audio_in_spdif_enable(int flag)
 {
-  int rd = 0, start=0;
+//  int rd = 0, start=0;
 
 	if(flag){
 reset_again:

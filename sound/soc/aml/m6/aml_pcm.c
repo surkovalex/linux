@@ -82,9 +82,9 @@ unsigned int aml_i2s_alsa_write_addr = 0;
 
 static  unsigned  playback_substream_handle = 0 ;
 /*to keep the pcm status for clockgating*/
-static unsigned clock_gating_status = 0;
-static unsigned clock_gating_playback = 1;
-static unsigned clock_gating_capture = 2;
+//static unsigned clock_gating_status = 0;
+//static unsigned clock_gating_playback = 1;
+//static unsigned clock_gating_capture = 2;
 static int audio_type_info = -1;
 static int audio_sr_info = -1;
 extern unsigned audioin_mode;
@@ -94,14 +94,14 @@ static unsigned trigger_underun = 0;
 static int audio_ch_info = -1;
 
 //static struct rt5631_platform_data *rt5631_snd_pdata = NULL;
-static struct aml_pcm_work_t{
-	struct snd_pcm_substream *substream;
-	struct work_struct aml_codec_workqueue;
-}aml_pcm_work;
+//static struct aml_pcm_work_t{
+//	struct snd_pcm_substream *substream;
+//	struct work_struct aml_codec_workqueue;
+//}aml_pcm_work;
 
 int codec_power=1;
 unsigned int flag=0;
-static int num=0;
+//static int num=0;
 
 static int codec_power_switch(struct snd_pcm_substream *substream, unsigned int status);
 
@@ -863,7 +863,7 @@ static enum hrtimer_restart aml_pcm_hrtimer_callback(struct hrtimer* timer)
   struct snd_pcm_runtime* runtime= substream->runtime;
 
   unsigned int last_ptr, size;
-  unsigned long flag;
+//  unsigned long flag;
   //printk("------------->hrtimer start\n");
   if(s->active == 0){
     hrtimer_forward_now(timer, ns_to_ktime(HRTIMER_PERIOD));

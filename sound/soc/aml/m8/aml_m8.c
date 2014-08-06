@@ -338,7 +338,6 @@ static int aml_audio_get_i2s_mute(struct snd_kcontrol *kcontrol,
 }
 
 
-static bool spdif_mute_flag;
 
 static int aml_audio_set_spdif_mute(struct snd_kcontrol *kcontrol,
     struct snd_ctl_elem_value *ucontrol)

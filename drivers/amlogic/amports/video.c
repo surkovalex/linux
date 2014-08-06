@@ -1214,8 +1214,9 @@ u32 property_changed_true=0;
 static void vsync_toggle_frame(vframe_t *vf)
 {
     u32 first_picture = 0;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     unsigned long flags;
-
+#endif
     frame_count++;
     if(debug_flag& DEBUG_FLAG_PRINT_TOGGLE_FRAME){
         printk("%s()\n", __func__);
@@ -2196,9 +2197,10 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     s32 i, vout_type;
     vframe_t *vf;
     unsigned long flags;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     vdin_v4l2_ops_t *vdin_ops = NULL;
     vdin_arg_t arg;
-
+#endif
 #ifdef CONFIG_AM_VIDEO_LOG
     int toggle_cnt;
 #endif

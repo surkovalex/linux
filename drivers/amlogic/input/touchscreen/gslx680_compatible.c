@@ -767,7 +767,7 @@ schedule:
 static void gsl_monitor_worker(struct work_struct *work)
 {
 	struct gsl_ts *ts = container_of(to_delayed_work(work), struct gsl_ts, monitor_work);
-	int i;
+//	int i;
 
 #ifdef GSL_NOID_VERSION
 	if (ts->api == NULL) {

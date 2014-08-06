@@ -908,7 +908,6 @@ static int aml_mac_init(struct net_device *ndev)
 	data_dump(ndev->dev_addr, 6);
 #ifdef CONFIG_AML_NAND_KEY
 	int ret;
-	int use_nand_mac=0;
 	u8 mac[ETH_ALEN];
 	char *endp;
 	int j;

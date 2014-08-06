@@ -20,6 +20,25 @@
 extern int cec_power_flag;
 unsigned char cec_repeat = 10;
 #endif
+static const remotereg_t *remoteregsTab[] = {
+	RDECODEMODE_NEC,
+	RDECODEMODE_DUOKAN,
+	RDECODEMODE_MITSUBISHI,
+	RDECODEMODE_THOMSON,
+	RDECODEMODE_TOSHIBA,
+	RDECODEMODE_SONYSIRC,
+	RDECODEMODE_RC5,
+	RDECODEMODE_RESERVED,
+	RDECODEMODE_RC6,
+	RDECODEMODE_RCMM,
+	RDECODEMODE_COMCAST,
+	RDECODEMODE_SANYO,
+	RDECODEMODE_SKIPLEADER,
+	RDECODEMODE_SW,
+	RDECODEMODE_SW_NEC,
+	NULL,
+	RDECODEMODE_SW_DUOKAN
+};
 extern char *remote_log_buf;
 static int auto_repeat_count,repeat_count = 0;
 static void remote_rel_timer_sr(unsigned long data);

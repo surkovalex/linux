@@ -99,7 +99,7 @@ static int get_pulse_width(unsigned long data)
 
 static inline void kbd_software_mode_remote_wait(unsigned long data)
 {
-	unsigned short pulse_width;
+//	unsigned short pulse_width;
 	struct remote *remote_data = (struct remote *)data;
 
 //	pulse_width = get_pulse_width(data);

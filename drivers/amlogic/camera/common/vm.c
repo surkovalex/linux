@@ -2014,7 +2014,7 @@ static int vm_driver_probe(struct platform_device *pdev)
 #ifndef CONFIG_CMA
 	char* buf_start;
 	unsigned int buf_size;
-	struct resource *mem;
+//	struct resource *mem;
     int idx;
 
 #if 0

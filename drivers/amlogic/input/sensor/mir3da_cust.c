@@ -252,7 +252,7 @@ static long mir3da_misc_ioctl( struct file *file,unsigned int cmd, unsigned long
     int             interval = 0;
     char            bEnable = 0;
     int             z_dir = 0;
-    int             range = 0;
+//    int             range = 0;
     short           xyz[3] = {0};
     MIR_HANDLE      handle = mir_handle;
     

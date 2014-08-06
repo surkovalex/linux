@@ -2451,7 +2451,7 @@ static ssize_t attr_get_interrupt_polarity(struct device *dev,
 	val = atomic_read(&stat->interrupt->interrupt_polarity.enable);
 	return sprintf(buf, "%d\n", val);
 }
-
+#if 0
 static struct kobj_attribute gen1_interrupt_pin1_enable =
 __ATTR(pin1_enable, 0664, attr_get_gen1_status, attr_set_gen1_status);
 static struct kobj_attribute gen1_interrupt_pin2_enable =
@@ -2564,7 +2564,7 @@ static struct attribute *attributes_mag_interrupt[] = {
 	&gen_mag_z.attr,
 	NULL,
 };
-
+#endif
 static struct attribute *attributes_acc[] = {
 	&poll_attr_acc.attr,
 	&enable_attr_acc.attr,

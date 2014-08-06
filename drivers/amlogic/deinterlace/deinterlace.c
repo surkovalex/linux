@@ -127,6 +127,7 @@ static DEFINE_SPINLOCK(di_lock2);
 #ifdef ENABLE_SPIN_LOCK_ALWAYS
 static DEFINE_SPINLOCK(di_lock2);
 #define di_lock_irqfiq_save(irq_flag, fiq_flag) \
+				fiq_flag=0; \
                 spin_lock_irqsave(&di_lock2, irq_flag);
 
 #define di_unlock_irqfiq_restore(irq_flag, fiq_flag) \
@@ -3293,8 +3294,9 @@ static void config_di_mif(DI_MIF_t* di_mif, di_buf_t*di_buf)
 static void pre_de_process(void)
 {
   int chan2_field_num = 1;
+#ifdef NEW_DI_V1
   int cont_rd = 1;
-
+#endif
 #ifdef DI_DEBUG
     di_print("%s: start\n", __func__);
 #endif
@@ -4421,8 +4423,8 @@ static irqreturn_t det3d_irq(int irq, void *dev_instance)
 #endif
 static irqreturn_t de_irq(int irq, void *dev_instance)
 {
-   unsigned int data32;
 #ifndef CHECK_DI_DONE
+   unsigned int data32;
    data32 = Rd(DI_INTR_CTRL);
    //if ( (data32 & 0xf) != 0x1 ) {
    //     printk("%s: error %x\n", __func__, data32);
@@ -5988,7 +5990,6 @@ di task
 */
 static void di_unreg_process(void)
 {
-    ulong flags=0,fiq_flag=0, irq_flag2=0;
         if((di_pre_stru.unreg_req_flag||di_pre_stru.force_unreg_req_flag||di_pre_stru.disable_req_flag)&&
             (di_pre_stru.pre_de_busy==0)){
             //printk("===unreg_req_flag\n");
@@ -6009,6 +6010,7 @@ static void di_unreg_process(void)
 #else
 /* !RUN_REG_IN_IRQ*/
 
+			ulong flags=0,fiq_flag=0, irq_flag2=0;
             if(di_pre_stru.force_unreg_req_flag||di_pre_stru.disable_req_flag){
 #ifdef DI_DEBUG
                 di_print("%s: force_unreg\n", __func__);

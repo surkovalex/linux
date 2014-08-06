@@ -379,7 +379,8 @@ KBUILD_CFLAGS   += -Werror=enum-compare \
 		   -Werror=implicit-int \
 		   -Werror=missing-braces \
 		   -Werror=unused-value \
-		   -Werror=maybe-uninitialized
+		   -Werror=maybe-uninitialized \
+		   -Werror=unused-variable
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__

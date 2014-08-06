@@ -575,9 +575,10 @@ static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 	fe_status_t s = 0;
 	int retval = 0;
 	int time=0;
-	int count=0;
+#if (defined CONFIG_AM_SI2176)
 	int newcount=0;
 	int strength=0;
+#endif
 	struct dvb_frontend_private *fepriv = fe->frontend_priv;
 	struct dtv_frontend_properties *c = &fe->dtv_property_cache, tmp;
 
@@ -636,6 +637,7 @@ static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 #if (defined CONFIG_AM_M6_DEMOD)
 //dvbc auto qam
 	if(c->modulation== QAM_AUTO){
+	int count=0;
 		while((dvbc_get_status()<=3)&&(count<=20)){
 			msleep(30);
 			if(count==20){

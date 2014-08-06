@@ -452,8 +452,8 @@ static int aml_platform_pcm_new(struct snd_soc_pcm_runtime *rtd)
     printk("codec_dai %x \n",	(unsigned)codec_dai);
 	
     struct aml_audio_interface *aud_interface = NULL;
-    struct snd_pcm *pcm =rtd->pcm ;
-    struct snd_soc_card *card = rtd->card;
+//    struct snd_pcm *pcm =rtd->pcm ;
+//    struct snd_soc_card *card = rtd->card;
 	
 	int ret = 0;
 

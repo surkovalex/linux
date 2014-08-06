@@ -35,6 +35,7 @@
 #include <mach/am_regs.h>
 #include <mach/lcd_reg.h>
 #include <linux/amlogic/vout/lcdoutc.h>
+#include <linux/amlogic/vout/aml_lcd_common.h>
 #include <mach/clock.h>
 #include <mach/mod_gate.h>
 #include <asm/fiq.h>
@@ -54,6 +55,17 @@ static unsigned gamma_cntl_port_offset = 0;
 
 void lcd_config_init(Lcd_Config_t *pConf);
 
+#define SS_LEVEL_MAX	7
+static const char *lcd_ss_level_table[]={
+	"0",
+	"0.5%",
+	"1%",
+	"2%",
+	"3%",
+	"4%",
+	"5%",
+};
+
 static void print_lcd_driver_version(void)
 {
     printk("lcd driver version: %s%s\n\n", LCD_DRV_DATE, LCD_DRV_TYPE);
@@ -63,12 +75,10 @@ static void lcd_ports_ctrl_lvds(Bool_t status)
 {
 	if (status) {
 		WRITE_LCD_REG_BITS(LVDS_GEN_CNTL, 1, 3, 1); //enable lvds fifo
-		if (lcd_Conf->lcd_basic.lcd_bits == 6) {
+		if (lcd_Conf->lcd_basic.lcd_bits == 6)
 			WRITE_LCD_REG_BITS(LVDS_PHY_CNTL4, 0x27, 0, 7);	//enable LVDS 3 channels
-		}
-		else {
+		else
 			WRITE_LCD_REG_BITS(LVDS_PHY_CNTL4, 0x2f, 0, 7); //enable LVDS 4 channels
-		}
 	}
 	else {
 		WRITE_LCD_REG_BITS(LVDS_PHY_CNTL3, 0, 0, 1);
