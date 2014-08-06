@@ -382,7 +382,10 @@ void enable_di_pre_aml (
    int nr_en, int mtn_en, int pd32_check_en, int pd22_check_en, int hist_check_en,
    int pre_field_num, int pre_viu_link, int hold_line, int urgent)
 {
-    int hist_check_only = 0,nr_w = 0,nr_h = 0;
+    int hist_check_only = 0;
+#ifdef NEW_DI_V1
+    int nr_w = 0,nr_h = 0;
+#endif
     pd32_check_en = 1; // for progressive luma detection
 
   	hist_check_only = hist_check_en && !nr_en && !mtn_en && !pd22_check_en && !pd32_check_en ;
@@ -2191,6 +2194,7 @@ unsigned char di_get_power_control(unsigned char type)
 
 void di_load_nr_setting()
 {
+		#ifdef NEW_DI_V1
     Wr(NR2_3DEN_MODE, 0x77);
     Wr(NR2_SNR_SAD_CFG, 0x134f);
     Wr(NR2_MATNR_SNR_NRM_GAIN, 0x0);
@@ -2203,7 +2207,7 @@ void di_load_nr_setting()
     Wr(NR2_MATNR_MTN_CRTL2, 0x32020);
     Wr(NR2_MATNR_MTN_GAIN, 0xffffffff);
     Wr(NR2_MATNR_DEGHOST, 0x133);
-        
+    #endif    
 }
 
 #ifdef DI_POST_SKIP_LINE
