@@ -86,6 +86,8 @@ static u32 frame_width, frame_height, frame_dur, frame_ar;
 static bool get_frame_dur;
 static struct timer_list recycle_timer;
 static u32 stat;
+static u32 bit_depth_luma;
+static u32 bit_depth_chroma;
 static u32 error_watchdog_count;
 static u32 error_skip_nal_watchdog_count;
 static u32 error_system_watchdog_count;
@@ -442,7 +444,8 @@ typedef union PARAM_{
         unsigned short vui_num_units_in_tick_lo;
         unsigned short vui_time_scale_hi;
         unsigned short vui_time_scale_lo;
-        unsigned short reserved[4];
+        unsigned short bit_depth;
+        unsigned short reserved[3];
         
         unsigned short modification_list[0x20];                      
     }p;
@@ -2684,6 +2687,9 @@ static void hevc_local_init(void)
     
     hevc_init_stru(&gHevc, cur_buf_info, &mc_buf_spec);
     
+    bit_depth_luma = 8;
+    bit_depth_chroma = 8;
+    
     if((debug&H265_DEBUG_SEND_PARAM_WITH_REG)==0){
         gHevc.rpm_ptr = (unsigned short*)ioremap_nocache(cur_buf_info->rpm.buf_start, cur_buf_info->rpm.buf_size);
         if (!gHevc.rpm_ptr) {
@@ -3228,8 +3234,8 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
     else if(dec_status == HEVC_SLICE_SEGMENT_DONE){
         error_watchdog_count = 0;
         if(hevc->wait_buf == 0){
-            u32 vui_time_scale = (u32)(rpm_param.p.vui_time_scale_hi << 16) | rpm_param.p.vui_time_scale_lo;
-            u32 vui_num_units_in_tick = (u32)(rpm_param.p.vui_num_units_in_tick_hi << 16) | rpm_param.p.vui_num_units_in_tick_lo;
+            u32 vui_time_scale;
+            u32 vui_num_units_in_tick;
 
             if(debug&H265_DEBUG_SEND_PARAM_WITH_REG){
                 get_rpm_param(&rpm_param);      
@@ -3256,7 +3262,16 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
                             rpm_param.p.vui_time_scale_hi,
                             rpm_param.p.vui_time_scale_lo);
             }
-
+            vui_time_scale = (u32)(rpm_param.p.vui_time_scale_hi << 16) | rpm_param.p.vui_time_scale_lo;
+            vui_num_units_in_tick = (u32)(rpm_param.p.vui_num_units_in_tick_hi << 16) | rpm_param.p.vui_num_units_in_tick_lo;
+            if(bit_depth_luma!=((rpm_param.p.bit_depth&0xf)+8)){
+                printk("Bit depth luma = %d\n", (rpm_param.p.bit_depth&0xf)+8);    
+            }
+            if(bit_depth_chroma!=(((rpm_param.p.bit_depth>>4)&0xf)+8)){
+                printk("Bit depth chroma = %d\n",  ((rpm_param.p.bit_depth>>4)&0xf) + 8);    
+            }
+            bit_depth_luma = (rpm_param.p.bit_depth&0xf) + 8;
+            bit_depth_chroma = ((rpm_param.p.bit_depth>>4)&0xf) + 8;
             if ((vui_time_scale != 0) && (vui_num_units_in_tick != 0)) {
                 frame_dur = div_u64(96000ULL * vui_num_units_in_tick, vui_time_scale);
                 get_frame_dur = true;
@@ -3736,6 +3751,12 @@ static void __exit amvdec_h265_driver_remove_module(void)
 
 module_param(stat, uint, 0664);
 MODULE_PARM_DESC(stat, "\n amvdec_h265 stat \n");
+
+module_param(bit_depth_luma, uint, 0664);
+MODULE_PARM_DESC(bit_depth_luma, "\n amvdec_h265 bit_depth_luma \n");
+
+module_param(bit_depth_chroma, uint, 0664);
+MODULE_PARM_DESC(bit_depth_chroma, "\n amvdec_h265 bit_depth_chroma \n");
 
 module_param(debug, uint, 0664);
 MODULE_PARM_DESC(debug, "\n amvdec_h265 debug \n");
