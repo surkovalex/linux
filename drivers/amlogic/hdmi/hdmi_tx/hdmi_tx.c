@@ -396,6 +396,7 @@ static int set_disp_mode_auto(void)
             hdmitx_device.HWOp.Cntl(&hdmitx_device, HDMITX_HWCMD_TURNOFF_HDMIHW, (hpdmode==2)?1:0);
         }
     }
+    hdmitx_set_audio(&hdmitx_device, &(hdmitx_device.cur_audio_param), hdmi_ch);
     hdmitx_device.output_blank_flag = 1;
     return ret;
 }
