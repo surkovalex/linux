@@ -1824,10 +1824,12 @@ irqreturn_t aml_sdhc_data_thread(int irq, void *data)
                 spin_lock_irqsave(&host->mrq_lock, flags);
 
                 host->mmc->ios.clock = clock[cnt]; 
-                aml_sdhc_set_clk_rate(host->mmc,host->mmc->ios.clock);
-
                 pdata->need_retuning = true; // retuing will be done in the next request
                 mrq->cmd->retries = (ARRAY_SIZE(clock) - 1) - cnt;
+                spin_unlock_irqrestore(&host->mrq_lock, flags);
+                aml_sdhc_set_clk_rate(host->mmc,host->mmc->ios.clock);
+
+
             }
             else if(aml_card_type_mmc(pdata) && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK) && (host->mrq->cmd->opcode != MMC_SEND_TUNING_BLOCK_HS200)){
                 spin_lock_irqsave(&host->mrq_lock, flags);
@@ -1927,6 +1929,7 @@ static void aml_sdhc_clk_switch (struct amlsd_platform* pdata, int clk_div, int 
 static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
 {
     u32 clk_rate, clk_div, clk_src_sel, clk_src_div;
+    unsigned long flags;
     struct clk *clk_src;
     struct amlsd_platform* pdata = mmc_priv(mmc);
     struct amlsd_host* host = (void*)pdata->host;
@@ -1968,7 +1971,9 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
     } else { // OSC, 24MHz
         clk_rate = 24000000;
     }
-
+	
+		spin_lock_irqsave(&host->mrq_lock, flags);
+		
     if(clk_ios > pdata->f_max)
         clk_ios = pdata->f_max;
     if(clk_ios < pdata->f_min)
@@ -2011,7 +2016,8 @@ static void aml_sdhc_set_clk_rate(struct mmc_host *mmc, unsigned int clk_ios)
 
     /*Wait for a while after clock setting*/
     // udelay(100);
-
+		
+		spin_unlock_irqrestore(&host->mrq_lock, flags);
     sdhc_dbg(AMLSD_DBG_IOS, "Clk IOS %d, Clk Src %d, Host Max Clk %d, vclkc=%#x, clk2=%#x, actual_clock=%d, rx_clk_phase=%d, sd_clk_phase=%d\n",
         clk_ios, clk_rate, pdata->f_max, readl(host->base+SDHC_CLKC), readl(host->base+SDHC_CLK2), pdata->mmc->actual_clock, clk2->rx_clk_phase, clk2->sd_clk_phase);
 
