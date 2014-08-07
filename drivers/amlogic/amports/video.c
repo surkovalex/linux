@@ -99,8 +99,6 @@ static int debugflags=0;
 static int output_fps = 0;
 static u32 omx_pts = 0;
 bool omx_secret_mode = false;
-static int provider_trigger_flag = 0 ;
-static int axis_reset_ready = 0;
 #define DEBUG_FLAG_FFPLAY	(1<<0)
 #define DEBUG_FLAG_CALC_PTS_INC	(1<<1)
 
@@ -433,12 +431,12 @@ static int scaler_pos_changed = 0;
 static struct amvideocap_req *capture_frame_req=NULL;
 static video_prot_t video_prot;
 static u32 video_angle = 0;
-u32 get_video_angle(void) { return video_angle; }
-EXPORT_SYMBOL(get_video_angle);
 #if HAS_VPU_PROT
 static u32 use_prot = 0;
 u32 get_prot_status(void) { return video_prot.status; }
 EXPORT_SYMBOL(get_prot_status);
+u32 get_video_angle(void) { return video_angle; }
+EXPORT_SYMBOL(get_video_angle);
 extern void prot_get_parameter(u32 wide_mode, vframe_t * vf, vpp_frame_par_t * next_frame_par, const vinfo_t *vinfo);
 #endif
 
@@ -1905,17 +1903,6 @@ static inline bool duration_expire(vframe_t *cur_vf, vframe_t *next_vf, u32 dur)
 
 #define VPTS_RESET_THRO
 
-static int resolution_change(vframe_t *cur_vf, vframe_t *next_vf)
-{
-	int ret = 0;
-	if(cur_vf == NULL){
-		return 1;			
-	}	
-	if((cur_vf->width != next_vf->width)||(cur_vf->height != next_vf->height)){
-		ret = 1;	
-	}
-	return ret;
-}
 static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
 {
     u32 pts = next_vf->pts;
@@ -2456,10 +2443,6 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 
     while (vf) {
         if (vpts_expire(cur_dispbuf, vf)) {
-        	if((!(trickmode_fffb|trickmode_i))&&provider_trigger_flag&&!axis_reset_ready&&resolution_change(cur_dispbuf, vf)){
-        		return IRQ_HANDLED;
-        	}
-        	provider_trigger_flag = 0;
             amlog_mask(LOG_MASK_TIMESTAMP,
                        "VIDEO_PTS = 0x%x, cur_dur=0x%x, next_pts=0x%x, scr = 0x%x\n",
                        timestamp_vpts_get(),
@@ -3153,15 +3136,12 @@ static int video_receiver_event_fun(int type, void* data, void* private_data)
 #ifdef CONFIG_AM_VIDEO2
         set_clone_frame_rate(android_clone_rate, 200);
 #endif
-		provider_trigger_flag = 0 ;
-		axis_reset_ready =0 ;
     }
     else if(type == VFRAME_EVENT_PROVIDER_LIGHT_UNREG){
         video_vf_light_unreg_provider();
     }
     else if(type == VFRAME_EVENT_PROVIDER_REG){
         enable_video_discontinue_report = 1;
-        provider_trigger_flag = 1;
 #ifdef CONFIG_AM_VIDEO2
         char* provider_name = (char*)data;
         if(strncmp(provider_name, "decoder", 7)==0
@@ -3482,7 +3462,6 @@ static void _set_video_window(int *p)
         }
     }
     video_property_changed = true;
-    axis_reset_ready = 1;
 }
 
 /*********************************************************
