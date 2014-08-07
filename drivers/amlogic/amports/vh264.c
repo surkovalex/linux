@@ -622,7 +622,7 @@ static void vh264_set_params(void)
     last_mb_width = mb_width;
     last_mb_height = mb_height;
 
-    if (frame_width == 0 || frame_height == 0) {
+    if (frame_width == 0 || frame_height == 0 ||crop_infor && frame_height &&frame_width) {
         frame_width = mb_width << 4;
         frame_height = mb_height << 4;
         if (frame_mbs_only_flag) {
