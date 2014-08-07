@@ -355,8 +355,11 @@ static void vcck_pwm_init(struct device * dev) {
 static 
 int meson_cs_probe(struct platform_device *pdev)
 {
-	
-	printk("======================enter %s done!\n",__func__);
+	struct meson_cs_pdata_t *meson_cs_pdata  = pdev->dev.platform_data;
+	struct meson_cs_regulator_dev *meson_cs_regulator;
+	int error = 0, i, cur_idx;
+	struct regulator_config *meson_regulator_config;
+
 #ifdef CONFIG_USE_OF
 	struct device_node *np = pdev->dev.of_node;
 	struct device_node *np_init_data;
@@ -438,11 +441,8 @@ int meson_cs_probe(struct platform_device *pdev)
 	}
 #endif
 
-	struct meson_cs_pdata_t *meson_cs_pdata  = pdev->dev.platform_data;
-	struct meson_cs_regulator_dev *meson_cs_regulator;
-	int error = 0, i, cur_idx;
-	struct regulator_config *meson_regulator_config;
-       g_vcck_voltage = meson_cs_pdata;
+	printk("======================enter %s done!\n",__func__);
+	       g_vcck_voltage = meson_cs_pdata;
 	meson_cs_regulator = kzalloc(sizeof(struct meson_cs_regulator_dev), GFP_KERNEL);
 	if (!meson_cs_regulator)
 		return -ENOMEM;

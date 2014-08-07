@@ -149,8 +149,6 @@ int remote_printk(const char *fmt, ...)
 
 static int remote_mouse_event(struct input_dev *dev, unsigned int scancode, unsigned int type,bool flag)
 {
-	if(flag)
-		return 1;
 	
 	__u16 mouse_code = REL_X;
 	__s32 mouse_value = 0;
@@ -158,6 +156,8 @@ static int remote_mouse_event(struct input_dev *dev, unsigned int scancode, unsi
 	__s32 move_accelerate[] = {0, 2, 2, 4, 4, 6, 8, 10, 12, 14, 16, 18};
 	unsigned int i;
 
+	if(flag)
+		return 1;
 	for (i = 0; i < ARRAY_SIZE(mouse_map[gp_remote->map_num]); i++)
 		if (mouse_map[gp_remote->map_num][i] == scancode) {
 			break;
@@ -627,8 +627,8 @@ static int remote_probe(struct platform_device *pdev)
 	struct remote *remote;
 	struct input_dev *input_dev;
 	unsigned int ao_baseaddr;
-	aml_set_reg32_mask(P_AO_RTI_PIN_MUX_REG, (1 << 0));
 	int i, ret;
+	aml_set_reg32_mask(P_AO_RTI_PIN_MUX_REG, (1 << 0));
 	if (!pdev->dev.of_node) {
 		printk("aml_remote: pdev->dev.of_node == NULL!\n");
 		return -1;

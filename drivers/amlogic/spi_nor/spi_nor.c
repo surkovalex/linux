@@ -607,15 +607,7 @@ early_param("storage",get_storage_device);
 	 * a chip ID, try the JEDEC id commands; they'll work for most
 	 * newer chips, even if we don't recognize the particular chip.
 	 */
-	printk("%s\n", __func__);
 		
-	int flag = -1;
-	flag = check_storage_device();
-	if(flag < 0){
-		printk("%s %d boot_device_flag %d : do not init spi\n",__func__,__LINE__,boot_device_flag);
-		return  -ENOMEM;
-	}
-	
 #ifdef CONFIG_OF
 	int index;
 	int val = 0;
@@ -625,6 +617,16 @@ early_param("storage",get_storage_device);
 	int ret;
 	phandle phandle;
 	struct device_node *np_spi_part;
+#endif
+	int flag = -1;
+	flag = check_storage_device();
+	printk("%s\n", __func__);
+	if(flag < 0){
+		printk("%s %d boot_device_flag %d : do not init spi\n",__func__,__LINE__,boot_device_flag);
+		return  -ENOMEM;
+	}
+	
+#ifdef CONFIG_OF
 
 	if(spi->dev.of_node){
 		data = kzalloc(sizeof(struct flash_platform_data), GFP_KERNEL);

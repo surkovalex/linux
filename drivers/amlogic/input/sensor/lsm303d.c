@@ -2621,11 +2621,11 @@ static int create_sysfs_interfaces(struct lsm303d_status *stat)
 	int i=0;
 //	struct lsm303d_status *stat = dev_get_drvdata(dev);
 
+	struct kobject *mag_kobj = &stat->input_dev_mag->dev.kobj ;
 	struct kobject *acc_kobj = &stat->input_dev_acc->dev.kobj ;
 	if(!acc_kobj)
 		return -ENOMEM;
 
-	struct kobject *mag_kobj = &stat->input_dev_mag->dev.kobj ;
 	if(!mag_kobj)
 		return -ENOMEM;
 

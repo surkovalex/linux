@@ -2030,8 +2030,8 @@ buffer_setup(struct videobuf_queue *vq, unsigned int *count, unsigned int *size)
 	struct gc0308_fh *fh = container_of(res, struct gc0308_fh, res);
 	struct gc0308_device *dev  = fh->dev;
     //int bytes = fh->fmt->depth >> 3 ;
-	*size = fh->width*fh->height*fh->fmt->depth >> 3;
 	int height = fh->height;
+	*size = fh->width*fh->height*fh->fmt->depth >> 3;
 	if(height==1080)
 		height = 1088;
 	*size = (fh->width*height*fh->fmt->depth)>>3;

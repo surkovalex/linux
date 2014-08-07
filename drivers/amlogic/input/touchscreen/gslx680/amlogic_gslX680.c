@@ -697,6 +697,12 @@ static void gslX680_ts_worker(struct work_struct *work)
 	u16 x, y;
 
 	struct gsl_ts *ts = container_of(work, struct gsl_ts,work);
+#ifdef GSL_NOID_VERSION
+	u32 tmp1;
+	u8 buf[4] = {0};
+	struct gsl_touch_info cinfo;
+	memset(&cinfo,0,sizeof(struct gsl_touch_info));
+#endif
 
 	print_info("=====gslX680_ts_worker=====\n");				 
 
@@ -707,12 +713,6 @@ static void gslX680_ts_worker(struct work_struct *work)
 		i2c_lock_flag = 1;
 #endif
 
-#ifdef GSL_NOID_VERSION
-	u32 tmp1;
-	u8 buf[4] = {0};
-	struct gsl_touch_info cinfo;
-	memset(&cinfo,0,sizeof(struct gsl_touch_info));
-#endif
 
 	rc = gsl_ts_read(ts->client, 0x80, ts->touch_data, ts->dd->data_size);
 	if (rc < 0) 

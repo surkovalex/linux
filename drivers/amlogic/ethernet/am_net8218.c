@@ -667,15 +667,15 @@ void net_tasklet(unsigned long dev_instance)
 	}
 	if (result & 2) {
 		struct _rx_desc *c_rx, *rx = NULL;
+		int rx_cnt = 0;
 		c_rx = (void *)readl((void*)(np->base_addr + ETH_DMA_19_Curr_Host_Re_Descriptor));
 		c_rx = np->rx_ring + (c_rx - np->rx_ring_dma);
 		rx = np->last_rx->next;
-		int rx_cnt = 0;
 		while (rx != NULL) {
 			CACHE_RSYNC(rx, sizeof(struct _rx_desc));
 			if (!(rx->status & (DescOwnByDma))) {
-				rx_cnt++;
 				int ip_summed = CHECKSUM_UNNECESSARY;
+				rx_cnt++;
 				len = (rx->status & DescFrameLengthMask) >> DescFrameLengthShift;
 				if (unlikely(len < 18 || len > np->rx_buf_sz)) {	//here is fatal error we drop it ;
 					np->stats.rx_dropped++;
@@ -895,6 +895,26 @@ static int mac_pmt_enable(unsigned int enable)
 extern int get_aml_key_kernel(const char* key_name, unsigned char* data, int ascii_flag);
 extern int extenal_api_key_set_version(char *devvesion);
 static char print_buff[1025];
+void read_mac_from_nand(struct net_device *ndev)
+{
+	int ret;
+	u8 mac[ETH_ALEN];
+	char *endp;
+	int j;
+	ret = get_aml_key_kernel("mac", print_buff, 0);
+	extenal_api_key_set_version("nand3");
+	printk("ret = %d\nprint_buff=%s\n", ret, print_buff);
+	if (ret >= 0) {
+		strcpy(ndev->dev_addr, print_buff);
+	for(j=0; j < ETH_ALEN; j++)
+	{
+		mac[j] = simple_strtol(&ndev->dev_addr[3 * j], &endp, 16);
+		printk("%d : %d\n", j, mac[j]);
+	}
+	memcpy(ndev->dev_addr, mac, ETH_ALEN);
+	}
+
+}
 #endif
 static int aml_mac_init(struct net_device *ndev)
 {
@@ -907,22 +927,7 @@ static int aml_mac_init(struct net_device *ndev)
 
 	data_dump(ndev->dev_addr, 6);
 #ifdef CONFIG_AML_NAND_KEY
-	int ret;
-	u8 mac[ETH_ALEN];
-	char *endp;
-	int j;
-	extenal_api_key_set_version("nand3");
-	ret = get_aml_key_kernel("mac", print_buff, 0);
-	printk("ret = %d\nprint_buff=%s\n", ret, print_buff);
-	if (ret >= 0) {
-		strcpy(ndev->dev_addr, print_buff);
-	for(j=0; j < ETH_ALEN; j++)
-	{
-		mac[j] = simple_strtol(&ndev->dev_addr[3 * j], &endp, 16);
-		printk("%d : %d\n", j, mac[j]);
-	}
-	memcpy(ndev->dev_addr, mac, ETH_ALEN);
-	}
+	read_mac_from_nand(ndev);
 #endif
 	printk("--2--write mac add to:");
 	data_dump(ndev->dev_addr, 6);
@@ -1225,9 +1230,9 @@ static int netdev_open(struct net_device *dev)
 {
 	struct am_net_private *np = netdev_priv(dev);
 	unsigned long val;
+	int res;
 	np->refcnt++;
 	switch_mod_gate_by_name("ethernet",1);
-	int res;
 	if (running) {
 		return 0;
 	}
@@ -1731,8 +1736,8 @@ static void set_multicast_list(struct net_device *dev)
 	}
 }
 static int set_mac_addr_n(struct net_device *dev, void *addr){
-	printk("mac addr come in\n");
 	struct sockaddr *sa = addr;
+	printk("mac addr come in\n");
 
 	if (!is_valid_ether_addr(sa->sa_data))
 		return -EADDRNOTAVAIL;
@@ -2757,8 +2762,8 @@ static int am_net_cali(int argc, char **argv,int gate)
 	int cali_start = 0;
 	int cali_time = 0;
 	int ii=0;
-	cali_start = gate;
 	unsigned int value;
+	cali_start = gate;
 	if ((argc < 4) || (argv == NULL) || (argv[0] == NULL)
 			|| (argv[1] == NULL) || (argv[2] == NULL)|| (argv[3] == NULL)) {
 		printk("Invalid syntax\n");
@@ -2906,6 +2911,7 @@ static int ethernet_probe(struct platform_device *pdev)
 {
         int ret;
 	int res;
+	struct am_net_private *np=NULL;
 	printk("ethernet_driver probe!\n");
 #ifdef CONFIG_OF
 	if (!pdev->dev.of_node) {
@@ -2973,7 +2979,7 @@ static int ethernet_probe(struct platform_device *pdev)
 		res = am_eth_class_init();
 
 	eth_pdata = (struct aml_eth_platdata *)pdev->dev.platform_data;
-	struct am_net_private *np = netdev_priv(my_ndev);
+	np = netdev_priv(my_ndev);
 	if(np->phydev && savepowermode)
 		np->phydev->drv->suspend(np->phydev);
 	//switch_mod_gate_by_name("ethernet",0);

@@ -89,9 +89,9 @@ static void aml_audio_stop_timer(struct aml_audio_private_data *p_aml_audio)
 static int hp_det_adc_value(struct aml_audio_private_data *p_aml_audio)
 {
     int ret,hp_value,hp_val_sum,loop_num;
+    unsigned int mic_ret = 0;
     hp_val_sum = 0;
     loop_num = 0;
-    unsigned int mic_ret = 0;
     
     while(loop_num < 8){
         hp_value = get_adc_sample(p_aml_audio->hp_adc_ch);
@@ -491,6 +491,7 @@ static int aml_resume_pre(struct snd_soc_card *card)
 
         p_aml_audio->pin_ctl = devm_pinctrl_get_select(card->dev, "aml_snd_m8");
     }
+    printk(KERN_INFO "enter %s\n", __func__);
     return 0;
 }
 

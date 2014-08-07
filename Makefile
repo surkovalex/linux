@@ -384,7 +384,8 @@ KBUILD_CFLAGS   += -Werror=enum-compare \
 		   -Werror=format \
 		   -Werror=unused-function \
 		   -Werror=switch \
-		   -Werror=strict-prototypes
+		   -Werror=strict-prototypes \
+		   -Werror=declaration-after-statement
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__

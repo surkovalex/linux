@@ -46,13 +46,13 @@ static struct resource memobj;
 int dev_ion_probe(struct platform_device *pdev) {
     int err;
     int i;
-    num_heaps = 1;
     
     struct resource *res;
     struct device_node	*of_node = pdev->dev.of_node;
     const void *name;
     int offset,size;
 
+    num_heaps = 1;
     my_ion_heap[0].type = ION_HEAP_TYPE_SYSTEM;
     my_ion_heap[0].id = ION_HEAP_TYPE_SYSTEM;
     my_ion_heap[0].name = "vmalloc_ion";

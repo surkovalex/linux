@@ -2365,9 +2365,9 @@ bool OV5647_set_af_new_step(void *priv, unsigned int af_step){
 
 void OV5647_set_new_format(void *priv,int width,int height,int fr){
     int index = 0;
-    current_fr = fr;
     camera_priv_data_t *camera_priv_data = (camera_priv_data_t *)priv;
     configure_t *configure = camera_priv_data->configure;
+    current_fr = fr;
     if(camera_priv_data == NULL)
     	return;
     printk("sum:%d,mode:%d,fr:%d\n",configure->aet.sum,ov5647_work_mode,fr);
@@ -3062,6 +3062,12 @@ void set_resolution_param(struct ov5647_device *dev, resolution_param_t* res_par
     //int rc = -1;
     int i=0;
     unsigned char t = dev->cam_info.interface;
+	int default_sensor_data[4] = {0x00000668,0x00000400,0x00000400,0x00000878};
+    int *sensor_data;
+    int addr_start = 0x5186;
+    int data = 0;
+    int index = 0;
+
     if(i_index != -1 && ov5647_work_mode != CAMERA_CAPTURE){
     	printk("i_index is %d\n", i_index);
         res_param = &debug_prev_resolution_array[i_index];
@@ -3086,11 +3092,6 @@ void set_resolution_param(struct ov5647_device *dev, resolution_param_t* res_par
     
     set_flip(dev);
 
-    int default_sensor_data[4] = {0x00000668,0x00000400,0x00000400,0x00000878};
-    int *sensor_data;
-    int addr_start = 0x5186;
-    int data = 0;
-    int index = 0;
     if(dev->configure->wb_sensor_data_valid == 1){
         sensor_data = dev->configure->wb_sensor_data.export;
     }else

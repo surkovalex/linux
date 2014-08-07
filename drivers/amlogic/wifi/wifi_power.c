@@ -256,8 +256,8 @@ EXPORT_SYMBOL(wifi_get_country_code);
 
 int wifi_usb_set_power(int val)
 {
-	WARN_ON(1);
     struct wifi_power_platform_data *pdata = NULL;
+	WARN_ON(1);
     if(devp==NULL)
         return -1;
     pdata = (struct wifi_power_platform_data*)devp->platform_data;

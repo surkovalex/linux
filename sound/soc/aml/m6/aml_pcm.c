@@ -1000,6 +1000,7 @@ static int aml_pcm_open(struct snd_pcm_substream *substream)
 	int ret = 0;
 	void *buffer = NULL;
 	unsigned int buffersize = 0;
+	audio_stream_t *s = NULL;
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 		playback_substream_handle = (unsigned long)substream;
 		snd_soc_set_runtime_hwparams(substream, &aml_pcm_hardware);
@@ -1059,7 +1060,7 @@ static int aml_pcm_open(struct snd_pcm_substream *substream)
 	
 
 	spin_lock_init(&prtd->s.lock);
-	audio_stream_t *s = &prtd->s;
+	s = &prtd->s;
 	s->xrun_num = 0;
  out:
 	return ret;

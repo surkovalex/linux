@@ -2502,11 +2502,11 @@ out:
 
 static int dtv_set_frontend(struct dvb_frontend *fe)
 {
-	printk("dtv_set_frontend\n");
 	struct dvb_frontend_private *fepriv = fe->frontend_priv;
 	struct dtv_frontend_properties *c = &fe->dtv_property_cache;
 	struct dvb_frontend_tune_settings fetunesettings;
 	u32 rolloff = 0;
+	printk("dtv_set_frontend\n");
 
 	if (dvb_frontend_check_parameters(fe) < 0)
 		return -EINVAL;
@@ -3240,6 +3240,7 @@ int dvb_register_frontend(struct dvb_adapter* dvb,
 		.kernel_ioctl = dvb_frontend_ioctl
 	};
 
+	int ret;
 	dev_dbg(dvb->device, "%s:\n", __func__);
 
 	if (mutex_lock_interruptible(&frontend_mutex))
@@ -3277,7 +3278,6 @@ int dvb_register_frontend(struct dvb_adapter* dvb,
 
 	dvb_register_device (fe->dvb, &fepriv->dvbdev, &dvbdev_template,
 			     fe, DVB_DEVICE_FRONTEND);
-	int ret;
 	printk("For tongfang\n");
 	ret=0;
 	tongfang_clsp = class_create(THIS_MODULE,LOCK_DEVICE_NAME);

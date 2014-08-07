@@ -5521,6 +5521,7 @@ static int process_post_vframe(void)
     di_buf_t *p = NULL;//, *ptmp;
     int itmp;
     int ready_count = list_count(QUEUE_PRE_READY);
+    bool check_drop = false;
     if(queue_empty(QUEUE_POST_FREE)){
         return 0;
     }
@@ -5795,7 +5796,6 @@ static int process_post_vframe(void)
                     }
 #endif
                     di_lock_irqfiq_save(irq_flag2, fiq_flag);
-                    bool check_drop = false;
                     if((check_start_drop_prog && is_progressive(ready_di_buf->vframe))||
                     	  !is_progressive(ready_di_buf->vframe))
                         check_drop = true;

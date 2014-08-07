@@ -3061,8 +3061,6 @@ static void hevc_recover(hevc_stru_t* hevc)
         amhevc_stop();
 
         //reset
-        WRITE_MPEG_REG(PARSER_VIDEO_RP, READ_VREG(HEVC_STREAM_RD_PTR));
-        SET_MPEG_REG_MASK(PARSER_ES_CONTROL, ES_VID_MAN_RD_PTR);
 
         hevc_stream_start_addr = READ_VREG(HEVC_STREAM_START_ADDR);
         hevc_stream_end_addr = READ_VREG(HEVC_STREAM_END_ADDR);
