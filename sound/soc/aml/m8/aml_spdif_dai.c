@@ -43,7 +43,7 @@ extern int aout_notifier_call_chain(unsigned long val, void *v);
 //static  unsigned  playback_substream_handle = 0 ;
 extern unsigned int IEC958_mode_codec;
 static int iec958buf[32+16];
-void  aml_spdif_play()
+void  aml_spdif_play(void)
 {
     return;
    	 _aiu_958_raw_setting_t set;
@@ -83,7 +83,7 @@ void  aml_spdif_play()
 
 	
 }
-static void  aml_spdif_play_stop()
+static void  aml_spdif_play_stop(void)
 {
 	audio_hw_958_enable(0);
 }

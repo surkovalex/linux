@@ -889,7 +889,7 @@ static struct snd_soc_codec_driver soc_codec_dev_pmu3 = {
 };
 
 
-static int pmu3_audio_codec_mute()
+static int pmu3_audio_codec_mute(void)
 {
     uint32_t addr;
     unsigned int value = 0x8000;

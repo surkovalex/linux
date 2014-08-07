@@ -324,7 +324,7 @@ int aml1216_get_vsys_voltage(void)
     return result;
 }
 
-int aml1216_get_otp_version()
+int aml1216_get_otp_version(void)
 {
     uint8_t val = 0; 
     int  otp_version = 0;

@@ -1017,7 +1017,7 @@ int if_audio_out_enable()
 {
 	return READ_MPEG_REG_BITS(AIU_MEM_I2S_CONTROL, 1, 2);
 }
-int if_958_audio_out_enable()
+int if_958_audio_out_enable(void)
 {
 	return READ_MPEG_REG_BITS(AIU_MEM_IEC958_CONTROL,1,2);
 }

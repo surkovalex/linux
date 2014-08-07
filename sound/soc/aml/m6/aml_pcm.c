@@ -1211,7 +1211,7 @@ static int aml_pcm_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 	return res;
 }
 
-static unsigned int aml_get_in_wr_ptr(){
+static unsigned int aml_get_in_wr_ptr(void){
 	return (audio_in_i2s_wr_ptr() - aml_i2s_capture_phy_start_addr);
 }
 

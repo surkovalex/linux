@@ -325,7 +325,7 @@ int aml1218_get_vsys_voltage(void)
 }
 
 static int pmu__version = -1;
-int aml1218_get_pmu_version()
+int aml1218_get_pmu_version(void)
 {
     uint8_t val = 0; 
 

@@ -234,7 +234,7 @@ void tsync_pcr_avevent_locked(avevent_t event, u32 param)
 }
 
 // timer to check the system with the referrence time in ts stream.
-static unsigned long tsync_pcr_check()
+static unsigned long tsync_pcr_check(void)
 {
     u32 tsdemux_pcr=tsdemux_pcrscr_get();
     u32 tsdemux_pcr_diff=0;
