@@ -2887,7 +2887,7 @@ void OV5647_set_night_mode(struct ov5647_device *dev,enum  camera_night_mode_fli
 
 }   /* OV5647_NightMode */
 
-static void OV5647_set_param_banding(struct ov5647_device *dev,enum  camera_night_mode_flip_e banding)
+static void OV5647_set_param_banding(struct ov5647_device *dev,enum  camera_banding_flip_e banding)
 {
     struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
     switch(banding){

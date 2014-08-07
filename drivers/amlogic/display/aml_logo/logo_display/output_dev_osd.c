@@ -165,6 +165,8 @@ void set_osd_freescaler(int index, logo_object_t *plogo, vmode_t new_mode) {
             osd_set_free_scale_axis_hw(index, 0, 0, 1919, 1079);
             osddev_update_disp_axis_hw(0, 1919, 0, 1079, 0, 0, 0, index);
             break;
+		default:
+			break;
    }
    switch(new_mode) {
         case VMODE_480I:
@@ -196,6 +198,8 @@ void set_osd_freescaler(int index, logo_object_t *plogo, vmode_t new_mode) {
         case VMODE_4K2K_SMPTE:
             osd_set_window_axis_hw(index, 0, 0, 4095, 2159);
             break;
+		default:
+			break;
    }
    osd_free_scale_enable_hw(index, 0x10001);
    osd_enable_hw(1, index);

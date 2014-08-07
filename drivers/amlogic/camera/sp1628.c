@@ -1165,6 +1165,7 @@ void set_SP1628_param_wb(struct sp1628_device *dev,enum  camera_wb_flip_e para)
 				break;
 	
 			case CAM_WB_MANUAL:
+			default:
 					// TODO
 				break;
 		}
@@ -1573,7 +1574,7 @@ void SP1628_set_param_banding(struct sp1628_device *dev,enum  camera_banding_fli
 		
 			break;
 		
-			 //default:
+			default:
 		
 				 break;
 		

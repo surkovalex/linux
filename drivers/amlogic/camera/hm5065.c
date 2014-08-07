@@ -816,6 +816,7 @@ void HM5065_set_param_wb(struct hm5065_device *dev,enum  camera_wb_flip_e para)/
 				break;
 	
 			case CAM_WB_MANUAL:
+			default:
 					// TODO
 				break;
 		}
@@ -1034,6 +1035,8 @@ static void HM5065_set_param_banding(struct hm5065_device *dev,enum  camera_band
 							i2c_put_byte(client, 0x0190, 0x00);
 							i2c_put_byte(client, 0x019c, 0x4b);
 							i2c_put_byte(client, 0x019d, 0x20);
+				break;
+			default:
 				break;
 		}
 }

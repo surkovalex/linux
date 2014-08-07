@@ -1193,6 +1193,7 @@ void hm2057_set_param_wb(struct hm2057_device *dev,enum  camera_wb_flip_e para)/
 			break;
 
 		case CAM_WB_MANUAL:
+		default:
 			// TODO
 			break;
 	}
@@ -1481,6 +1482,8 @@ void hm2057_set_param_banding(struct hm2057_device *dev,enum  camera_banding_fli
 					i2c_put_byte(client,0x0000, 0xFF);	//AE CMU   
 					i2c_put_byte(client,0x0100, 0xFF);	//AE CMU	
 					i2c_put_byte(client,0x0101, 0xFF);	//AE CMU 
+					break;
+				default:
 					break;
 		
 				}

@@ -1434,7 +1434,7 @@ void SP0A19_night_mode(struct sp0a19_device *dev,enum  camera_night_mode_flip_e 
 *
 *************************************************************************/
 
-void SP0A19_set_param_banding(struct sp0a19_device *dev,enum  camera_night_mode_flip_e banding)
+void SP0A19_set_param_banding(struct sp0a19_device *dev,enum camera_banding_flip_e banding)
 {
     struct i2c_client *client = v4l2_get_subdevdata(&dev->sd);
     unsigned char buf[4];
@@ -1705,6 +1705,8 @@ void SP0A19_set_param_banding(struct sp0a19_device *dev,enum  camera_night_mode_
 		i2c_put_byte_add8(client,buf,2);
                      #endif
             break;
+		default:
+			break;
     }
 }
 

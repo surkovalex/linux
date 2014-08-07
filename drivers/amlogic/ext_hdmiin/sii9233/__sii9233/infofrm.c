@@ -806,6 +806,8 @@ SelectIf_t id;
                                         }
                                     }
                                     break;
+					default:
+									break;
                 }
             }
         }
