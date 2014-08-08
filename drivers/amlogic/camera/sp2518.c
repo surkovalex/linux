@@ -60,7 +60,7 @@
 #define SP2518_CAMERA_VERSION \
 	KERNEL_VERSION(SP2518_CAMERA_MAJOR_VERSION, SP2518_CAMERA_MINOR_VERSION, SP2518_CAMERA_RELEASE)
 	
-#define SP2518_DRIVER_VERSION "SP2518-COMMON-01-140717"
+#define SP2518_DRIVER_VERSION "SP2518-COMMON-01-140722"
 
 //unsigned short DGain_shutter,AGain_shutter,DGain_shutterH,DGain_shutterL,AGain_shutterH,AGain_shutterL,shutterH,shutterL,shutter;
 //unsigned short UXGA_Cap = 0;
@@ -666,10 +666,10 @@ struct aml_camera_i2c_fig_s SP2518_script[] = {
 	{0xa5,0x80},
 	{0xa6,0x80},
 	{0xfd,0x01},
-	{0x64,0x1e},//28
-	{0x65,0x1c},//25
-	{0x66,0x1c},//2a
-	{0x67,0x16},//25
+	{0x64,0x22},//28
+	{0x65,0x1e},//25
+	{0x66,0x1e},//2a
+	{0x67,0x1a},//25
 	{0x68,0x1c},//25
 	{0x69,0x1c},//29
 	{0x6a,0x1a},//28
