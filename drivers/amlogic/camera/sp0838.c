@@ -122,7 +122,7 @@ MODULE_DESCRIPTION("sp0838 On Board");
 MODULE_AUTHOR("amlogic-sh");
 MODULE_LICENSE("GPL v2");
 
-#define SP0838_DRIVER_VERSION "SP0838-COMMON-01-140722"
+#define SP0838_DRIVER_VERSION "SP0838-COMMON-01-140808"
 
 static unsigned video_nr = -1;  /* videoX start number, -1 is autodetect. */
 
@@ -1014,10 +1014,10 @@ void set_SP0838_param_wb(struct sp0838_device *dev,enum  camera_wb_flip_e para)
 		buf[1]=0x01;
 		i2c_put_byte_add8(client,buf,2);
 		buf[0]=0x28;
-		buf[1]=0x98;//98
+		buf[1]=0x5a;//98
 		i2c_put_byte_add8(client,buf,2);
 		buf[0]=0x29;
-		buf[1]=0xc0;//c0
+		buf[1]=0x62;//c0
 		i2c_put_byte_add8(client,buf,2);
 		buf[0]=0xfd;
 		buf[1]=0x00;
