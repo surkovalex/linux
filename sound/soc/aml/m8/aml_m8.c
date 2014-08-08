@@ -458,6 +458,8 @@ static int i2s_gpio_set(struct snd_soc_card *card)
         amlogic_gpio_request_one(p_aml_audio->gpio_i2s_o,GPIOF_OUT_INIT_LOW,"low_odata");
         amlogic_set_value(p_aml_audio->gpio_i2s_o, 0, "low_odata");
     }
+    //mute spk
+    amlogic_set_value(p_aml_audio->gpio_mute, 0, "mute_spk");
     return 0;
 }
 static int aml_suspend_post(struct snd_soc_card *card)
