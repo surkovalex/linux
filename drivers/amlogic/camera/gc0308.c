@@ -2560,7 +2560,7 @@ static int gc0308_open(struct file *file)
 	int retval = 0;
 	resource_size_t mem_start = 0;
         unsigned int mem_size = 0;
-#if CONFIG_CMA
+#ifdef CONFIG_CMA
     retval = vm_init_buf(16*SZ_1M);
     if(retval <0)
         return -1;
