@@ -1175,7 +1175,7 @@ void root_func(){
 		bootloader:bootloader{
 			name = "bootloader";
 			offset = <0>;
-			size = <0x60000>;
+			size = <0x100000>;
 		};
 
 //$$ MATCH "Spi_nr-part-1_match" = <&ubootenv>
