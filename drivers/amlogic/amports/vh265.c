@@ -3324,24 +3324,28 @@ static void vh265_put_timer_func(unsigned long arg)
     if (empty_flag == 0){
         // decoder has input
         if((debug&H265_DEBUG_DIS_LOC_ERROR_PROC)==0){
-            if(gHevc.error_flag==0){
-                error_watchdog_count++;
-                if (error_watchdog_count == error_handle_threshold) {    
-                    printk("H265 decoder error local reset.\n");
-                    gHevc.error_flag = 1;
-                    error_watchdog_count = 0;
-                    error_skip_nal_watchdog_count = 0;
-                    error_system_watchdog_count++;
-                    WRITE_VREG(HEVC_ASSIST_MBOX1_IRQ_REG, 0x1); 
+            if((state == RECEIVER_INACTIVE) &&                       // receiver has no buffer to recycle
+                (kfifo_is_empty(&display_q))                        // no buffer in display queue
+                ){
+                if(gHevc.error_flag==0){
+                    error_watchdog_count++;
+                    if (error_watchdog_count == error_handle_threshold) {    
+                        printk("H265 decoder error local reset.\n");
+                        gHevc.error_flag = 1;
+                        error_watchdog_count = 0;
+                        error_skip_nal_watchdog_count = 0;
+                        error_system_watchdog_count++;
+                        WRITE_VREG(HEVC_ASSIST_MBOX1_IRQ_REG, 0x1); 
+                    }
                 }
-            }
-            else if(gHevc.error_flag == 2){
-                error_skip_nal_watchdog_count++;
-                if(error_skip_nal_watchdog_count==error_handle_nal_skip_threshold){
-                    gHevc.error_flag = 3;
-                    error_watchdog_count = 0;
-                    error_skip_nal_watchdog_count = 0;
-                    WRITE_VREG(HEVC_ASSIST_MBOX1_IRQ_REG, 0x1); 
+                else if(gHevc.error_flag == 2){
+                    error_skip_nal_watchdog_count++;
+                    if(error_skip_nal_watchdog_count==error_handle_nal_skip_threshold){
+                        gHevc.error_flag = 3;
+                        error_watchdog_count = 0;
+                        error_skip_nal_watchdog_count = 0;
+                        WRITE_VREG(HEVC_ASSIST_MBOX1_IRQ_REG, 0x1); 
+                    }
                 }
             }
         }
