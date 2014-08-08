@@ -375,8 +375,8 @@ void audio_in_spdif_enable(int flag)
 //  int rd = 0, start=0;
 
 	if(flag){
-reset_again:
 #if 0
+reset_again:
 	     WRITE_MPEG_REG_BITS(AUDIN_FIFO1_CTRL, 1, 1, 1); // reset FIFO 0
             WRITE_MPEG_REG(AUDIN_FIFO1_PTR, 0);
             rd = READ_MPEG_REG(AUDIN_FIFO1_PTR);

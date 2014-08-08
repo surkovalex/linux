@@ -439,9 +439,10 @@ static int __init rmda_early_init(void)
 
 #else
 #if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
-    request_irq(INT_RDMA, &rdma_isr,
+    if(request_irq(INT_RDMA, &rdma_isr,
                     IRQF_SHARED, "rdma",
-                    (void *)"rdma");
+                    (void *)"rdma"))
+		return -1;
 #endif    
 #endif
     //printk("%s phy_addr %x remap %x table %x\n", __func__, rmda_table_phy_addr, rmda_table_addr_remap, rmda_table); 

@@ -745,7 +745,6 @@ static void lsm303d_irq1_work_func(struct work_struct *work)
 	
 	lsm303d_interrupt_catch(stat,1);
 	pr_info("%s: IRQ1 triggered\n", LSM303D_DEV_NAME);
-exit:
 	enable_irq(stat->irq1);
 }
 
@@ -759,7 +758,6 @@ static void lsm303d_irq2_work_func(struct work_struct *work)
 	
 	lsm303d_interrupt_catch(stat,2);
 	pr_info("%s: IRQ2 triggered\n", LSM303D_DEV_NAME);
-exit:
 	enable_irq(stat->irq2);
 }
 

@@ -630,6 +630,7 @@ static int dvfs_get_voltage_step(void)
 		}
         return reg_val & 0xf;
     }
+	return -1;
 }
 
 static int dvfs_set_voltage(int from, int to)
@@ -825,7 +826,6 @@ static int meson_cs_dvfs_probe(struct platform_device *pdev)
         printk("%2d, %08x, %7d\n", i, g_table[i].pwm_value, g_table[i].voltage);    
     }
 
-next:
     if (use_pwm) {
         dvfs_vcck_pwm_init(&pdev->dev);
     }

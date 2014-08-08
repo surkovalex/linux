@@ -2012,7 +2012,7 @@ MODULE_AMLOG(AMLOG_DEFAULT_LEVEL, 0xff, LOG_LEVEL_DESC, LOG_MASK_DESC);
 static int vm_driver_probe(struct platform_device *pdev)
 {
 #ifndef CONFIG_CMA
-	char* buf_start;
+	phys_addr_t buf_start;
 	unsigned int buf_size;
 //	struct resource *mem;
     int idx;
@@ -2035,7 +2035,7 @@ static int vm_driver_probe(struct platform_device *pdev)
      }
      else
      {
-         buf_start = (char *)get_reserve_block_addr(idx);
+         buf_start = (phys_addr_t)get_reserve_block_addr(idx);
          buf_size = (unsigned int)get_reserve_block_size(idx);
      }
 #endif 

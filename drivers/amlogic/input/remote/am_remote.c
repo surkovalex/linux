@@ -487,7 +487,7 @@ static int hardware_init(struct platform_device *pdev)
 {
 	//struct aml_remote_platdata *remote_pdata;
 	unsigned int control_value, status, data_value;
-
+	 struct pinctrl *p;
 	//step 0: set pinmux to remote
 	//remote_pdata = (struct aml_remote_platdata *)pdev->dev.platform_data;
 	//if (!remote_pdata) {
@@ -496,8 +496,9 @@ static int hardware_init(struct platform_device *pdev)
 	//}
 	//if (remote_pdata->pinmux_setup)
 	//	remote_pdata->pinmux_setup();
-	devm_pinctrl_get_select_default(&pdev->dev);
-
+	p=devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(p))
+		return p;
 	//step 1 :set reg IR_DEC_CONTROL
 	control_value = 3 << 28 | (0xFA0 << 12) | 0x13;
 	am_remote_write_reg(AM_IR_DEC_REG0, control_value);

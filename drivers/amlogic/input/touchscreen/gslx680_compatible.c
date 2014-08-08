@@ -913,7 +913,7 @@ static int gsl_ts_resume(struct i2c_client *client)
 
 static int gsl_ts_probe(struct i2c_client *client,const struct i2c_device_id *id)
 {
-	struct gsl_ts *ts;
+	struct gsl_ts *ts=NULL;
 	int rc = -1;
 
 	printk("GSLX680 Enter %s\n", __func__);

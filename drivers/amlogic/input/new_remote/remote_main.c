@@ -305,7 +305,7 @@ static void enable_remote_irq(void)
 
 }
 
-int remote_reprot_key( struct remote * remote_data){
+void remote_reprot_key( struct remote * remote_data){
 	remote_report_key[remote_data->work_mode](remote_data);
 }
 static void remote_release_timer_sr(unsigned long data)
@@ -377,7 +377,10 @@ static DEVICE_ATTR(log_buffer, S_IRUGO | S_IWUSR, remote_log_buffer_show, NULL);
 
 static int hardware_init(struct platform_device *pdev)
 {
-	devm_pinctrl_get_select_default(&pdev->dev);
+	struct pinctrl *p;
+	p=devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(p))
+		return p;
 	set_remote_mode(DECODEMODE_NEC);
 	return request_irq(NEC_REMOTE_IRQ_NO, remote_interrupt, IRQF_SHARED, "keypad", (void *)remote_interrupt);
 }

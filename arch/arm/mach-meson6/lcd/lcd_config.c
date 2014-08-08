@@ -191,7 +191,7 @@ static void write_gamma_table(u16 *data, u32 rgb_mask, u16 gamma_coeff, u32 gamm
 	
 	spin_lock_irqsave(&gamma_write_lock, flags);
 	rgb_mask = gamma_sel_table[rgb_mask];
-	while ((!(READ_LCD_REG(L_GAMMA_CNTL_PORT+gamma_cntl_port_offset) & (0x1 << LCD_ADR_RDY))) && (cnt < LCD_GAMMA_RETRY_CNT)) {
+	while ((!(READ_LCD_REG((L_GAMMA_CNTL_PORT+gamma_cntl_port_offset)) & (0x1 << LCD_ADR_RDY))) && (cnt < LCD_GAMMA_RETRY_CNT)) {
 		udelay(10);
 		cnt++;
 	};
@@ -199,7 +199,7 @@ static void write_gamma_table(u16 *data, u32 rgb_mask, u16 gamma_coeff, u32 gamm
 	if (gamma_reverse == 0) {
 		for (i=0;i<256;i++) {
 			cnt = 0;
-			while ((!( READ_LCD_REG(L_GAMMA_CNTL_PORT+gamma_cntl_port_offset) & (0x1 << LCD_WR_RDY))) && (cnt < LCD_GAMMA_RETRY_CNT)) {
+			while ((!( READ_LCD_REG((L_GAMMA_CNTL_PORT+gamma_cntl_port_offset)) & (0x1 << LCD_WR_RDY))) && (cnt < LCD_GAMMA_RETRY_CNT)) {
 				udelay(10);
 				cnt++;
 			};
@@ -209,7 +209,7 @@ static void write_gamma_table(u16 *data, u32 rgb_mask, u16 gamma_coeff, u32 gamm
 	else {
 		for (i=0;i<256;i++) {
 			cnt = 0;
-			while ((!( READ_LCD_REG(L_GAMMA_CNTL_PORT+gamma_cntl_port_offset) & (0x1 << LCD_WR_RDY))) && (cnt < LCD_GAMMA_RETRY_CNT)) {
+			while ((!( READ_LCD_REG((L_GAMMA_CNTL_PORT+gamma_cntl_port_offset)) & (0x1 << LCD_WR_RDY))) && (cnt < LCD_GAMMA_RETRY_CNT)) {
 				udelay(10);
 				cnt++;
 			};

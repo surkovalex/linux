@@ -453,7 +453,7 @@ AIU_HDMI_CLK_DATA_CTRL can be writen sucessfully when audio PLL OFF.
 so notify HDMI to set audio parameter every time when HDMI AUDIO not ready
 */
 
-static int audio_notify_hdmi_info(int audio_type, void *v){
+static void audio_notify_hdmi_info(int audio_type, void *v){
     	struct snd_pcm_substream *substream =(struct snd_pcm_substream*)v;
 	if(substream->runtime->rate != audio_sr_info || audio_type_info != audio_type || !audio_hdmi_init_ready()
 		|| substream->runtime->channels != audio_ch_info)

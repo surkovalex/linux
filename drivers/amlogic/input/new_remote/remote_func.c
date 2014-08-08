@@ -139,7 +139,7 @@ void get_cur_scancode(struct remote *remote_data){
 	}
 	else if(remote_data->work_mode > DECODEMODE_MAX){
 		remote_data->cur_lsbkeycode = remote_data->cur_keycode;
-		if(remote_data->work_mode = DECODEMODE_SW_DUOKAN )
+		if(remote_data->work_mode == DECODEMODE_SW_DUOKAN )
 			changeduokandecodeorder(remote_data);
 	}
 	else{
@@ -379,7 +379,7 @@ int remote_hw_reprot_key(struct remote *remote_data)
 	get_cur_scancode(remote_data);
 	get_cur_scanstatus(remote_data);
 	if(remote_data->status)// repeat enable & come in S timer is open
-		return;
+		return 0;
 	if (remote_data->cur_lsbkeycode) {	//key first press
 		if(remote_data->ig_custom_enable)
 		{

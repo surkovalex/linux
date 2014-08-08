@@ -1370,7 +1370,7 @@ static int aml1218_update_state(struct aml_charger *charger)
     }
     vsys = aml1218_get_vsys_voltage();
     if (aml1218_get_pmu_version() == 0) {
-        if ((vsys > charger->vbat) && (vsys - charger->vbat < 500) || charger->vbat > 3950) {
+        if (((vsys > charger->vbat) && (vsys - charger->vbat < 500)) || (charger->vbat > 3950)) {
             //printk("%s, vsys is not large or vbat too large, vsys:%d, vbat:%d\n", __func__, vsys, charger->vbat);
             aml1218_set_charge_enable(0);
         } else {

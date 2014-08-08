@@ -6770,7 +6770,9 @@ static vframe_t *di_vf_get(void* arg)
     else
 #endif
     if (!queue_empty(QUEUE_POST_READY)){
+#ifdef SUPPORT_START_FRAME_HOLD
 get_vframe:
+#endif
         log_buffer_state("ge_");
         di_lock_irqfiq_save(irq_flag2, fiq_flag);
 

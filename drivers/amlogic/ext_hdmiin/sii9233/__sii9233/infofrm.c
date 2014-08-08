@@ -129,7 +129,9 @@ static IfCtrl_t IfCtrl;
 
 /***** local function prototypes *********************************************/
 
-//static uint8_t GetIfTypeFromUnreqBuffer ( void );
+#if (CONF__SUPPORT_REPEATER3D == ENABLE)
+static uint8_t GetIfTypeFromUnreqBuffer ( void );
+#endif
 static void SetDecodeIfBuffers ( const DevAddr_t DevAddr, const uint8_t bDecodeIfType );
 static void SetIfTo ( SelectIf_t eSelectIf, const uint16_t wTo );
 static bool_t GetIf( const uint8_t bIfType );

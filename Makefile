@@ -385,7 +385,14 @@ KBUILD_CFLAGS   += -Werror=enum-compare \
 		   -Werror=unused-function \
 		   -Werror=switch \
 		   -Werror=strict-prototypes \
-		   -Werror=declaration-after-statement
+		   -Werror=declaration-after-statement \
+		   -Werror=uninitialized \
+		   -Werror=unused-label \
+		   -Werror=undef \
+		   -Werror=unused-result \
+		   -Werror=return-type \
+		   -Werror=parentheses \
+		   -Werror=int-to-pointer-cast
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__

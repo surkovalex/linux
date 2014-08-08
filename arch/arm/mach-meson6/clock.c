@@ -1407,6 +1407,7 @@ static  int __init meson_device_low_power(char *s)
     if(strcmp(s, "1") == 0) {
         device_low_power = 1;
     }
+	return 0;
 }
 __setup("meson_device_low_power=",meson_device_low_power);
 
