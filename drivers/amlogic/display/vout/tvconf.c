@@ -644,19 +644,7 @@ static int __init vdac_config_bootargs_setup(char* line)
     return 1;
 }
 
-extern void cvbs_performance_config(unsigned int index);
-static int __init cvbs_performance_setup(char* line)
-{
-	unsigned int cfg = 0x1;
-
-	printk("cvbs performance line = %s\n", line);
-	cfg = simple_strtoul(line, NULL, 10);
-
-	cvbs_performance_config(cfg);
-}
-
 __setup("vdaccfg=", vdac_config_bootargs_setup);
-__setup("cvbsdrv=", cvbs_performance_setup);
 #endif
 
 arch_initcall(tv_init_module);
