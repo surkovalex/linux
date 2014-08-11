@@ -100,7 +100,7 @@ int get_data_from_text_file(char *text_file, fill_buf_t fill_buf, void *priv)
 			cur_char = text_buf[i];
 			/* comment judge*/
 			if (comment != NO_COMMENT) {
-				if ((LINE_COMMENT == comment) && (0x0a == last_char) && (0x0d == cur_char)) {
+				if ((LINE_COMMENT == comment) && (0x0d == last_char) && (0x0a == cur_char)) {
 					comment = NO_COMMENT;
 				}
 				else if ((BLOCK_COMMENT == comment) && ('*' == last_char) && ('/' == cur_char)) {
@@ -116,6 +116,7 @@ int get_data_from_text_file(char *text_file, fill_buf_t fill_buf, void *priv)
 				if (scan_len &&
 				((sscanf(scan_buf,"0x%x",&ival)==1) || (sscanf(scan_buf,"%d",&ival)==1))) {
 					fill_buf(priv, idx++, ival);
+					//printk("%5d: val=0x8x,  string=%s\n", idx, ival, scan_buf);
 				}
 				scan_len = 0;
 				memset(scan_buf, 0 ,ARRAY_SIZE(scan_buf));
