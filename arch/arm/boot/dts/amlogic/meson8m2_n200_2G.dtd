@@ -216,6 +216,24 @@ void root_func(){
 //		dev_name = "amvdec_656in";
 //		status = "ok";
 //		reg = <0x1e400000 0x00100000>;
+/// ***************************************************************************************
+///	-	DISP&MM-VDIN
+//$$ MODULE = "DISP&MM-VDIN"
+//$$ DEVICE="vdin0"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 2 = "reg"
+//$$ L2 PROP_U32 = "irq"
+//$$ L2 PROP_U32 = "vdin_id"
+    vdin0{
+        compatible = "amlogic,vdin";
+        dev_name = "vdin0";
+        status = "ok";
+	reserve-memory = <0x00100000>;//only for mpeg2vdin use
+	 reserve-iomap = "true";
+        irq = <115>;
+        vdin_id = <0>;
+	};
+	
 //	};
 //
 /// ***************************************************************************************

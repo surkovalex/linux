@@ -80,7 +80,7 @@ uint field_22lvl;
 pd_detect_threshold_t field_pd_th;
 pd_detect_threshold_t win_pd_th[MAX_WIN_NUM];
 pd_win_prop_t pd_win_prop[MAX_WIN_NUM];
-extern int mpeg2vdin_en;
+extern int mpeg2vdin_flag;
 
 static bool frame_dynamic = 0;
 MODULE_PARM_DESC(frame_dynamic, "\n frame_dynamic \n");
@@ -528,7 +528,7 @@ void enable_di_pre_aml (
                    );
 #endif
 #ifdef SUPPORT_MPEG_TO_VDIN
-	if(mpeg2vdin_en)
+	if(mpeg2vdin_flag)
 		WRITE_MPEG_REG_BITS(DI_PRE_CTRL,1,13,1);// pre sync with vdin vsync
 #endif
 #ifdef DET3D
@@ -1514,7 +1514,7 @@ void initial_di_pre_aml ( int hsize_pre, int vsize_pre, int hold_line )
                     (0x3 << 30)      			// pre soft rst, pre frame rst.
            	);
 #ifdef SUPPORT_MPEG_TO_VDIN
-	if(mpeg2vdin_en)
+	if(mpeg2vdin_flag)
 		WRITE_MPEG_REG_BITS(DI_PRE_CTRL,1,13,1);// pre sync with vdin vsync
 #endif
     Wr(DI_MC_22LVL0, (Rd(DI_MC_22LVL0) & 0xffff0000 ) | 256);                //   field 22 level
