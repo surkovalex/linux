@@ -668,17 +668,17 @@ early_param("storage",get_storage_device);
 				goto err;
 				}
 			}
-			ret = of_property_read_string(np_spi_part, "name", &(data->parts[index].name));
+			ret = of_property_read_string(np_spi_part, "name", (const char **)&(data->parts[index].name));
 			if(ret){
 				printk("%s:%d,please config name item\n",__func__,__LINE__);
 				goto err;
 			}
-			ret = of_property_read_u32(np_spi_part, "offset", &(data->parts[index].offset));
+			ret = of_property_read_u32(np_spi_part, "offset", (u32 *)&(data->parts[index].offset));
 			if(ret){
 				printk("%s:%d,please config offset item\n",__func__,__LINE__);
 				goto err;
 			}
-			ret = of_property_read_u32(np_spi_part, "size", &(data->parts[index].size));
+			ret = of_property_read_u32(np_spi_part, "size", (u32 *)&(data->parts[index].size));
 			if(ret){
 				printk("%s:%d,please config size item\n",__func__,__LINE__);
 				goto err;

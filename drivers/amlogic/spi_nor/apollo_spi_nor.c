@@ -626,7 +626,7 @@ static int amlogic_spi_nor_probe(struct platform_device *pdev)
 	amlogic_spi->master = master;
 
 #ifdef CONFIG_OF
-		of_property_read_string(pdev->dev.of_node,"pinctrl-names",&amlogic_spi->spi_state_name);
+		of_property_read_string(pdev->dev.of_node,"pinctrl-names",(const char **)&amlogic_spi->spi_state_name);
 		printk("amlogic_spi->state_name:%s\n",amlogic_spi->spi_state_name);
 #endif
 
@@ -648,12 +648,12 @@ static int amlogic_spi_nor_probe(struct platform_device *pdev)
 	amlogic_spi->spi_state=pinctrl_lookup_state(amlogic_spi->p,amlogic_spi->spi_state_name);
 	if (IS_ERR(amlogic_spi->spi_state)) {
 		pinctrl_put(amlogic_spi->p);
-		return ERR_PTR(PTR_ERR(amlogic_spi->spi_state));
+		return PTR_ERR(amlogic_spi->spi_state);
 	}
 	amlogic_spi->spi_idlestate=pinctrl_lookup_state(amlogic_spi->p,"dummy");
 	if (IS_ERR(amlogic_spi->spi_idlestate)) {
 		pinctrl_put(amlogic_spi->p);
-		return ERR_PTR(PTR_ERR(amlogic_spi->spi_idlestate));
+		return PTR_ERR(amlogic_spi->spi_idlestate);
 	}
 	status = spi_register_master(master);
 	if (status < 0)

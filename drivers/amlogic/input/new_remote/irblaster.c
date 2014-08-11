@@ -416,7 +416,7 @@ static void ir_hardware_init(void)
 	ret = request_irq(INT_REMOTE, irblaster_interrupt, IRQF_SHARED, "irblaster", (void *)irblaster_interrupt);
 	if (ret < 0) {
 		printk(KERN_ERR "Irblaster: request_irq failed, ret=%d.\n", ret);
-		return ret;
+		return;
 	}
 }
 static void ir_hardware_release(void)

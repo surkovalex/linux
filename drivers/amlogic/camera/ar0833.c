@@ -664,7 +664,8 @@ struct ar0833_fh {
 
 static inline struct ar0833_fh *to_fh(struct ar0833_device *dev)
 {
-	return container_of(dev, struct ar0833_fh, dev);
+	struct ar0833_fh *ar=container_of(dev, struct ar0833_fh, dev);
+	return ar;
 }
 
 #define RAW10

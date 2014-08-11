@@ -2,7 +2,7 @@
 #include <mach/gpio.h>
 #include <mach/am_regs.h>
 #include <linux/delay.h>
-
+struct gpio_chip;
 extern int gpio_amlogic_requst_force(struct gpio_chip *chip ,unsigned offset);
 extern void   gpio_amlogic_free(struct gpio_chip *chip,unsigned offset);
 

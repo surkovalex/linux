@@ -3492,7 +3492,7 @@ static long amvideo_ioctl(struct file *file,
     case AMSTREAM_IOC_SET_OMX_VPTS:
         {
             u32 pts;
-            memcpy(&pts,arg,sizeof(u32));
+            get_user(pts,(unsigned long __user *)arg);
             omx_pts = pts;
         }
         break;

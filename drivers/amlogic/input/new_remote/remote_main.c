@@ -321,7 +321,7 @@ static irqreturn_t remote_interrupt(int irq, void *dev_id){
 	return IRQ_HANDLED;
 }
 
-static void remote_fiq_interrupt(unsigned long data)
+static void remote_fiq_interrupt(void)
 {
 	//struct remote *remote_data = (struct remote *)data;
 	remote_reprot_key(gp_remote);
@@ -380,7 +380,7 @@ static int hardware_init(struct platform_device *pdev)
 	struct pinctrl *p;
 	p=devm_pinctrl_get_select_default(&pdev->dev);
 	if (IS_ERR(p))
-		return p;
+		return -1;
 	set_remote_mode(DECODEMODE_NEC);
 	return request_irq(NEC_REMOTE_IRQ_NO, remote_interrupt, IRQF_SHARED, "keypad", (void *)remote_interrupt);
 }
@@ -411,7 +411,7 @@ static int work_mode_config(unsigned int cur_mode)
 		gp_remote->fiq_handle_item.name = "remote_bridge";
 		register_fiq_bridge_handle(&gp_remote->fiq_handle_item);
 		desc->depth++;
-		request_fiq(NEC_REMOTE_IRQ_NO, &remote_fiq_interrupt);
+		request_fiq(NEC_REMOTE_IRQ_NO, remote_fiq_interrupt);
 	}
 	else{
 		printk("do nothing\n");
@@ -610,11 +610,11 @@ static int register_remote_dev(struct remote *remote)
 }
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
-static int remote_early_suspend(struct early_suspend *handler)
+static void remote_early_suspend(struct early_suspend *handler)
 {
 	 printk("remote_early_suspend, set sleep 1 \n");
 	 gp_remote->sleep = 1;
-	 return 0;
+	 return;
 }
 #endif
 
@@ -764,7 +764,7 @@ static int remote_remove(struct platform_device *pdev)
 	device_remove_file(&pdev->dev, &dev_attr_enable);
 	device_remove_file(&pdev->dev, &dev_attr_log_buffer);
 	if(gp_remote->work_mode >= DECODEMODE_MAX){
-		free_fiq(NEC_REMOTE_IRQ_NO, &remote_fiq_interrupt);
+		free_fiq(NEC_REMOTE_IRQ_NO, remote_fiq_interrupt);
 		free_irq(BRIDGE_IRQ, gp_remote);
 	} else {
 		free_irq(NEC_REMOTE_IRQ_NO, remote_interrupt);
@@ -808,7 +808,7 @@ static int remote_resume(struct platform_device * pdev)
 	return 0;
 }
 
-static int remote_suspend(struct platform_device * pdev)
+static int remote_suspend(struct platform_device * pdev,pm_message_t state)
 {
 	printk("remote_suspend, set sleep 1 \n");
 	gp_remote->sleep = 1;

@@ -72,9 +72,9 @@
 
 
 /********** Clock Source Device, Timer-E *********/
-static cycle_t cycle_read_timerE(struct clocksource *cs)
+static unsigned long cycle_read_timerE(struct clocksource *cs)
 {
-    return (cycles_t) aml_read_reg32(P_ISA_TIMERE);
+    return (unsigned long) aml_read_reg32(P_ISA_TIMERE);
 }
 
 static struct clocksource clocksource_timer_e = {

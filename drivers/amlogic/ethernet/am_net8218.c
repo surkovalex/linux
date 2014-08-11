@@ -88,7 +88,7 @@ static int phy_interface = 1;
 static int reset_delay = 0;
 static int reset_pin_num = 0;
 static int reset_pin_enable = 0;
-static char *reset_pin;
+static const char *reset_pin;
 static unsigned int MDCCLK = ETH_MAC_4_GMII_Addr_CR_100_150;
 
 module_param_named(amlog_level, g_debug, int, 0664);
@@ -2707,7 +2707,7 @@ static const char *g_pwol_help = {
 	"    1. enable PHY  WOL, Magic Packet.\n"
 
 };
-static void eth_pwol_show(struct class *class, struct class_attribute *attr, char *buf)
+static ssize_t eth_pwol_show(struct class *class, struct class_attribute *attr, char *buf)
 {
 	struct am_net_private *np = netdev_priv(my_ndev);
 	int ret;
@@ -2720,7 +2720,7 @@ static void eth_pwol_show(struct class *class, struct class_attribute *attr, cha
 	printk("Current PHY WOL: %d\n", syswol.wolopts);
 	return ret;
 }
-static int eth_pwol_store(struct class *class, struct class_attribute *attr, const char *buf, size_t count)
+static ssize_t eth_pwol_store(struct class *class, struct class_attribute *attr, const char *buf, size_t count)
 {
 	struct am_net_private *np = netdev_priv(my_ndev);
 	int err;
@@ -2772,11 +2772,11 @@ static int am_net_cali(int argc, char **argv,int gate)
 	cali_rise = simple_strtol(argv[1], NULL, 0);
 	cali_sel = simple_strtol(argv[2], NULL, 0);
 	cali_time = simple_strtol(argv[3], NULL, 0);
-	writel((readl(P_PREG_ETH_REG0)&(~(0x1f << 25))),P_PREG_ETH_REG0);
-	writel((readl(P_PREG_ETH_REG0)|(cali_start << 25)|(cali_rise << 26)|(cali_sel << 27)),P_PREG_ETH_REG0);
+	aml_write_reg32(P_PREG_ETH_REG0,aml_read_reg32(P_PREG_ETH_REG0)&(~(0x1f << 25)));
+	aml_write_reg32(P_PREG_ETH_REG0,aml_read_reg32(P_PREG_ETH_REG0)|(cali_start << 25)|(cali_rise << 26)|(cali_sel << 27));
 	printk("rise :%d   sel: %d  time: %d   start:%d  cbus2050 = %x\n",cali_rise,cali_sel,cali_time,cali_start,readl(P_PREG_ETH_REG0));
 	for(ii=0;ii < cali_time;ii++){
-		value = readl(P_PREG_ETH_REG1);
+		value = aml_read_reg32(P_PREG_ETH_REG1);
 		if((value>>15) & 0x1){
  			printk("value == %x,  cali_len == %d, cali_idx == %d,  cali_sel =%d,  cali_rise = %d\n",value,(value>>5)&0x1f,(value&0x1f),(value>>11)&0x7,(value>>14)&0x1);
 		}

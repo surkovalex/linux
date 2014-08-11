@@ -153,7 +153,7 @@ int get_adc_sample(int chan)
 	int count;
 	int value=-1;
 	int sum;
-	unsigned int flags;
+	unsigned long flags;
 	if (!gp_saradc)
 		return -1;
 	
@@ -453,7 +453,7 @@ err_free_mem:
 	return err;
 }
 
-static int saradc_suspend(struct platform_device *pdev)
+static int saradc_suspend(struct platform_device *pdev,pm_message_t state)
 {
 	printk("%s: disable SARADC\n", __func__);
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8

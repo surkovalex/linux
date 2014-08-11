@@ -5256,8 +5256,8 @@ static int pulldown_process(di_buf_t* di_buf, int buffer_count)
             pattern_check_pre_2(0, &di_buf->di_buf_dup_p[3]->field_pd_info,
                  &di_buf->di_buf_dup_p[2]->field_pd_info,
                 &di_buf->di_buf_dup_p[1]->field_pd_info,
-                &di_buf->di_buf_dup_p[2]->pulldown_mode,
-                &di_buf->di_buf_dup_p[1]->pulldown_mode,
+                (int *)&di_buf->di_buf_dup_p[2]->pulldown_mode,
+                (int *)&di_buf->di_buf_dup_p[1]->pulldown_mode,
                 &pulldown_type, &field_pd_th
               );
 
@@ -5278,7 +5278,7 @@ static int pulldown_process(di_buf_t* di_buf, int buffer_count)
             pattern_check_pre_2(0, &di_buf->di_buf_dup_p[2]->field_pd_info,
                  &di_buf->di_buf_dup_p[1]->field_pd_info,
                 &di_buf->di_buf_dup_p[0]->field_pd_info,
-                &di_buf->di_buf_dup_p[1]->pulldown_mode,
+                (int *)&di_buf->di_buf_dup_p[1]->pulldown_mode,
                 NULL, &pulldown_type, &field_pd_th);
 
               for(ii=0;ii<MAX_WIN_NUM; ii++){

@@ -22,7 +22,7 @@ struct aml_bl_extern_driver_t {
 };
 
 struct bl_extern_config_t {
-	char *name;
+	const char *name;
 	Bl_Extern_Type_t type;
 	unsigned int gpio_used;
 	int gpio;

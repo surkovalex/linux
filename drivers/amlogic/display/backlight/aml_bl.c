@@ -337,7 +337,7 @@ exit_power_on_bl:
     mutex_unlock(&bl_power_mutex);
 }
 
-static void bl_delayd_on(void) //bl_delayed_work for LCD_BL_FLAG control
+static void bl_delayd_on(struct work_struct *work) //bl_delayed_work for LCD_BL_FLAG control
 {
     power_on_bl(LCD_BL_FLAG);
 }

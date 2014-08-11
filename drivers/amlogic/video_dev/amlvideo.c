@@ -744,7 +744,7 @@ static int vidioc_streamoff(struct file *file, void *priv, enum v4l2_buf_type i)
     return ret;
 }
 
-static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id *i) {
+static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id i) {
     return 0;
 }
 

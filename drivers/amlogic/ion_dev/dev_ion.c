@@ -70,7 +70,7 @@ int dev_ion_probe(struct platform_device *pdev) {
 	 }
 	 else
 	 {
-		i= find_reserve_block_by_name(name);
+		i= find_reserve_block_by_name((char *)name);
 		if(i<0)
 		{
 			printk("\ndev_ion memory resource undefined2.\n");

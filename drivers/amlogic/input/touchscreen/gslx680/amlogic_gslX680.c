@@ -378,13 +378,13 @@ static void gsl_load_fw(struct i2c_client *client)
 	if (CHIP_1680E==chip_type)
 	{
 		printk("======gsl_load_1680E FW start==============\n");
-		ptr_fw =GSL1680E_FW;
+		ptr_fw =(struct fw_data *)GSL1680E_FW;
 		source_len = ARRAY_SIZE(GSL1680E_FW);
 	}
 	else
 	{
 		printk("======gsl_load_3670 FW start==============\n");
-		ptr_fw = GSL3670_FW;
+		ptr_fw =(struct fw_data *) GSL3670_FW;
 		source_len = ARRAY_SIZE(GSL3670_FW);
 	}
 

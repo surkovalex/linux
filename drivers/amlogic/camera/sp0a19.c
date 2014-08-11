@@ -431,7 +431,8 @@ struct sp0a19_fh {
 
 static inline struct sp0a19_fh *to_fh(struct sp0a19_device *dev)
 {
-	return container_of(dev, struct sp0a19_fh, dev);
+	struct sp0a19_fh *sp=container_of(dev, struct sp0a19_fh, dev);
+	return sp;
 }
 
 static struct v4l2_frmsize_discrete sp0a19_prev_resolution[]= //should include 320x240 and 640x480, those two size are used for recording
@@ -1164,8 +1165,8 @@ void SP0A19_night_mode(struct sp0a19_device *dev,enum  camera_night_mode_flip_e 
 
 	unsigned char  temp_reg;
 	//temp_reg=sp0a19_read_byte(0x22);
-	//buf[0]=0x20;
-	temp_reg=i2c_get_byte_add8(client,buf);
+	buf[0]=0x32;
+	temp_reg=i2c_get_byte_add8(client,buf[0]);
 	temp_reg=0xff;
 
     if(enable)
@@ -2580,7 +2581,7 @@ static int vidioc_enum_framesizes(struct file *file, void *fh,struct v4l2_frmsiz
 	return ret;
 }
 
-static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id *i)
+static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id i)
 {
 	return 0;
 }

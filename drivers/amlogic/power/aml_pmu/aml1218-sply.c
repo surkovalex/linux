@@ -1326,7 +1326,7 @@ static int aml1218_update_state(struct aml_charger *charger)
     int vsys;
 
     aml1218_read(0x00E0, &val);
-    aml1218_reads(0x00de, &chg_status, 4);
+    aml1218_reads(0x00de, (uint8_t *)&chg_status, 4);
 
     charger->ibat = aml1218_get_battery_current();
     if (val & 0x18) {

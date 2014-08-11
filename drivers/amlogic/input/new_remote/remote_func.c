@@ -500,7 +500,7 @@ static inline void kbd_software_mode_remote_send_key(unsigned long data)
 				if(i == ARRAY_SIZE(remote_data->custom_code))
 				{
 					input_dbg("Wrong custom code is 0x%08x\n", remote_data->cur_lsbkeycode);
-					return -1;
+					return;
 				}
 			}
 		}
