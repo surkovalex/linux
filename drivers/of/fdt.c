@@ -648,7 +648,7 @@ struct reserve_mgr{
 	unsigned long long start_memory_addr;
 	unsigned long long total_memory;
 	unsigned long long current_addr_from_low;
-	unsigned long long current_addr_from_high; 
+	unsigned long long current_addr_from_high;
 	struct reserve_mem reserve[MAX_RESERVE_BLOCK];
 };
 
@@ -698,7 +698,7 @@ int find_reserve_block(const char * name,int idx)
 	return -1;
 }
 
-int find_reserve_block_by_name(char * name)
+int find_reserve_block_by_name(const char * name)
 {
 	int i;
 
@@ -726,7 +726,7 @@ unsigned long long get_reserve_block_addr(int blockid)
 	{
 		addr = pReserve_Manager->start_memory_addr+pReserve_Manager->total_memory-prm->startaddr-prm->size;
 	}
-	
+
 	return addr;
 }
 
