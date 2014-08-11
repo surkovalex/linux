@@ -335,7 +335,7 @@ static int aml_pcm_preallocate_dma_buffer(struct snd_pcm *pcm,
             /* one size for i2s output, another for 958, and 128 for alignment */
 		    //buf->area = dma_alloc_coherent(pcm->card->dev, size+4096,
 					  //&buf->addr, GFP_KERNEL);
-            buf->area = aml_i2s_playback_start_addr;
+            buf->area = (unsigned char *)aml_i2s_playback_start_addr;
             buf->addr = aml_pcm_playback_phy_start_addr;
 		    printk("aml-pcm %d:"
 		    "dev>0 playback preallocate_dma_buffer: area=%p, addr=%p, size=%d\n", stream,
@@ -350,7 +350,7 @@ static int aml_pcm_preallocate_dma_buffer(struct snd_pcm *pcm,
 		    buf->private_data = NULL;
 		    //buf->area = dma_alloc_coherent(pcm->card->dev, size*2,
 		    //			  &buf->addr, GFP_KERNEL);
-		    buf->area = aml_i2s_capture_start_addr;
+		    buf->area = (unsigned char *)aml_i2s_capture_start_addr;
             buf->addr = aml_pcm_capture_phy_start_addr;
 		    printk("aml-pcm %d:"
 		    "dev>0 capture preallocate_dma_buffer: area=%p, addr=%p, size=%d\n", stream,
