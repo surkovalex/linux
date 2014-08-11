@@ -478,10 +478,9 @@ void enable_di_pre_aml (
 	Wr_reg_bits(NR2_SW_EN,nr2_en,4,1);
 	#else
 	/*only process sd,avoid affecting sharp*/
-	if((nr_h<<1) >= 720 || nr_w >= 1280) 
-	    Wr_reg_bits(NR2_SW_EN,0,4,1);
+	if((nr_h<<1) >= 720 || nr_w >= 1280)            Wr_reg_bits(NR2_SW_EN,0,4,1);
 	else
-	    Wr_reg_bits(NR2_SW_EN,1,4,1);
+	    Wr_reg_bits(NR2_SW_EN,nr2_en,4,1);
 	#endif
 	/*enable noise meter*/
 	Wr_reg_bits(NR2_SW_EN,1,17,1);
@@ -2194,7 +2193,7 @@ unsigned char di_get_power_control(unsigned char type)
 
 void di_load_nr_setting()
 {
-		#ifdef NEW_DI_V1
+#ifdef NEW_DI_V1
     Wr(NR2_3DEN_MODE, 0x77);
     Wr(NR2_SNR_SAD_CFG, 0x134f);
     Wr(NR2_MATNR_SNR_NRM_GAIN, 0x0);
@@ -2207,7 +2206,7 @@ void di_load_nr_setting()
     Wr(NR2_MATNR_MTN_CRTL2, 0x32020);
     Wr(NR2_MATNR_MTN_GAIN, 0xffffffff);
     Wr(NR2_MATNR_DEGHOST, 0x133);
-    #endif    
+#endif    
 }
 
 #ifdef DI_POST_SKIP_LINE
