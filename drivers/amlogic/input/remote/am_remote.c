@@ -498,7 +498,7 @@ static int hardware_init(struct platform_device *pdev)
 	//	remote_pdata->pinmux_setup();
 	p=devm_pinctrl_get_select_default(&pdev->dev);
 	if (IS_ERR(p))
-		return p;
+		return -1;
 	//step 1 :set reg IR_DEC_CONTROL
 	control_value = 3 << 28 | (0xFA0 << 12) | 0x13;
 	am_remote_write_reg(AM_IR_DEC_REG0, control_value);
@@ -1069,8 +1069,7 @@ static int remote_remove(struct platform_device *pdev)
 	gp_remote = NULL;
 	return 0;
 }
-
-static void remote_resume(void)
+static int remote_resume(struct platform_device *pdev)
 {
 	printk("resume_remote make sure uboot interrupt clear\n");
 	am_remote_read_reg(AM_IR_DEC_FRAME);
@@ -1093,6 +1092,8 @@ static void remote_resume(void)
 		WRITE_AOBUS_REG(AO_RTI_STATUS_REG2, 0);
     }
 #endif
+	
+	return 0;
 }
 static struct platform_driver remote_driver = {
 	.probe = remote_probe,
