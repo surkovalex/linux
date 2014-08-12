@@ -208,8 +208,12 @@ void set_osd_freescaler(int index, logo_object_t *plogo, vmode_t new_mode) {
 
 static int osd0_init(logo_object_t *plogo)
 {
+#if defined(CONFIG_AM_HDMI_ONLY)
 	int hpd_state = 0;
+#endif
+#if defined(CONFIG_AM_HDMI_ONLY) || (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 	vmode_t cur_mode = plogo->para.vout_mode;
+#endif
 
 	if(plogo->para.output_dev_type==output_osd0.idx)
 	{
@@ -267,8 +271,12 @@ static int osd0_init(logo_object_t *plogo)
 }
 static int osd1_init(logo_object_t *plogo)
 {
+#if defined(CONFIG_AM_HDMI_ONLY)
 	int hpd_state = 0;
+#endif
+#if defined(CONFIG_AM_HDMI_ONLY) || (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 	vmode_t cur_mode = plogo->para.vout_mode;
+#endif
 
 	if(plogo->para.output_dev_type==output_osd1.idx)
 	{

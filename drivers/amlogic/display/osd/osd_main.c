@@ -1589,8 +1589,10 @@ osd_probe(struct platform_device *pdev)
 	int  logo_osd_index=0,i;
 	myfb_dev_t 	*fbdev = NULL;
 	vmode_t current_mode = VMODE_MASK;
+#ifdef CONFIG_AM_HDMI_ONLY
 	vmode_t cvbs_mode = VMODE_MASK;
 	int hpd_state = 0;
+#endif
 	const void *prop;
 	int prop_idx=0;
 	int rotation = 0;

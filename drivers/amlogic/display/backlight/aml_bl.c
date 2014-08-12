@@ -470,7 +470,7 @@ void bl_power_off(int bl_flag)
     printk("backlight power off\n");
     mutex_unlock(&bl_power_mutex);
 }
-
+#ifndef CONFIG_USE_OF
 static DEFINE_MUTEX(bl_level_mutex);
 static void set_backlight_level(unsigned level)
 {
@@ -671,6 +671,7 @@ unsigned get_backlight_level(void)
     DPRINT("%s: %d\n", __FUNCTION__, bl_level);
     return bl_level;
 }
+#endif
 #endif
 
 struct aml_bl {

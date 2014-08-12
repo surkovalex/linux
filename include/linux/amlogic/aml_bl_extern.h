@@ -14,7 +14,7 @@ typedef enum {
 
 //global API
 struct aml_bl_extern_driver_t {
-	char *name;
+	const char *name;
 	Bl_Extern_Type_t type;
 	int (*power_on) (void);
 	int (*power_off)(void);
