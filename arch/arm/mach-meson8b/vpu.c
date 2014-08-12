@@ -236,10 +236,11 @@ unsigned int get_vpu_clk(void)
 	return clk_freq;
 }
 
-static int adjust_vpu_clk(VPU_Conf_t *vconf)
+static int adjust_vpu_clk(void *vconf1)
 {
 	unsigned int clk_level;
 	unsigned long flags = 0;
+	VPU_Conf_t *vconf=(VPU_Conf_t *)vconf1;
 	spin_lock_irqsave(&vpu_lock, flags);
 	
 	clk_level = vconf->clk_level;

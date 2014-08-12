@@ -2774,7 +2774,7 @@ static int am_net_cali(int argc, char **argv,int gate)
 	cali_time = simple_strtol(argv[3], NULL, 0);
 	aml_write_reg32(P_PREG_ETH_REG0,aml_read_reg32(P_PREG_ETH_REG0)&(~(0x1f << 25)));
 	aml_write_reg32(P_PREG_ETH_REG0,aml_read_reg32(P_PREG_ETH_REG0)|(cali_start << 25)|(cali_rise << 26)|(cali_sel << 27));
-	printk("rise :%d   sel: %d  time: %d   start:%d  cbus2050 = %x\n",cali_rise,cali_sel,cali_time,cali_start,readl(P_PREG_ETH_REG0));
+	printk("rise :%d   sel: %d  time: %d   start:%d  cbus2050 = %x\n",cali_rise,cali_sel,cali_time,cali_start,aml_read_reg32(P_PREG_ETH_REG0));
 	for(ii=0;ii < cali_time;ii++){
 		value = aml_read_reg32(P_PREG_ETH_REG1);
 		if((value>>15) & 0x1){

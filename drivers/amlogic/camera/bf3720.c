@@ -408,8 +408,7 @@ struct bf3720_fh {
 
 static inline struct bf3720_fh *to_fh(struct bf3720_device *dev)
 {
-	struct bf3720_fh *bf=container_of(dev, struct bf3720_fh, dev);
-	return bf;
+	return container_of(&dev, struct bf3720_fh, dev);
 }
 
 static struct v4l2_frmsize_discrete bf3720_prev_resolution[]= //should include 352x288 and 640x480, those two size are used for recording

@@ -431,8 +431,7 @@ struct sp0a19_fh {
 
 static inline struct sp0a19_fh *to_fh(struct sp0a19_device *dev)
 {
-	struct sp0a19_fh *sp=container_of(dev, struct sp0a19_fh, dev);
-	return sp;
+	return container_of(&dev, struct sp0a19_fh, dev);
 }
 
 static struct v4l2_frmsize_discrete sp0a19_prev_resolution[]= //should include 320x240 and 640x480, those two size are used for recording
@@ -1000,7 +999,7 @@ void set_SP0A19_param_wb(struct sp0a19_device *dev,enum  camera_wb_flip_e para)
 	//temp_reg=sp0a19_read_byte(0x22);
 	//buf[0]=0x22; //SP0A19 enable auto wb
 	buf[0]=0x32;
-	temp_reg=i2c_get_byte_add8(client,buf);
+	temp_reg=i2c_get_byte_add8(client,buf[0]);
 
 	printk(" camera set_SP0A19_param_wb=%d. \n ",para);
 	switch (para)

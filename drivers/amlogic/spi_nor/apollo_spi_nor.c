@@ -644,7 +644,7 @@ static int amlogic_spi_nor_probe(struct platform_device *pdev)
 	INIT_LIST_HEAD(&amlogic_spi->msg_queue);
 	amlogic_spi->p = devm_pinctrl_get(amlogic_spi->dev);
 	if (IS_ERR(amlogic_spi->p))
-		return amlogic_spi->p;
+		return PTR_ERR(amlogic_spi->p);
 	amlogic_spi->spi_state=pinctrl_lookup_state(amlogic_spi->p,amlogic_spi->spi_state_name);
 	if (IS_ERR(amlogic_spi->spi_state)) {
 		pinctrl_put(amlogic_spi->p);
