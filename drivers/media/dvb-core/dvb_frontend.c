@@ -572,15 +572,20 @@ int si2177_get_strength(void);
 
 static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 {
-	fe_status_t s = 0;
-	int retval = 0;
-	int time=0;
-#if (defined CONFIG_AM_SI2176)
-	int newcount=0;
-	int strength=0;
-#endif
+	fe_status_t s;
+	int retval;
+	int time;
 	struct dvb_frontend_private *fepriv = fe->frontend_priv;
 	struct dtv_frontend_properties *c = &fe->dtv_property_cache, tmp;
+#if ((defined CONFIG_AM_SI2176) || (defined CONFIG_AM_SI2177))&&(defined CONFIG_AM_M6_DEMOD)
+	int strength;
+#endif
+#if (defined CONFIG_AM_M6_DEMOD)
+	int newcount;
+    int count;
+	count=0;
+#endif
+	s=retval=time=0;
 
 	/* if we've got no parameters, just keep idling */
 	if (fepriv->state & FESTATE_IDLE) {
@@ -637,7 +642,6 @@ static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 #if (defined CONFIG_AM_M6_DEMOD)
 //dvbc auto qam
 	if(c->modulation== QAM_AUTO){
-	int count=0;
 		while((dvbc_get_status()<=3)&&(count<=20)){
 			msleep(30);
 			if(count==20){
