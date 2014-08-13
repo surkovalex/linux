@@ -43,13 +43,6 @@
 #define AMVECM_MODULE_NAME        "amvecm"
 #define AMVECM_DEVICE_NAME        "amvecm"
 #define AMVECM_CLASS_NAME         "amvecm"
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
-typedef struct{
-    int vpp_off;
-    int viu_off;
-}video_dev_t;
-#endif
-extern video_dev_t *cur_dev;
 typedef struct amvecm_dev_s {
     dev_t                       devt;
     struct cdev                 cdev;
@@ -2120,15 +2113,15 @@ static ssize_t amvecm_saturation_hue_pre_store(struct class *cla, struct class_a
 
     printk("\n[amvideo..] saturation_pre:%d hue_pre:%d mab:%x\n", saturation_pre,hue_pre,mab);
 
-    WRITE_VCBUS_REG(VPP_VADJ2_MA_MB + cur_dev->vpp_off, mab);
+    WRITE_MPEG_REG(VPP_VADJ2_MA_MB, mab);
     mc = (s16)((mab<<22)>>22); // mc = -mb
     mc = 0 - mc;
     if (mc > 511)  mc = 511;
     if (mc < -512) mc = -512;
     md = (s16)((mab<<6)>>22);  // md =	ma;
     mab = ((mc&0x3ff)<<16)|(md&0x3ff);
-    WRITE_VCBUS_REG(VPP_VADJ1_MC_MD + cur_dev->vpp_off, mab);
-    WRITE_VCBUS_REG_BITS(VPP_VADJ_CTRL + cur_dev->vpp_off, 1, 0, 1);
+    WRITE_MPEG_REG(VPP_VADJ1_MC_MD, mab);
+    WRITE_MPEG_REG_BITS(VPP_VADJ_CTRL, 1, 0, 1);
 
     return count;
 }
@@ -2177,15 +2170,15 @@ static ssize_t amvecm_saturation_hue_post_store(struct class *cla, struct class_
 
 printk("\n[amvideo..] saturation_post:%d hue_post:%d mab:%x\n", saturation_post,hue_post,mab);
 
-    WRITE_VCBUS_REG(VPP_VADJ2_MA_MB + cur_dev->vpp_off, mab);
+    WRITE_MPEG_REG(VPP_VADJ2_MA_MB, mab);
     mc = (s16)((mab<<22)>>22); // mc = -mb
     mc = 0 - mc;
     if (mc > 511)  mc = 511;
     if (mc < -512) mc = -512;
     md = (s16)((mab<<6)>>22);  // md =	ma;
     mab = ((mc&0x3ff)<<16)|(md&0x3ff);
-    WRITE_VCBUS_REG(VPP_VADJ2_MC_MD + cur_dev->vpp_off, mab);
-    WRITE_VCBUS_REG_BITS(VPP_VADJ_CTRL + cur_dev->vpp_off, 1, 2, 1);
+    WRITE_MPEG_REG(VPP_VADJ2_MC_MD, mab);
+    WRITE_MPEG_REG_BITS(VPP_VADJ_CTRL, 1, 2, 1);
 
     return count;
 }
