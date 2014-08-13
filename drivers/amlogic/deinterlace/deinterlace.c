@@ -3929,7 +3929,7 @@ static unsigned char pre_de_buf_config(void)
 	    vdin_arg_t vdin_arg;
 	    vdin_v4l2_ops_t *vdin_ops = get_vdin_v4l2_ops();
 	    vdin_arg.cmd = VDIN_CMD_GET_HISTGRAM;
-	    vdin_arg.private = vframe;
+	    vdin_arg.private = (unsigned int)vframe;
 	    if(vdin_ops->tvin_vdin_func)
 	        vdin_ops->tvin_vdin_func(0,&vdin_arg);
 	}
