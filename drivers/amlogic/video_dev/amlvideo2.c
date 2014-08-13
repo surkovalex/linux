@@ -2972,10 +2972,19 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	dst_w = fh->width;
 	dst_h = fh->height;
 	if(vinfo->width<vinfo->height){
-		dst_w = fh->height;
-		dst_h = fh->width;
+		if((vinfo->width<=768)&&(vinfo->height<=1024)){
+			dst_w = vinfo->width;
+			dst_h = vinfo->height;
+		}else{
+			dst_w = fh->height;
+			dst_h = fh->width;
+		}
 		output_axis_adjust(vinfo->height,vinfo->width, (int *)&dst_h,(int *)&dst_w,0);
 	}else{
+		if((vinfo->height<=768)&&(vinfo->width<=1024)){
+			dst_w = vinfo->width;
+			dst_h = vinfo->height;
+		}
 		output_axis_adjust(vinfo->width,vinfo->height, (int *)&dst_w,(int *)&dst_h,0);	
 	}
 	para.dest_hactive = dst_w;
