@@ -45,7 +45,7 @@ extern unsigned int IEC958_mode_codec;
 static int iec958buf[32+16];
 void  aml_spdif_play()
 {
-    return;
+    //return;
    	 _aiu_958_raw_setting_t set;
    	 _aiu_958_channel_status_t chstat;	 
 	struct snd_pcm_substream substream;

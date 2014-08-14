@@ -614,9 +614,9 @@ static ssize_t store_config(struct device * dev, struct device_attribute *attr, 
         }
     }
     else if(strncmp(buf, "3d", 2)==0){
-			// First, disable HDMI TMDS
-			hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
-			// Second, set 3D parameters
+        // First, disable HDMI TMDS
+        hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
+        // Second, set 3D parameters
         if(strncmp(buf+2, "tb", 2)==0){
             hdmi_set_3d(&hdmitx_device, 6, 0);
         }
@@ -629,9 +629,9 @@ static ssize_t store_config(struct device * dev, struct device_attribute *attr, 
         else if(strncmp(buf+2, "off", 3)==0){
             hdmi_set_3d(&hdmitx_device, 0xf, 0);
         }
-				// Last, delay sometime and enable HDMI TMDS
-				msleep(20);
-				hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_ENABLE);
+        // Last, delay sometime and enable HDMI TMDS
+        msleep(20);
+        hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_ENABLE);
     }
     else if(strncmp(buf, "audio_", 6)==0) {
         if(strncmp(buf+6, "off", 3) == 0) {
@@ -1035,7 +1035,7 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
     audio_fs_t n_rate = aud_samp_rate_map(substream->runtime->rate);
     audio_sample_size_t n_size = aud_size_map(substream->runtime->sample_bits);
 
-    hdmitx_device.audio_param_update_flag = 1;
+    //hdmitx_device.audio_param_update_flag = 0;
     hdmitx_device.audio_notify_flag = 0;
 
     if(audio_param->sample_rate != n_rate) {
@@ -1080,7 +1080,7 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
     if((!hdmi_audio_off_flag)&&(hdmitx_device.audio_param_update_flag)) {
         if(hdmitx_device.hpd_state == 1) {     // plug-in & update audio param
             hdmitx_set_audio(&hdmitx_device, &(hdmitx_device.cur_audio_param), hdmi_ch);
-	    if((hdmitx_device.audio_notify_flag == 1) || (hdmitx_device.audio_step == 1)) {
+            if((hdmitx_device.audio_notify_flag == 1) || (hdmitx_device.audio_step == 1)) {
                 hdmitx_device.audio_notify_flag = 0;
                 hdmitx_device.audio_step = 0;
 #ifndef CONFIG_AML_HDMI_TX_HDCP
@@ -1387,7 +1387,7 @@ static int get_dt_pwr_init_data(struct device_node *np, struct hdmi_pwr_ctl *pwr
     }
 
     if(np != NULL) {
-	    ret = of_property_read_u32(np,"pwr_level",&pwr->pwr_level);
+        ret = of_property_read_u32(np,"pwr_level",&pwr->pwr_level);
     }
 #if 0
     struct pwr_ctl_var (*var)[HDMI_TX_PWR_CTRL_NUM] = (struct pwr_ctl_var (*)[HDMI_TX_PWR_CTRL_NUM])pwr;
