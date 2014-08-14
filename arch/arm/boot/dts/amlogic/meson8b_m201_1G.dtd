@@ -498,7 +498,7 @@ void root_func(){
             f_max_w = <50000000>;
             max_req_size = <0x20000>;          /**128KB*/
             gpio_dat3 = "BOOT_3";
-            card_type = <5>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+            card_type = <1>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
         };
 
 //$$ DEVICE="sdio"
@@ -1704,11 +1704,11 @@ void root_func(){
 //$$ L2 PROP_U32 = "amlogic,pullup"
 //$$ L2 PROP_U32 = "amlogic,pullupen"      
         emmc_all_pins:emmc_all_pins{
-            amlogic,setmask=<6 0x3f000000>;         /*sdio c*/
-            amlogic,clrmask=<2 0x04c0fc00           /*sdio b & nand*/
+            amlogic,setmask=<6 0xfc000000>;         /*sdio c*/
+            amlogic,clrmask=<2 0x06c2fc00           /*sdio b & nand*/
                                 8 0x0000003f        /*sdio a*/
                                 4 0x6c000000>;        /*sdhc c*/
-            amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_16","BOOT_17";
+            amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_8","BOOT_10";
             amlogic,enable-output=<1>; /** 0:output, 1:input */
             amlogic,pullup=<1>;
             amlogic,pullupen=<1>;
@@ -1722,11 +1722,11 @@ void root_func(){
 //$$ L2 PROP_U32 = "amlogic,pullup"
 //$$ L2 PROP_U32 = "amlogic,pullupen"
         emmc_clk_cmd_pins:emmc_clk_cmd_pins{
-            amlogic,setmask=<6 0x03000000>;         /*bit[24-25] */
-            amlogic,clrmask=<2 0x04c0fc00           /*sdio b & nand*/
+            amlogic,setmask=<6 0xc0000000>;         /*bit[30-31] */
+            amlogic,clrmask=<2 0x06c2fc00           /*sdio b & nand   nand bit17 bit25*/ 
                                 8 0x0000003f        /*sdio a*/
-                                4 0x6c000000>;        /*sdhc c*/
-            amlogic,pins = "BOOT_16","BOOT_17"; /** BOOT_16:CMD, BOOT_17:CLK */
+                                7 0xc0000>;        /*sdhc c bit 18-19*/
+            amlogic,pins = "BOOT_8","BOOT_10"; /** BOOT_10:CMD, BOOT_8:CLK */
             amlogic,enable-output=<1>; /** 0:output, 1:input */
             amlogic,pullup=<1>;
             amlogic,pullupen=<1>;
