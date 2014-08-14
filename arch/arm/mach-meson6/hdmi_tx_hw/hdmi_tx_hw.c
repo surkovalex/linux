@@ -2900,7 +2900,7 @@ void HDMITX_Meson_Init(hdmitx_dev_t* hdmitx_device)
     aml_write_reg32(P_HDMI_CTRL_PORT, aml_read_reg32(P_HDMI_CTRL_PORT)|(1<<15)); //APB3 err_en
     hdmi_wr_reg(0x10, 0xff);
 
-    hdmi_phy_suspend();
+  //  hdmi_phy_suspend();
 
     /**/    
     hdmi_hw_init(hdmitx_device);

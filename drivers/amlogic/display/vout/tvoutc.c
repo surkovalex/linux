@@ -411,7 +411,7 @@ static DEFINE_MUTEX(setmode_mutex);
 int tvoutc_setmode(tvmode_t mode)
 {
     const  reg_t *s;
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     static int uboot_display_flag = 1;
 #else
     static int uboot_display_flag = 0;

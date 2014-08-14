@@ -264,6 +264,13 @@ static int osd0_init(logo_object_t *plogo)
 		if((cur_mode != (plogo->para.vout_mode & VMODE_MODE_BIT_MASK)) && (cur_mode <= VMODE_4K2K_SMPTE)) {
 		    set_osd_freescaler(LOGO_DEV_OSD0, plogo, cur_mode);
 		}
+
+		#else // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+		if((cur_mode != (plogo->para.vout_mode&VMODE_MODE_BIT_MASK)) && (cur_mode < VMODE_VGA)) {
+
+							plogo->para.loaded = 0;
+
+		}
 #endif
 		return OUTPUT_DEV_FOUND;
 	}
@@ -327,6 +334,13 @@ static int osd1_init(logo_object_t *plogo)
 		if((cur_mode != (plogo->para.vout_mode & VMODE_MODE_BIT_MASK)) && (cur_mode <= VMODE_4K2K_SMPTE)) {
 		    set_osd_freescaler(LOGO_DEV_OSD1, plogo, cur_mode);
 		}
+#else // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+		if((cur_mode != (plogo->para.vout_mode&VMODE_MODE_BIT_MASK)) && (cur_mode < VMODE_VGA)) {
+
+							plogo->para.loaded = 0;
+
+		}
+
 #endif
 		return OUTPUT_DEV_FOUND;
 	}
