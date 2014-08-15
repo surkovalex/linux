@@ -1879,7 +1879,7 @@ sdhc_sd_clk_cmd_pins:sdhc_sd_clk_cmd_pins{
 //$$ L2 PROP_STR 4 = "amlogic,pins"
 		aml_spi_nor_pins: aml_spi_nor_pins{
 			amlogic,setmask=<5 0xf>;
-			amlogic,clrmask=<2 0x380000>;
+			amlogic,clrmask=<2 0x10380000>;
 			amlogic,pins = "BOOT_11","BOOT_12","BOOT_13","BOOT_18";
 		};
 //$$ MATCH "meson_vcck_dvfs_pin_0_match" = "&aml_pwm_pins"
