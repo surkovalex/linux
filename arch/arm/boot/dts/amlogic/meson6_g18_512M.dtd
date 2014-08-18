@@ -267,10 +267,12 @@ void root_func(){
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_STR = "power_gpio"
     wifi_power{
+    	
         compatible = "amlogic,wifi_power";
         dev_name = "wifi_power";
 	status = "okay";
         power_gpio = "GPIOE_11";
+        valid = "low";
     };
     
 /// ***************************************************************************************
