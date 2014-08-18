@@ -157,7 +157,7 @@ void root_func(){
 		compatible = "amlogic,deinterlace";
 		dev_name = "deinterlace";
 		status = "ok";
-		reserve-memory = <0x01800000>; //8x1920x1088x3/2=24M
+		reserve-memory = <0x02100000>; //10x1920x1088x3/2=33M
 	};
 
 /// ***************************************************************************************
