@@ -340,7 +340,6 @@ void vsync_rdma_config_pre(void)
 }    
 EXPORT_SYMBOL(vsync_rdma_config_pre);
 
-#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
 static irqreturn_t rdma_isr(int irq, void *dev_id)
 {
 #ifdef CONFIG_RDMA_IN_RDMAIRQ
@@ -389,7 +388,6 @@ static irqreturn_t rdma_isr(int irq, void *dev_id)
 #endif    
     return IRQ_HANDLED;
 }
-#endif
 static int __init rmda_early_init(void)
 {
     ulong rmda_table_addr;
@@ -433,9 +431,10 @@ static int __init rmda_early_init(void)
 #endif
 
 #ifdef CONFIG_RDMA_IN_RDMAIRQ
-    request_irq(INT_RDMA, &rdma_isr,
+    if(request_irq(INT_RDMA, &rdma_isr,
                     IRQF_SHARED, "rdma",
-                    (void *)"rdma");
+                    (void *)"rdma"))
+		return -1;
 
 #else
 #if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
