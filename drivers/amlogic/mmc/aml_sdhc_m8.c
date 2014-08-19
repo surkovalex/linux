@@ -511,7 +511,7 @@ static void aml_sdhc_reg_init(struct amlsd_host* host)
 
     /*Send Stop Cmd automatically*/
     if(IS_MESON_M8M2_CPU)
-         misc.txstart_thres = 4; // [29:31] = 7
+         misc.txstart_thres = 6;//4; // [29:31] = 7
     else
          misc.txstart_thres = 7; // [29:31] = 7
     misc.manual_stop = 0;
