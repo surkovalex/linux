@@ -2364,18 +2364,19 @@ static int ppmgr_task(void *data)
                 ) {
                     ppmgr_device.use_prot = 0;
                     set_video_angle(0);
-                    ppmgr_device.angle = ppmgr_device.global_angle;
+                    //ppmgr_device.angle = ppmgr_device.global_angle;
                     ppmgr_device.videoangle = (ppmgr_device.angle + ppmgr_device.orientation) % 4;
                     set_property_change(1);
                 } else {
                     ppmgr_device.use_prot = 1;
-                    ppmgr_device.angle = 0;
+                    //ppmgr_device.angle = 0;
                     ppmgr_device.videoangle = (ppmgr_device.angle + ppmgr_device.orientation) % 4;
                     set_property_change(1);
                     //set_video_angle(ppmgr_device.global_angle);
                 }
                 ppmgr_device.started = 0;
             }
+            vf->video_angle = (ppmgr_device.angle + ppmgr_device.orientation + vf->orientation)%4;
             plarform_type = get_platform_type();
             if( plarform_type == PLATFORM_TV){
             	process_type = get_tv_process_type(vf);
@@ -2409,18 +2410,19 @@ static int ppmgr_task(void *data)
                 ) {
                     ppmgr_device.use_prot = 0;
                     set_video_angle(0);
-                    ppmgr_device.angle = ppmgr_device.global_angle;
+                    //ppmgr_device.angle = ppmgr_device.global_angle;
                     ppmgr_device.videoangle = (ppmgr_device.angle + ppmgr_device.orientation) % 4;
                     set_property_change(1);
                 } else {
                     ppmgr_device.use_prot = 1;
                     set_video_angle(ppmgr_device.global_angle);
-                    ppmgr_device.angle = 0;
+                    //ppmgr_device.angle = 0;
                     ppmgr_device.videoangle = (ppmgr_device.angle + ppmgr_device.orientation) % 4;
                     set_property_change(1);
                 }
                 ppmgr_device.started = 0;
             }
+            vf->video_angle = (ppmgr_device.angle + ppmgr_device.orientation + vf->orientation)%4;
             ret = process_vf_deinterlace(vf, context, &ge2d_config);
             process_vf_rotate(vf, context, &ge2d_config,(ret>0)?ret:0);
 #endif

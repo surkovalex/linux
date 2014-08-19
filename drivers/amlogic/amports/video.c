@@ -249,11 +249,11 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
                 get_vpu_mem_pd_vmod(VPU_PIC_ROT2) == VPU_MEM_POWER_DOWN || \
                 aml_read_reg32(P_VPU_PROT3_CLK_GATE) == 0) { \
             PROT_MEM_POWER_ON(); \
-            VD1_MEM_POWER_ON(); \
             video_prot_gate_on(); \
             video_prot.video_started = 1; \
             video_prot.angle_changed = 1; \
         } \
+		VD1_MEM_POWER_ON(); \
         VIDEO_LAYER_ON(); \
     } while (0)
 #else
@@ -432,12 +432,12 @@ static int scaler_pos_changed = 0;
 static struct amvideocap_req *capture_frame_req=NULL;
 static video_prot_t video_prot;
 static u32 video_angle = 0;
+u32 get_video_angle(void) { return video_angle; }
+EXPORT_SYMBOL(get_video_angle);
 #if HAS_VPU_PROT
 static u32 use_prot = 0;
 u32 get_prot_status(void) { return video_prot.status; }
 EXPORT_SYMBOL(get_prot_status);
-u32 get_video_angle(void) { return video_angle; }
-EXPORT_SYMBOL(get_video_angle);
 extern void prot_get_parameter(u32 wide_mode, vframe_t * vf, vpp_frame_par_t * next_frame_par, const vinfo_t *vinfo);
 #endif
 static inline ulong keep_phy_addr(ulong addr)
@@ -1442,6 +1442,7 @@ static void vsync_toggle_frame(vframe_t *vf)
          (vf->type_backup & VIDTYPE_INTERLACE)) ||
          (cur_dispbuf->type != vf->type)
 #if HAS_VPU_PROT
+         || (cur_dispbuf->video_angle != vf->video_angle)
          || video_prot.angle_changed
 #endif
          ) {
@@ -1467,20 +1468,27 @@ amlog_mask(LOG_MASK_FRAMEINFO,
 #if HAS_VPU_PROT
         if (use_prot) {
             vframe_t tmp_vf = *vf;
-            if (video_prot.angle_changed || cur_dispbuf->width != vf->width || cur_dispbuf->height != vf->height) {
+            video_prot.angle = vf->video_angle;
+            if ((first_picture)||video_prot.angle_changed||(cur_dispbuf->video_angle != vf->video_angle || cur_dispbuf->width != vf->width || cur_dispbuf->height != vf->height)) {
                 u32 angle_orientation = 0;
                 video_prot_init(&video_prot, &tmp_vf);
-                angle_orientation = (video_angle + video_prot.src_vframe_orientation) % 4;
+                angle_orientation = vf->video_angle;
                 video_prot_set_angle(&video_prot, angle_orientation);
                 video_prot.angle = angle_orientation;
                 video_prot.status = angle_orientation % 2;
-                video_prot.angle_changed = 0;
+                video_prot.angle_changed = 0;               
+                if(debug_flag& DEBUG_FLAG_BLACKOUT){
+                  if(cur_dispbuf){	
+                  	printk("cur_dispbuf->width: %d  cur_dispbuf->height:%d -- vf->width:%d vf->height:%d\n", cur_dispbuf->width, cur_dispbuf->height,vf->width,vf->height);
+                  }
+                }
             }
             video_prot_revert_vframe(&video_prot, &tmp_vf);
             if (video_prot.status) {
                 static vpp_frame_par_t prot_parms;
                 prot_get_parameter(wide_setting, &tmp_vf, &prot_parms, vinfo);
                 video_prot_axis(&video_prot, prot_parms.VPP_hd_start_lines_, prot_parms.VPP_hd_end_lines_, prot_parms.VPP_vd_start_lines_, prot_parms.VPP_vd_end_lines_);
+				vpp_set_filters(process_3d_type,wide_setting, &tmp_vf, next_frame_par, vinfo);
                 if (video_prot.status) {
                     u32 tmp_line_in_length_ = next_frame_par->VPP_hd_end_lines_ - next_frame_par->VPP_hd_start_lines_ + 1;
                     u32 tmp_pic_in_height_ = next_frame_par->VPP_vd_end_lines_ - next_frame_par->VPP_vd_start_lines_ + 1;
@@ -1497,9 +1505,12 @@ amlog_mask(LOG_MASK_FRAMEINFO,
                         next_frame_par->VPP_vd_end_lines_ = tmp_pic_in_height_ - 1;
                     }
                 }
+            }else{
+            	vpp_set_filters(process_3d_type,wide_setting, vf, next_frame_par, vinfo);
             }
-	     vpp_set_filters(process_3d_type,wide_setting, &tmp_vf, next_frame_par, vinfo);
+	     
         } else {
+             video_prot.angle_changed = 0;
              vpp_set_filters(process_3d_type,wide_setting, vf, next_frame_par, vinfo);
         }
 #else
@@ -1596,7 +1607,7 @@ static void viu_set_dcu(vpp_frame_par_t *frame_par, vframe_t *vf)
     }
 #if HAS_VPU_PROT
     if (use_prot) {
-        if (video_prot.angle == 2) {
+        if (vf->video_angle == 2) {
             VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2 + cur_dev->viu_off, 0xf, 2, 4);
         } else {
             VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2 + cur_dev->viu_off, 0, 2, 4);
@@ -3073,6 +3084,7 @@ static void video_vf_unreg_provider(void)
     if (cur_dispbuf) {
         vf_local = *cur_dispbuf;
         cur_dispbuf = &vf_local;
+        cur_dispbuf->video_angle = 0;
     }
 
     if (trickmode_fffb) {
@@ -3141,7 +3153,7 @@ static void video_vf_light_unreg_provider(void)
             get_vpu_mem_pd_vmod(VPU_PIC_ROT2) == VPU_MEM_POWER_DOWN ||
             aml_read_reg32(P_VPU_PROT3_CLK_GATE) == 0) {
         PROT_MEM_POWER_ON();
-        VD1_MEM_POWER_ON();
+        //VD1_MEM_POWER_ON();
         video_prot_gate_on();
         video_prot.video_started = 1;
         video_prot.angle_changed = 1;
@@ -4873,6 +4885,7 @@ void set_video_angle(u32 s_value) {
     if ((s_value >= 0 && s_value <= 3) && (video_angle != s_value)) {
         video_angle = s_value;
         video_prot.angle_changed = 1;
+        video_prot.video_started = 1;
         printk("video_prot angle:%d\n", video_angle);
     }
 }

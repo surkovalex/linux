@@ -3981,7 +3981,7 @@ static unsigned char pre_de_buf_config(void)
             di_pre_stru.cur_inp_type = di_buf->vframe->type;
             di_pre_stru.cur_source_type = di_buf->vframe->source_type;
             di_pre_stru.cur_sig_fmt = di_buf->vframe->sig_fmt;
-	    di_pre_stru.orientation = di_buf->vframe->orientation;
+	        di_pre_stru.orientation = di_buf->vframe->video_angle;
             di_pre_stru.source_change_flag = 1;
             di_pre_stru.same_field_source_flag = 0;
 #if defined (NEW_DI_TV)
