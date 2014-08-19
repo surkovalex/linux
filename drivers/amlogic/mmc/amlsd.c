@@ -549,7 +549,7 @@ static int amlsd_param_show(struct seq_file *s, void *v)
 	seq_printf(s, "f_min : %d\n", pdata->f_min);
 	seq_printf(s, "port : %d\n", pdata->port);
 	seq_printf(s, "caps : 0x%x\n", pdata->caps);
-	seq_printf(s, "ocr_avail : 0x%lx\n", pdata->ocr_avail);
+	seq_printf(s, "ocr_avail : 0x%x\n", pdata->ocr_avail);
 	seq_printf(s, "max_req_size : %d\n", pdata->max_req_size);
 	return 0;
 }
