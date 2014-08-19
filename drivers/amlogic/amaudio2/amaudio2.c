@@ -149,14 +149,15 @@ static int amaudio_open(struct inode *inode, struct file *file)
 	//(unsigned int)amaudio->sw.addr,amaudio->sw.paddr,(unsigned int)amaudio->hw.addr,amaudio->hw.paddr);
 	
   	WRITE_MPEG_REG_BITS(AIU_MEM_I2S_MASKS,0, 16, 16);
+	
+	spin_lock_init(&amaudio->sw.lock);
+  	spin_lock_init(&amaudio->hw.lock);
+	spin_lock_init(&amaudio->sw_read.lock);
+	
   	if(request_irq(INT_AMRISC_DC_PCMLAST, i2s_out_callback, IRQF_SHARED, "i2s_out",amaudio)){
   		res = -EINVAL;
   		goto error;
   	}
-  	spin_lock_init(&amaudio->sw.lock);
-  	spin_lock_init(&amaudio->hw.lock);
-	spin_lock_init(&amaudio->sw_read.lock);
-  	
   }else if(iminor(inode) == 1){
   	printk(KERN_DEBUG "amaudio2_in opened\n");
   	if(!this->dev->dma_mask)
