@@ -259,10 +259,6 @@ enum NalUnitType
   NAL_UNIT_INVALID,
 };
 
-static int forbidden_zero_bit;
-static int m_nalUnitType;
-static int m_reservedZero6Bits;
-static int m_temporalId;
 
 //---------------------------------------------------
 // Amrisc Software Interrupt 
@@ -808,6 +804,9 @@ typedef struct hevc_state_{
     int last_pts;
     u64 last_lookup_pts_us64;
     u64 last_pts_us64;
+    u64 shift_byte_count;
+    u32 shift_byte_count_lo;
+	u32 shift_byte_count_hi;
     int pts_mode_switching_count;
     int pts_mode_recovery_count;
 }hevc_stru_t;
@@ -858,6 +857,9 @@ static void hevc_init_stru(hevc_stru_t* hevc, BuffInfo_t* buf_spec_i, buff_t* mc
     hevc->last_lookup_pts = 0;
     hevc->last_pts_us64 = 0;
     hevc->last_lookup_pts_us64 = 0;
+    hevc->shift_byte_count = 0;
+    hevc->shift_byte_count_lo = 0;
+    hevc->shift_byte_count_hi = 0;
     hevc->pts_mode_switching_count = 0;
     hevc->pts_mode_recovery_count = 0;
 
@@ -876,29 +878,6 @@ static void hevc_init_stru(hevc_stru_t* hevc, BuffInfo_t* buf_spec_i, buff_t* mc
 }    
 
 static int prepare_display_buf(hevc_stru_t* hevc, int display_buff_id, int stream_offset, unsigned short slice_type);
-
-
-static void dump_lmem(void)
-{
-	int i;
-	unsigned int data32;
-
-        WRITE_VREG(HEVC_DEC_STATUS_REG, HEVC_DUMP_LMEM);
-        // Interrupt Amrisc to excute 
-        WRITE_VREG(HEVC_MCPU_INTR_REQ, AMRISC_MAIN_REQ);
-	printk("\ndump_lmem:");
-	for(i=0; i<0x400; i++){
-		do{
-			data32 = READ_VREG(RPM_CMD_REG);
-			//printk("%x\n", data32);
-		}while((data32&0x10000)==0);	
-            	printk("%04x ", data32&0xffff);
-            	if(((i+1)&0xf)==0)
-                	printk("\n");
-		WRITE_VREG(RPM_CMD_REG, 0);		
-	}
-
-}
 
 static void get_rpm_param(param_t* params)
 {
@@ -1013,7 +992,7 @@ static void uninit_pic_list(hevc_stru_t* hevc)
 	for(i=0; i<MAX_REF_PIC_NUM; i++){
     if(m_PIC[i].alloc_pages!=NULL && m_PIC[i].cma_page_count>0){
         dma_release_from_contiguous(cma_dev, m_PIC[i].alloc_pages, m_PIC[i].cma_page_count);
-        printk("release cma buffer[%d] (%d %x)\n", i, m_PIC[i].cma_page_count, m_PIC[i].alloc_pages);
+        printk("release cma buffer[%d] (%d %x)\n", i, m_PIC[i].cma_page_count, (unsigned)m_PIC[i].alloc_pages);
         m_PIC[i].alloc_pages=NULL;
         m_PIC[i].cma_page_count=0;
     }
@@ -1062,7 +1041,7 @@ static void init_pic_list(hevc_stru_t* hevc)
         m_PIC[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, m_PIC[i].cma_page_count, 0);
         m_PIC[i].mc_y_adr = page_to_phys(m_PIC[i].alloc_pages);
 		    m_PIC[i].mc_u_v_adr = m_PIC[i].mc_y_adr + ((mc_buffer_size_u_v_h<<16)<<1);
-		    printk("allocate cma buffer[%d] (%d,%x,%x)\n", i, m_PIC[i].cma_page_count , m_PIC[i].alloc_pages, m_PIC[i].mc_y_adr);
+        printk("allocate cma buffer[%d] (%d,%x,%x)\n", i, m_PIC[i].cma_page_count , (unsigned)m_PIC[i].alloc_pages, (unsigned)m_PIC[i].mc_y_adr);
 		}
 		else{
 		    m_PIC[i].cma_page_count = 0;
@@ -1128,20 +1107,6 @@ static void dump_pic_list(hevc_stru_t* hevc)
 		printk("index %d decode_idx:%d,	POC:%d,	referenced:%d,	num_reorder_pic:%d, output_mark:%d, output_ready:%d, mv_wr_start %lx\n", pic->index, pic->decode_idx, pic->POC, pic->referenced, pic->num_reorder_pic, pic->output_mark, pic->output_ready, pic->mpred_mv_wr_start_addr);
 		pic = pic->next;
 	}
-}
-
-static void reset_pic_list(hevc_stru_t* hevc)
-{
-    
-	PIC_t* pic = hevc->decode_pic_list;
-	while(pic){
-    pic->referenced = 0;
-    pic->output_mark = 0;
-    pic->recon_mark = 0;
-    pic->error_mark = 0;
-		pic = pic->next;
-	}
-
 }
 
 static PIC_t* output_pic(hevc_stru_t* hevc, unsigned char flush_flag)
@@ -2386,6 +2351,7 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
             int iPrevPOClsb;
             int iPrevPOCmsb;
             int iPOCmsb;
+            int iPOClsb = rpm_param->p.POClsb;
             if(iMaxPOClsb==0){
                 printk("error iMaxPOClsb is 0\n");    
                 return 3;
@@ -2394,7 +2360,6 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
             iPrevPOClsb = hevc->iPrevTid0POC%iMaxPOClsb;
             iPrevPOCmsb = hevc->iPrevTid0POC-iPrevPOClsb;
             
-            int iPOClsb = rpm_param->p.POClsb;
             if( ( iPOClsb  <  iPrevPOClsb ) && ( ( iPrevPOClsb - iPOClsb )  >=  ( iMaxPOClsb / 2 ) ) )
             {
                 iPOCmsb = iPrevPOCmsb + iMaxPOClsb;
@@ -2753,8 +2718,8 @@ static param_t  rpm_param;
 
 static void hevc_local_init(void)
 {
-    memset(&rpm_param, 0, sizeof(rpm_param));
     BuffInfo_t* cur_buf_info = NULL;
+    memset(&rpm_param, 0, sizeof(rpm_param));
     
     uninit_pic_list(&gHevc);
     
@@ -3057,8 +3022,15 @@ static s32 vh265_init(void);
 static void hevc_recover(hevc_stru_t* hevc)
 {
 
-        int i;
-        int ttt=0;
+        u32 rem;
+        unsigned hevc_shift_byte_count ;
+        unsigned hevc_stream_start_addr;
+        unsigned hevc_stream_end_addr ;
+        unsigned hevc_stream_rd_ptr ;
+        unsigned hevc_stream_wr_ptr ;
+        unsigned hevc_stream_control;
+        unsigned hevc_stream_fifo_ctl;
+        unsigned hevc_stream_buf_size;
 #if 0
             for(i=0; i<(hevc->debug_ptr_size/2); i+=4){
                 int ii;
@@ -3070,18 +3042,35 @@ static void hevc_recover(hevc_stru_t* hevc)
             }
 #endif
 #define ES_VID_MAN_RD_PTR            (1<<0)
+
+        amhevc_stop();
+
         //reset
         WRITE_MPEG_REG(PARSER_VIDEO_RP, READ_VREG(HEVC_STREAM_RD_PTR));
         SET_MPEG_REG_MASK(PARSER_ES_CONTROL, ES_VID_MAN_RD_PTR);
 
-        unsigned hevc_stream_start_addr = READ_VREG(HEVC_STREAM_START_ADDR);
-        unsigned hevc_stream_end_addr = READ_VREG(HEVC_STREAM_END_ADDR);
-        unsigned hevc_stream_rd_ptr = READ_VREG(HEVC_STREAM_RD_PTR);
-        unsigned hevc_stream_wr_ptr = READ_VREG(HEVC_STREAM_WR_PTR);
-        unsigned hevc_stream_control = READ_VREG(HEVC_STREAM_CONTROL);
-        unsigned hevc_stream_fifo_ctl = READ_VREG(HEVC_STREAM_FIFO_CTL);
-        
-        amhevc_stop();
+        hevc_stream_start_addr = READ_VREG(HEVC_STREAM_START_ADDR);
+        hevc_stream_end_addr = READ_VREG(HEVC_STREAM_END_ADDR);
+        hevc_stream_rd_ptr = READ_VREG(HEVC_STREAM_RD_PTR);
+        hevc_stream_wr_ptr = READ_VREG(HEVC_STREAM_WR_PTR);
+        hevc_stream_control = READ_VREG(HEVC_STREAM_CONTROL);
+        hevc_stream_fifo_ctl = READ_VREG(HEVC_STREAM_FIFO_CTL);
+        hevc_stream_buf_size = hevc_stream_end_addr - hevc_stream_start_addr;
+
+        // HEVC streaming buffer will reset and restart from current hevc_stream_rd_ptr position
+        // calculate HEVC_SHIFT_BYTE_COUNT value with the new position.
+        hevc_shift_byte_count = READ_VREG(HEVC_SHIFT_BYTE_COUNT);
+        if ((hevc->shift_byte_count_lo & (1<<31)) && ((hevc_shift_byte_count & (1<<31)) == 0)) {
+            hevc->shift_byte_count += 0x100000000ULL;
+        }
+        div_u64_rem(hevc->shift_byte_count, hevc_stream_buf_size, &rem);
+        hevc->shift_byte_count -= rem;
+        hevc->shift_byte_count += hevc_stream_rd_ptr - hevc_stream_start_addr;
+        if (rem > (hevc_stream_rd_ptr - hevc_stream_start_addr)) {
+            hevc->shift_byte_count += hevc_stream_buf_size;
+        }
+        hevc->shift_byte_count_lo = (u32)hevc->shift_byte_count;
+
         WRITE_VREG(DOS_SW_RESET3, 
             //(1<<2)|
             (1<<3)|(1<<4)|(1<<8)|(1<<11)|(1<<12)|(1<<14)|(1<<15)|(1<<17)|(1<<18)|(1<<19));
@@ -3092,6 +3081,7 @@ static void hevc_recover(hevc_stru_t* hevc)
         WRITE_VREG(HEVC_STREAM_RD_PTR, hevc_stream_rd_ptr);
         WRITE_VREG(HEVC_STREAM_WR_PTR, hevc_stream_wr_ptr);
         WRITE_VREG(HEVC_STREAM_CONTROL, hevc_stream_control);
+        WRITE_VREG(HEVC_SHIFT_BYTE_COUNT, hevc->shift_byte_count_lo);
         WRITE_VREG(HEVC_STREAM_FIFO_CTL, hevc_stream_fifo_ctl);
 
         hevc_config_work_space_hw(&gHevc);
@@ -3140,6 +3130,8 @@ static void hevc_recover(hevc_stru_t* hevc)
 #endif            
         init_pic_list_hw();
         
+        printk("%s HEVC_SHIFT_BYTE_COUNT=%x\n", __func__, READ_VREG(HEVC_SHIFT_BYTE_COUNT));
+
         amhevc_start();
 
         //skip, search next start code
@@ -3174,7 +3166,6 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
 
    if(debug&H265_DEBUG_UCODE){
        if(READ_HREG(DEBUG_REG1)&0x10000){
-            unsigned short tmps[4];
 #if 0
             printk("PPS \r\n");
             for(i=0; i<(hevc->debug_ptr_size/2); i+=4){
@@ -3231,6 +3222,12 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
         }
     }
     
+    i = READ_VREG(HEVC_SHIFT_BYTE_COUNT);
+    if ((hevc->shift_byte_count_lo & (1<<31)) && ((i & (1<<31)) == 0)) {
+        hevc->shift_byte_count_hi++;
+    }
+    hevc->shift_byte_count_lo = i;
+
     if(dec_status == HEVC_NAL_SEARCH_DONE){
         int naltype = READ_HREG(CUR_NAL_UNIT_TYPE);
         int parse_type = HEVC_DISCARD_NAL;
