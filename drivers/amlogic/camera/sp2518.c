@@ -2404,7 +2404,7 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	para.hs_bp = 0;
 	para.vs_bp = 24;
 	para.cfmt = TVIN_YUV422;
-        para.dfmt = TVIN_NV21;
+        para.dfmt = TVIN_YUV422;
 	para.scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;	
 	para.skip_count =  2; //skip_num
 

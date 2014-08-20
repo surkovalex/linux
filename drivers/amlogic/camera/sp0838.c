@@ -1859,7 +1859,7 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	para.hs_bp = 0;
 	para.vs_bp = 2;
 	para.cfmt = TVIN_YVYU422;
-        para.dfmt = TVIN_NV21;
+        para.dfmt = TVIN_YVYU422;
 	para.scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;	
 	para.skip_count =  2; //skip_num
 	printk("0a19,h=%d, v=%d, frame_rate=%d\n", sp0838_h_active, sp0838_v_active, sp0838_frmintervals_active.denominator);
