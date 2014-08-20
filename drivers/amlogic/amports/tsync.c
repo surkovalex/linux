@@ -509,7 +509,7 @@ void tsync_avevent_locked(avevent_t event, u32 param)
         /*set tsync mode to vmaster to avoid video block caused by avpts-diff too much
           threshold 120s is an arbitrary value*/  
         t = abs(timestamp_apts_get()-timestamp_vpts_get())/TIME_UNIT90K;
-        if (tsync_enable && !get_vsync_pts_inc_mode() && t<120) {
+        if (tsync_enable && !get_vsync_pts_inc_mode()/* && t<120*/) {
             tsync_mode = TSYNC_MODE_AMASTER;
         } else {
             tsync_mode = TSYNC_MODE_VMASTER;
