@@ -253,7 +253,7 @@ extern u32 get_blackout_policy(void);
 #ifdef CONFIG_GE2D_KEEP_FRAME
 static ge2d_context_t *ge2d_videoh264_context = NULL;
 
-static int ge2d_videoh264task_init()
+static int ge2d_videoh264task_init(void)
 {
     if (ge2d_videoh264_context == NULL)
             ge2d_videoh264_context = create_ge2d_work_queue();
@@ -264,7 +264,7 @@ static int ge2d_videoh264task_init()
     }
     return 0;
 }
-static int ge2d_videoh264task_release()
+static int ge2d_videoh264task_release(void)
 {
     if (ge2d_videoh264_context) {
             destroy_ge2d_work_queue(ge2d_videoh264_context);
@@ -275,9 +275,9 @@ static int ge2d_videoh264task_release()
 static int ge2d_canvas_dup(canvas_t *srcy ,canvas_t *srcu,canvas_t *des,
     int format,u32 srcindex,u32 desindex)
 {
-    printk("ge2d_canvas_dupvh264 ADDR srcy[0x%x] srcu[0x%x] des[0x%x]\n",srcy->addr,srcu->addr,des->addr);
 
     config_para_ex_t ge2d_config;
+    printk("ge2d_canvas_dupvh264 ADDR srcy[0x%lx] srcu[0x%lx] des[0x%lx]\n",srcy->addr,srcu->addr,des->addr);
     memset(&ge2d_config,0,sizeof(config_para_ex_t));
 
     ge2d_config.alu_const_color= 0;
@@ -1850,7 +1850,7 @@ static void stream_switching_done(void)
         spin_unlock_irqrestore(&lock, flags);
     }
 }
-
+#if !defined(NV21)|| !defined(CONFIG_GE2D_KEEP_FRAME)
 static int canvas_dup(u8 *dst, ulong src_paddr, ulong size)
 {
     void __iomem *p = ioremap_wc(src_paddr, size);
@@ -1861,7 +1861,7 @@ static int canvas_dup(u8 *dst, ulong src_paddr, ulong size)
     }
     return 0;
 }
-
+#endif
 static void stream_switching_do(struct work_struct *work)
 {
     vframe_t *vf_prev, *vf_curr;

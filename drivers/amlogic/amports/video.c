@@ -679,7 +679,7 @@ static int noneseamless_play_clone_rate = 5;
 
 #ifdef CONFIG_GE2D_KEEP_FRAME
 static ge2d_context_t *ge2d_video_context = NULL;
-static int ge2d_videotask_init()
+static int ge2d_videotask_init(void)
 {
     if (ge2d_video_context == NULL)
             ge2d_video_context = create_ge2d_work_queue();
@@ -692,7 +692,7 @@ static int ge2d_videotask_init()
 
     return 0;
 }
-static int ge2d_videotask_release()
+static int ge2d_videotask_release(void)
 {
     if (ge2d_video_context) {
             destroy_ge2d_work_queue(ge2d_video_context);
@@ -704,9 +704,9 @@ static int ge2d_videotask_release()
 static int ge2d_canvas_dup(canvas_t *srcy ,canvas_t *srcu,canvas_t *des,
     int format,u32 srcindex,u32 desindex)
 {
-    printk("ge2d_canvas_dup ADDR srcy[0x%x] srcu[0x%x] des[0x%x]\n",srcy->addr,srcu->addr,des->addr);
 
     config_para_ex_t ge2d_config;
+    printk("ge2d_canvas_dup ADDR srcy[0x%lx] srcu[0x%lx] des[0x%lx]\n",srcy->addr,srcu->addr,des->addr);
     memset(&ge2d_config,0,sizeof(config_para_ex_t));
 
     ge2d_config.alu_const_color= 0;
@@ -758,10 +758,10 @@ static int ge2d_canvas_dup(canvas_t *srcy ,canvas_t *srcu,canvas_t *des,
     return 0;
 }
 
-int ge2d_show_frame(ulong yaddr,ulong uaddr)
+void ge2d_show_frame(ulong yaddr,ulong uaddr)
 {
     u32 cur_index;
-    u32 y_index, u_index,des_index,src_index;
+    u32 y_index, u_index;
     cur_index = READ_MPEG_REG(VD1_IF0_CANVAS0);
     y_index = cur_index & 0xff;
     u_index = (cur_index >> 8) & 0xff;
@@ -798,7 +798,7 @@ int ge2d_store_frame(ulong yaddr,ulong uaddr,u32 ydupindex,u32 udupindex)
     ge2d_canvas_dup(&cs0,&cs1,&cyd,GE2D_FORMAT_M24_NV21,src_index,des_index);
     return 0;
 }
-static void ge2d_keeplastframe_block()
+static void ge2d_keeplastframe_block(void)
 {
     mutex_lock(&video_module_mutex);
     ge2d_store_frame(keep_y_addr,keep_u_addr,DISPLAY_CANVAS_YDUP_INDEX,DISPLAY_CANVAS_UDUP_INDEX);

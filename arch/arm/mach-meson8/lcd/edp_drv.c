@@ -372,7 +372,7 @@ static int dptx_init_downspread(unsigned char ss_enable)
 	
 	return status;
 }
-
+#if 0
 static char *dptx_explain_reply_code(int status)
 {
 	switch (status) {
@@ -380,7 +380,7 @@ static char *dptx_explain_reply_code(int status)
 			return "unknown status";
 	}
 }
-
+#endif
 static int trdp_AUX_check_status(void)
 {
 	if (READ_DPTX_REG(EDP_TX_TRANSMITTER_OUTPUT_ENABLE) & 1)
