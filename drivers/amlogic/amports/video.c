@@ -92,7 +92,7 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_DEFAULT_LEVEL_DESC, LOG_MASK_DESC);
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 #include <mach/mod_gate.h>
 #endif
-#include "mach/meson-secure.h"
+//#include "mach/meson-secure.h"
 #endif
 
 static int debugflags=0;
