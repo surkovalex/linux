@@ -3268,7 +3268,6 @@ static int hdmitx_cntl_misc(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned 
 
 static int hdmitx_get_state(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned argv)
 {
-    int st = 0;
     if(!(cmd & CMD_STAT_OFFSET))
         hdmi_print(ERR, "stat: " "hdmitx: w: invalid cmd 0x%x\n", cmd);
     else
@@ -3300,14 +3299,10 @@ static int hdmitx_get_state(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned 
         break;
     case STAT_VIDEO_CLK:
         break;
-    case STAT_AUDIO_PACK:
-        st = (hdmi_rd_reg(TX_AUDIO_PACK) & 0x1);
-        return st;
-        break;
     default:
         break;
     }
-    return st;
+    return 0;
 }
 
 void HDMITX_Meson_Init(hdmitx_dev_t* hdmitx_device)

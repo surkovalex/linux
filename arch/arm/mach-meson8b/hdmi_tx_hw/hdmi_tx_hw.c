@@ -2969,7 +2969,7 @@ static int hdmitx_get_state(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned 
     case STAT_VIDEO_CLK:
         break;
     case STAT_AUDIO_PACK:
-        st = (hdmi_rd_reg(TX_AUDIO_PACK) & 0x1);
+        st = (hdmi_rd_reg(STAT_AUDIO_PACK) & 0x1);
         return st;
         break;
     default:
