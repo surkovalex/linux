@@ -57,11 +57,11 @@ u16 total_len;
 
 struct i2c_client *guitar_client = NULL;
 
-extern s32  gt811_i2c_read(struct i2c_client *client, uint8_t *buf, s32 len);
-extern s32  gt811_i2c_write(struct i2c_client *client,uint8_t *data,s32 len);
+extern s32  gtp_i2c_read(struct i2c_client *client, uint8_t *buf, s32 len);
+extern s32  gtp_i2c_write(struct i2c_client *client,uint8_t *data,s32 len);
 extern s32  gtp_i2c_end_cmd(struct i2c_client *client);
-extern void gt811_reset_guitar(s32 ms);
-extern s32  gt811_send_cfg(struct i2c_client *client);
+extern void gtp_reset_guitar(s32 ms);
+extern s32  gtp_send_cfg(struct i2c_client *client);
 
 #pragma pack(1)
 typedef struct
@@ -100,7 +100,7 @@ static u8 gup_get_ic_msg(struct i2c_client *client, u16 addr, u8* msg, s32 len)
 
     for (i = 0; i < 5; i++)
     {
-        if (gt811_i2c_read(client, msg, GTP_ADDR_LENGTH + len) > 0)
+        if (gtp_i2c_read(client, msg, GTP_ADDR_LENGTH + len) > 0)
         {
             break;
         }
@@ -127,7 +127,7 @@ static u8 gup_clear_mix_flag(struct i2c_client *client)
 
     for (i = 0; i < 5; i++)
     {
-        if (gt811_i2c_write(client, buf, 3) > 0)
+        if (gtp_i2c_write(client, buf, 3) > 0)
         {
             break;
         }
@@ -180,7 +180,7 @@ static u8 gup_get_ic_fw_msg(struct i2c_client *client)
     buf[0] = 0x15;
     buf[1] = 0x22;
     buf[2] = 0x18;
-    ret =  gt811_i2c_write(client, buf, 3);
+    ret =  gtp_i2c_write(client, buf, 3);
     if (ret <= 0)
     {
         return fail;
@@ -222,7 +222,7 @@ static u8 gup_get_ic_fw_msg(struct i2c_client *client)
             GTP_INFO("If the check sum is still error, ");
             GTP_INFO("The IC will be updated by force.");
 
-            gt811_reset_guitar(10);
+            gtp_reset_guitar(10);
             continue;
             //msleep(100);
         }
@@ -252,18 +252,18 @@ s32 gup_enter_update_mode(struct i2c_client *client)
     msleep(5);
 
     //step 2
-    gt811_reset_guitar(100);
+    gtp_reset_guitar(100);
 
     for(retry=0;retry < 20; retry++)
     {
         //step 3
-        ret = gt811_i2c_write(client, inbuf, 2);   //Test I2C connection.
+        ret = gtp_i2c_write(client, inbuf, 2);   //Test I2C connection.
         if (ret > 0)
         {
             GTP_DEBUG("<Set update mode>I2C is OK!");
             //step 4
             msleep(100);
-            ret = gt811_i2c_read(client, inbuf, 3);
+            ret = gtp_i2c_read(client, inbuf, 3);
             if (ret > 0)
             {
                 GTP_DEBUG("The value of 0x00ff is 0x%02x", inbuf[2]);
@@ -556,7 +556,7 @@ static u8 gup_nvram_store(struct i2c_client *client)
     int i;
     u8 inbuf[3] = {REG_NVRCS >> 8, REG_NVRCS & 0xff, 0x18};
 
-    ret = gt811_i2c_read(client, inbuf, 3);
+    ret = gtp_i2c_read(client, inbuf, 3);
     if ( ret < 0 )
     {
         return fail;
@@ -572,7 +572,7 @@ static u8 gup_nvram_store(struct i2c_client *client)
 
     for ( i = 0 ; i < 300 ; i++ )
     {
-        ret = gt811_i2c_write(client, inbuf, 3);
+        ret = gtp_i2c_write(client, inbuf, 3);
         if ( ret > 0 )
             return success;
     }
@@ -585,7 +585,7 @@ static u8 gup_nvram_recall(struct i2c_client *client)
     int ret;
     u8 inbuf[3] = {REG_NVRCS >> 8, REG_NVRCS & 0xff, 0};
 
-    ret = gt811_i2c_read(client, inbuf, 3);
+    ret = gtp_i2c_read(client, inbuf, 3);
     if ( ret < 0 )
     {
         return fail;
@@ -597,7 +597,7 @@ static u8 gup_nvram_recall(struct i2c_client *client)
     }
 
     inbuf[2] = ( 1 << BIT_NVRAM_RECALL );        //recall command
-    ret = gt811_i2c_write(client , inbuf, 3);
+    ret = gtp_i2c_write(client , inbuf, 3);
 
     if (ret <= 0)
     {
@@ -637,7 +637,7 @@ static u8 gup_update_nvram(struct i2c_client *client, st_fw_head* fw_head, u8 *n
         w_buf[0] = st_addr >> 8;
         w_buf[1] = st_addr & 0xff;
         GTP_DEBUG("Write address:0x%02x%02x\tlength:%d", w_buf[0], w_buf[1], write_bytes);
-        ret =  gt811_i2c_write(client, w_buf, GTP_ADDR_LENGTH + write_bytes);
+        ret =  gtp_i2c_write(client, w_buf, GTP_ADDR_LENGTH + write_bytes);
         if (ret <= 0)
         {
             if (retry++ > 10)
@@ -655,10 +655,10 @@ static u8 gup_update_nvram(struct i2c_client *client, st_fw_head* fw_head, u8 *n
 /*            r_buf[0] = 0x14;
             r_buf[1] = 0x00;
             r_buf[2] = 0x80;
-            gt811_i2c_write(ts->client, r_buf, 3);
+            gtp_i2c_write(ts->client, r_buf, 3);
             r_buf[0] = 0x14;
             r_buf[1] = 0x00;
-            gt811_i2c_read(ts->client, r_buf, 3);
+            gtp_i2c_read(ts->client, r_buf, 3);
             GTP_DEBUG("I2CCS:0x%x", r_buf[2]);//*/
 
             r_buf[0] = w_buf[0];
@@ -666,7 +666,7 @@ static u8 gup_update_nvram(struct i2c_client *client, st_fw_head* fw_head, u8 *n
 
             for (i = 0; i < 10; i++)
             {
-                ret = gt811_i2c_read(client, r_buf, GTP_ADDR_LENGTH + write_bytes);
+                ret = gtp_i2c_read(client, r_buf, GTP_ADDR_LENGTH + write_bytes);
                 if (ret <= 0)
                 {
                     continue;
@@ -736,7 +736,7 @@ static u8 gup_update_firmware(struct i2c_client *client, st_fw_head* fw_head, u8
     buf[0] = 0x15;
     buf[1] = 0x22;
     buf[2] = 0x18;
-    ret =  gt811_i2c_write(client, buf, 3);
+    ret =  gtp_i2c_write(client, buf, 3);
     if (ret <= 0)
     {
         return fail;
@@ -753,13 +753,13 @@ static u8 gup_update_firmware(struct i2c_client *client, st_fw_head* fw_head, u8
         {
             tmp[0] = 0x4f;
             tmp[1] = 0x70;
-            gt811_i2c_read(client, tmp, 130);
+            gtp_i2c_read(client, tmp, 130);
 
             for (i = 0; i < 50; i++)
             {
                 buf[0] = 0x4f;
                 buf[1] = 0x70;
-                ret = gt811_i2c_read(client, buf, 130);
+                ret = gtp_i2c_read(client, buf, 130);
                 if (ret <= 0)
                 {
                     continue;
@@ -830,7 +830,7 @@ static u8 gup_update_firmware(struct i2c_client *client, st_fw_head* fw_head, u8
             buf[0] = 0x4f;
             buf[1] = 0xf3;
             memcpy(&buf[2], fw_head->chk_sum, sizeof(fw_head->chk_sum));
-            ret = gt811_i2c_write(client, buf, 5);
+            ret = gtp_i2c_write(client, buf, 5);
             if (ret <= 0)
             {
                 continue;
@@ -859,7 +859,7 @@ static u8 gup_update_firmware(struct i2c_client *client, st_fw_head* fw_head, u8
             buf[0] = 0x00;
             buf[1] = 0xff;
             buf[2] = 0x44;
-            ret = gt811_i2c_write(client, buf, 3);
+            ret = gtp_i2c_write(client, buf, 3);
             if (ret > 0)
             {
                 break;
@@ -936,7 +936,7 @@ s32 gup_update_proc(void *dir)
     if (dir != NULL)
     {
         gup_get_ic_fw_msg(guitar_client);
-        gt811_reset_guitar(10);
+        gtp_reset_guitar(10);
     }
     else
     {
@@ -1042,7 +1042,7 @@ s32 gup_update_proc(void *dir)
 
         for ( i = 0; i < 10; i++)
         {
-            ret = gt811_i2c_read(guitar_client, ic_nvram, GTP_ADDR_LENGTH + fw_head.lenth);
+            ret = gtp_i2c_read(guitar_client, ic_nvram, GTP_ADDR_LENGTH + fw_head.lenth);
             if (ret <= 0)
             {
                 continue;
@@ -1096,9 +1096,9 @@ s32 gup_update_proc(void *dir)
 
     //Reset guitar
     GTP_DEBUG("Reset IC and send config!");
-    gt811_reset_guitar(10);
+    gtp_reset_guitar(10);
 
-    ret = gt811_send_cfg(guitar_client);
+    ret = gtp_send_cfg(guitar_client);
     if (ret < 0)
     {
         GTP_ERROR("Send config data failed.");
@@ -1164,7 +1164,7 @@ u8 gup_init_update_proc(struct goodix_ts_data *ts)
         gup_leave_update_mode();
     }
 
-    gt811_reset_guitar(10);
+    gtp_reset_guitar(10);
 
     if (success == update_msg.fw_flag)
     {
