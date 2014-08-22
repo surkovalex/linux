@@ -23,6 +23,7 @@
 #include <linux/errno.h>
 #include <linux/interrupt.h>
 #include <linux/semaphore.h>
+#include <linux/delay.h>
 #include <linux/timer.h>
 #include <linux/kfifo.h>
 #include <linux/kthread.h>
@@ -1037,11 +1038,28 @@ static void init_pic_list(hevc_stru_t* hevc)
 		m_PIC[i].mpred_mv_wr_start_addr = hevc->work_space_buf->mpred_mv.buf_start + ((i * lcu_total)*MV_MEM_UNIT);
 		
 		if(hevc->use_cma_flag){
-		    m_PIC[i].cma_page_count = PAGE_ALIGN((mc_buffer_size_u_v_h<<16)*3)/PAGE_SIZE;
-        m_PIC[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, m_PIC[i].cma_page_count, 0);
-        m_PIC[i].mc_y_adr = page_to_phys(m_PIC[i].alloc_pages);
-		    m_PIC[i].mc_u_v_adr = m_PIC[i].mc_y_adr + ((mc_buffer_size_u_v_h<<16)<<1);
-        printk("allocate cma buffer[%d] (%d,%x,%x)\n", i, m_PIC[i].cma_page_count , (unsigned)m_PIC[i].alloc_pages, (unsigned)m_PIC[i].mc_y_adr);
+		    if((m_PIC[i].cma_page_count!=0) && (m_PIC[i].alloc_pages!=NULL) &&
+		        (m_PIC[i].cma_page_count != PAGE_ALIGN((mc_buffer_size_u_v_h<<16)*3)/PAGE_SIZE)){
+            dma_release_from_contiguous(cma_dev, m_PIC[i].alloc_pages, m_PIC[i].cma_page_count);
+            printk("release cma buffer[%d] (%d %x)\n", i, m_PIC[i].cma_page_count, (unsigned)m_PIC[i].alloc_pages);
+            m_PIC[i].alloc_pages=NULL;
+            m_PIC[i].cma_page_count=0;		        
+		    }
+		    if(m_PIC[i].alloc_pages == NULL){
+    		    m_PIC[i].cma_page_count = PAGE_ALIGN((mc_buffer_size_u_v_h<<16)*3)/PAGE_SIZE;
+            m_PIC[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, m_PIC[i].cma_page_count, 0);
+            if(m_PIC[i].alloc_pages == NULL){
+                printk("allocate cma buffer[%d] fail\n", i);
+                m_PIC[i].cma_page_count = 0;
+                break;
+            }
+            m_PIC[i].mc_y_adr = page_to_phys(m_PIC[i].alloc_pages);
+    		    m_PIC[i].mc_u_v_adr = m_PIC[i].mc_y_adr + ((mc_buffer_size_u_v_h<<16)<<1);
+            printk("allocate cma buffer[%d] (%d,%x,%x)\n", i, m_PIC[i].cma_page_count , (unsigned)m_PIC[i].alloc_pages, (unsigned)m_PIC[i].mc_y_adr);
+		    }
+		    else{
+            printk("reuse cma buffer[%d] (%d,%x,%x)\n", i, m_PIC[i].cma_page_count , (unsigned)m_PIC[i].alloc_pages, (unsigned)m_PIC[i].mc_y_adr);
+		    }
 		}
 		else{
 		    m_PIC[i].cma_page_count = 0;
@@ -2426,14 +2444,14 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
             PIC_t* pic;
             hevc->new_pic=1;
             /**/
-#if 0         
-            if(hevc->pic_list_init_flag == 0){
-                init_pic_list(hevc);
-                init_buf_spec(hevc);
-                hevc->pic_list_init_flag = 3;
+            if(use_cma == 0){
+                if(hevc->pic_list_init_flag == 0){
+                    init_pic_list(hevc);
+                    init_buf_spec(hevc);
+                    hevc->pic_list_init_flag = 3;
+                }
             }
-#endif            
-
+            
             if(debug&H265_DEBUG_BUFMGR_MORE) dump_pic_list(hevc);
             /* prev pic */
             if(hevc->curr_POC!=0){
@@ -2720,8 +2738,6 @@ static void hevc_local_init(void)
 {
     BuffInfo_t* cur_buf_info = NULL;
     memset(&rpm_param, 0, sizeof(rpm_param));
-    
-    uninit_pic_list(&gHevc);
     
     if (frame_width <= 1920 &&  frame_height <= 1088) {
         cur_buf_info = &amvh265_workbuff_spec[0]; //1080p work space
@@ -3379,7 +3395,7 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
                 get_frame_dur = true;
             }
 
-            if((rpm_param.p.slice_segment_address == 0)&&(hevc->pic_list_init_flag == 0)){
+            if(use_cma&&(rpm_param.p.slice_segment_address == 0)&&(hevc->pic_list_init_flag == 0)){
                 hevc->pic_w = rpm_param.p.pic_width_in_luma_samples;
                 hevc->pic_h = rpm_param.p.pic_height_in_luma_samples;
                 hevc->lcu_size        = 1<<(rpm_param.p.log2_min_coding_block_size_minus3+3+rpm_param.p.log2_diff_max_min_coding_block_size);
@@ -3542,12 +3558,16 @@ static int h265_task_handle(void *data)
 		int ret = 0;
     while (1)
     {
+        if(use_cma==0){
+            printk("ERROR: use_cma can not be changed dynamically\n");    
+        }
         ret = down_interruptible(&h265_sema);
         if((init_flag!=0) && (gHevc.pic_list_init_flag == 1)){
             init_pic_list(&gHevc);
             init_buf_spec(&gHevc);
             gHevc.pic_list_init_flag = 2;
             printk("set pic_list_init_flag to 2\n");
+            
             WRITE_VREG(HEVC_ASSIST_MBOX1_IRQ_REG, 0x1); 
         }
         
@@ -3745,9 +3765,11 @@ static s32 vh265_init(void)
 
     stat |= STAT_TIMER_ARM;
 
-    if(h265_task==NULL){
-        sema_init(&h265_sema,1);
-        h265_task = kthread_run(h265_task_handle, NULL, "kthread_h265");
+    if(use_cma){
+        if(h265_task==NULL){
+            sema_init(&h265_sema,1);
+            h265_task = kthread_run(h265_task_handle, NULL, "kthread_h265");
+        }
     }
     //stat |= STAT_KTHREAD;
 
@@ -3782,8 +3804,6 @@ static s32 vh265_init(void)
 static int vh265_stop(void)
 {
     init_flag = 0;
-    uninit_list = 1;
-    up(&h265_sema);
     
     if (stat & STAT_VDEC_RUN) {
         amhevc_stop();
@@ -3805,11 +3825,18 @@ static int vh265_stop(void)
         vf_unreg_provider(&vh265_vf_prov);
         stat &= ~STAT_VF_HOOK;
     }
-#if 0    
-    if (stat & STAT_KTHREAD){
-        kthread_stop(h265_task);
-        stat &= ~STAT_KTHREAD;
+
+    if(use_cma){
+        uninit_list = 1;
+        up(&h265_sema);
+        while(uninit_list){ //wait uninit complete
+            msleep(10);
+        }
     }
+#if 0    
+    if(h265_task)
+        kthread_stop(h265_task);
+    h265_task = NULL;
 #endif
     amhevc_disable();
 
@@ -3836,7 +3863,7 @@ static int amvdec_h265_probe(struct platform_device *pdev)
         amvh265_workbuff_spec[i].start_adr = mem->start;
     }
 
-    if(debug) printk("H.265 decoder mem resource 0x%x -- 0x%x\n", mem->start, mem->end + 1);
+    if(debug) printk("===H.265 decoder mem resource 0x%x -- 0x%x\n", mem->start, mem->end + 1);
 
     if (mem[1].start != 0) {
         memcpy(&vh265_amstream_dec_info, (void *)mem[1].start, sizeof(vh265_amstream_dec_info));
