@@ -2120,8 +2120,11 @@ static unsigned print_ivals=0;
 module_param(print_ivals, uint, 0644);
 MODULE_PARM_DESC(print_ivals, "print current intervals!!");
 
-//#define TEST_LATENCY
+#define TEST_LATENCY
 #ifdef TEST_LATENCY
+static unsigned print_latecny=0;
+module_param(print_latecny, uint, 0644);
+MODULE_PARM_DESC(print_latecny, "print current latency!!");
 static int total_latency = 0;
 static int total_latency_out = 0;
 static long long cur_time = 0;
@@ -2187,7 +2190,7 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 		}
 	}
 
-#ifdef USE_VDIN_PTS
+#if 0//def USE_VDIN_PTS
 	if(no_frame)
 		goto unlock;
 	if(frame_inittime == 1){
@@ -2211,10 +2214,14 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 			goto unlock;
 		frameInv_adjust = 0;
 		frameInv = 0;
-		do_gettimeofday( &thread_ts1);
+		//do_gettimeofday( &thread_ts1);
+		thread_ts1.tv_sec = vf->pts_us64& 0xFFFFFFFF;
+		thread_ts1.tv_usec = vf->pts;
 		frame_inittime = 0;
 	}else{
-		do_gettimeofday( &thread_ts2);
+		//do_gettimeofday( &thread_ts2);
+		thread_ts2.tv_sec = vf->pts_us64& 0xFFFFFFFF;
+		thread_ts2.tv_usec = vf->pts;
 		diff = thread_ts2.tv_sec - thread_ts1.tv_sec;
 		diff = diff*1000000 + thread_ts2.tv_usec - thread_ts1.tv_usec;
 		frameInv += diff;
@@ -2260,8 +2267,9 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 
 // test latency
 #ifdef TEST_LATENCY
-	do_gettimeofday(&test_time);
+	if(print_latecny)
 	{
+		do_gettimeofday(&test_time);
 		int timeNow64 = ((test_time.tv_sec & 0xFFFFFFFF)*1000*1000) + (test_time.tv_usec);
 		int timePts =  ((vf->pts_us64 & 0xFFFFFFFF)*1000*1000) + (vf->pts);
 		//printk("amlvideo2 in  num:%d delay:%d\n", timePts, (timeNow64 - timePts)/1000);
@@ -2300,8 +2308,9 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 
 // test latency
 #ifdef TEST_LATENCY
-	do_gettimeofday(&test_time);
+	if(print_latecny)
 	{
+		do_gettimeofday(&test_time);
 		int timeNow64_out = ((test_time.tv_sec & 0xFFFFFFFF)*1000*1000) + (test_time.tv_usec);
 		int timePts_out =  ((buf->vb.ts.tv_sec & 0xFFFFFFFF)*1000*1000) + (buf->vb.ts.tv_usec);
 		//printk("amlvideo2 out num:%d delay:%d\n", timePts_out, (timeNow64_out - timePts_out)/1000);
