@@ -88,16 +88,16 @@ static void aml_audio_stop_timer(struct aml_audio_private_data *p_aml_audio)
 
 static int hp_det_adc_value(struct aml_audio_private_data *p_aml_audio)
 {
-    int ret,hp_value,hp_val_sum,loop_num;
+    int ret,hp_value;
+    int hp_val_sum = 0;
+    int loop_num = 0;
     unsigned int mic_ret = 0;
-    hp_val_sum = 0;
-    loop_num = 0;
     
     while(loop_num < 8){
         hp_value = get_adc_sample(p_aml_audio->hp_adc_ch);
         if(hp_value <0){
             printk("hp detect get error adc value!\n");
-            continue;
+            return -1; //continue;
         }
         hp_val_sum += hp_value;
         loop_num ++;
@@ -139,7 +139,6 @@ static int aml_audio_hp_detect(struct aml_audio_private_data *p_aml_audio)
     while(loop_num < 3){
         ret = hp_det_adc_value(p_aml_audio);
         if(p_aml_audio->hp_last_state != ret){
-            loop_num = 0;
             msleep_interruptible(50);
             if(ret < 0){
                 ret = p_aml_audio->hp_last_state;
@@ -148,8 +147,8 @@ static int aml_audio_hp_detect(struct aml_audio_private_data *p_aml_audio)
             }
         }else{
             msleep_interruptible(50);
-            loop_num = loop_num + 1;
         }
+        loop_num = loop_num + 1;
     }
  
    // mutex_unlock(&p_aml_audio->lock);
@@ -225,7 +224,7 @@ static void aml_asoc_timer_func(unsigned long data)
     struct aml_audio_private_data *p_aml_audio = (struct aml_audio_private_data *)data;
     unsigned long delay = msecs_to_jiffies(150);
 
-    if(p_aml_audio->hp_det_status){
+    if(p_aml_audio->hp_det_status && !p_aml_audio->suspended){
         schedule_work(&p_aml_audio->work);
     }
     mod_timer(&p_aml_audio->timer, jiffies + delay);
@@ -410,10 +409,19 @@ static int aml_set_bias_level(struct snd_soc_card *card,
 #ifdef CONFIG_PM_SLEEP
 static int aml_suspend_pre(struct snd_soc_card *card)
 {
-    printk(KERN_DEBUG "enter %s\n", __func__);
-#if HP_DET
+    struct aml_audio_private_data * p_aml_audio;
 
-#endif
+    printk(KERN_INFO "enter %s\n", __func__);
+    p_aml_audio = snd_soc_card_get_drvdata(card);
+    if(!p_aml_audio->hp_disable){
+        /* stop timer */
+        mutex_lock(&p_aml_audio->lock);
+        p_aml_audio->suspended = true;
+        if (p_aml_audio->timer_en) {
+            aml_audio_stop_timer(p_aml_audio);
+        }
+        mutex_unlock(&p_aml_audio->lock);
+    }
     return 0;
 }
 
@@ -499,7 +507,19 @@ static int aml_resume_pre(struct snd_soc_card *card)
 
 static int aml_resume_post(struct snd_soc_card *card)
 {
-    printk(KERN_DEBUG "enter %s\n", __func__);
+    struct aml_audio_private_data * p_aml_audio;
+
+    printk(KERN_INFO "enter %s\n", __func__);
+    p_aml_audio = snd_soc_card_get_drvdata(card);
+    if(!p_aml_audio->hp_disable){
+        mutex_lock(&p_aml_audio->lock);
+        p_aml_audio->suspended = false;
+        if (!p_aml_audio->timer_en) {
+            aml_audio_start_timer(p_aml_audio, msecs_to_jiffies(100));
+        }
+        mutex_unlock(&p_aml_audio->lock);
+    }
+
     return 0;
 }
 #else
@@ -638,6 +658,7 @@ static int aml_asoc_init(struct snd_soc_pcm_runtime *rtd)
         p_aml_audio->timer.function = aml_asoc_timer_func;
         p_aml_audio->timer.data = (unsigned long)p_aml_audio;
         p_aml_audio->data= (void*)card;
+        p_aml_audio->suspended = false;
 
         INIT_WORK(&p_aml_audio->work, aml_asoc_work_func);
         mutex_init(&p_aml_audio->lock);
