@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-08-11a";//add mpeg2vdin for m8
+static char version_s[] = "2014-08-25a";//modfiy for bypass vscale skip
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -241,7 +241,11 @@ static int force_width = 0;
 static int force_height = 0;
 #ifdef NEW_DI_V1
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-static int di_vscale_skip_enable = 4;
+static int di_vscale_skip_enable = 7;
+/*
+bit[2]: enable bypass all for progressive
+bit[1:0]: enable bypass post when skip
+*/
 #else
 static int di_vscale_skip_enable = 3;
 #endif
