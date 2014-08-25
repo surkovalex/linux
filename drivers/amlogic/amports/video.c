@@ -132,6 +132,7 @@ static struct vframe_provider_s * osd_prov = NULL;
 
 //#define SLOW_SYNC_REPEAT
 //#define INTERLACE_FIELD_MATCH_PROCESS
+bool disable_slow_sync = 0;
 
 #ifdef INTERLACE_FIELD_MATCH_PROCESS
 #define FIELD_MATCH_THRESHOLD  10
@@ -630,6 +631,7 @@ atomic_t video_unreg_flag = ATOMIC_INIT(0);
 atomic_t video_pause_flag = ATOMIC_INIT(0);
 int trickmode_duration = 0;
 int trickmode_duration_count = 0;
+u32 trickmode_vpts = 0;
 /* last_playback_filename */
 char file_name[512];
 
@@ -1926,7 +1928,7 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
     }
 
     if ((trickmode_i == 1) || ((trickmode_fffb == 1))) {
-        if (((0 == atomic_read(&trickmode_framedone)) || (trickmode_i == 1)) && (trickmode_duration_count <= 0)) {
+        if (((0 == atomic_read(&trickmode_framedone)) || (trickmode_i == 1)) && (!to_notify_trick_wait) && (trickmode_duration_count <= 0)) {
             #if 0
             if (cur_vf) {
                 pts = timestamp_vpts_get() + trickmode_duration;
@@ -2475,6 +2477,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 
             vsync_toggle_frame(vf);
             if (trickmode_fffb == 1) {
+                trickmode_vpts = vf->pts;
 #ifdef CONFIG_VSYNC_RDMA
                 if((VSYNC_RD_MPEG_REG(DI_IF1_GEN_REG)&0x1)==0){
                     to_notify_trick_wait = true;
@@ -2509,7 +2512,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
              * you can adjust this array for any slow sync control as you want.
              * The playback can be smoother than previous method.
              */
-            if (duration_expire(cur_dispbuf, vf, frame_repeat_count * vsync_pts_inc) && timestamp_pcrscr_enable_state()) {
+            if (!disable_slow_sync && duration_expire(cur_dispbuf, vf, frame_repeat_count * vsync_pts_inc) && timestamp_pcrscr_enable_state()) {
                 amlog_mask(LOG_MASK_SLOWSYNC,
                            "slow sync toggle, frame_repeat_count = %d\n",
                            frame_repeat_count);
@@ -3059,6 +3062,7 @@ static void video_vf_unreg_provider(void)
 
     if (trickmode_fffb) {
         atomic_set(&trickmode_framedone, 0);
+        to_notify_trick_wait = false;
     }
 
     if (blackout|force_blackout) {
@@ -3507,12 +3511,17 @@ static long amvideo_ioctl(struct file *file,
             trickmode_i = 0;
             trickmode_fffb = 0;
         }
+        to_notify_trick_wait = false;
         atomic_set(&trickmode_framedone, 0);
         tsync_trick_mode(trickmode_fffb);
         break;
 
     case AMSTREAM_IOC_TRICK_STAT:
         put_user(atomic_read(&trickmode_framedone),(unsigned long __user *)arg);
+        break;
+
+    case AMSTREAM_IOC_GET_TRICK_VPTS:
+        put_user(trickmode_vpts, (unsigned long __user *)arg);
         break;
 
     case AMSTREAM_IOC_VPAUSE:
@@ -3727,6 +3736,13 @@ static long amvideo_ioctl(struct file *file,
 
     case AMSTREAM_IOC_GET_FREERUN_MODE:
         put_user(freerun_mode,(int *)arg);
+        break;
+
+    case AMSTREAM_IOC_DISABLE_SLOW_SYNC:
+        if (arg)
+            disable_slow_sync = 1;
+        else
+            disable_slow_sync = 0;
         break;
     /****************************************************************
     3d process ioctl
