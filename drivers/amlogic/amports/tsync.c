@@ -114,6 +114,7 @@ static int tsync_trickmode = 0;
 static int vpause_flag = 0;
 static int apause_flag = 0;
 static bool dobly_avsync_test = false;
+extern bool disable_slow_sync;
 
 
 /*
@@ -532,13 +533,26 @@ void tsync_avevent_locked(avevent_t event, u32 param)
                 timestamp_pcrscr_set(param);
             }
 #else
-            timestamp_pcrscr_set(param);
+            if (disable_slow_sync && (tsync_stat == TSYNC_STAT_PCRSCR_SETUP_NONE)) {
+                if (tsync_syncthresh && (tsync_mode == TSYNC_MODE_AMASTER)) {
+                    timestamp_pcrscr_set(param - VIDEO_HOLD_THRESHOLD);
+                } else {
+                    timestamp_pcrscr_set(param);
+                }
+            } else {
+                timestamp_pcrscr_set(param);
+            }
 #endif
 
+#ifdef TSYNC_SLOW_SYNC
+            if (disable_slow_sync && (tsync_stat == TSYNC_STAT_PCRSCR_SETUP_NONE))
+#endif
+            {
             tsync_stat = TSYNC_STAT_PCRSCR_SETUP_VIDEO;
             amlog_level(LOG_LEVEL_INFO, "vpts to scr, apts = 0x%x, vpts = 0x%x\n",
                         timestamp_apts_get(),
                         timestamp_vpts_get());
+            }
         }
 
         if (tsync_stat == TSYNC_STAT_PCRSCR_SETUP_AUDIO) {
