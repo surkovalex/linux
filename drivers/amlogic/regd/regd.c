@@ -638,6 +638,7 @@ static int regd_release(struct inode *inode, struct file *file)
 }
 
 
+unsigned int gammaR[256] = {0};
 static long regd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
@@ -764,18 +765,12 @@ static long regd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case IOC_WR_SGR_GAMMA:
 	{
 		int gamma_val = 0;
-		unsigned int *gammaR=NULL;
 		char parm[10];
-		gammaR=kmalloc(256*sizeof(unsigned int),GFP_KERNEL);
-		if(gammaR){
-			printk("kmalloc error\n");
-			return -EINVAL;
-		}
-		memset(gammaR,0,256*sizeof(unsigned int));
 		if(copy_from_user(&gamma_val, argp, sizeof(int))){
 			ret = EFAULT;
 			break;
 		}
+		memset(gammaR,0,256*sizeof(unsigned int));
 		printk("gamma_val = %x\n",gamma_val);
 		sprintf(parm, "%x", gamma_val);
 		sscanf(parm, "%x", gammaR);
@@ -784,26 +779,18 @@ static long regd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			gammaR[0] = 598;
 		}
 		set_lcd_gamma_table((u16 *)gammaR, H_SEL_R);
-		kfree(gammaR);
-		gammaR=NULL;
 		break;
 	}
 
 	case IOC_WR_SGG_GAMMA:
 	{
 		int gamma_val = 0;
-		unsigned int *gammaR=NULL;
 		char parm[10];
-		gammaR=kmalloc(256*sizeof(unsigned int),GFP_KERNEL);
-		if(gammaR){
-			printk("kmalloc error\n");
-			return -EINVAL;
-		}
-		memset(gammaR,0,256*sizeof(unsigned int));
 		if(copy_from_user(&gamma_val, argp, sizeof(int))){
 			ret = EFAULT;
 		break;
 		}
+		memset(gammaR,0,256*sizeof(unsigned int));
 		sprintf(parm, "%x", (int)gamma_val);
 		sscanf(parm, "%x", gammaR);
 		printk("sgg:%s --> %d\n",parm, gammaR[0]);
@@ -811,26 +798,18 @@ static long regd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			gammaR[0] = 598;
 		}
 		set_lcd_gamma_table((u16 *)gammaR, H_SEL_G);
-		kfree(gammaR);
-		gammaR=NULL;
 		break;
 	}
 
 	case IOC_WR_SGB_GAMMA:
 	{
 		int gamma_val = 0;
-		unsigned int *gammaR=NULL;
 		char parm[10];
-		gammaR=kmalloc(256*sizeof(unsigned int),GFP_KERNEL);
-		if(gammaR){
-			printk("kmalloc error\n");
-			return -EINVAL;
-		}
-		memset(gammaR,0,256*sizeof(unsigned int));
 		if(copy_from_user(&gamma_val, argp, sizeof(int))){
 			ret = EFAULT;
 			break;
 		}
+		memset(gammaR,0,256*sizeof(unsigned int));
 		sprintf(parm, "%x", (int)gamma_val);
 		sscanf(parm, "%x", gammaR);
 		printk("sgb:%s --> %d\n",parm, gammaR[0]);
@@ -838,8 +817,6 @@ static long regd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			gammaR[0] = 598;
 		}
 		set_lcd_gamma_table((u16 *)gammaR, H_SEL_B);
-		kfree(gammaR);
-		gammaR=NULL;
 		break;
 	}
 
