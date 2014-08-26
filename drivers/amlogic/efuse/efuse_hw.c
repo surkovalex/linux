@@ -17,8 +17,10 @@
 #include <mach/meson-secure.h>
 #endif
 
+#ifndef CONFIG_MESON_TRUSTZONE
 static void __efuse_write_byte( unsigned long addr, unsigned long data );
 static void __efuse_read_dword( unsigned long addr, unsigned long *data);
+#endif
 
 extern int efuseinfo_num;
 extern int efuse_active_version;
@@ -80,6 +82,7 @@ void __efuse_debug_init(void)
 #endif
 
 
+#ifndef CONFIG_MESON_TRUSTZONE
 static void __efuse_write_byte( unsigned long addr, unsigned long data )
 {
 	unsigned long auto_wr_is_enabled = 0;
@@ -202,21 +205,22 @@ static void __efuse_read_dword( unsigned long addr, unsigned long *data )
 
 	//printk(KERN_INFO "__efuse_read_dword: addr=%ld, data=0x%lx\n", addr, *data);
 }
+#endif
 
 static ssize_t __efuse_read( char *buf, size_t count, loff_t *ppos )
 {
 	unsigned long* contents = (unsigned long*)kzalloc(sizeof(unsigned long)*EFUSE_DWORDS, GFP_KERNEL);
 	unsigned pos = *ppos;
-	unsigned long *pdw;
-	char* tmp_p;
-
 #ifdef CONFIG_MESON_TRUSTZONE
 	struct efuse_hal_api_arg arg;
 	unsigned int retcnt;
 	int ret;
-#endif				
+#else
+	unsigned long *pdw;
+	char* tmp_p;
 	/*pos may not align to 4*/
 	unsigned int dwsize = (count + 3 +  pos%4) >> 2;	
+#endif
 	
 	if (!contents) {
 		printk(KERN_INFO "memory not enough\n"); 
@@ -277,13 +281,12 @@ static ssize_t __efuse_read( char *buf, size_t count, loff_t *ppos )
 static ssize_t __efuse_write(const char *buf, size_t count, loff_t *ppos )
 {
 	unsigned pos = *ppos;
-	//loff_t *readppos = ppos;
-	unsigned char *pc;	
-
 #ifdef CONFIG_MESON_TRUSTZONE
 	struct efuse_hal_api_arg arg;	
 	unsigned int retcnt;
 	int ret;
+#else
+	unsigned char *pc;	
 #endif
 
 	if (pos >= EFUSE_BYTES)
