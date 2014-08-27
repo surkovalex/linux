@@ -283,9 +283,8 @@ void root_func(){
         compatible = "amlogic,ion_dev";
         dev_name = "ion_dev";
         status = "ok";
-        share-memory-name = "ppmgr0";
-        share-memory-offset = <0>;
-        share-memory-size = <0x01000000>;
+	reserve-memory = <0x01000000>;
+	reserve-iomap = "true";
     };
 /// ***************************************************************************************
 ///	-	DISP&MM-Vout

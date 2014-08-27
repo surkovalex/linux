@@ -78,15 +78,21 @@ void root_func(){
 	memory{
 		device_type = "memory";
 		aml_reserved_start = <0x06000000>; /**reserved memory start */
-		aml_reserved_end = <0x05000000>;/**reserved memory end : dtb start for uboot*/
+		aml_reserved_end = <0x05000000>;/**reserved memory end */
 		phys_offset = <0x00200000>;
 		linux,total-memory = <0x3fe00000>;
+
         #address-cells = <1>;
         #size-cells = <1>;
 
         cma_0:region@0 {
            region_name = "cma_0";
-           reg = <0 0x02a00000>;
+           reg = <0 0x01800000>;
+           linux,contiguous-region;
+        };
+        cma_1:region@1 {
+           region_name = "cma_1";
+           reg = <0 0x01200000>;
            linux,contiguous-region;
         };
 	};
@@ -130,7 +136,7 @@ void root_func(){
 		compatible = "amlogic,mesonfb";
 		dev_name = "mesonfb";
 		status = "okay";
-        reserve-memory = <0x0900000  0x0b00000>;//9M+1M=10M
+        reserve-memory = <0x0900000  0x0b00000>;//9M+11M=20M 1280x720x4x3=0xa8c000,11MB,for HDMI output.Horizontal panel neend't it.
 	   	reserve-iomap = "true";
         vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
         display_size_default = <768 1024 768 3072 32>;//1024x768x4x3==0x0900000,9MB
@@ -201,8 +207,7 @@ void root_func(){
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
-		linux,contiguous-region = <&cma_0>;
-		reserve-iomap = "true";
+        linux,contiguous-region = <&cma_1>;
 	};
 /// ***************************************************************************************
 ///	-	DISP&MM-VDIN
@@ -233,7 +238,7 @@ void root_func(){
         compatible = "amlogic,vdin";
         dev_name = "vdin1";
         status = "ok";
-        reserve-memory = <0x01000000>;
+        reserve-memory = <0xa00000>;
 	miracast_size = <1920 1080>;//1920x1080x2x4=17M
 	reserve-iomap = "true";
         irq = <117>;
@@ -250,7 +255,7 @@ void root_func(){
 		compatible = "amlogic,amlvideo2";
 		dev_name = "amlvideo2.0";
 		status = "okay";
-		reserve-memory = <0x01800000>;
+		reserve-memory = <0x00800000>;
 		reserve-iomap = "true";
 	};
 
@@ -275,9 +280,8 @@ void root_func(){
         compatible = "amlogic,ion_dev";
         dev_name = "ion_dev";
         status = "ok";
-        share-memory-name = "ppmgr0";
-        share-memory-offset = <0>;
-        share-memory-size = <0x01000000>;//ion_dev use same buffer with ppmgr0
+	reserve-memory = <0x01000000>;
+	reserve-iomap = "true";
     };
 /// ***************************************************************************************
 ///	-	DISP&MM-Vout
