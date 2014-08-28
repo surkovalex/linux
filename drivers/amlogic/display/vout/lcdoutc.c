@@ -95,7 +95,6 @@ typedef struct {
 static lcd_dev_t *pDev = NULL;
 static struct class *gamma_debug_class = NULL;
 static Bool_t data_status = ON;
-static int bl_status = ON;
 
 static inline void lcd_mdelay(int n)
 {
@@ -145,17 +144,14 @@ static void lcd_setup_gamma_table(Lcd_Config_t *pConf, unsigned int rgb_flag)
 static void backlight_power_ctrl(Bool_t status)
 {
 	if( status == ON ){
-		if ((data_status == OFF) || (bl_status == ON))
+		if (data_status == OFF)
 			return;
 		bl_power_on(LCD_BL_FLAG);
 	}
 	else{
-		if (bl_status == OFF)
-			return;
 		bl_power_off(LCD_BL_FLAG);
 	}
 	lcd_print("%s(%s): data_status=%s\n", __FUNCTION__, (status ? "ON" : "OFF"), (data_status ? "ON" : "OFF"));
-	bl_status = status;
 }
 
 static int lcd_power_ctrl(Bool_t status)

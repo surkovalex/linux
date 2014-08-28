@@ -559,11 +559,6 @@ static void vclk_set_lcd(int lcd_type, unsigned long pll_reg, unsigned long vid_
 			WRITE_LCD_CBUS_REG_BITS(HHI_EDP_TX_PHY_CNTL0, edp_div0_sel, 20, 4);	//set edptx_phy_clk_div0
 			WRITE_LCD_CBUS_REG_BITS(HHI_EDP_TX_PHY_CNTL0, edp_div1_sel, 24, 3);	//set edptx_phy_clk_div1
 			WRITE_LCD_CBUS_REG_BITS(HHI_EDP_TX_PHY_CNTL0, 1, 5, 1);	//enable divider N, for vid_pll2_in
-			
-			if (IS_MESON_M8_CPU)
-				WRITE_LCD_CBUS_REG(HHI_EDP_APB_CLK_CNTL, (1 << 7) | (2 << 0));	//fclk_div5---fixed 510M, div to 170M, edp apb clk
-			else if (IS_MESON_M8M2_CPU)
-				WRITE_LCD_CBUS_REG(HHI_EDP_APB_CLK_CNTL_M8M2, (1 << 7) | (2 << 0));	//fclk_div5---fixed 510M, div to 170M, edp apb clk
 			break;
 		case LCD_DIGITAL_LVDS:
 		case LCD_DIGITAL_TTL:
@@ -602,6 +597,8 @@ static void vclk_set_lcd(int lcd_type, unsigned long pll_reg, unsigned long vid_
 	WRITE_LCD_CBUS_REG_BITS(HHI_VIID_CLK_CNTL, 0, 15, 1);  //release soft reset
 	udelay(5);
 	
+	if (IS_MESON_M8M2_CPU)
+		WRITE_LCD_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 3, 1);	//enable CTS_ENCL clk gate, new added in m8m2
 	spin_unlock_irqrestore(&lcd_clk_lock, flags);
 }
 
@@ -1118,6 +1115,8 @@ static void _disable_lcd_driver(Lcd_Config_t *pConf)
 
     WRITE_LCD_REG(ENCL_VIDEO_EN, 0);	//disable encl
 
+    if (IS_MESON_M8M2_CPU)
+        WRITE_LCD_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 0, 3, 1);	//disable CTS_ENCL clk gate, new added in m8m2
     WRITE_LCD_CBUS_REG_BITS(HHI_VIID_CLK_CNTL, 0, 0, 5);	//close vclk2 gate: 0x104b[4:0]
 
     WRITE_LCD_CBUS_REG_BITS(HHI_VIID_DIVIDER_CNTL, 0, 16, 1);	//close vid2_pll gate: 0x104c[16]
@@ -1751,6 +1750,12 @@ static void lcd_control_config_pre(Lcd_Config_t *pConf)
             set_mipi_dsi_control_config(pConf);
             break;
         case LCD_DIGITAL_EDP:
+            //prepare EDP_APB_CLK to access EDP registers
+            if (IS_MESON_M8_CPU)
+                WRITE_LCD_CBUS_REG(HHI_EDP_APB_CLK_CNTL, (1 << 7) | (2 << 0));      //fclk_div5---fixed 510M, div to 170M, edp apb clk
+            else if (IS_MESON_M8M2_CPU)
+                WRITE_LCD_CBUS_REG(HHI_EDP_APB_CLK_CNTL_M8M2, (1 << 7) | (2 << 0)); //fclk_div5---fixed 510M, div to 170M, edp apb clk
+
             ss_level = ((ss_level > 0) ? 1 : 0);
             select_edp_link_config(pConf);
             if (pConf->lcd_control.edp_config->link_adaptive == 1) {
