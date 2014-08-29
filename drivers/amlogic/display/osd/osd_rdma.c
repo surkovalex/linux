@@ -25,9 +25,10 @@
  */
  #include "osd_rdma.h"
 static rdma_table_item_t* rdma_table=NULL;
-static u32		   table_paddr=0; 
+static u32		   table_paddr=0;
 static u32		   rdma_enable=0;
 static u32		   item_count=0;
+static u32 		   rdma_debug = 0;
 
 static bool		osd_rdma_init_flat = false;
 static int ctrl_ahb_rd_burst_size = 3;
@@ -175,11 +176,24 @@ static int stop_rdma(char channel)
 	return 0;
 }
 
+int read_rdma_table(void)
+{
+	int rdma_count = 0;
+
+	if (rdma_debug){
+		for(rdma_count=0; rdma_count < item_count; rdma_count++){
+			printk("rdma_table addr is 0x%x, value is 0x%x\n", rdma_table[rdma_count].addr, rdma_table[rdma_count].val);
+		}
+	}
+	return 0;
+}
+EXPORT_SYMBOL(read_rdma_table);
+
 int reset_rdma(void)
 {
 	item_count=0;
+	memset(rdma_table, 0x0, TABLE_SIZE);
 	aml_write_reg32(END_ADDR,(table_paddr + item_count*8-1));
-	//start_rdma(RDMA_CHANNEL_INDEX);
 	return 0;
 }
 EXPORT_SYMBOL(reset_rdma);
@@ -233,3 +247,5 @@ module_param(item_count, uint, 0664);
 MODULE_PARM_DESC(table_paddr, "\n table_paddr\n");
 module_param(table_paddr, uint, 0664);
 
+MODULE_PARM_DESC(rdma_debug, "\n rdma_debug\n");
+module_param(rdma_debug, uint, 0664);
