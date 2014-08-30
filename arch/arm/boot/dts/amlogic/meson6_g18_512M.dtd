@@ -742,7 +742,7 @@ void root_func(){
 		bootloader:bootloader{
 			name = "bootloader";
 			offset = <0>;
-			size = <0x60000>;
+			size = <0x100000>;
 		};
 
 //$$ MATCH "Spi_nr-part-1_match" = <&ubootenv>
@@ -751,8 +751,8 @@ void root_func(){
 //$$ L2 PROP_U32 = "size"
 		ubootenv:ubootenv{
 			name = "ubootenv";
-      offset = <0x80000>;
-      size = <0x8000>;
+      offset = <0x100000>;
+      size = <0x10000>;
     };
 	};
 
