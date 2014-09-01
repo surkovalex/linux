@@ -52,7 +52,6 @@ static spinlock_t gamma_write_lock;
 static spinlock_t lcd_clk_lock;
 
 static Lcd_Config_t *lcd_Conf;
-static struct class *lcd_video_class = NULL;
 static unsigned char lcd_gamma_init_err = 0;
 
 void lcd_config_init(Lcd_Config_t *pConf);
@@ -1169,11 +1168,11 @@ static void lcd_test(unsigned num)
 		case 4:
 			WRITE_LCD_REG(ENCL_VIDEO_MODE_ADV, 0);
 			WRITE_LCD_REG(ENCL_TST_MDSEL, 0);
-			WRITE_LCD_REG(ENCL_TST_Y, 0x3ff);
+			WRITE_LCD_REG(ENCL_TST_Y, 0x200);
 			WRITE_LCD_REG(ENCL_TST_CB, 0x200);
 			WRITE_LCD_REG(ENCL_TST_CR, 0x200);
 			WRITE_LCD_REG(ENCL_TST_EN, 1);
-			printk("show test pattern 4: White\n");
+			printk("show test pattern 4: Gray\n");
 			break;
 		case 5:
 			WRITE_LCD_REG(ENCL_VIDEO_MODE_ADV, 0);
@@ -1240,18 +1239,12 @@ static struct class_attribute lcd_video_class_attrs[] = {
     __ATTR(vso,  S_IRUGO | S_IWUSR, lcd_video_vso_read, lcd_video_vso_write),
 };
 
-static int creat_lcd_video_attr(void)
+static int creat_lcd_video_attr(Lcd_Config_t *pConf)
 {
     int i;
 
-    lcd_video_class = class_create(THIS_MODULE, "lcd_video");
-    if(IS_ERR(lcd_video_class)) {
-        printk("create lcd_video class fail\n");
-        return -1;
-    }
-
     for(i=0;i<ARRAY_SIZE(lcd_video_class_attrs);i++) {
-        if (class_create_file(lcd_video_class, &lcd_video_class_attrs[i])) {
+        if (class_create_file(pConf->lcd_misc_ctrl.debug_class, &lcd_video_class_attrs[i])) {
             printk("create lcd_video attribute %s fail\n", lcd_video_class_attrs[i].attr.name);
         }
     }
@@ -1259,17 +1252,16 @@ static int creat_lcd_video_attr(void)
     return 0;
 }
 
-static int remove_lcd_video_attr(void)
+static int remove_lcd_video_attr(Lcd_Config_t *pConf)
 {
     int i;
 
-    if (lcd_video_class == NULL)
+    if (pConf->lcd_misc_ctrl.debug_class == NULL)
         return -1;
 
     for(i=0;i<ARRAY_SIZE(lcd_video_class_attrs);i++) {
-        class_remove_file(lcd_video_class, &lcd_video_class_attrs[i]);
+        class_remove_file(pConf->lcd_misc_ctrl.debug_class, &lcd_video_class_attrs[i]);
     }
-    class_destroy(lcd_video_class);
 
     return 0;
 }
@@ -1920,25 +1912,25 @@ void lcd_config_probe(Lcd_Config_t *pConf)
             dsi_probe(pConf);
             break;
         case LCD_DIGITAL_EDP:
-            edp_probe();
+            edp_probe(pConf);
             break;
         default:
             break;
     }
 
-    creat_lcd_video_attr();
+    creat_lcd_video_attr(pConf);
 }
 
-void lcd_config_remove(void)
+void lcd_config_remove(Lcd_Config_t *pConf)
 {
-    remove_lcd_video_attr();
+    remove_lcd_video_attr(pConf);
 
-    switch (lcd_Conf->lcd_basic.lcd_type) {
+    switch (pConf->lcd_basic.lcd_type) {
         case LCD_DIGITAL_MIPI:
-            dsi_remove();
+            dsi_remove(pConf);
             break;
         case LCD_DIGITAL_EDP:
-            edp_remove();
+            edp_remove(pConf);
             break;
         default:
             break;
