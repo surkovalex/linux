@@ -2142,8 +2142,8 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 	unsigned diff = 0;
 	bool no_frame = false;
 	vframe_t *vf = NULL;
-
 	unsigned long flags = 0;
+	int active_duration = 0;
 
 	dprintk(node->vid_dev, 1, "Thread tick\n");
 
@@ -2208,7 +2208,6 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 		}
 	}
 #else
-	int active_duration = 0;
 	if(frame_inittime == 1){
 	   	if(no_frame)
 			goto unlock;
@@ -2269,9 +2268,10 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 #ifdef TEST_LATENCY
 	if(print_latecny)
 	{
+		int timeNow64, timePts;
 		do_gettimeofday(&test_time);
-		int timeNow64 = ((test_time.tv_sec & 0xFFFFFFFF)*1000*1000) + (test_time.tv_usec);
-		int timePts =  ((vf->pts_us64 & 0xFFFFFFFF)*1000*1000) + (vf->pts);
+		timeNow64 = ((test_time.tv_sec & 0xFFFFFFFF)*1000*1000) + (test_time.tv_usec);
+		timePts =  ((vf->pts_us64 & 0xFFFFFFFF)*1000*1000) + (vf->pts);
 		//printk("amlvideo2 in  num:%d delay:%d\n", timePts, (timeNow64 - timePts)/1000);
 		if(cur_time == test_time.tv_sec){
 			total_latency += (int)((timeNow64 - timePts)/1000);
@@ -2310,9 +2310,10 @@ static int  amlvideo2_thread_tick(struct amlvideo2_fh *fh)
 #ifdef TEST_LATENCY
 	if(print_latecny)
 	{
+		int timeNow64_out, timePts_out;
 		do_gettimeofday(&test_time);
-		int timeNow64_out = ((test_time.tv_sec & 0xFFFFFFFF)*1000*1000) + (test_time.tv_usec);
-		int timePts_out =  ((buf->vb.ts.tv_sec & 0xFFFFFFFF)*1000*1000) + (buf->vb.ts.tv_usec);
+		timeNow64_out = ((test_time.tv_sec & 0xFFFFFFFF)*1000*1000) + (test_time.tv_usec);
+		timePts_out =  ((buf->vb.ts.tv_sec & 0xFFFFFFFF)*1000*1000) + (buf->vb.ts.tv_usec);
 		//printk("amlvideo2 out num:%d delay:%d\n", timePts_out, (timeNow64_out - timePts_out)/1000);
 		if(cur_time_out == test_time.tv_sec){
 			total_latency_out += (timeNow64_out - timePts_out)/1000;
