@@ -883,6 +883,7 @@ sdio{
 			gpio-vbus-power = "GPIOZ_1";
 			gpio-work-mask	= <1>; /**0: work on pulldown,1:work on pullup*/
 			charger_detect = <1>;
+			non_normal_usb_charger_detect_delay = <20000>;
 			status = "okay";
 		};
 	};

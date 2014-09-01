@@ -68,6 +68,8 @@ static const char * bc_name[]={
 #define T_VDMSRC_DIS	(20 + 5)
 #define T_VDMSRC_ON	40
 
+extern void charger_detect_work(void *_vp);
+
 int dwc_otg_charger_detect(dwc_otg_core_if_t * _core_if)
 {
 	usb_peri_reg_t *peri;
@@ -143,6 +145,22 @@ int dwc_otg_charger_detect(dwc_otg_core_if_t * _core_if)
 	return bc_mode;
 }
 
+void dwc_otg_non_normal_usb_charger_detect(dwc_otg_core_if_t * _core_if)
+{
+	usb_peri_reg_t *peri;
+	usb_adp_bc_data_t adp_bc;
+	int bc_mode = USB_BC_MODE_DISCONNECT;
+	int timeout_det;
+
+	peri = _core_if->usb_peri_reg;
+	adp_bc.d32 = DWC_READ_REG32(&peri->adp_bc);
+	if(adp_bc.b.device_sess_vld){
+		DWC_WORKQ_SCHEDULE(_core_if->wq_otg,
+					   charger_detect_work, _core_if,
+					   "Charger detect");
+	}
+	return ;
+}
 
 /**
  * Choose endpoint from ep arrays using usb_ep structure.
