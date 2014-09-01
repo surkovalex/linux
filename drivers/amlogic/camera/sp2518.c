@@ -102,8 +102,8 @@ static int vidio_set_fmt_ticks=0;
 
 extern int disable_sp2518;
 
-static int sp2518_h_active=1600;//800;
-static int sp2518_v_active=1198;//600;
+static int sp2518_h_active=1568;//800;
+static int sp2518_v_active=1176;//600;
 
 static int sp2518_have_open=0;
 static struct v4l2_fract sp2518_frmintervals_active = {
@@ -1690,8 +1690,8 @@ void SP2518_set_resolution(struct sp2518_device *dev,int height,int width)
 		mdelay(100);
                sp2518_frmintervals_active.denominator 	= 5;
                sp2518_frmintervals_active.numerator	= 1;
-		sp2518_h_active=1600;
-		sp2518_v_active=1198;//1200;
+		sp2518_h_active=1568;
+		sp2518_v_active=1176;//1200;
 		
 
 		}
@@ -2402,7 +2402,7 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 	para.hsync_phase = 0;
 	para.vsync_phase = 1;
 	para.hs_bp = 0;
-	para.vs_bp = 2;
+	para.vs_bp = 24;
 	para.cfmt = TVIN_YUV422;
         para.dfmt = TVIN_NV21;
 	para.scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;	
@@ -2698,8 +2698,8 @@ static int sp2518_close(struct file *file)
 	dprintk(dev, 1, "close called (dev=%s, users=%d)\n",
 		video_device_node_name(vdev), dev->users);
 #if 1
-	sp2518_h_active=1600;//800//zyy
-	sp2518_v_active=1198;//1200;//600
+	sp2518_h_active=1568;//800//zyy
+	sp2518_v_active=1176;//1200;//600
 	sp2518_qctrl[0].default_value=0;
 	sp2518_qctrl[1].default_value=4;
 	sp2518_qctrl[2].default_value=0;
