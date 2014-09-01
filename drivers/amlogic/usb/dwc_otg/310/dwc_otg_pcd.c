@@ -149,8 +149,6 @@ void dwc_otg_non_normal_usb_charger_detect(dwc_otg_core_if_t * _core_if)
 {
 	usb_peri_reg_t *peri;
 	usb_adp_bc_data_t adp_bc;
-	int bc_mode = USB_BC_MODE_DISCONNECT;
-	int timeout_det;
 
 	peri = _core_if->usb_peri_reg;
 	adp_bc.d32 = DWC_READ_REG32(&peri->adp_bc);
