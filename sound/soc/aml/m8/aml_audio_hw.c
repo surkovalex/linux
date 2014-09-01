@@ -96,11 +96,12 @@ int audio_clock_config_table[][13][2]=
 	{
 	//256
 #if OVERCLOCK == 0
-		{0x0004f880, (50-1)},  // 32
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8	
+		{0x0005cc08, (60-1)},  // 32	
 		{0x0005e965, (40-1)}, //44.1	
 		{0x0004c9a0,	(50-1)},	//48K
 #else		
+		{0x0005cc08, (30-1)},  // 32		
 		{0x0004cdf3, (42-1)},  // 44.1
 		{0x0007c4e6, (23-1)},  // 48
 #endif	
