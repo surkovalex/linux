@@ -1242,7 +1242,8 @@ static void vsync_toggle_frame(vframe_t *vf)
 
     if(vf->early_process_fun){
         if(vf->early_process_fun(vf->private_data, vf) == 1){
-            video_property_changed = true;
+            //video_property_changed = true;
+            first_picture = 1;
         }
     }
     else{
