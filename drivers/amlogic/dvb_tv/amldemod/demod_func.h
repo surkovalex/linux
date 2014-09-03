@@ -108,7 +108,7 @@ u32 dvbc_get_status(void);
 u32 dvbc_set_auto_symtrack(void);
 int  dvbc_timer_init(void);
 void  dvbc_timer_exit(void);
-void dvbc_cci_task(void);
+int dvbc_cci_task(void *);
 int dvbc_get_cci_task(void);
 void dvbc_create_cci_task(void);
 void dvbc_kill_cci_task(void);

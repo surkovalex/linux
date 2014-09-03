@@ -30,7 +30,7 @@ static void dvbc_cci_timer(unsigned long data)
 				 printk("\n");
 				 mdelay(500);
 			mod_timer(&mytimer, jiffies + 2*HZ);
-			return 0;
+			return;
 		}
 		 if(cciflag==1){
 		 	printk("[cci]cciflag is 1,wait 20\n");
@@ -114,7 +114,7 @@ static void dvbc_cci_timer(unsigned long data)
 
 		printk("[cci][%s]--------------------------\n",__func__);
 		mod_timer(&mytimer, jiffies + 2*HZ);
-		return 0;
+		return;
 //	}
 #endif
 }
@@ -132,7 +132,7 @@ void  dvbc_timer_exit(void)
 	del_timer(&mytimer);
 }
 
-void dvbc_cci_task(void)
+int dvbc_cci_task(void *data)
 {
 	int count;
 	int maxCCI_p,re,im,j,i,times,maxCCI,sum,sum1,reg_0xf0,tmp1,tmp,tmp2,reg_0xa8,reg_0xac;
@@ -264,7 +264,7 @@ void dvbc_create_cci_task(void)
 	{
 		printk ("[%s]Create cci kthread error!\n",__func__);
 		cci_task=NULL;
-		return 0;
+		return;
 	}
 	wake_up_process(cci_task);
 	printk ("[%s]Create cci kthread and wake up!\n",__func__);
