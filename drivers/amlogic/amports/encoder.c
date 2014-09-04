@@ -2380,8 +2380,10 @@ static struct resource memobj;
 #endif
 static int amvenc_avc_probe(struct platform_device *pdev)
 {
+#ifndef CONFIG_CMA
     struct resource *mem;
     int idx;
+#endif
 
     amlog_level(LOG_LEVEL_INFO, "amvenc_avc probe start.\n");
 
