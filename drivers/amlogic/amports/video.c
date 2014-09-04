@@ -2881,13 +2881,13 @@ static int alloc_keep_buffer(void)
             goto err1;
         }
         printk("alloc_keep_buffer keep_y_addr %x\n",(unsigned int)keep_y_addr);
-#ifndef CONFIG_GE2D_KEEP_FRAME
+
         keep_y_addr_remap = ioremap_nocache(virt_to_phys((u8 *)keep_y_addr), Y_BUFFER_SIZE);
         if (!keep_y_addr_remap) {
                 amlog_mask(LOG_MASK_KEEPBUF, "%s: failed to remap y addr\n", __FUNCTION__);
                 goto err2;
         }
-#endif		
+		
     }
 
     if(!keep_u_addr){
@@ -2897,13 +2897,13 @@ static int alloc_keep_buffer(void)
             goto err3;
         }
         printk("alloc_keep_buffer keep_u_addr %x\n",(unsigned int)keep_u_addr);
-#ifndef CONFIG_GE2D_KEEP_FRAME
+
         keep_u_addr_remap = ioremap_nocache(virt_to_phys((u8 *)keep_u_addr), U_BUFFER_SIZE);
         if (!keep_u_addr_remap) {
             amlog_mask(LOG_MASK_KEEPBUF, "%s: failed to remap u addr\n", __FUNCTION__);
             goto err4;
         }
-#endif		
+	
     }
 
     if(!keep_v_addr){
@@ -2913,38 +2913,38 @@ static int alloc_keep_buffer(void)
             goto err5;
         }
         printk("alloc_keep_buffer keep_v_addr %x\n",(unsigned int)keep_v_addr);
-#ifndef CONFIG_GE2D_KEEP_FRAME
+
         keep_v_addr_remap = ioremap_nocache(virt_to_phys((u8 *)keep_v_addr), U_BUFFER_SIZE);
         if (!keep_v_addr_remap) {
             amlog_mask(LOG_MASK_KEEPBUF, "%s: failed to remap v addr\n", __FUNCTION__);
             goto err6;
         }
-#endif		
+		
     }
     printk("yaddr=%lx,u_addr=%lx,v_addr=%lx\n",keep_y_addr,keep_u_addr,keep_v_addr);
     return 0;
 	
-#ifndef CONFIG_GE2D_KEEP_FRAME	
+
 err6:
-#endif
+
     free_pages(keep_v_addr, get_order(U_BUFFER_SIZE));
     keep_v_addr = 0;
 err5:
     if(keep_u_addr_remap)
         iounmap(keep_u_addr_remap);
     keep_u_addr_remap = NULL;
-#ifndef CONFIG_GE2D_KEEP_FRAME	
+	
 err4:
-#endif
+
     free_pages(keep_u_addr, get_order(U_BUFFER_SIZE));
     keep_u_addr = 0;
 err3:
     if(keep_y_addr_remap)
         iounmap(keep_y_addr_remap);
     keep_y_addr_remap = NULL;
-#ifndef CONFIG_GE2D_KEEP_FRAME		
+	
 err2:
-#endif
+
     free_pages(keep_y_addr, get_order(Y_BUFFER_SIZE));
     keep_y_addr = 0;
 err1:
@@ -3255,17 +3255,12 @@ unsigned int vf_keep_current(void)
     if (0 == (READ_VCBUS_REG(VPP_MISC + cur_dev->vpp_off) & VPP_VD1_POSTBLEND)) {
         return 0;
     }
-#ifdef CONFIG_GE2D_KEEP_FRAME
-   if (!keep_y_addr || (cur_dispbuf->type & VIDTYPE_VIU_NV21) != VIDTYPE_VIU_NV21) {
-    	//only support VIDTYPE_VIU_NV21...
-    	return -1;
-   }
-#else
-    if (!keep_y_addr_remap) {
+
+    if (!keep_y_addr ||!keep_y_addr_remap) {
         //if (alloc_keep_buffer())
         return -1;
     }
-#endif
+
     cur_index = READ_VCBUS_REG(VD1_IF0_CANVAS0 + cur_dev->viu_off);
     y_index = cur_index & 0xff;
     u_index = (cur_index >> 8) & 0xff;
