@@ -1279,12 +1279,16 @@ static int dvb_frontend_asyncshouldwakeup(struct dvb_frontend *fe)
 
 	dprintk ("%s:%d\n", __func__, fepriv->setfrontendasync_wakeup);
 
-	if (fepriv->setfrontendasync_wakeup) {
-		fepriv->setfrontendasync_wakeup = 0;
-		return 1;
-	}
+	return fepriv->setfrontendasync_wakeup;
+}
 
-	return 0;
+static int dvb_frontend_asyncnotbusy(struct dvb_frontend *fe)
+{
+	struct dvb_frontend_private *fepriv = fe->frontend_priv;
+
+	dprintk ("%s:%d\n", __func__, fepriv->setfrontendasync_needwakeup);
+
+	return !fepriv->setfrontendasync_needwakeup;
 }
 
 static void dvb_frontend_asyncwakeup(struct dvb_frontend *fe)
@@ -1305,6 +1309,11 @@ static void dvb_frontend_asyncwakeup(struct dvb_frontend *fe)
 	if(fepriv->setfrontendasync_needwakeup){
 		fepriv->setfrontendasync_wakeup = 1;
 		wake_up_interruptible(&fepriv->setfrontendasync_wait_queue);
+
+		up(&fepriv->sem);
+		wait_event_interruptible(fepriv->setfrontendasync_wait_queue,
+											dvb_frontend_asyncnotbusy(fe));
+		down_interruptible (&fepriv->sem);
 	}
 }
 
@@ -1321,6 +1330,7 @@ static int dvb_frontend_asyncpreproc(struct dvb_frontend *fe)
 	}
 
 	fepriv->setfrontendasync_needwakeup = 1;
+	fepriv->setfrontendasync_wakeup = 0;
 
 	dprintk ("%s:%d\n", __func__, fepriv->setfrontendasync_needwakeup);
 
@@ -1376,6 +1386,8 @@ static int dvb_frontend_asyncpostproc(struct dvb_frontend *fe, int asyncwait_ret
 		return -1;
 
 	fepriv->setfrontendasync_needwakeup = 0;
+
+	wake_up_interruptible(&fepriv->setfrontendasync_wait_queue);
 
 	if(asyncwait_ret > 0){
 		fepriv->setfrontendasync_interruptwakeup = 1;
