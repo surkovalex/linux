@@ -2145,12 +2145,19 @@ static int hdmitx_set_audmode(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_audio
             audio_N_para = 6272 * 2;
             break;
         case FS_48K:
-            audio_N_para = 6144 * 2;
+			audio_N_para = 6144 * 2;
+			if((hdmitx_device->cur_VIC == HDMI_1080p24) ||
+				(hdmitx_device->cur_VIC == HDMI_480p60) ||
+				(hdmitx_device->cur_VIC == HDMI_480p60_16x9) ||
+				(hdmitx_device->cur_VIC == HDMI_480i60) ||
+				(hdmitx_device->cur_VIC == HDMI_480i60_16x9) ){
+				audio_N_para = 6144 * 3;
+			}
             break;
         default:
             break;
     }
-
+	
     //TODO. Different audio type, maybe have different settings
     switch(audio_param->type){
         case CT_PCM:
