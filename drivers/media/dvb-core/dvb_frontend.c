@@ -1313,7 +1313,8 @@ static void dvb_frontend_asyncwakeup(struct dvb_frontend *fe)
 		up(&fepriv->sem);
 		wait_event_interruptible(fepriv->setfrontendasync_wait_queue,
 											dvb_frontend_asyncnotbusy(fe));
-		down_interruptible (&fepriv->sem);
+		if (down_interruptible (&fepriv->sem))
+			return ;
 	}
 }
 
