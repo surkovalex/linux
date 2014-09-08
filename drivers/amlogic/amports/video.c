@@ -595,10 +595,8 @@ static u32 disable_video = VIDEO_DISABLE_NONE;
 /* test screen*/
 static u32 test_screen = 0;
 
-#ifdef SLOW_SYNC_REPEAT
 /* video frame repeat count */
 static u32 frame_repeat_count = 0;
-#endif
 
 /* vout */
 static const vinfo_t *vinfo = NULL;
@@ -652,6 +650,7 @@ char file_name[512];
 #define FREERUN_NODUR   1   // freerun without duration
 #define FREERUN_DUR     2   // freerun with duration
 static u32 freerun_mode;
+static u32 slowsync_repeat_enable = 0;
 
 void set_freerun_mode(int mode){
 	freerun_mode = mode;
@@ -1899,7 +1898,6 @@ static int calc_hold_line(void)
     }
 }
 
-#ifdef SLOW_SYNC_REPEAT
 /* add a new function to check if current display frame has been
 displayed for its duration */
 static inline bool duration_expire(vframe_t *cur_vf, vframe_t *next_vf, u32 dur)
@@ -1927,7 +1925,6 @@ static inline bool duration_expire(vframe_t *cur_vf, vframe_t *next_vf, u32 dur)
         return false;
     }
 }
-#endif
 
 #define VPTS_RESET_THRO
 
@@ -2367,10 +2364,9 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 	    vpts_chase_counter--;
     }
 #endif
-
-#ifdef SLOW_SYNC_REPEAT
-    frame_repeat_count++;
-#endif
+    
+    if(slowsync_repeat_enable)
+        frame_repeat_count++;
 
     if(smooth_sync_enable){
         if(video_frame_repeat_count){
@@ -2437,9 +2433,8 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
             tsync_avevent_locked(VIDEO_START,
                           (vf->pts) ? vf->pts : timestamp_vpts_get());
 
-#ifdef SLOW_SYNC_REPEAT
-            frame_repeat_count = 0;
-#endif
+            if(slowsync_repeat_enable)
+                frame_repeat_count = 0;
 
         } else if ((cur_dispbuf == &vf_local) && (video_property_changed)) {
             if (!(blackout|force_blackout)) {
@@ -2516,10 +2511,8 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 #endif
                 break;
             }
-
-#ifdef SLOW_SYNC_REPEAT
-            frame_repeat_count = 0;
-#endif
+            if(slowsync_repeat_enable)
+                frame_repeat_count = 0;
             vf = video_vf_peek();
             if (!vf) {
                 next_peek_underflow++;
@@ -2529,42 +2522,41 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
                break;
            }
         } else {
-#ifdef SLOW_SYNC_REPEAT
             /* check if current frame's duration has expired, in this example
              * it compares current frame display duration with 1/1/1/1.5 frame duration
              * every 4 frames there will be one frame play longer than usual.
              * you can adjust this array for any slow sync control as you want.
              * The playback can be smoother than previous method.
              */
-            if (!disable_slow_sync && duration_expire(cur_dispbuf, vf, frame_repeat_count * vsync_pts_inc) && timestamp_pcrscr_enable_state()) {
-                amlog_mask(LOG_MASK_SLOWSYNC,
-                           "slow sync toggle, frame_repeat_count = %d\n",
-                           frame_repeat_count);
-                amlog_mask(LOG_MASK_SLOWSYNC,
-                           "system time = 0x%x, video time = 0x%x\n",
-                           timestamp_pcrscr_get(), timestamp_vpts_get());
-#if 0 //def CONFIG_VSYNC_RDMA
-                if(dispbuf_to_put){
-                    video_vf_put(dispbuf_to_put);
-                    dispbuf_to_put = NULL;
+            if(slowsync_repeat_enable)
+            {
+                if (duration_expire(cur_dispbuf, vf, frame_repeat_count * vsync_pts_inc) && timestamp_pcrscr_enable_state()) {
+                    amlog_mask(LOG_MASK_SLOWSYNC,
+                            "slow sync toggle, frame_repeat_count = %d\n",
+                            frame_repeat_count); 
+                    amlog_mask(LOG_MASK_SLOWSYNC, 
+                            "system time = 0x%x, video time = 0x%x\n",
+                             timestamp_pcrscr_get(), timestamp_vpts_get());
+                    vf = video_vf_get();
+                    if (!vf) break;
+                    vsync_toggle_frame(vf);
+                    frame_repeat_count = 0;
+
+                    vf = video_vf_peek();
+                } else if ((cur_dispbuf) && (cur_dispbuf->duration_pulldown > vsync_pts_inc)) {
+                    frame_count++; 
+                    cur_dispbuf->duration_pulldown -= PTS2DUR(vsync_pts_inc);
                 }
-#endif
-                vf = video_vf_get();
-                if (!vf) break;
-
-                vsync_toggle_frame(vf);
-                frame_repeat_count = 0;
-
-                vf = video_vf_peek();
-            } else
-#endif
-                if ((cur_dispbuf) && (cur_dispbuf->duration_pulldown > vsync_pts_inc)) {
+            }
+            else
+            {
+                if ((cur_dispbuf) && (cur_dispbuf->duration_pulldown > vsync_pts_inc)) { 
                     frame_count++;
                     cur_dispbuf->duration_pulldown -= PTS2DUR(vsync_pts_inc);
                 }
-
-                /* setting video display property in pause mode */
-                if (video_property_changed && cur_dispbuf) {
+            }
+                /*  setting video display property in pause mode */
+                if (video_property_changed && cur_dispbuf) { 
                     if (blackout|force_blackout) {
                         if (cur_dispbuf != &vf_local) {
                             vsync_toggle_frame(cur_dispbuf);
@@ -2573,9 +2565,10 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
                         vsync_toggle_frame(cur_dispbuf);
                     }
                 }
-
+                
             break;
         }
+
 #ifdef CONFIG_AM_VIDEO_LOG
         toggle_cnt++;
 #endif
@@ -4837,6 +4830,28 @@ static ssize_t video_vsync_pts_inc_upint_store(struct class *cla, struct class_a
     return count;
 }
 
+static ssize_t slowsync_repeat_enable_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "slowsync repeate enable = %d\n",slowsync_repeat_enable);
+}
+
+static ssize_t slowsync_repeat_enable_store(struct class *cla, struct class_attribute *attr, const char *buf,
+        size_t count)
+{
+    size_t r;
+    r = sscanf(buf, "%d", &slowsync_repeat_enable);
+
+    if(debug_flag){
+        printk("%s(%d)\n", __func__, slowsync_repeat_enable);
+    }
+
+    if (r != 1) {
+        return -EINVAL;
+    }
+
+    return count;
+}
+
 static ssize_t video_vsync_slow_factor_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
     return sprintf(buf, "%d\n", vsync_slow_factor);
@@ -5009,6 +5024,10 @@ static struct class_attribute amvideo_class_attrs[] = {
     __ATTR(stereo_scaler,
     S_IRUGO|S_IWUSR,NULL,
     video_3d_scale_store),
+    __ATTR(slowsync_repeat_enable,
+    S_IRUGO | S_IWUSR,
+    slowsync_repeat_enable_show,
+    slowsync_repeat_enable_store),
     __ATTR_RO(device_resolution),
     __ATTR_RO(frame_addr),
     __ATTR_RO(frame_canvas_width),
