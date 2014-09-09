@@ -399,6 +399,10 @@ static void i2s_copy(amaudio_t* amaudio)
 	if(audio_out_mode != 3){
 		valid_data = sw->level&~0x3f;
 		if(valid_data < INT_BLOCK) {
+			sw->wr = ((sw->rd+INT_BLOCK)%sw->size);
+			sw->wr /= INT_BLOCK;
+			sw->wr *= INT_BLOCK;
+			sw->level = INT_BLOCK;
 			goto EXIT;
 		}
 	}
@@ -406,6 +410,10 @@ static void i2s_copy(amaudio_t* amaudio)
 	if(audio_out_read_enable == 1){
 		valid_data = sw_read->level&~0x3f;
 		if(valid_data < INT_BLOCK) {
+			sw_read->wr = ((sw_read->rd+INT_BLOCK)%sw_read->size);
+			sw_read->wr /= INT_BLOCK;
+			sw_read->wr *= INT_BLOCK;
+			sw_read->level = INT_BLOCK;
 			goto EXIT;
 		}
 	}
