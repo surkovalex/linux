@@ -263,14 +263,12 @@ void remote_send_key(struct input_dev *dev, unsigned int scancode, unsigned int 
 			input_dbg("scancode is 0x%04x, invalid key is 0x%04x.\n", scancode, key_map[gp_remote->map_num][scancode]);
 			return;
 		}
-		if(type == 1 && scancode == 0x1a && key_map[gp_remote->map_num][scancode] == 0x0074){
-		    disable_irq(NEC_REMOTE_IRQ_NO);
-                }
-		if(type == 0 && scancode == 0x1a && key_map[gp_remote->map_num][scancode] == 0x0074){
-		    enable_irq(NEC_REMOTE_IRQ_NO);
-                }
-		input_event(dev, EV_KEY, key_map[gp_remote->map_num][scancode], type);
-		input_sync(dev);
+		if(type == 2 && scancode == 0x1a && key_map[gp_remote->map_num][scancode] == 0x0074){
+			return;
+		}else{
+			input_event(dev, EV_KEY, key_map[gp_remote->map_num][scancode], type);
+			input_sync(dev);
+		}
 		switch (type) {
 			case 0:
 				input_dbg("release ircode = 0x%02x, scancode = 0x%04x, maptable = %d \n", scancode, key_map[gp_remote->map_num][scancode],gp_remote->map_num);

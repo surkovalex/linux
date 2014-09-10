@@ -444,9 +444,8 @@ int remote_hw_reprot_key(struct remote *remote_data)
 #ifdef CONFIG_AML_HDMI_TX
        extern int rc_long_press_pwr_key;
 		if((remote_data->repeat_release_code == 0x1a) && (!cec_repeat)) {
-            rc_long_press_pwr_key = 1;
+            	    rc_long_press_pwr_key = 1;
 		    cec_repeat = 10;
-		    mdelay(20);
 		}
 		if(remote_data->repeat_release_code == 0x1a)
  		    cec_repeat--;
