@@ -381,8 +381,10 @@ static int _switch_gate(mod_type_t type, int flag)
 		PRINT_INFO("turn %s random_num_gen module\n", flag?"on":"off");
 		if (flag) {
 			__CLK_GATE_ON(RANDOM_NUM_GEN);
+			__CLK_GATE_ON(RANDOM_NUM_GEN1);
 		} else {
 			__CLK_GATE_OFF(RANDOM_NUM_GEN);
+			__CLK_GATE_OFF(RANDOM_NUM_GEN1);
 		}
 		break;
 	case MOD_ETHERNET:
