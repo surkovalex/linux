@@ -363,7 +363,8 @@ static void cvbs_performance_enhancement(tvmode_t mode)
 {
 	const reg_t *s;
 	unsigned int index = cvbs_performance_index;
-	unsigned int max = sizeof(tvregs_576cvbs_performance)/sizeof(reg_t*);
+	unsigned int max = 0;
+	unsigned int type = 0;
 
 	if( TVMODE_576CVBS != mode )
 		return ;
@@ -371,9 +372,30 @@ static void cvbs_performance_enhancement(tvmode_t mode)
 	if( 0xff == index )
 		return ;
 
-	index = (index>=max)?0:index;
-	printk("cvbs performance use table = %d\n", index);
-	s = tvregs_576cvbs_performance[index];
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+		if( IS_MESON_M8M2_CPU )
+		{
+			max = sizeof(tvregs_576cvbs_performance_m8m2)/sizeof(reg_t*);
+			index = (index>=max)?0:index;
+			s = tvregs_576cvbs_performance_m8m2[index];
+			type = 2;
+		}
+		else
+		{
+			max = sizeof(tvregs_576cvbs_performance_m8)/sizeof(reg_t*);
+			index = (index>=max)?0:index;
+			s = tvregs_576cvbs_performance_m8[index];
+			type = 0;
+		}
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
+		max = sizeof(tvregs_576cvbs_performance_m8b)/sizeof(reg_t*);
+		index = (index>=max)?0:index;
+		s = tvregs_576cvbs_performance_m8b[index];
+		type = 1;
+#endif
+
+	printk("cvbs performance type = %d, table = %d\n", type, index);
+
 	while (MREG_END_MARKER != s->reg)
 	{
     	setreg(s++);

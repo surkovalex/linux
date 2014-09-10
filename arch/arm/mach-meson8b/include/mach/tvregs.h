@@ -28,6 +28,7 @@
 #include "am_regs.h"
 #define MREG_END_MARKER 0xffff
 
+#define CONFIG_CVBS_PERFORMANCE_COMPATIBLITY_SUPPORT	1
 
 	#define VIDEO_CLOCK_HD_25	0x00101529
 	#define VIDEO_CLOCK_SD_25	0x00500a6c
@@ -58,6 +59,41 @@ static const  reg_t tvreg_vclk_hd[]={
     {P_HHI_VID_PLL_CNTL,VIDEO_CLOCK_HD_24},//HD,24
     {P_HHI_VID_PLL_CNTL,VIDEO_CLOCK_HD_25},//HD,25
 };
+
+#ifdef CONFIG_CVBS_PERFORMANCE_COMPATIBLITY_SUPPORT
+
+static const reg_t tvregs_576cvbs_china_sarft_m8b[] =
+{
+	{P_ENCI_YC_DELAY,				0x343  },
+	{MREG_END_MARKER,            	0      }
+};
+
+static const reg_t tvregs_576cvbs_china_telecom_m8b[] =
+{
+	{P_ENCI_YC_DELAY,				0x343   },
+	{P_ENCI_SYNC_ADJ,				0x8080	},
+    {P_ENCI_VIDEO_SAT,              0xfd	},
+    {P_VENC_VDAC_DAC0_FILT_CTRL1,   0xf850	},
+	{MREG_END_MARKER,            	0		}
+};
+
+static const reg_t tvregs_576cvbs_china_mobile_m8b[] =
+{
+	{P_ENCI_YC_DELAY,				0x343   },
+	{P_ENCI_SYNC_ADJ,				0x8080	},
+    {P_ENCI_VIDEO_SAT,              0xfd	},
+    {P_VENC_VDAC_DAC0_FILT_CTRL1,   0xf850	},
+	{MREG_END_MARKER,            	0       }
+};
+
+static const reg_t *tvregs_576cvbs_performance_m8b[] =
+{
+	tvregs_576cvbs_china_sarft_m8b,
+	tvregs_576cvbs_china_telecom_m8b,
+	tvregs_576cvbs_china_mobile_m8b
+};
+
+#endif
 
 static const  reg_t tvregs_720p[] = {
     {P_VENC_VDAC_SETTING,          0xff,  },

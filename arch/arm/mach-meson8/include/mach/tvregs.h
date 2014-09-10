@@ -62,12 +62,12 @@ static const  reg_t tvreg_vclk_hd[]={
 
 #ifdef CONFIG_CVBS_PERFORMANCE_COMPATIBLITY_SUPPORT
 
-static const reg_t tvregs_576cvbs_china_sarft[] =
+static const reg_t tvregs_576cvbs_china_sarft_m8[] =
 {
 	{MREG_END_MARKER,            	0      }
 };
 
-static const reg_t tvregs_576cvbs_china_telecom[] =
+static const reg_t tvregs_576cvbs_china_telecom_m8[] =
 {
 	{P_ENCI_SYNC_ADJ,				0x8060	},
     {P_ENCI_VIDEO_SAT,              0xfe	},
@@ -75,7 +75,7 @@ static const reg_t tvregs_576cvbs_china_telecom[] =
 	{MREG_END_MARKER,            	0		}
 };
 
-static const reg_t tvregs_576cvbs_china_mobile[] =
+static const reg_t tvregs_576cvbs_china_mobile_m8[] =
 {
 	{P_ENCI_SYNC_ADJ,				0x8060	},
     {P_ENCI_VIDEO_SAT,              0xfe	},
@@ -83,11 +83,42 @@ static const reg_t tvregs_576cvbs_china_mobile[] =
 	{MREG_END_MARKER,            	0       }
 };
 
-static const reg_t *tvregs_576cvbs_performance[] =
+static const reg_t *tvregs_576cvbs_performance_m8[] =
 {
-	tvregs_576cvbs_china_sarft,
-	tvregs_576cvbs_china_telecom,
-	tvregs_576cvbs_china_mobile
+	tvregs_576cvbs_china_sarft_m8,
+	tvregs_576cvbs_china_telecom_m8,
+	tvregs_576cvbs_china_mobile_m8
+};
+
+static const reg_t tvregs_576cvbs_china_sarft_m8m2[] =
+{
+	{P_ENCI_YC_DELAY,				0x343  },
+	{MREG_END_MARKER,            	0      }
+};
+
+static const reg_t tvregs_576cvbs_china_telecom_m8m2[] =
+{
+	{P_ENCI_YC_DELAY,				0x343   },
+	{P_ENCI_SYNC_ADJ,				0x8080	},
+    {P_ENCI_VIDEO_SAT,              0xfd	},
+    {P_VENC_VDAC_DAC0_FILT_CTRL1,   0xf850	},
+	{MREG_END_MARKER,            	0		}
+};
+
+static const reg_t tvregs_576cvbs_china_mobile_m8m2[] =
+{
+	{P_ENCI_YC_DELAY,				0x343   },
+	{P_ENCI_SYNC_ADJ,				0x8080	},
+    {P_ENCI_VIDEO_SAT,              0xfd	},
+    {P_VENC_VDAC_DAC0_FILT_CTRL1,   0xf850	},
+	{MREG_END_MARKER,            	0       }
+};
+
+static const reg_t *tvregs_576cvbs_performance_m8m2[] =
+{
+	tvregs_576cvbs_china_sarft_m8m2,
+	tvregs_576cvbs_china_telecom_m8m2,
+	tvregs_576cvbs_china_mobile_m8m2
 };
 
 #endif
