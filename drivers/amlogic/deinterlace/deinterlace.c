@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-08-25a";//modfiy for bypass vscale skip
+static char version_s[] = "2014-09-11a";//process p fields in interlace file as interlace
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -2264,15 +2264,20 @@ static void force_source_change(void)
 
 static unsigned char is_source_change(vframe_t* vframe)
 {
-#define VFRAME_FORMAT_MASK  (VIDTYPE_VIU_422|VIDTYPE_VIU_FIELD|VIDTYPE_VIU_SINGLE_PLANE|VIDTYPE_VIU_444|VIDTYPE_MVC)
+#define VFRAME_FORMAT_MASK  (VIDTYPE_VIU_422|VIDTYPE_VIU_SINGLE_PLANE|VIDTYPE_VIU_444|VIDTYPE_MVC)
     if(
         (di_pre_stru.cur_width!=vframe->width)||
         (di_pre_stru.cur_height!=vframe->height)||
-        ((di_pre_stru.cur_prog_flag!=is_progressive(vframe))&&(!is_handle_prog_frame_as_interlace(vframe)))||
         (((di_pre_stru.cur_inp_type&VFRAME_FORMAT_MASK)!=(vframe->type&VFRAME_FORMAT_MASK))&&(!is_handle_prog_frame_as_interlace(vframe)))||
         (di_pre_stru.cur_source_type != vframe->source_type)
         ){
+        /* video format changed */
         return 1;
+    }else if (((di_pre_stru.cur_prog_flag!=is_progressive(vframe))&&(!is_handle_prog_frame_as_interlace(vframe)))||
+    	((di_pre_stru.cur_inp_type&VIDTYPE_VIU_FIELD)!=(vframe->type&VIDTYPE_VIU_FIELD))
+    	){
+    	/* just scan mode changed */
+    	return 2;
     }
     return 0;
 }
@@ -3814,6 +3819,7 @@ static unsigned char pre_de_buf_config(void)
     di_buf_t *di_buf = NULL;
     vframe_t* vframe;
     int i, di_linked_buf_idx = -1;
+    unsigned char change_type = 0;
 
     if((queue_empty(QUEUE_IN_FREE)&&(di_pre_stru.process_count==0))||
         queue_empty(QUEUE_LOCAL_FREE)){
@@ -3945,8 +3951,9 @@ static unsigned char pre_de_buf_config(void)
         di_buf->seq = di_pre_stru.in_seq;
         di_pre_stru.in_seq++;
         queue_out(di_buf);
-
-        if(is_source_change(vframe)){ /* source change*/
+        change_type = is_source_change(vframe);
+        /* source change, when i mix p,force p as i*/
+        if(change_type == 1 || (change_type == 2 && di_pre_stru.cur_prog_flag == 1)){ 
             if(di_pre_stru.di_mem_buf_dup_p){
             	/*avoid only 2 i field then p field*/
             	if((di_pre_stru.cur_prog_flag == 0) && use_2_interlace_buff)
@@ -4025,6 +4032,15 @@ static unsigned char pre_de_buf_config(void)
                         return 0;
                     }
                 }
+                /* process p fields in i source as interlace*/
+                if((di_buf->vframe->type & VIDTYPE_TYPEMASK) == VIDTYPE_PROGRESSIVE){
+               	    if((di_pre_stru.cur_inp_type & VIDTYPE_TYPEMASK) == VIDTYPE_INTERLACE_TOP){
+                        di_buf->vframe->type|=VIDTYPE_INTERLACE_BOTTOM;
+                }
+                    else{
+                        di_buf->vframe->type|=VIDTYPE_INTERLACE_TOP;
+                    }
+                }
             }
                 else{
                     di_pre_stru.same_field_source_flag=0;
@@ -4087,7 +4103,7 @@ static unsigned char pre_de_buf_config(void)
 #endif
                 return 0;
             }
-            else if(is_progressive(vframe)){
+            else if(is_progressive(di_buf->vframe)){
                 if(is_handle_prog_frame_as_interlace(vframe)&&(is_progressive(vframe))){
                     di_buf_t* di_buf_tmp = NULL;
                     vframe_in[di_buf->index] = NULL;
