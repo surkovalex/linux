@@ -1097,6 +1097,15 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
 /******************************
 *  hdmitx kernel task
 *******************************/
+int tv_audio_support(int type, rx_cap_t * pRXCap)
+{
+    int i, audio_check = 0;
+    for(i = 0; i < pRXCap->AUD_count; i++){
+        if(pRXCap->RxAudioCap[i].audio_format_code == type)
+        audio_check = 1;
+    }
+    return audio_check;
+}
 
 static int hdmi_task_handle(void *data)
 {
@@ -1151,7 +1160,8 @@ wait:
             }
 // Check audio status
 #ifndef CONFIG_AML_HDMI_TX_HDCP
-            if((hdmitx_device->cur_VIC != HDMI_Unkown) && (!(hdmitx_device->HWOp.GetState(hdmitx_device, STAT_AUDIO_PACK, 0)))) {
+            if((hdmitx_device->cur_VIC != HDMI_Unkown) && (!(hdmitx_device->HWOp.GetState(hdmitx_device, STAT_AUDIO_PACK, 0)))
+            	 && (tv_audio_support(hdmitx_device->cur_audio_param.type, &hdmitx_device->RXCap))) {
                 hdmitx_device->HWOp.CntlConfig(hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_UNMUTE);
             }
 #endif
