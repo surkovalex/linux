@@ -6957,9 +6957,9 @@ static int di_probe(struct platform_device *pdev)
     int r, i;
     struct resource *mem;
     int buf_num_avail;
-    pr_dbg("di_probe\n");
     const void*name;
     int offset,size;
+    pr_dbg("di_probe\n");
     vout_register_client(&display_mode_notifier_nb_v);
 
     memset(&di_post_stru, 0, sizeof(di_post_stru));
