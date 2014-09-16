@@ -912,7 +912,7 @@ void osd_setup(struct osd_ctl_s *osd_ctl,
 	pan_data.y_start=yoffset;
 	disp_data.x_start=disp_start_x;
 	disp_data.y_start=disp_start_y;
-	amlog_level(LOG_LEVEL_HIGH,"!!!!!! call osd_setup:%d\n",yoffset);
+
 	if(likely(osd_hw.free_scale_enable[OSD1] && index==OSD1))
 	{
 		if(!osd_hw.free_scale_mode[OSD1]){
@@ -1697,12 +1697,9 @@ void osd_pan_display_fence(osd_fence_map_t *fence_map)
 	u32 index = fence_map->fb_index;
 	u32 xoffset = fence_map->xoffset;
 	u32 yoffset = fence_map->yoffset;
-#if defined(CONFIG_FB_OSD2_CURSOR)
-	if (index >= 1)
-#else
+
 	if (index >= 2)
-#endif
-	return;
+		return;
 
 	if(timeline_created) //out fence created success.
 	{
