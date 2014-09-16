@@ -51,7 +51,7 @@
 #include <linux/amlogic/amlog.h>
 #include <linux/amlogic/logo/logo_dev.h>
 #include <linux/amlogic/logo/logo_dev_osd.h>
-#include <osd_sync.h>
+#include "osd_sync.h"
 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
