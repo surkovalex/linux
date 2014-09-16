@@ -153,7 +153,7 @@ void root_func(){
 	continuemem{
                 compatible = "amlogic,contimuemem";
                 dev_name = "contimuemem";
-                reserve-memory = <0x05800000>; // 88M deinterlace+vdec
+                reserve-memory = <0x06100000>; // 88M deinterlace+vdec
 	};
 
 	
