@@ -3,12 +3,14 @@
 #include <linux/amlogic/osd/osd_hw.h>
 #include <linux/amlogic/amports/vframe_provider.h>
 #include <plat/fiq_bridge.h>
+#include <linux/list.h>
 
 /************************************************************************
 **
 **	macro  define  part
 **
 **************************************************************************/
+#define MAX_BUF_NUM	 3  /*fence relative*/
 #define	LEFT		0
 #define	RIGHT		1
 #define	OSD_RELATIVE_BITS				0x33370
@@ -110,6 +112,33 @@ typedef struct{
 	u32  on_off;
 	u32  angle;
 }osd_rotate_t;
+
+//define osd fence map .
+typedef struct{
+	u32  xoffset;
+	u32  yoffset;
+	u32  yres;
+	s32  in_fd;
+	s32  out_fd;
+	u32  val;
+	struct sync_fence *in_fence;
+	struct files_struct * files;
+}osd_fen_map_t;
+
+typedef struct {
+	struct list_head list;
+
+	u32  fb_index;
+	u32  buf_num;
+	u32  xoffset;
+	u32  yoffset;
+	u32  yres;
+	s32  in_fd;
+	s32  out_fd;
+	u32  val;
+	struct sync_fence *in_fence;
+	struct files_struct * files;
+}osd_fence_map_t;
 
 typedef  pandata_t  dispdata_t;
 

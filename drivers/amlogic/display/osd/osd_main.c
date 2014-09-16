@@ -51,6 +51,9 @@
 #include <linux/amlogic/amlog.h>
 #include <linux/amlogic/logo/logo_dev.h>
 #include <linux/amlogic/logo/logo_dev_osd.h>
+#include <osd_sync.h>
+
+
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 static struct early_suspend early_suspend;
@@ -283,6 +286,8 @@ osd_ioctl(struct fb_info *info, unsigned int cmd,
 	 u32  block_mode;
         unsigned long  ret;
 	 u32  flush_rate;
+	fb_sync_request_t  sync_request;
+
 
     	switch (cmd)
   	{
@@ -298,6 +303,11 @@ osd_ioctl(struct fb_info *info, unsigned int cmd,
 		case FBIOPUT_OSD_SCALE_AXIS:
 			ret=copy_from_user(&osd_axis, argp, 4 * sizeof(s32));
 			break;
+		case FBIOPUT_OSD_SYNC_ADD:
+			ret=copy_from_user(&sync_request,argp,sizeof(fb_sync_request_t));
+			//printk("osd_mai request offset:%d\n", sync_request.offset);
+			break;
+		case FBIO_WAITFORVSYNC:
 		case FBIOGET_OSD_SCALE_AXIS:
 		case FBIOPUT_OSD_ORDER:
 		case FBIOGET_OSD_ORDER:
@@ -458,13 +468,24 @@ osd_ioctl(struct fb_info *info, unsigned int cmd,
 		case FBIOPUT_OSD_WINDOW_AXIS:
 			osddev_set_window_axis(info->node, osd_dst_axis[0], osd_dst_axis[1], osd_dst_axis[2], osd_dst_axis[3]);
 			break;
+		 case FBIOPUT_OSD_SYNC_ADD:
+		 	sync_request.out_fen_fd=osddev_sync_request(info, sync_request.xoffset,sync_request.yoffset,sync_request.in_fen_fd);
+			ret=copy_to_user(argp, &sync_request, sizeof(fb_sync_request_t));
+			if(sync_request.out_fen_fd  <0 ) // fence create fail.
+			ret=-1;
+			break;
+		case FBIO_WAITFORVSYNC:
+			osddev_wait_for_vsync();
+			ret=1;
+			ret=copy_to_user(argp,&ret,sizeof(u32));
+
 		default:
 			break;
     	}
 
    	mutex_unlock(&fbdev->lock);
 	
-	return  0;
+	return  ret;
 }
 static int osd_open(struct fb_info *info, int arg)
 {
@@ -1806,7 +1827,11 @@ osd_probe(struct platform_device *pdev)
 		set_default_display_axis(&fbdev->fb_info->var,&fbdev->osd_ctl,vinfo);
 		osd_check_var(var, fbi);
     		register_framebuffer(fbi);
-		if(NULL==init_logo_obj )//if we have init a logo object ,then no need to setup hardware . 
+		if(index == OSD0 && init_logo_obj != NULL)
+		{
+			osddev_set(fbdev);
+		}
+		else if(NULL==init_logo_obj)//if we have init a logo object ,then no need to setup hardware .
 		{
 			osddev_set(fbdev);
 		}
