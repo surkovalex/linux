@@ -1787,7 +1787,7 @@ osd_probe(struct platform_device *pdev)
 				}
 			}
 			amlog_level(LOG_LEVEL_HIGH,"---------------clear framebuffer%d memory  \r\n",index);
-			memset((char*)fbdev->fb_mem_vaddr, 0x80, fbdev->fb_len);
+			memset((char*)fbdev->fb_mem_vaddr, 0x00, fbdev->fb_len);
 		}
 
 		if (index == OSD0){
