@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-09-11a";//process p fields in interlace file as interlace
+static char version_s[] = "2014-09-18a";//set drop count to 1 for tv channel
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -281,7 +281,7 @@ static bool use_2_interlace_buff = false;
 #endif
 static int input2pre_buf_miss_count = 0;
 static int input2pre_proc_miss_count = 0;
-static int input2pre_throw_count = 6;
+static int input2pre_throw_count = 1;
 
 #ifdef NEW_DI_V1
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
