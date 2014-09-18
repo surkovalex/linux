@@ -808,14 +808,14 @@ static int gpiod_export(struct gpio_desc *desc, bool direction_may_change)
 		if (status)
 			goto fail_unregister_device;
 	}
-
+#if 0
 	if (gpiod_to_irq(desc) >= 0 && (direction_may_change ||
 				       !test_bit(FLAG_IS_OUT, &desc->flags))) {
 		status = device_create_file(dev, &dev_attr_edge);
 		if (status)
 			goto fail_unregister_device;
 	}
-
+#endif
 	set_bit(FLAG_EXPORT, &desc->flags);
 	mutex_unlock(&sysfs_lock);
 	return 0;
