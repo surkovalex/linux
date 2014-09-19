@@ -131,12 +131,12 @@ void root_func(){
 		compatible = "amlogic,mesonfb";
 		dev_name = "mesonfb";
 		status = "okay";
-		reserve-memory = <0x00b00000 0x00100000>;
+		reserve-memory = <0x00800000 0x00100000>;
 		reserve-iomap = "true";
 	        vmode = <3>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
 		scale_mode = <1>; /*0:default 1:new*/
 		4k2k_fb = <0>;
-	        display_size_default = <1280 720 1280 2160 32>;  // osd0:8M, osd1:1m  1280*720*4*3 = 11,059,200
+	        display_size_default = <1280 720 1280 1440 32>;  // osd0:8M, osd1:1m  1280*720*4*3 = 11,059,200
 	};
 
 //$$ DEVICE="deinterlace"
@@ -159,7 +159,7 @@ void root_func(){
 		compatible = "amlogic,mesonstream";
 		dev_name = "mesonstream.0";
 		status = "okay";
-		reserve-memory = <0x00a00000>;//10M,you can use 8M if memory isn't enough
+		reserve-memory = <0x00800000>;//10M,you can use 8M if memory isn't enough
 		reserve-iomap = "true";
 	};
 
