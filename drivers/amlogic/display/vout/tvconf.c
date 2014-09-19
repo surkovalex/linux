@@ -653,7 +653,7 @@ static __exit void tv_exit_module(void)
 	amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"exit tv module\r\n");
 }
 
-#if ((defined CONFIG_ARCH_MESON8))
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 extern void cvbs_config_vdac(unsigned int flag, unsigned int cfg);
 
 static int __init vdac_config_bootargs_setup(char* line)

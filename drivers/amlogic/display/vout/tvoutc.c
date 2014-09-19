@@ -287,7 +287,7 @@ static int uboot_display_already(tvmode_t mode)
     */
 }
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 static unsigned int vdac_cfg_valid = 0, vdac_cfg_value = 0;
 static unsigned int cvbs_get_trimming_version(unsigned int flag)
 {
@@ -449,7 +449,7 @@ int tvoutc_setmode(tvmode_t mode)
         }
     }
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 	// for hdmi mode, disable HPLL as soon as possible
 	if( (mode==TVMODE_480I) || (mode==TVMODE_480P) ||
 		(mode==TVMODE_576I) || (mode==TVMODE_576P) ||
@@ -465,6 +465,7 @@ int tvoutc_setmode(tvmode_t mode)
 
     cvbs_cntl_output(0);
 #endif
+
     while (MREG_END_MARKER != s->reg)
         setreg(s++);
     printk("%s[%d]\n", __func__, __LINE__);
@@ -566,7 +567,7 @@ printk(" clk_util_clk_msr 29 = %d\n", clk_util_clk_msr(29));
 	}
 #endif
 
-#if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
     if( (mode==TVMODE_480CVBS) || (mode==TVMODE_576CVBS) )
     {
         msleep(1000);
