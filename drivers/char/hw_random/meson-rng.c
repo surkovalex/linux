@@ -57,6 +57,11 @@ static int meson_read(struct hwrng *rng, void *buf,
 
 	pm_runtime_get_sync(meson_rng->dev);
 
+	// this will cause additional disturbances
+	aml_read_reg32(P_VDIN_ASFIFO_CTRL2);
+	aml_read_reg32(P_VDIN_MATRIX_CTRL);
+	aml_read_reg32(P_PAD_PULL_UP_REG5);
+
 	// 'max' minimum is 32, so this is safe
 	data[0] = aml_read_reg32(P_RAND64_ADDR0);
 	data[1] = aml_read_reg32(P_RAND64_ADDR1);
@@ -113,6 +118,13 @@ static int meson_rng_runtime_resume(struct device *dev)
 	print_state("b resu");
 	switch_mod_gate_by_type(MOD_RANDOM_NUM_GEN, 1);
 	print_state("a resu");
+
+	// Enable the ring oscillator
+	// NOTE:  CBUS 0x207f bit[0] = enable
+	// NOTE:  CBUS 0x207f bit[1] = high-frequency mode.
+	//      Setting bit[1]=1 may change the randomness even more
+	aml_set_reg32_mask(P_AM_RING_OSC_REG0, (1 << 0) | (1 << 1));
+
 	return 0;
 }
 #endif
