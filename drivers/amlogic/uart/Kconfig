@@ -17,3 +17,4 @@ config AM_UART_CONSOLE
 	default y
 	help
 		Support for running a console on the Amlogic serial
+source "drivers/amlogic/uart/gps_um220/Kconfig"
