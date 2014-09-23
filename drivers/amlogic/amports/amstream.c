@@ -2149,9 +2149,15 @@ static int  amstream_probe(struct platform_device *pdev)
         bufs[BUF_TYPE_AUDIO].buf_size = DEFAULT_AUDIO_BUFFER_SIZE;
         bufs[BUF_TYPE_AUDIO].flag |= BUF_FLAG_IOMEM;
 
+#if 0
         bufs[BUF_TYPE_SUBTITLE].buf_start = res->start + resource_size(res) - DEFAULT_SUBTITLE_BUFFER_SIZE;
         bufs[BUF_TYPE_SUBTITLE].buf_size = DEFAULT_SUBTITLE_BUFFER_SIZE;
         bufs[BUF_TYPE_SUBTITLE].flag = BUF_FLAG_IOMEM;
+#endif
+        if (stbuf_change_size(&bufs[BUF_TYPE_SUBTITLE], DEFAULT_SUBTITLE_BUFFER_SIZE) != 0) {
+            r = (-ENOMEM);
+            goto error4;
+        }
     }
 
     if (HAS_HEVC_VDEC) {
