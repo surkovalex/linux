@@ -73,11 +73,11 @@ static int smsc_phy_config_init(struct phy_device *phydev)
 		return rc;
 
 	/* Enable energy detect mode for this SMSC Transceivers */
-	rc = phy_write(phydev, MII_LAN83C185_CTRL_STATUS,
+/*	rc = phy_write(phydev, MII_LAN83C185_CTRL_STATUS,
 		       rc | MII_LAN83C185_EDPWRDOWN);
 	if (rc < 0)
 		return rc;
-
+*/
 	return smsc_phy_ack_interrupt (phydev);
 }
 
@@ -100,7 +100,7 @@ static int lan911x_config_init(struct phy_device *phydev)
 static int lan87xx_read_status(struct phy_device *phydev)
 {
 	int err = genphy_read_status(phydev);
-
+#if 0
 	if (!phydev->link) {
 		/* Disable EDPD to wake up PHY */
 		int rc = phy_read(phydev, MII_LAN83C185_CTRL_STATUS);
@@ -125,6 +125,7 @@ static int lan87xx_read_status(struct phy_device *phydev)
 		if (rc < 0)
 			return rc;
 	}
+#endif
 
 	return err;
 }
