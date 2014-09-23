@@ -452,13 +452,13 @@ static int saradc_probe(struct platform_device *pdev)
 	}
 	saradc_reset();
 	gp_saradc = saradc;
+	spin_lock_init(&saradc->lock);	
 	saradc->state = SARADC_STATE_IDLE;
 #ifdef ENABLE_CALIBRATION
 	saradc->coef = 0;
   saradc_internal_cal(saradc);
 #endif
 	set_cal_voltage(7);
-	spin_lock_init(&saradc->lock);	
 #ifdef	CONFIG_MESON_CPU_TEMP_SENSOR
 	temp_sens_sel(1);
 	get_cpu_temperature_celius=get_celius;
