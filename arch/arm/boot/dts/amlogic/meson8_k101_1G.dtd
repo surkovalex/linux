@@ -337,8 +337,6 @@ void root_func(){
 		port_name = "uart_a";
 		status = "okay";
 		dev_name = "uart_0";
-		pinctrl-names = "default";
-    		pinctrl-0 = <&a_uart_pins>;
 	};
 	
 //$$ DEVICE="uart_1"
@@ -1381,17 +1379,6 @@ sdio{
 		status = "disabled";
 
 		type = <2>;	/** lcd_extern_driver type: 0=i2c, 1=spi, 2=mipi */
-	};
-/// ***************************************************************************************
-///     -       Gps
-//$$ MODULE="Gps"
-//$$ DEVICE="Gps"
-//$$ L2 PROP_STR = "gpio_power"
-//$$ L2 PROP_STR = "status"
-    gps{
-               compatible = "amlogic,gps_um220";
-               gpio_power = "GPIOX_20";
-               status = "okay";
 	};
 
 /// ***************************************************************************************
