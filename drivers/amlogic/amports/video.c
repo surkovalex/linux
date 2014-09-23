@@ -2172,6 +2172,13 @@ int get_vsync_pts_inc_mode(void)
 }
 EXPORT_SYMBOL(get_vsync_pts_inc_mode);
 
+void set_vsync_pts_inc_mode(int inc)
+{
+    vsync_pts_inc_upint = inc;
+}
+EXPORT_SYMBOL(set_vsync_pts_inc_mode);
+
+
 #ifdef CONFIG_VSYNC_RDMA
 void vsync_rdma_process(void)
 {

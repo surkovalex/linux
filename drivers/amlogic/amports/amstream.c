@@ -81,6 +81,7 @@ u32 amstream_port_num;
 u32 amstream_buf_num;
 
 extern void set_real_audio_info(void *arg);
+
 //#define DATA_DEBUG
 static int use_bufferlevelx10000=10000;
 static int reset_canuse_buferlevel(int level);
@@ -707,6 +708,7 @@ static  int amstream_port_init(stream_port_t *port)
 #endif
 
     tsync_audio_break(0); // clear audio break
+	set_vsync_pts_inc_mode(0); // clear video inc
 
     port->flag |= PORT_FLAG_INITED;
     return 0;

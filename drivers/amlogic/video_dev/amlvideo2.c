@@ -2436,6 +2436,8 @@ static int amlvideo2_start_thread(struct amlvideo2_fh *fh)
 #endif
 	dprintk(node->vid_dev, 1, "%s\n", __func__);
 
+    dma_q->task_running = 1;
+
 #ifdef MUTLI_NODE
 	dma_q->kthread = kthread_run(amlvideo2_thread, fh, (node->vid==0)?"amlvideo2-0":"amlvideo2-1");
 #else
@@ -2448,7 +2450,7 @@ static int amlvideo2_start_thread(struct amlvideo2_fh *fh)
 	}
 	/* Wakes thread */
 	//wake_up_interruptible(&dma_q->wq);
-	dma_q->task_running = 1;
+
 	dprintk(node->vid_dev, 1, "returning from %s\n", __func__);
 	return 0;
 }
