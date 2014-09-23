@@ -141,12 +141,12 @@ EXPORT_SYMBOL(is_ionvideo_active);
 
 static void videoc_omx_compute_pts(struct ionvideo_dev *dev, struct vframe_s* vf) {
     if (dev->pts == 0) {
-        if (dev->receiver_register == 0) {
+        if (dev->is_omx_video_started == 0) {
             dev->pts = last_pts_us64 + (DUR2PTS(vf->duration)*100/9);
         }
     }
-    if (dev->receiver_register) {    
-        dev->receiver_register = 0;
+    if (dev->is_omx_video_started) {    
+        dev->is_omx_video_started = 0;
     }
     last_pts_us64 = dev->pts;  
 }
@@ -302,6 +302,7 @@ static int ionvideo_thread(void *data) {
 
 static int ionvideo_start_generating(struct ionvideo_dev *dev) {
     struct ionvideo_dmaqueue *dma_q = &dev->vidq;
+    dev->is_omx_video_started = 1;
 
     dprintk(dev, 2, "%s\n", __func__);
 
@@ -841,10 +842,12 @@ static int video_receiver_event_fun(int type, void* data, void* private_data) {
 
     if (type == VFRAME_EVENT_PROVIDER_UNREG) {
         dev->receiver_register = 0;
+        dev->is_omx_video_started = 0;
         tsync_avevent(VIDEO_STOP, 0);
         printk("unreg:ionvideo\n");
     }else if (type == VFRAME_EVENT_PROVIDER_REG) {
         dev->receiver_register = 1;
+        dev->is_omx_video_started = 1;
         dev->ppmgr2_dev.interlaced_num = 0;
         printk("reg:ionvideo\n");
     }else if (type == VFRAME_EVENT_PROVIDER_QUREY_STATE) {

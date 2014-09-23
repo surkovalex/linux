@@ -140,6 +140,7 @@ struct ionvideo_dev {
     u8 is_video_started;
     u32 skip;
     int once_record;
+    u8 is_omx_video_started;
 };
 
 int is_ionvideo_active(void);
