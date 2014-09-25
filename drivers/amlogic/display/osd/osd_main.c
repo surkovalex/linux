@@ -48,10 +48,10 @@
 #include <linux/of.h>
 #include <linux/of_fdt.h>
 #include "osd_log.h"
+#include "osd_sync.h"
 #include <linux/amlogic/amlog.h>
 #include <linux/amlogic/logo/logo_dev.h>
 #include <linux/amlogic/logo/logo_dev_osd.h>
-#include "osd_sync.h"
 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND

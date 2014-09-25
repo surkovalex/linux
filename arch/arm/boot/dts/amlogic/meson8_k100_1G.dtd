@@ -139,7 +139,7 @@ void root_func(){
 		dev_name = "mesonfb";
 		status = "okay";
 	   	reserve-memory = <0x02400000  0x00100000>;
-               vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
+		vmode = <1>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
  		display_size_default = <2048 1536 2048 4608 32>;//2048x1536x4x3=0x02400000
  		reserve-iomap = "true";
 	};
