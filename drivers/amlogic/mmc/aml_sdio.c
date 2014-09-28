@@ -46,8 +46,6 @@ void aml_sdio_send_stop(struct amlsd_host* host);
 static unsigned int sdio_error_flag = 0;
 static unsigned int sdio_debug_flag = 0;
 static unsigned int sdio_err_bak;
-static unsigned int timeout_cmd_cnt = 0;
-
 
 void sdio_debug_irqstatus(struct sdio_status_irq* irqs, struct cmd_send* send)
 {    
@@ -284,13 +282,9 @@ void aml_sdio_start_cmd(struct mmc_host* mmc, struct mmc_request* mrq)
 
     if(!(mrq->cmd->flags & MMC_RSP_CRC))
         send.response_do_not_have_crc7 = 1;
-        
     if(mrq->cmd->flags & MMC_RSP_BUSY)
         send.check_busy_on_dat0 = 1;
 
-    //clear here
-    timeout_cmd_cnt = 0;
-     
     if(mrq->data){
         /*total package num*/
         send.repeat_package_times = mrq->data->blocks - 1;
@@ -449,6 +443,7 @@ static void aml_sdio_timeout(struct work_struct *work)
 //#ifdef      CONFIG_MMC_AML_DEBUG
     struct amlsd_platform * pdata = mmc_priv(host->mmc);
 //#endif
+	static int timeout_cmd_cnt = 0;
 	int is_mmc_stop = 0;
 
 //	struct timeval ts_current;
@@ -776,10 +771,6 @@ void aml_sdio_request(struct mmc_host *mmc, struct mmc_request *mrq)
         timeout = 500;//mod_timer(&host->timeout_tlist,
                 //jiffies + 500/*10*nsecs_to_jiffies(mrq->data->timeout_ns)*/); // 5s
 //	if(mmc->caps & MMC_CAP_SDIO_IRQ){
-
-    if(mrq->cmd->opcode == MMC_ERASE) //maybe over 30S for erase cmd.
-        timeout = 3000;
-            
 	if(SDIO_IRQ_SUPPORT){
 		schedule_delayed_work(&host->timeout, timeout/20); 
 	}else{
