@@ -875,7 +875,14 @@ static ssize_t amstream_mpts_write(struct file *file, const char *buf,
 #ifdef DATA_DEBUG
     debug_file_write(buf, count);
 #endif
-    return tsdemux_write(file, pvbuf, pabuf, buf, count);
+	if (port->flag & PORT_FLAG_DRM){
+		r = drm_tswrite(file, pvbuf, pabuf, buf, count);
+	}
+	else{
+		r = tsdemux_write(file, pvbuf, pabuf, buf, count);
+	}
+
+    return r;
 }
 
 static ssize_t amstream_mpps_write(struct file *file, const char *buf,
