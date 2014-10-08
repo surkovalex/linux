@@ -55,7 +55,7 @@ static struct cdev amirblaster_device;
 static struct aml_blaster *irblaster = NULL;
 static DEFINE_MUTEX(irblaster_file_mutex);
 static void aml_consumerir_transmit(struct aml_blaster * aml_transmit){
-	int i,k,j;
+	int i,k;
 	unsigned int consumerir_freqs = 1000/(irblaster->consumerir_freqs/1000);
 	unsigned int high_level_modulation_enable = 1<<12;
 	unsigned int high_level_modulation_disable = ~(1<<12);
@@ -155,14 +155,14 @@ static int aml_irblaster_open(struct inode *inode, struct file *file)
 
 static long aml_irblaster_ioctl(struct file *filp, unsigned int cmd, unsigned long args)
 {
-	int i;
+
 	int consumerir_freqs = 0;
 	int modulation_level = 0; 
 	s32 r = 0;
 	unsigned long flags;
+	static struct aml_blaster consumerir_transmit;
 	void __user *argp = (void __user *)args;
 	irblaster_dbg("aml_irblaster_ioctl()  0x%4x \n ",cmd);
-        static struct aml_blaster consumerir_transmit;
 	switch(cmd)
 	{
 		case CONSUMERIR_TRANSMIT:
