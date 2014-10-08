@@ -24,8 +24,11 @@
  *     rdma table work as REGISTER Cache for read write.
  */
  #include "osd_rdma.h"
+
 static rdma_table_item_t* rdma_table=NULL;
+static rdma_table_item_t* check_rdma_table=NULL;
 static u32		   table_paddr=0;
+static u32		   check_table_paddr = 0;
 static u32		   rdma_enable=0;
 static u32		   item_count=0;
 static u32 		   rdma_debug = 0;
@@ -191,9 +194,42 @@ EXPORT_SYMBOL(read_rdma_table);
 
 int reset_rdma(void)
 {
-	item_count=0;
-	memset(rdma_table, 0x0, TABLE_SIZE);
-	aml_write_reg32(END_ADDR,(table_paddr + item_count*8-1));
+	int check_number = 0;
+	int has_checked = 0;
+	int count_checked = 0;
+	bool need_update = true;
+
+	if(item_count != 0){
+		has_checked = 0;
+		for(check_number=item_count-1; check_number >= 0; check_number--){
+			need_update = true;
+			for(count_checked = 0; count_checked < has_checked; count_checked++){
+				if(rdma_table[check_number].addr == check_rdma_table[has_checked].addr){
+					need_update = false;
+					break;
+				}
+			}
+
+			if(need_update){
+				if(rdma_table[check_number].val !=
+						aml_read_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr)))
+				{
+					printk("the rdma write error addr is 0x%x, the old value is 0x%x, the real value is 0x%x\n",
+							rdma_table[check_number].addr, aml_read_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr)),
+							rdma_table[check_number].val);
+					check_rdma_table[has_checked].addr = rdma_table[check_number].addr;
+					has_checked++;
+					aml_write_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr),
+									rdma_table[check_number].val);
+				}
+			}
+		}
+
+		item_count=0;
+		memset(rdma_table, 0x0, TABLE_SIZE);
+		memset(check_rdma_table, 0x0, TABLE_SIZE);
+		aml_write_reg32(END_ADDR,(table_paddr + item_count*8-1));
+	}
 	return 0;
 }
 EXPORT_SYMBOL(reset_rdma);
@@ -221,7 +257,7 @@ EXPORT_SYMBOL(osd_rdma_enable);
 static int  osd_rdma_init(void)
 {
 	// alloc map table .
-	static ulong table_vaddr;
+	static ulong table_vaddr = 0;
 	osd_rdma_init_flat = true;
 	table_vaddr= __get_free_pages(GFP_KERNEL, get_order(PAGE_SIZE));
 	if (!table_vaddr) {
@@ -234,6 +270,20 @@ static int  osd_rdma_init(void)
 	rdma_table=(rdma_table_item_t*) ioremap_nocache(table_paddr, PAGE_SIZE);
 
 	if (NULL==rdma_table) {
+		printk("%s: failed to remap rmda_table_addr\n", __func__);
+		return -1;
+	}
+
+	table_vaddr = 0;
+	table_vaddr= __get_free_pages(GFP_KERNEL, get_order(PAGE_SIZE));
+	if (!table_vaddr) {
+		printk("%s: failed to alloc rmda_table\n", __func__);
+		return -1;
+	}
+	check_table_paddr = virt_to_phys((u8 *)table_vaddr);
+	//remap addr nocache.
+	check_rdma_table=(rdma_table_item_t*) ioremap_nocache(check_table_paddr, PAGE_SIZE);
+	if (NULL==check_rdma_table) {
 		printk("%s: failed to remap rmda_table_addr\n", __func__);
 		return -1;
 	}

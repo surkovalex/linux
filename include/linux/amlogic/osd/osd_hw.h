@@ -20,7 +20,7 @@ typedef  enum{
 
 typedef  enum{
 	SCAN_MODE_INTERLACE,
-	SCAN_MODE_PROGRESSIVE	
+	SCAN_MODE_PROGRESSIVE
 }scan_mode_t;
 
 typedef  enum{
