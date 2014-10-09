@@ -43,16 +43,16 @@ static int  osd_rdma_init(void);
 #define Wr(adr,val) WRITE_VCBUS_REG(adr, val)
 #define Rd(adr)    READ_VCBUS_REG(adr)
 #define Wr_reg_bits(adr, val, start, len)  WRITE_VCBUS_REG_BITS(adr, val, start, len)
-#define Wr_set_reg_bits_mask(adr, _mask)	 SET_VCBUS_REG_MASK(adr, _mask);
-#define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_VCBUS_REG_MASK(adr, _mask);
-#define REGS_RECONFIG(reg) VCBUS_REG_ADDR(reg);
+#define Wr_set_reg_bits_mask(adr, _mask)	 SET_VCBUS_REG_MASK(adr, _mask)
+#define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_VCBUS_REG_MASK(adr, _mask)
+#define REGS_RECONFIG(reg) VCBUS_REG_ADDR(reg)
 #else
 #define Wr(adr,val) WRITE_MPEG_REG(adr, val)
 #define Rd(adr)    READ_MPEG_REG(adr)
 #define Wr_reg_bits(adr, val, start, len)  WRITE_MPEG_REG_BITS(adr, val, start, len)
-#define Wr_set_reg_bits_mask(adr, _mask)	 SET_MPEG_REG_MASK(adr, _mask);
-#define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_MPEG_REG_MASK(adr, _mask);
-#define REGS_RECONFIG(reg) CBUS_REG_ADDR(reg);
+#define Wr_set_reg_bits_mask(adr, _mask)	 SET_MPEG_REG_MASK(adr, _mask)
+#define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_MPEG_REG_MASK(adr, _mask)
+#define REGS_RECONFIG(reg) CBUS_REG_ADDR(reg)
 #endif
 
 static int  update_table_item(u32 addr,u32 val)
