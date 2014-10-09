@@ -295,7 +295,6 @@ static int aml_m8_spk_enabled;
 static bool aml_audio_i2s_mute_flag = 0;
 static bool aml_audio_spdif_mute_flag = 0;
 
-#if 0
 static int aml_m8_set_spk(struct snd_kcontrol *kcontrol,
     struct snd_ctl_elem_value *ucontrol)
 {
@@ -311,7 +310,6 @@ static int aml_m8_set_spk(struct snd_kcontrol *kcontrol,
     return 0;
 }
 
-#endif
 static int aml_m8_get_spk(struct snd_kcontrol *kcontrol,
     struct snd_ctl_elem_value *ucontrol)
 {
@@ -581,7 +579,8 @@ static const struct snd_kcontrol_new aml_m8_controls[] = {
 
 	SOC_SINGLE_BOOL_EXT("Ext Spk Switch", 0,
 		aml_m8_get_spk,
-		NULL),
+		aml_m8_set_spk),
+       
    /*
     SOC_SINGLE_BOOL_EXT("Audio MPLL9 Switch", 0,
     aml_m8_get_MPLL9,

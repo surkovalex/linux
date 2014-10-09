@@ -11,7 +11,7 @@ config SND_AML_M8
 	select SND_SOC_WM8960
 	select SND_SOC_RT5631
 	select SND_SOC_AMLPMU3 if AML1218
-
+	select SND_SOC_ES8323
 config SND_AML_M8_PCM
 	tristate "M8 evaluation board with PCM2BT"
 	depends on SND_AML_M8_SOC

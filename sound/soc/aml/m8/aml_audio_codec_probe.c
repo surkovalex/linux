@@ -48,6 +48,13 @@ static const struct regmap_config codec_regmaps[] = {
 		.val_bits = 	9,
 		.max_register = 	0x37,
 	},
+	{
+		.name = "es8323",
+		.reg_bits = 	8,
+		.val_bits = 	8,
+		.max_register = 	0x35,
+	},
+	
 };
 
 static int test_codec_of_node(struct device_node* p_node, aml_audio_codec_info_t* audio_codec_dev)
@@ -156,6 +163,8 @@ static int test_codec_of_node(struct device_node* p_node, aml_audio_codec_info_t
 		printk("ID value mismatch, so %s disabled!\n", audio_codec_dev->name);
 		ret = -ENODEV;
 	}
+	
+	printk("-----------val=0x%x---------\n",val);
 	
 err1:
 	i2c_unregister_device(client);
