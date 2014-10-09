@@ -217,7 +217,7 @@ int reset_rdma(void)
 						aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)))
 				{
 					printk("the rdma write error addr is 0x%x, the old value is 0x%x, the real value is 0x%x\n",
-							rdma_table[check_number].addr, aml_read_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr)),
+							rdma_table[check_number].addr, aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)),
 							rdma_table[check_number].val);
 					check_rdma_table[has_checked].addr = rdma_table[check_number].addr;
 					has_checked++;
