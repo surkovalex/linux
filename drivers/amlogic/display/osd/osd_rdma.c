@@ -45,12 +45,14 @@ static int  osd_rdma_init(void);
 #define Wr_reg_bits(adr, val, start, len)  WRITE_VCBUS_REG_BITS(adr, val, start, len)
 #define Wr_set_reg_bits_mask(adr, _mask)	 SET_VCBUS_REG_MASK(adr, _mask);
 #define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_VCBUS_REG_MASK(adr, _mask);
+#define REGS_RECONFIG(reg) VCBUS_REG_ADDR(reg);
 #else
 #define Wr(adr,val) WRITE_MPEG_REG(adr, val)
 #define Rd(adr)    READ_MPEG_REG(adr)
 #define Wr_reg_bits(adr, val, start, len)  WRITE_MPEG_REG_BITS(adr, val, start, len)
 #define Wr_set_reg_bits_mask(adr, _mask)	 SET_MPEG_REG_MASK(adr, _mask);
 #define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_MPEG_REG_MASK(adr, _mask);
+#define REGS_RECONFIG(reg) CBUS_REG_ADDR(reg);
 #endif
 
 static int  update_table_item(u32 addr,u32 val)
@@ -212,14 +214,14 @@ int reset_rdma(void)
 
 			if(need_update){
 				if(rdma_table[check_number].val !=
-						aml_read_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr)))
+						aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)))
 				{
 					printk("the rdma write error addr is 0x%x, the old value is 0x%x, the real value is 0x%x\n",
 							rdma_table[check_number].addr, aml_read_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr)),
 							rdma_table[check_number].val);
 					check_rdma_table[has_checked].addr = rdma_table[check_number].addr;
 					has_checked++;
-					aml_write_reg32(VCBUS_REG_ADDR(rdma_table[check_number].addr),
+					aml_write_reg32(REGS_RECONFIG(rdma_table[check_number].addr),
 									rdma_table[check_number].val);
 				}
 			}
