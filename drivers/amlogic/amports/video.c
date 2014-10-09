@@ -3288,7 +3288,8 @@ unsigned int vf_keep_current(void)
     	printk("%s %lx %x\n", __func__, keep_y_addr, canvas_get_addr(y_index));
     }
 
-    if ((cur_dispbuf->type & VIDTYPE_VIU_422) == VIDTYPE_VIU_422) {
+    if ((cur_dispbuf->type & VIDTYPE_VIU_422) == VIDTYPE_VIU_422) { 
+        return -1;  //no VIDTYPE_VIU_422 type frame need keep,avoid memcpy crash
         canvas_read(y_index,&cd);
         if ((Y_BUFFER_SIZE < (cd.width *cd.height))) {
             printk("## [%s::%d] error: yuv data size larger than buf size: %x,%x,%x, %x,%x\n", __FUNCTION__,__LINE__,
