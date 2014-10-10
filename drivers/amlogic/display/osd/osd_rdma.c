@@ -27,9 +27,7 @@
 #include <linux/amlogic/amlog.h>
 
 static rdma_table_item_t* rdma_table=NULL;
-static rdma_table_item_t* check_rdma_table=NULL;
 static u32		   table_paddr=0;
-static u32		   check_table_paddr = 0;
 static u32		   rdma_enable=0;
 static u32		   item_count=0;
 static u32 		   rdma_debug = 0;
@@ -46,14 +44,12 @@ static int  osd_rdma_init(void);
 #define Wr_reg_bits(adr, val, start, len)  WRITE_VCBUS_REG_BITS(adr, val, start, len)
 #define Wr_set_reg_bits_mask(adr, _mask)	 SET_VCBUS_REG_MASK(adr, _mask)
 #define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_VCBUS_REG_MASK(adr, _mask)
-#define REGS_RECONFIG(reg) VCBUS_REG_ADDR(reg)
 #else
 #define Wr(adr,val) WRITE_MPEG_REG(adr, val)
 #define Rd(adr)    READ_MPEG_REG(adr)
 #define Wr_reg_bits(adr, val, start, len)  WRITE_MPEG_REG_BITS(adr, val, start, len)
 #define Wr_set_reg_bits_mask(adr, _mask)	 SET_MPEG_REG_MASK(adr, _mask)
 #define Wr_clr_reg_bits_mask(adr, _mask)	 CLEAR_MPEG_REG_MASK(adr, _mask)
-#define REGS_RECONFIG(reg) CBUS_REG_ADDR(reg)
 #endif
 
 static int  update_table_item(u32 addr,u32 val)
@@ -197,42 +193,9 @@ EXPORT_SYMBOL(read_rdma_table);
 
 int reset_rdma(void)
 {
-	int check_number = 0;
-	int has_checked = 0;
-	int count_checked = 0;
-	bool need_update = true;
-
-	if(item_count != 0){
-		has_checked = 0;
-		for(check_number=item_count-1; check_number >= 0; check_number--){
-			need_update = true;
-			for(count_checked = 0; count_checked < has_checked; count_checked++){
-				if(rdma_table[check_number].addr == check_rdma_table[has_checked].addr){
-					need_update = false;
-					break;
-				}
-			}
-
-			if(need_update){
-				if(rdma_table[check_number].val !=
-						aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)))
-				{
-					amlog_mask_level(LOG_MASK_HARDWARE, LOG_LEVEL_LOW, "the rdma write error addr is 0x%x, the old value is 0x%x, the real value is 0x%x\n",
-							rdma_table[check_number].addr, aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)),
-							rdma_table[check_number].val);
-					check_rdma_table[has_checked].addr = rdma_table[check_number].addr;
-					has_checked++;
-					aml_write_reg32(REGS_RECONFIG(rdma_table[check_number].addr),
-									rdma_table[check_number].val);
-				}
-			}
-		}
-
-		item_count=0;
-		memset(rdma_table, 0x0, TABLE_SIZE);
-		memset(check_rdma_table, 0x0, TABLE_SIZE);
-		aml_write_reg32(END_ADDR,(table_paddr + item_count*8-1));
-	}
+	item_count=0;
+	memset(rdma_table, 0x0, TABLE_SIZE);
+	aml_write_reg32(END_ADDR,(table_paddr + item_count*8-1));
 	return 0;
 }
 EXPORT_SYMBOL(reset_rdma);
@@ -257,7 +220,7 @@ int osd_rdma_enable(u32  enable)
 }
 EXPORT_SYMBOL(osd_rdma_enable);
 
-static int  osd_rdma_init(void)
+static int osd_rdma_init(void)
 {
 	// alloc map table .
 	static ulong table_vaddr = 0;
@@ -273,20 +236,6 @@ static int  osd_rdma_init(void)
 	rdma_table=(rdma_table_item_t*) ioremap_nocache(table_paddr, PAGE_SIZE);
 
 	if (NULL==rdma_table) {
-		printk("%s: failed to remap rmda_table_addr\n", __func__);
-		return -1;
-	}
-
-	table_vaddr = 0;
-	table_vaddr= __get_free_pages(GFP_KERNEL, get_order(PAGE_SIZE));
-	if (!table_vaddr) {
-		printk("%s: failed to alloc rmda_table\n", __func__);
-		return -1;
-	}
-	check_table_paddr = virt_to_phys((u8 *)table_vaddr);
-	//remap addr nocache.
-	check_rdma_table=(rdma_table_item_t*) ioremap_nocache(check_table_paddr, PAGE_SIZE);
-	if (NULL==check_rdma_table) {
 		printk("%s: failed to remap rmda_table_addr\n", __func__);
 		return -1;
 	}
