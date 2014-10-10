@@ -24,6 +24,7 @@
  *     rdma table work as REGISTER Cache for read write.
  */
  #include "osd_rdma.h"
+#include <linux/amlogic/amlog.h>
 
 static rdma_table_item_t* rdma_table=NULL;
 static rdma_table_item_t* check_rdma_table=NULL;
@@ -216,7 +217,7 @@ int reset_rdma(void)
 				if(rdma_table[check_number].val !=
 						aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)))
 				{
-					printk("the rdma write error addr is 0x%x, the old value is 0x%x, the real value is 0x%x\n",
+					amlog_mask_level(LOG_MASK_HARDWARE, LOG_LEVEL_LOW, "the rdma write error addr is 0x%x, the old value is 0x%x, the real value is 0x%x\n",
 							rdma_table[check_number].addr, aml_read_reg32(REGS_RECONFIG(rdma_table[check_number].addr)),
 							rdma_table[check_number].val);
 					check_rdma_table[has_checked].addr = rdma_table[check_number].addr;
