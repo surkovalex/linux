@@ -1130,6 +1130,45 @@ static int hdmitx_edid_search_IEEEOUI(char *buf)
     return 0;
 }
 
+// check EDID strictly
+static int edid_check_valid(unsigned char *buf)
+{
+    unsigned int chksum = 0;
+    unsigned int i = 0;
+
+    // check block 0 first 8 bytes
+    if((buf[0] != 0) && (buf[7] != 0))
+        return 0;
+    for(i = 1; i < 7; i ++) {
+        if(buf[i] != 0xff)
+            return 0;
+    }
+
+    // check block 0 checksum
+    for(chksum = 0, i = 0; i < 0x80; i++) {
+        chksum += buf[i];
+    }
+    if((chksum & 0xff) != 0)
+        return 0;
+
+    // check Extension flag at block 0
+    if(buf[0x7e] == 0)
+        return 0;
+
+    // check block 1 extension tag
+    if(buf[0x80] != 0x2)
+        return 0;
+
+    // check block 1 checksum
+    for(chksum = 0, i = 0x80; i < 0x100; i++) {
+        chksum += buf[i];
+    }
+    if((chksum & 0xff) != 0)
+        return 0;
+
+    return 1;
+}
+
 int hdmitx_edid_parse(hdmitx_dev_t* hdmitx_device)
 {
     unsigned char CheckSum ;
@@ -1267,6 +1306,16 @@ int hdmitx_edid_parse(hdmitx_dev_t* hdmitx_device)
     if((pRXCap->IEEEOUI != 0x0c03) || (pRXCap->IEEEOUI == 0x0)|| (pRXCap->VIC_count == 0)){
         hdmitx_edid_set_default_vic(hdmitx_device);
     }    
+
+    // strictly DVI device judgement
+    // valid EDID & no audio tag & no IEEEOUI
+    if( edid_check_valid(&EDID_buf[0]) && (pRXCap->AUD_count == 0)
+        && !hdmitx_edid_search_IEEEOUI(&EDID_buf[128]) ) {
+        pRXCap->IEEEOUI = 0x0;
+        printk("hdmitx: edid: sink is DVI device\n");
+    } else {
+        pRXCap->IEEEOUI = 0x0c03;
+    }
 
 #if 1    
     i=hdmitx_edid_dump(hdmitx_device, (char*)(hdmitx_device->tmp_buf), HDMI_TMP_BUF_SIZE);
