@@ -550,12 +550,12 @@ static int aml_i2s_open(struct snd_pcm_substream *substream)
 
 	spin_lock_init(&prtd->s.lock);
 	s->xrun_num = 0;
-	WRITE_MPEG_REG_BITS(MPLL_I2S_CNTL, 1,14, 1);
+	//WRITE_MPEG_REG_BITS(MPLL_I2S_CNTL, 1,14, 1);
 	mutex_lock(&gate_mutex);
 	if(!num_clk_gate){
         num_clk_gate = 1;
     	if(audio_gate_status == 0){
-    		audio_aiu_pg_enable(1);
+    	//	audio_aiu_pg_enable(1);
     		ALSA_DEBUG("aml_pcm_open  device type %x \n", s->device_type);
 
     	}
