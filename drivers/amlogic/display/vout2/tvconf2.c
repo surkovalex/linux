@@ -370,7 +370,7 @@ static int  create_tv_attr(disp_module_info_t* info)
 	info->base_class=class_create(THIS_MODULE,info->name);
 	if(IS_ERR(info->base_class))
 	{
-		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"create tv display class fail\r\n");
+		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"create tv display class fail\n");
 		return  -1 ;
 	}
 	//create  class attr
@@ -378,7 +378,7 @@ static int  create_tv_attr(disp_module_info_t* info)
 	{
 		if ( class_create_file(info->base_class,tv_attr[i]))
 		{
-			amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"create disp attribute %s fail\r\n",tv_attr[i]->attr.name);
+			amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"create disp attribute %s fail\n",tv_attr[i]->attr.name);
 		}
 	}
 	sprintf(vdac_setting,"%x",get_current_vdac_setting2());
@@ -391,7 +391,7 @@ static int __init tv_init_module(void)
 	info=(disp_module_info_t*)kmalloc(sizeof(disp_module_info_t),GFP_KERNEL) ;
 	if (!info)
 	{
-		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"can't alloc display info struct\r\n");
+		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"can't alloc display info struct\n");
 		return -ENOMEM;
 	}
 	
@@ -401,18 +401,18 @@ static int __init tv_init_module(void)
 	ret=register_chrdev(TV2_CONF_MAJOR,info->name,&am_tv_fops);
 	if(ret <0) 
 	{
-		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"register char dev tv error\r\n");
+		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"register char dev tv error\n");
 		return  ret ;
 	}
 	info->major=TV2_CONF_MAJOR;
-	amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"major number %d for disp\r\n",ret);
+	amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"major number %d for disp\n",ret);
 	if(vout2_register_server(&tv_server))
 	{
-		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"register tv module server fail \r\n");
+		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"register tv module server fail\n");
 	}
 	else
 	{
-		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"register tv module server ok \r\n");
+		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"register tv module server ok\n");
 	}
 	create_tv_attr(info);
 	return 0;
@@ -438,7 +438,7 @@ static __exit void tv_exit_module(void)
 	}
 	vout2_unregister_server(&tv_server);
 	
-	amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"exit tv module\r\n");
+	amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"exit tv module\n");
 }
 
 

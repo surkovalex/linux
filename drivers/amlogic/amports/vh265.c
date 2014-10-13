@@ -1120,7 +1120,7 @@ static void init_pic_list_hw(void)
 static void dump_pic_list(hevc_stru_t* hevc)
 {
 	PIC_t* pic = hevc->decode_pic_list;
-	printk("pic_list_init_flag is %d\r\n", hevc->pic_list_init_flag);
+	printk("pic_list_init_flag is %d\n", hevc->pic_list_init_flag);
 	while(pic){
 		printk("index %d decode_idx:%d,	POC:%d,	referenced:%d,	num_reorder_pic:%d, output_mark:%d, output_ready:%d, mv_wr_start %lx\n", pic->index, pic->decode_idx, pic->POC, pic->referenced, pic->num_reorder_pic, pic->output_mark, pic->output_ready, pic->mpred_mv_wr_start_addr);
 		pic = pic->next;
@@ -3218,7 +3218,7 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
    if(debug&H265_DEBUG_UCODE){
        if(READ_HREG(DEBUG_REG1)&0x10000){
 #if 0
-            printk("PPS \r\n");
+            printk("PPS\n");
             for(i=0; i<(hevc->debug_ptr_size/2); i+=4){
                 int ii;
                 for(ii=0; ii<4; ii++){
@@ -3409,7 +3409,7 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
                         printk("\n");
                 } 
                 
-                printk("vui_timing_info: %x, %x, %x, %x\r\n",         rpm_param.p.vui_num_units_in_tick_hi,
+                printk("vui_timing_info: %x, %x, %x, %x\n",         rpm_param.p.vui_num_units_in_tick_hi,
                             rpm_param.p.vui_num_units_in_tick_lo,
                             rpm_param.p.vui_time_scale_hi,
                             rpm_param.p.vui_time_scale_lo);
@@ -3754,7 +3754,7 @@ static s32 vh265_init(void)
     amhevc_enable();
 #if 0
     if(debug &H265_DEBUG_LOAD_UCODE_FROM_FILE){
-        printk("load ucode from file\r\n");
+        printk("load ucode from file\n");
         if (amhevc_loadmc(ucode_buf) < 0) {
             amhevc_disable();
             return -EBUSY;

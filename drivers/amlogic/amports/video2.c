@@ -2231,7 +2231,7 @@ static void set_video_window(const char *para)
         video_property_changed = true;
     }
     amlog_mask(LOG_MASK_SYSFS,
-               "video=>x0:%d,y0:%d,x1:%d,y1:%d\r\n ",
+               "video=>x0:%d,y0:%d,x1:%d,y1:%d\n",
                parsed[0], parsed[1], parsed[2], parsed[3]);
 }
 

@@ -957,7 +957,7 @@ struct class* init_ppmgr_cls() {
     ret = class_register(&ppmgr_class);
     if(ret<0 )
     {
-        amlog_level(LOG_LEVEL_HIGH,"error create ppmgr class\r\n");
+        amlog_level(LOG_LEVEL_HIGH,"error create ppmgr class\n");
         return NULL;
     }
     return &ppmgr_class;
@@ -1101,7 +1101,7 @@ int  init_ppmgr_device(void)
     ret=register_chrdev(0,ppmgr_device.name,&ppmgr_fops);
     if(ret <=0)
     {
-        amlog_level(LOG_LEVEL_HIGH,"register ppmgr device error\r\n");
+        amlog_level(LOG_LEVEL_HIGH,"register ppmgr device error\n");
         return  ret ;
     }
     ppmgr_device.major=ret;
@@ -1130,7 +1130,7 @@ int  init_ppmgr_device(void)
 #endif
     ppmgr_device.mirror_flag  = 0;
     ppmgr_device.canvas_width = ppmgr_device.canvas_height = 0;
-    amlog_level(LOG_LEVEL_LOW,"ppmgr_dev major:%d\r\n",ret);
+    amlog_level(LOG_LEVEL_LOW,"ppmgr_dev major:%d\n",ret);
 
     if((ppmgr_device.cla = init_ppmgr_cls())==NULL) return -1;
     ppmgr_device.dev=device_create(ppmgr_device.cla,NULL,MKDEV(ppmgr_device.major,0),NULL,ppmgr_device.name);

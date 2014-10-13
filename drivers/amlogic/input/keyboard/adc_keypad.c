@@ -186,11 +186,11 @@ static int register_keypad_dev(struct kp  *kp)
     ret=register_chrdev(0, kp->config_name, &keypad_fops);
     if(ret<=0)
     {
-        printk("register char device error\r\n");
+        printk("register char device error\n");
         return  ret ;
     }
     kp->config_major=ret;
-    printk("adc keypad major:%d\r\n",ret);
+    printk("adc keypad major:%d\n",ret);
     kp->config_class=class_create(THIS_MODULE,kp->config_name);
     kp->config_dev=device_create(kp->config_class,	NULL,
     		MKDEV(kp->config_major,0),NULL,kp->config_name);
@@ -373,7 +373,7 @@ static int kp_probe(struct platform_device *pdev)
 		    state = -EINVAL;
 		    goto get_key_param_failed;
     }
-    printk("adc keypad register input device completed.\r\n");
+    printk("adc keypad register input device completed.\n");
     register_keypad_dev(gp_kp);
     kfree(key_param);
 #ifdef CONFIG_HAS_EARLYSUSPEND
