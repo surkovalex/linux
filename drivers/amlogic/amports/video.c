@@ -592,6 +592,10 @@ static u32 force_blackout = 0;
 /* disable video */
 static u32 disable_video = VIDEO_DISABLE_NONE;
 
+/* show first frame*/
+static bool show_first_frame_nosync=true;
+//static bool first_frame=false;
+
 /* test screen*/
 static u32 test_screen = 0;
 
@@ -2235,6 +2239,8 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     vdin_v4l2_ops_t *vdin_ops = NULL;
     vdin_arg_t arg;
 #endif
+	bool show_nosync=false;
+
 #ifdef CONFIG_AM_VIDEO_LOG
     int toggle_cnt;
 #endif
@@ -2443,6 +2449,9 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
             tsync_avevent_locked(VIDEO_START,
                           (vf->pts) ? vf->pts : timestamp_vpts_get());
 
+	     if(show_first_frame_nosync)
+	   	  show_nosync=true;
+	   	
             if(slowsync_repeat_enable)
                 frame_repeat_count = 0;
 
@@ -2476,7 +2485,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     }
 
     while (vf) {
-        if (vpts_expire(cur_dispbuf, vf)) {
+        if (vpts_expire(cur_dispbuf, vf)||show_nosync) {
             amlog_mask(LOG_MASK_TIMESTAMP,
                        "VIDEO_PTS = 0x%x, cur_dur=0x%x, next_pts=0x%x, scr = 0x%x\n",
                        timestamp_vpts_get(),
@@ -4937,6 +4946,30 @@ static ssize_t video_angle_store(struct class *cla, struct class_attribute *attr
     return strnlen(buf, count);
 }
 
+static ssize_t show_first_frame_nosync_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%d\n", show_first_frame_nosync?1:0);
+}
+
+static ssize_t show_first_frame_nosync_store(struct class *cla, struct class_attribute *attr, const char *buf,
+                                   size_t count)
+{
+    size_t r;
+    int value;    
+
+    r = sscanf(buf, "%d", &value);
+
+    if (r != 1) {
+        return -EINVAL;
+    }
+
+    if(value==0)
+	show_first_frame_nosync=false;
+    else
+	show_first_frame_nosync=true;
+
+    return count;
+}
 static struct class_attribute amvideo_class_attrs[] = {
     __ATTR(axis,
     S_IRUGO | S_IWUSR | S_IWGRP,
@@ -5037,6 +5070,10 @@ static struct class_attribute amvideo_class_attrs[] = {
     __ATTR(stereo_scaler,
     S_IRUGO|S_IWUSR,NULL,
     video_3d_scale_store),
+   __ATTR(show_first_frame_nosync,
+    S_IRUGO | S_IWUSR,
+    show_first_frame_nosync_show,
+    show_first_frame_nosync_store),
     __ATTR(slowsync_repeat_enable,
     S_IRUGO | S_IWUSR,
     slowsync_repeat_enable_show,
