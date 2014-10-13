@@ -799,9 +799,11 @@ static int pts_lookup_offset_inline(
     if(timestamp_firstvpts_get()==0&&res==0&&(*val)!=0&&type==PTS_TYPE_VIDEO){
     	timestamp_firstvpts_set(*val);
     }
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8    
     else if(timestamp_firstvpts_get()==0&&res==0&&(*val)!=0&&type==PTS_TYPE_HEVC){
     	timestamp_firstvpts_set(*val);
     }
+#endif    
     else if(timestamp_firstapts_get()==0&&res==0&&(*val)!=0&&type==PTS_TYPE_AUDIO){
     	timestamp_firstapts_set(*val);
     }    
