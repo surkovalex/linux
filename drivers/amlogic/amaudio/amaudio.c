@@ -68,7 +68,9 @@ extern unsigned int read_i2s_mute_swap_reg(void);
 extern void audio_i2s_swap_left_right(unsigned int flag);
 extern void audio_in_i2s_set_buf(u32 addr, u32 size);
 extern void audio_in_i2s_enable(int flag);
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
 extern void audio_mute_left_right(unsigned flag);
+#endif
 extern void audio_i2s_unmute(void);
 extern void audio_i2s_mute(void);
 extern int audio_out_buf_ready ;
@@ -1505,7 +1507,9 @@ static long amaudio_ioctl(struct file *file,
             direct_audio_right_gain(arg);
             break;
         case AMAUDIO_IOC_MUTE_LEFT_RIGHT_CHANNEL:
+            #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
             audio_mute_left_right(arg);
+            #endif
             break;
         case AMAUDIO_IOC_MUTE_UNMUTE:
             if (arg == 1) {
@@ -1616,7 +1620,9 @@ static long amaudio_utils_ioctl(struct file *file,
             printk("set resample_delta=%d\n ",resample_delta);
             break;
         case AMAUDIO_IOC_MUTE_LEFT_RIGHT_CHANNEL:
+            #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
             audio_mute_left_right(arg);
+            #endif
             break;
         case AMAUDIO_IOC_MUTE_UNMUTE:
             if (arg == 1) {
@@ -2019,11 +2025,15 @@ static ssize_t store_mute_left_right(struct class* class, struct class_attribute
 {
     switch(buf[0]) {
         case '1':
+            #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
             audio_mute_left_right(1);
+            #endif
             break;
 
         case '0':
+            #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
             audio_mute_left_right(0);
+            #endif
             break;
 
         default:
