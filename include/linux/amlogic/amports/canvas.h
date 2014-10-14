@@ -80,7 +80,7 @@ typedef struct {
 #endif
 
 /*here ppmgr share the same canvas with deinterlace and mipi driver for m6*/
-#define PPMGR_CANVAS_INDEX 0x66
+#define PPMGR_CANVAS_INDEX 0x70
 #define PPMGR_DOUBLE_CANVAS_INDEX 0x74  //for double canvas use
 #define PPMGR_DEINTERLACE_BUF_CANVAS 0x77   /*for progressive mjpeg use*/
 
