@@ -40,6 +40,9 @@ typedef struct {
 #define AMVDEC_ALL_CANVAS_RANGE_0 0xb  // vc1/real/mpeg12/mpeg4/ jpeg logo / h264
 #define AMVDEC_ALL_CANVAS_RANGE_1 0x25 //mjpeg
 
+#define PPMGR2_MAX_CANVAS 10
+#define PPMGR2_CANVAS_INDEX 0x2c    // 0x2c-0x3f for PPMGR2 (IONVIDEO)
+
 #define AMVDEC_H264MVC_CANVAS_INDEX 0x78
 #define AMVDEC_H264MVC_CANVAS_MAX 0xbf
 

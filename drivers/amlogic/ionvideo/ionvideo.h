@@ -42,9 +42,6 @@
 #define MAX_WIDTH 1920
 #define MAX_HEIGHT 1088
 
-#define PPMGR2_MAX_CANVAS 10
-#define PPMGR2_CANVAS_INDEX 0x66
-
 #define DUR2PTS(x) ((x) - ((x) >> 4))
 
 #define dprintk(dev, level, fmt, arg...)                    \
