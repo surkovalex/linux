@@ -293,29 +293,43 @@ static void meson_uart_change_speed(struct meson_uart_port *mup, unsigned long n
 	am_uart_t *uart = mup->uart;
 	unsigned long value;
 	struct clk * clk81;
+	struct clk * xtal;
 
 	if (!newbaud || newbaud == mup->baud)
 		return;
 
-	clk81 = clk_get_sys("clk81", "pll_fixed");
-	if (IS_ERR_OR_NULL(clk81)) {
-		printk(KERN_ERR "meson_uart_change_speed: clk81 is not available\n");
-		return;
+	if (IS_MESON_M8B_CPU || IS_MESON_M8M2_CPU) {
+		msleep(1);
+		xtal = clk_get_sys("xtal", NULL);
+		value = (clk_get_rate(xtal) / 3) / newbaud - 1;
 	}
-	msleep(1);
-
+	else {
+		clk81 = clk_get_sys("clk81", "pll_fixed");
+		if (IS_ERR_OR_NULL(clk81)) {
+			printk(KERN_ERR "meson_uart_change_speed: clk81 is not available\n");
+			return;
+		}
+		msleep(1);
+		value = ((clk_get_rate(clk81) * 10 / (newbaud * 4) + 5) / 10) - 1;
+	}
 	while (!(readl(&uart->status) & UART_TXEMPTY))
 		msleep(10);
 
 	printk(KERN_INFO "Changing %s baud from %d to %d\n", mup->name,mup->baud, (int)newbaud);
-	value = ((clk_get_rate(clk81) * 10 / (newbaud * 4) + 5) / 10) - 1;
+
 	mup->baud = (int)newbaud;
 #if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON6
 	value = (readl(&uart->mode) & ~0xfff) | (value & 0xfff);
 	writel(value, &uart->mode);
 #else
     value = (readl(&uart->reg5) & ~0x7fffff) | (value & 0x7fffff);
+
 	value |= 0x800000;
+
+	//Set USE_XTAL_CLK bit
+	if(IS_MESON_M8B_CPU || IS_MESON_M8M2_CPU)
+		value  |= 1<<24;
+
 	writel(value, &uart->reg5);
 #endif
 	msleep(1);
