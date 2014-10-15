@@ -5134,8 +5134,8 @@ static int amvideo_class_suspend(struct device *dev, pm_message_t state)
 
 #ifdef CONFIG_SCREEN_ON_EARLY
 extern void osd_resume_early(void);
+extern void vout_pll_resume_early(void);
 extern void resume_vout_early(void);
-extern void hdmi_resume_early(void);
 extern int power_key_pressed;
 #endif
 
@@ -5166,10 +5166,10 @@ static int amvideo_class_resume(struct device *dev)
 
 #ifdef CONFIG_SCREEN_ON_EARLY
 	if(power_key_pressed){
-		power_key_pressed = 0;
+		vout_pll_resume_early();
 		osd_resume_early();
 		resume_vout_early();
-		hdmi_resume_early();
+		power_key_pressed = 0;
 	}
 #endif
 

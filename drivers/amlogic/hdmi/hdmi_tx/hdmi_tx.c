@@ -68,66 +68,43 @@ static hdmitx_dev_t hdmitx_device;
 static struct switch_dev sdev = {      // android ics switch device
        .name = "hdmi",
        };
-
-static void hdmitx_suspend(void) 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
+static void hdmitx_early_suspend(struct early_suspend *h)
 {
     const vinfo_t *info = hdmi_get_current_vinfo();
+    hdmitx_dev_t * phdmi = (hdmitx_dev_t *)h->param;
     if (info && (strncmp(info->name, "panel", 5) == 0 || strncmp(info->name, "null", 4) == 0))
         return;
-    hdmitx_device.hpd_lock = 1;
-
-    hdmitx_device.HWOp.Cntl(&hdmitx_device, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_EARLY_SUSPEND);
-    hdmitx_device.cur_VIC = HDMI_Unkown;
-    hdmitx_device.output_blank_flag = 0;
-    hdmitx_device.HWOp.CntlDDC(&hdmitx_device, DDC_HDCP_OP, HDCP_OFF);
-    hdmitx_device.HWOp.CntlDDC(&hdmitx_device, DDC_HDCP_OP, DDC_RESET_HDCP);
-    hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_CLR_AVI_PACKET, 0);
-    hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_CLR_VSDB_PACKET, 0);
-    hdmi_print(IMP, SYS "HDMITX: suspend\n");
+    phdmi->hpd_lock = 1;
+    phdmi->HWOp.Cntl((hdmitx_dev_t *)h->param, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_EARLY_SUSPEND);
+    phdmi->cur_VIC = HDMI_Unkown;
+    phdmi->output_blank_flag = 0;
+    phdmi->HWOp.CntlDDC(phdmi, DDC_HDCP_OP, HDCP_OFF);
+    phdmi->HWOp.CntlDDC(phdmi, DDC_HDCP_OP, DDC_RESET_HDCP);
+    phdmi->HWOp.CntlConfig(&hdmitx_device, CONF_CLR_AVI_PACKET, 0);
+    phdmi->HWOp.CntlConfig(&hdmitx_device, CONF_CLR_VSDB_PACKET, 0);
+    hdmi_print(IMP, SYS "HDMITX: early suspend\n");
 }
 
-static void hdmitx_resume(void) 
+static void hdmitx_late_resume(struct early_suspend *h)
 {
     const vinfo_t *info = hdmi_get_current_vinfo();
+    hdmitx_dev_t * phdmi = (hdmitx_dev_t *)h->param;
     if (info && (strncmp(info->name, "panel", 5) == 0 || strncmp(info->name, "null", 4) == 0)) {
         hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_VIDEO_BLANK_OP, VIDEO_UNBLANK);
        return ;
     } else {
         hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_VIDEO_BLANK_OP, VIDEO_BLANK);
     }
-    hdmitx_device.hpd_lock = 0;
+    phdmi->hpd_lock = 0;
     hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_MUTE);
     hdmitx_device.HWOp.CntlDDC(&hdmitx_device, DDC_HDCP_OP, HDCP_OFF);
     hdmitx_device.internal_mode_change = 0;
     set_disp_mode_auto();
-
-    hdmitx_device.HWOp.Cntl(&hdmitx_device, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_LATE_RESUME);
-    hdmi_print(INF, SYS "resume\n");
-}
-
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
-static int early_suspend_flag = 0;
-#ifdef CONFIG_SCREEN_ON_EARLY
-static int early_resume_flag = 0;
-#endif
-
-
-static void hdmitx_early_suspend(struct early_suspend *h)
-{
-    if(early_suspend_flag)
-        return;
-    early_suspend_flag = 1;
-    hdmitx_suspend();
-}
-
-static void hdmitx_late_resume(struct early_suspend *h)
-{
-    if(!early_suspend_flag)
-        return;
-    early_suspend_flag = 0;
-    hdmitx_resume();
+    pr_info("amhdmitx: late resume module %d\n", __LINE__);
+    phdmi->HWOp.Cntl((hdmitx_dev_t *)h->param, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_LATE_RESUME);
+    hdmi_print(INF, SYS "late resume\n");
 }
 
 static struct early_suspend hdmitx_early_suspend_handler = {
@@ -137,20 +114,6 @@ static struct early_suspend hdmitx_early_suspend_handler = {
     .param = &hdmitx_device,
 };
 #endif
-
-#ifdef CONFIG_SCREEN_ON_EARLY
-void hdmi_resume_early(void)
-{
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	hdmitx_resume();
-	early_suspend_flag = 0;
-#endif
-	early_resume_flag = 1;
-	return ;
-}
-EXPORT_SYMBOL(hdmi_resume_early);
-#endif
-
 
 //static HDMI_TX_INFO_t hdmi_info;
 #define INIT_FLAG_VDACOFF        0x1
@@ -1659,11 +1622,6 @@ static int amhdmitx_remove(struct platform_device *pdev)
 #ifdef CONFIG_PM
 static int amhdmitx_suspend(struct platform_device *pdev,pm_message_t state)
 {
-#ifdef CONFIG_HAS_EARLYSUSPEND
-    if (early_suspend_flag)
-        return 0;
-#endif
-    hdmitx_suspend();
 #if 0
     pr_info("amhdmitx: hdmirx_suspend\n");
     hdmitx_pre_display_init();
@@ -1679,19 +1637,6 @@ static int amhdmitx_suspend(struct platform_device *pdev,pm_message_t state)
 
 static int amhdmitx_resume(struct platform_device *pdev)
 {
-#ifdef CONFIG_SCREEN_ON_EARLY
-	if (early_resume_flag) {
-		early_resume_flag = 0;
-		return 0;
-	}
-#endif
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-    if (early_suspend_flag)
-        return 0;
-#endif
-    hdmitx_resume();
-
 #if 0
     pr_info("amhdmitx: resume module\n");
     if(hdmi_pdata){

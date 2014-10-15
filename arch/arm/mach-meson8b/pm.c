@@ -249,10 +249,6 @@ static void meson_system_late_resume(struct early_suspend *h)
 
 extern int det_pwr_key(void);
 extern void clr_pwr_key(void);
-#ifdef CONFIG_SCREEN_ON_EARLY
-int power_key_pressed;
-EXPORT_SYMBOL(power_key_pressed);
-#endif
 
 static void meson_pm_suspend(void)
 {
@@ -325,12 +321,6 @@ static void meson_pm_suspend(void)
 	//power_gate_switch(ON);
 	clk_switch(ON);
 	//analog_switch(ON);
-
-#ifdef CONFIG_SCREEN_ON_EARLY
-    if (READ_AOBUS_REG(AO_RTI_STATUS_REG2) == FLAG_WAKEUP_PWRKEY) {
-        power_key_pressed = 1;
-    }
-#endif	
 }
 
 static int meson_pm_prepare(void)
