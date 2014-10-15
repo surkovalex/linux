@@ -1728,7 +1728,7 @@ int  init_jpegenc_device(void)
     r =register_chrdev(0,DEVICE_NAME,&jpegenc_fops);
     if(r<=0) 
     {
-        debug_level(2,"register jpegenc device error\r\n");
+        debug_level(2,"register jpegenc device error\n");
         return  r  ;
     }
     jpegenc_device_major= r ;

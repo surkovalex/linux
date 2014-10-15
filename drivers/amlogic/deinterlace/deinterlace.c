@@ -2897,7 +2897,7 @@ static void log_buffer_state(unsigned char* tag)
 			  		buf_state_log_start = 1;
 				}
 				if(buf_state_log_start){
-	        di_print("[%s]i %d, i_f %d/%d, l_f %d/%d, pre_r %d, post_f %d/%d, post_r (%d:%d), disp (%d:%d),rec %d, di_i %d, di_w %d\r\n",
+	        di_print("[%s]i %d, i_f %d/%d, l_f %d/%d, pre_r %d, post_f %d/%d, post_r (%d:%d), disp (%d:%d),rec %d, di_i %d, di_w %d\n",
 	            tag,
 	            provider_vframe_level,
 	            in_free,MAX_IN_BUF_NUM,

@@ -1260,7 +1260,7 @@ void SP2518_set_night_mode(struct sp2518_device *dev,enum  camera_night_mode_fli
 		{
 			i2c_put_byte_add8_new(client,0xfd,0x00);	//disable AE,add by sp_yjp,20120905
 			i2c_put_byte_add8_new(client,0x32,0x05);
-			printk("night mode 50hz\r\n");
+			printk("night mode 50hz\n");
 			#ifdef CLK24M_48M
 
 			//capture preview night 48M 50hz fix 6FPS maxgain 
@@ -1337,7 +1337,7 @@ void SP2518_set_night_mode(struct sp2518_device *dev,enum  camera_night_mode_fli
 		{
 			i2c_put_byte_add8_new(client,0xfd,0x00);	//disable AE,add by sp_yjp,20120905
 			i2c_put_byte_add8_new(client,0x32,0x05);
-			printk("night mode 60hz\r\n");
+			printk("night mode 60hz\n");
 
 			#ifdef CLK24M_48M
 
@@ -1423,7 +1423,7 @@ void SP2518_set_night_mode(struct sp2518_device *dev,enum  camera_night_mode_fli
 		{
 			i2c_put_byte_add8_new(client,0xfd,0x00);	//disable AE,add by sp_yjp,20120905
 			i2c_put_byte_add8_new(client,0x32,0x05);
-			printk("normal mode 50hz\r\n");	
+			printk("normal mode 50hz\n");	
 			#ifdef CLK24M_48M
 			//capture preview daylight 48M 50hz fix 9FPS maxgain  
 			i2c_put_byte_add8_new(client,0xfd,0x00);
@@ -1491,7 +1491,7 @@ void SP2518_set_night_mode(struct sp2518_device *dev,enum  camera_night_mode_fli
 		{
 			i2c_put_byte_add8_new(client,0xfd,0x00);	//disable AE,add by sp_yjp,20120905
 			i2c_put_byte_add8_new(client,0x32,0x05);
-			printk("normal mode 60hz\r\n");	
+			printk("normal mode 60hz\n");	
 			#ifdef CLK24M_48M
 			//capture preview daylight 48M 60Hz fix 9FPS maxgain   
 			i2c_put_byte_add8_new(client,0xfd,0x00);
@@ -1567,11 +1567,11 @@ void SP2518_set_param_banding(struct sp2518_device *dev,enum  camera_banding_fli
 	switch(banding) {
 	case CAM_BANDING_50HZ: 		
 		Antiflicker = DCAMERA_FLICKER_50HZ;
-		printk( " set_SP2518_anti_flicker  50hz \r\n" );
+		printk( " set_SP2518_anti_flicker  50hz\n" );
 		break;
 	case CAM_BANDING_60HZ:
 		Antiflicker = DCAMERA_FLICKER_60HZ;
-		printk( " set_SP2518_anti_flicker  60hz \r\n" );
+		printk( " set_SP2518_anti_flicker  60hz\n" );
 		break;
 	default:
 		break;

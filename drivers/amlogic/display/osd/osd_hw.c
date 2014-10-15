@@ -824,7 +824,7 @@ void  osd_set_colorkey_hw(u32 index,u32 color_index,u32 colorkey )
 	if( osd_hw.color_key[index]!=data32)
 	{
 		osd_hw.color_key[index]=data32;
-		amlog_mask_level(LOG_MASK_HARDWARE,LOG_LEVEL_LOW,"bpp:%d--r:0x%x g:0x%x b:0x%x ,a:0x%x\r\n",color_index,r,g,b,a);
+		amlog_mask_level(LOG_MASK_HARDWARE,LOG_LEVEL_LOW,"bpp:%d--r:0x%x g:0x%x b:0x%x ,a:0x%x\n",color_index,r,g,b,a);
 		add_to_update_list(index,OSD_COLOR_KEY);
 
 		osd_wait_vsync_hw();
@@ -1110,7 +1110,7 @@ void osd_free_scale_enable_hw(u32 index,u32 enable)
 			mode_changed = 1;
 #endif
 #endif
-		amlog_level(LOG_LEVEL_HIGH,"osd%d free scale %s\r\n",index,enable?"ENABLE":"DISABLE");
+		amlog_level(LOG_LEVEL_HIGH,"osd%d free scale %s\n",index,enable?"ENABLE":"DISABLE");
 		enable = (enable&0xffff?1:0);
 		osd_hw.free_scale_enable[index]=enable;
 		if (index==OSD1)
@@ -1428,7 +1428,7 @@ void osd_enable_hw(int enable ,int index )
 
 void osd_set_2x_scale_hw(u32 index,u16 h_scale_enable,u16 v_scale_enable)
 {
-	amlog_level(LOG_LEVEL_HIGH, "osd[%d] set scale, h_scale: %s, v_scale: %s\r\n",
+	amlog_level(LOG_LEVEL_HIGH, "osd[%d] set scale, h_scale: %s, v_scale: %s\n",
 			index, h_scale_enable ? "ENABLE" : "DISABLE", v_scale_enable ? "ENABLE" : "DISABLE");
 	amlog_level(LOG_LEVEL_HIGH, "osd[%d].scaledata: %d %d %d %d\n",
 			index,
@@ -2999,7 +2999,7 @@ void osd_init_hw(u32  logo_loaded)
 		IRQF_SHARED , "am_osd_vsync", osd_setup))
 #endif
 	{
-		amlog_level(LOG_LEVEL_HIGH,"can't request irq for vsync\r\n");
+		amlog_level(LOG_LEVEL_HIGH,"can't request irq for vsync\n");
 	}
 
 #ifdef FIQ_VSYNC
@@ -3014,7 +3014,7 @@ void osd_init_hw(u32  logo_loaded)
 	if (request_irq(INT_RDMA, &osd_rdma_isr,
                     IRQF_SHARED, "osd_rdma", (void *)"osd_rdma"))
 	{
-		amlog_level(LOG_LEVEL_HIGH,"can't request irq for rdma\r\n");
+		amlog_level(LOG_LEVEL_HIGH,"can't request irq for rdma\n");
 	}
 #endif
 	return ;

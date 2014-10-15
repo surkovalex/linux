@@ -2353,7 +2353,7 @@ int  init_avc_device(void)
     r =register_chrdev(0,DEVICE_NAME,&amvenc_avc_fops);
     if(r<=0)
     {
-        amlog_level(LOG_LEVEL_HIGH,"register amvenc_avc device error\r\n");
+        amlog_level(LOG_LEVEL_HIGH,"register amvenc_avc device error\n");
         return  r  ;
     }
     avc_device_major= r ;

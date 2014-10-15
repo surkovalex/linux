@@ -549,7 +549,7 @@ int aml_demod_ui_init(void)
 
 	r = class_register(&aml_demod_ui_class);
     if (r) {
-        printk("create aml_demod class fail\r\n");
+        printk("create aml_demod class fail\n");
         class_unregister(&aml_demod_ui_class);
 		return r;
     }
@@ -643,7 +643,7 @@ static int __init aml_demod_init(void)
     /* sysfs node creation */
     r = class_register(&aml_demod_class);
     if (r) {
-        printk("create aml_demod class fail\r\n");
+        printk("create aml_demod class fail\n");
         goto err1;
     }
 

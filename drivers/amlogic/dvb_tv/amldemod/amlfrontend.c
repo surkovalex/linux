@@ -492,7 +492,7 @@ retry:
 	afe->params.u.qam.modulation = c->modulation;*/
 
 
-	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\r\n",c->frequency,c->symbol_rate);
+	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\n",c->frequency,c->symbol_rate);
 	return  0;
 
 }
@@ -519,7 +519,7 @@ static int M6_Demod_Dvbc_Init(struct aml_fe_dev *dev,int mode)
 {
 	struct aml_demod_sys sys;
 	struct aml_demod_i2c i2c;
-	pr_dbg("AML Demod DVB-C init\r\n");
+	pr_dbg("AML Demod DVB-C init\n");
 	memset(&sys, 0, sizeof(sys));
 	memset(&i2c, 0, sizeof(i2c));
 	i2c.tuner = dev->drv->id;
@@ -691,7 +691,7 @@ retry:
 	afe->params = *c;
 
 
-//	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\r\n",p->frequency,p->u.qam.symbol_rate);
+//	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\n",p->frequency,p->u.qam.symbol_rate);
 	return  0;
 
 }
@@ -713,7 +713,7 @@ int M6_Demod_Dvbt_Init(struct aml_fe_dev *dev)
 	struct aml_demod_sys sys;
 	struct aml_demod_i2c i2c;
 
-	pr_dbg("AML Demod DVB-T init\r\n");
+	pr_dbg("AML Demod DVB-T init\n");
 
 	memset(&sys, 0, sizeof(sys));
 	memset(&i2c, 0, sizeof(i2c));
@@ -883,7 +883,7 @@ retry:
 	aml_dmx_after_retune(AM_TS_SRC_TS2, fe);
 
 	afe->params = *c;
-//	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\r\n",p->frequency,p->u.qam.symbol_rate);
+//	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\n",p->frequency,p->u.qam.symbol_rate);
 	return  0;
 
 }
@@ -904,7 +904,7 @@ int M6_Demod_Atsc_Init(struct aml_fe_dev *dev)
 	struct aml_demod_sys sys;
 	struct aml_demod_i2c i2c;
 
-	pr_dbg("AML Demod ATSC init\r\n");
+	pr_dbg("AML Demod ATSC init\n");
 
 	memset(&sys, 0, sizeof(sys));
 	memset(&i2c, 0, sizeof(i2c));
@@ -1066,7 +1066,7 @@ static int m6_demod_dtmb_set_frontend(struct dvb_frontend *fe)
 	aml_dmx_after_retune(AM_TS_SRC_TS2, fe);*/
 
 	afe->params = *c;
-//	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\r\n",p->frequency,p->u.qam.symbol_rate);
+//	pr_dbg("AML amldemod => frequency=%d,symbol_rate=%d\n",p->frequency,p->u.qam.symbol_rate);
 	return  0;
 
 }
@@ -1087,7 +1087,7 @@ int M6_Demod_Dtmb_Init(struct aml_fe_dev *dev)
 	struct aml_demod_sys sys;
 	struct aml_demod_i2c i2c;
 
-	pr_dbg("AML Demod DTMB init\r\n");
+	pr_dbg("AML Demod DTMB init\n");
 
 	memset(&sys, 0, sizeof(sys));
 	memset(&i2c, 0, sizeof(i2c));
@@ -1130,7 +1130,7 @@ static int m6_demod_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 	fe_ops->read_snr = m6_demod_dvbt_read_snr;
 	fe_ops->read_ucblocks = m6_demod_dvbt_read_ucblocks;
 
-	pr_dbg("=========================dvbt demod init\r\n");
+	pr_dbg("=========================dvbt demod init\n");
 	M6_Demod_Dvbt_Init(dev);
 	}
 	else if(mode == AM_FE_QAM){
@@ -1160,7 +1160,7 @@ static int m6_demod_fe_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
 
 //	init_waitqueue_head(&dev->lock_wq);
 	install_isr(dev);
-	pr_dbg("=========================dvbc demod init\r\n");
+	pr_dbg("=========================dvbc demod init\n");
 	M6_Demod_Dvbc_Init(dev,Adc_mode);
 	}else if(mode == AM_FE_ATSC){
 

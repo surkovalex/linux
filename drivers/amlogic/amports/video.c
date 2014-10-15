@@ -4040,7 +4040,7 @@ static void set_video_crop(const char *para)
         _set_video_crop(parsed);
     }
     amlog_mask(LOG_MASK_SYSFS,
-               "video crop=>x0:%d,y0:%d,x1:%d,y1:%d\r\n ",
+               "video crop=>x0:%d,y0:%d,x1:%d,y1:%d\n ",
                parsed[0], parsed[1], parsed[2], parsed[3]);
 }
 
@@ -4052,7 +4052,7 @@ static void set_video_speed_check(const char *para)
         vpp_set_video_speed_check(parsed[0], parsed[1]);
     }
     amlog_mask(LOG_MASK_SYSFS,
-               "video speed_check=>h:%d,w:%d\r\n ",
+               "video speed_check=>h:%d,w:%d\n ",
                parsed[0], parsed[1]);
 }
 
@@ -4064,7 +4064,7 @@ static void set_video_window(const char *para)
         _set_video_window(parsed);
     }
     amlog_mask(LOG_MASK_SYSFS,
-               "video=>x0:%d,y0:%d,x1:%d,y1:%d\r\n ",
+               "video=>x0:%d,y0:%d,x1:%d,y1:%d\n ",
                parsed[0], parsed[1], parsed[2], parsed[3]);
 }
 static ssize_t video_3d_scale_store(struct class *cla, struct class_attribute *attr, const char *buf, size_t count)
@@ -4168,7 +4168,7 @@ static ssize_t video_global_offset_store(struct class *cla, struct class_attribu
         video_property_changed = true;
 
         amlog_mask(LOG_MASK_SYSFS,
-                   "video_offset=>x0:%d,y0:%d\r\n ",
+                   "video_offset=>x0:%d,y0:%d\n ",
                    parsed[0], parsed[1]);
     }
 

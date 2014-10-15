@@ -435,7 +435,7 @@ static unsigned char is_dispmode_valid_for_hdmi(void)
 static ssize_t show_disp_mode(struct device * dev, struct device_attribute *attr, char * buf)
 {
     int pos=0;
-    pos+=snprintf(buf+pos, PAGE_SIZE, "VIC:%d\r\n", hdmitx_device.cur_VIC);
+    pos+=snprintf(buf+pos, PAGE_SIZE, "VIC:%d\n", hdmitx_device.cur_VIC);
     return pos;
 }
 
@@ -467,7 +467,7 @@ static ssize_t store_cec(struct device * dev, struct device_attribute *attr, con
 static ssize_t show_cec_config(struct device * dev, struct device_attribute *attr, char * buf)
 {
     int pos=0;
-    pos+=snprintf(buf+pos, PAGE_SIZE, "P_AO_DEBUG_REG0:0x%x\r\n", aml_read_reg32(P_AO_DEBUG_REG0));
+    pos+=snprintf(buf+pos, PAGE_SIZE, "P_AO_DEBUG_REG0:0x%x\n", aml_read_reg32(P_AO_DEBUG_REG0));
     return pos;
 }
 
@@ -590,8 +590,8 @@ static ssize_t show_config(struct device * dev, struct device_attribute *attr, c
     default:
         aud_conf = "none";
     }
-    pos += snprintf(buf+pos, PAGE_SIZE, "disp switch (force or edid): %s\r\n", (hdmitx_device.disp_switch_config==DISP_SWITCH_FORCE)?"force":"edid");
-    pos += snprintf(buf+pos, PAGE_SIZE, "audio config: %s\r\n", aud_conf);
+    pos += snprintf(buf+pos, PAGE_SIZE, "disp switch (force or edid): %s\n", (hdmitx_device.disp_switch_config==DISP_SWITCH_FORCE)?"force":"edid");
+    pos += snprintf(buf+pos, PAGE_SIZE, "audio config: %s\n", aud_conf);
     return pos;
 }
 
@@ -739,7 +739,7 @@ static ssize_t show_disp_cap_3d(struct device * dev, struct device_attribute *at
             }
         }
     }
-    pos += snprintf(buf+pos, PAGE_SIZE, "\r\n");
+    pos += snprintf(buf+pos, PAGE_SIZE, "\n");
 
     return pos;
 }
@@ -814,13 +814,13 @@ static ssize_t show_hdcp_ksv_info(struct device * dev, struct device_attribute *
     for(i = 0;i < 5; i++) {
         pos+=snprintf(buf+pos, PAGE_SIZE, "%02x", aksv_buf[i]);
     }
-    pos+=snprintf(buf+pos, PAGE_SIZE, "  %s\r\n", hdcp_ksv_valid(aksv_buf) ? "Valid" : "Invalid");
+    pos+=snprintf(buf+pos, PAGE_SIZE, "  %s\n", hdcp_ksv_valid(aksv_buf) ? "Valid" : "Invalid");
 
     pos+=snprintf(buf+pos, PAGE_SIZE, "BKSV: ");
     for(i = 0;i < 5; i++) {
         pos+=snprintf(buf+pos, PAGE_SIZE, "%02x", bksv_buf[i]);
     }
-    pos+=snprintf(buf+pos, PAGE_SIZE, "  %s\r\n", hdcp_ksv_valid(bksv_buf) ? "Valid" : "Invalid");
+    pos+=snprintf(buf+pos, PAGE_SIZE, "  %s\n", hdcp_ksv_valid(bksv_buf) ? "Valid" : "Invalid");
 
     return pos;
 }
@@ -838,7 +838,7 @@ static ssize_t show_support_3d(struct device * dev, struct device_attribute *att
 {
     int pos=0;
 
-    pos += snprintf(buf+pos, PAGE_SIZE,"%d\r\n", hdmitx_device.RXCap.threeD_present);
+    pos += snprintf(buf+pos, PAGE_SIZE,"%d\n", hdmitx_device.RXCap.threeD_present);
     return pos;
 }
 

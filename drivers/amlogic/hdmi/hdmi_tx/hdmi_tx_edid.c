@@ -1580,34 +1580,34 @@ int hdmitx_edid_dump(hdmitx_dev_t* hdmitx_device, char* buffer, int buffer_len)
     int i,pos=0;
     rx_cap_t* pRXCap = &(hdmitx_device->RXCap);
 
-    pos+=snprintf(buffer+pos, buffer_len-pos, "Receiver Brand Name: %s\r\n", pRXCap->ReceiverBrandName);
-    pos+=snprintf(buffer+pos, buffer_len-pos, "Receiver Product Name: %s\r\n", pRXCap->ReceiverProductName);
+    pos+=snprintf(buffer+pos, buffer_len-pos, "Receiver Brand Name: %s\n", pRXCap->ReceiverBrandName);
+    pos+=snprintf(buffer+pos, buffer_len-pos, "Receiver Product Name: %s\n", pRXCap->ReceiverProductName);
 
-    pos+=snprintf(buffer+pos, buffer_len-pos, "EDID block number: 0x%x\r\n",hdmitx_device->EDID_buf[0x7e]);
+    pos+=snprintf(buffer+pos, buffer_len-pos, "EDID block number: 0x%x\n",hdmitx_device->EDID_buf[0x7e]);
 
-    pos+=snprintf(buffer+pos, buffer_len-pos, "Source Physical Address[a.b.c.d]: %x.%x.%x.%x\r\n",
+    pos+=snprintf(buffer+pos, buffer_len-pos, "Source Physical Address[a.b.c.d]: %x.%x.%x.%x\n",
         hdmitx_device->hdmi_info.vsdb_phy_addr.a, hdmitx_device->hdmi_info.vsdb_phy_addr.b, hdmitx_device->hdmi_info.vsdb_phy_addr.c, hdmitx_device->hdmi_info.vsdb_phy_addr.d);
 
-    pos+=snprintf(buffer+pos, buffer_len-pos, "native Mode %x, VIC (native %d):\r\n",
+    pos+=snprintf(buffer+pos, buffer_len-pos, "native Mode %x, VIC (native %d):\n",
         pRXCap->native_Mode, pRXCap->native_VIC);
 
-    pos+=snprintf(buffer+pos, buffer_len-pos, "ColorDeepSupport %x, MaxTMDSClock %d\r\n",
+    pos+=snprintf(buffer+pos, buffer_len-pos, "ColorDeepSupport %x, MaxTMDSClock %d\n",
         pRXCap->ColorDeepSupport, pRXCap->Max_TMDS_Clock); 
 
     for( i = 0 ; i < pRXCap->VIC_count ; i++ )
     {
         pos+=snprintf(buffer+pos, buffer_len-pos,"%d ", pRXCap->VIC[i]);
     }
-    pos+=snprintf(buffer+pos, buffer_len-pos,"\r\n");
-    pos+=snprintf(buffer+pos, buffer_len-pos, "Audio {format, channel, freq, cce}\r\n");
+    pos+=snprintf(buffer+pos, buffer_len-pos,"\n");
+    pos+=snprintf(buffer+pos, buffer_len-pos, "Audio {format, channel, freq, cce}\n");
     for(i = 0; i< pRXCap->AUD_count; i++) {
-        pos+=snprintf(buffer+pos, buffer_len-pos, "{%d, %d, %x, %x}\r\n", pRXCap->RxAudioCap[i].audio_format_code,
+        pos+=snprintf(buffer+pos, buffer_len-pos, "{%d, %d, %x, %x}\n", pRXCap->RxAudioCap[i].audio_format_code,
             pRXCap->RxAudioCap[i].channel_num_max, pRXCap->RxAudioCap[i].freq_cc, pRXCap->RxAudioCap[i].cc3);
     }
-    pos+=snprintf(buffer+pos,buffer_len-pos,"Speaker Allocation: %x\r\n", pRXCap->RxSpeakerAllocation);
-    pos+=snprintf(buffer+pos,buffer_len-pos,"Vendor: %x\r\n", pRXCap->IEEEOUI);
+    pos+=snprintf(buffer+pos,buffer_len-pos,"Speaker Allocation: %x\n", pRXCap->RxSpeakerAllocation);
+    pos+=snprintf(buffer+pos,buffer_len-pos,"Vendor: %x\n", pRXCap->IEEEOUI);
 
-    pos+=snprintf(buffer+pos,buffer_len-pos,"Rx 3D Format Support List:\r\n{VIC FramePacking TopBottom SidebySide}\r\n");
+    pos+=snprintf(buffer+pos,buffer_len-pos,"Rx 3D Format Support List:\n{VIC FramePacking TopBottom SidebySide}\n");
     for(i = 0 ; i < pRXCap->VIC_count; i++){
         pos+=snprintf(buffer+pos,buffer_len-pos,"{ %d\t%d\t%d\t%d }\n", pRXCap->VIC[i], 
                                                                    pRXCap->support_3d_format[pRXCap->VIC[i]].frame_packing,
