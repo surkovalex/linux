@@ -1486,7 +1486,7 @@ typedef enum
 	CEA_MAX = 60
 }SII5293_VIDEO_MODE;
 
-static unsigned int vdin_state = 0;
+//static unsigned int vdin_state = 0;
 sii5293_vdin sii5293_vdin_info;
 sii9293_info_t sii9293_info;
 
@@ -1555,7 +1555,6 @@ void dump_input_video_info(void)
 
 unsigned int sii5293_get_output_mode(void)
 {
-	unsigned int h_active,h_total,v_active,v_total;
 	unsigned int mode = 0;
 
 	if( (gDriverContext.input_video_mode == 0) || (gDriverContext.input_video_mode >= NMB_OF_CEA861_VIDEO_MODES) )
@@ -1698,7 +1697,7 @@ static ssize_t user_enable_store(struct class *class, struct class_attribute *at
 {
 	int argn;
 	char *p=NULL, *para=NULL, *argv[5] = {NULL,NULL,NULL,NULL,NULL};
-	unsigned int mode = 0, enable=0, height = 0, width = 0, frame_rate = 0, field_flag = 0;
+	unsigned int mode = 0, enable=0;
 	char *vmode[10] = {"480i\n","480p\n","576i\n","576p\n","720p50\n","720p\n","1080i\n","1080p\n","1080i50\n","1080p50\n"};
 	int i = 0;
 
@@ -1819,9 +1818,9 @@ static ssize_t debug_store(struct class *class, struct class_attribute *attr,
 {
 	int argn;
 	char *p=NULL, *para=NULL, *argv[4] = {NULL,NULL,NULL,NULL};
-	unsigned int cmd=0, reg_start = 0, reg_end = 0, length = 0, value = 0xff;
-	char i2c_buf[2] = {0,0};
-	int ret = 0;
+	unsigned int cmd=0, reg_start = 0, reg_end = 0, value = 0xff;
+//	char i2c_buf[2] = {0,0};
+//	int ret = 0;
 
 	p = kstrdup(buf, GFP_KERNEL);
 	for( argn=0; argn<4; argn++ )
@@ -1904,8 +1903,8 @@ static ssize_t debug_store(struct class *class, struct class_attribute *attr,
 	}
 	else if( cmd == 4 ) // tt, for loop test of 9293 i2c
 	{
-		unsigned int type = 255, count = 0, i = 0, v1 = 0, v2 = 0;
-		unsigned int err1 = 0, err2 = 0, sum = 0, sum_failed = 0;
+		unsigned int type = 255, count = 0;//, i = 0, v1 = 0, v2 = 0;
+//		unsigned int err1 = 0, err2 = 0;
 
 		type = (unsigned int )simple_strtoul(argv[1], NULL, 10);
 		count = (unsigned int)simple_strtoul(argv[2], NULL, 10);
@@ -1915,7 +1914,7 @@ static ssize_t debug_store(struct class *class, struct class_attribute *attr,
 		if( type == 0 ) // 0x2/0x3 = 9392
 		{
 			unsigned int i = 0, v1 = 0, v2 = 0;
-			unsigned int err1 = 0, err2 = 0, sum_failed = 0;
+			unsigned int err1 = 0, err2 = 0;
 			for( i=0; i<count; i++ )
 			{
 				msleep(2);
@@ -1982,6 +1981,7 @@ static ssize_t sii5293_input_mode_show(struct class *class, struct class_attribu
 	return sprintf(buf, "%s\n", hdmi_mode_str);
 }
 
+/*
 static void dump_dvin_pinmux(void)
 {
 	printk(" dvin pinmux config:\n\
@@ -2074,7 +2074,7 @@ static ssize_t pinmux_store(struct class *class, struct class_attribute *attr,
 
 	return count;
 }
-
+*/
 static ssize_t sii9293_cable_status_show(struct class *class, struct class_attribute *attr, char *buf)
 {
 	sii9293_info.cable_status = sii_get_pwr5v_status();
@@ -2137,8 +2137,8 @@ static ssize_t sii9293_frame_skip_store(struct class *class, struct class_attrib
 {
 	int argn;
 	char *p=NULL, *para=NULL, *argv[4] = {NULL,NULL,NULL,NULL};
-	unsigned int skip_normal, skip_standby, skip_cable, skip_signal;
-	int ret = 0;
+	unsigned int skip_normal, skip_standby, skip_cable;
+//	int ret = 0;
 
 	p = kstrdup(buf, GFP_KERNEL);
 	for( argn=0; argn<3; argn++ )
