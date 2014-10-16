@@ -18,6 +18,9 @@ ifneq ($(wildcard $(srctree)/../hardware/dvb),)
 	obj-$(CONFIG_AM_AVL6211)  += ../../../../hardware/dvb/availink/drivers/avl6211/
 	obj-$(CONFIG_AM_SI2168)   += ../../../../hardware/dvb/silabs/drivers/si2168/
 	obj-$(CONFIG_AM_MXL101) += ../../../../hardware/dvb/maxlinear/drivers/mxl101/
+	obj-$(CONFIG_AM_AVL68xx)  += ../../../../hardware/dvb/availink/drivers/avl68xx/
+	obj-$(CONFIG_AM_MXL241_FE) += ../../../../hardware/dvb/maxlinear/drivers/mxl241/
+	obj-$(CONFIG_AM_MXL683_FE) += ../../../../hardware/dvb/maxlinear/drivers/mxl683/
 endif
 
 EXTRA_CFLAGS += -I.
