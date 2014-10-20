@@ -225,5 +225,25 @@ config AM_MXL101
 	depends on AM_DVB
 	help
 		Select to enable MXL101 demod driver.
+config AM_AVL68xx
+	tristate "AVL68xx T2 demod driver"
+	default y
+	depends on AM_DVB
+	help
+		Select to enable AVL68xx demod driver.	
+		
+config AM_MXL241_FE
+	tristate "MXL241 DVB-C demod driver"
+	default y
+	depends on AM_DVB
+	help
+		Select to enable MXL241 demod driver.
+
+config AM_MXL683_FE
+	tristate "MXL683 ISDB-T demod driver"
+	default y
+	depends on AM_DVB
+	help
+		Select to enable MXL683 demod driver.
 endmenu
 
