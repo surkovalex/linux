@@ -270,9 +270,11 @@ static void osd_toggle_buffer(struct kthread_work *work)
 	list_for_each_entry_safe(data, next, &saved_list, list){
 		//printk("osd_toggle_buffer the save_list is not NULL\n");
 		osd_pan_display_fence(data);
-		if((data->in_fence) && (data->in_fd > 0)){
-			__close_fd(data->files, data->in_fd);
+		if(data->in_fence){
 			sync_fence_put(data->in_fence);
+		}
+		if(data->in_fd > 0){
+			__close_fd(data->files, data->in_fd);
 		}
 		list_del(&data->list);
 		kfree(data);
