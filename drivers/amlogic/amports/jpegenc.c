@@ -1336,7 +1336,7 @@ bool jpegenc_on(void)
     spin_lock_irqsave(&lock, flags);
 
     hcodec_on = vdec_on(VDEC_HCODEC);
-    hcodec_on |=(encode_opened>0);
+    hcodec_on &=(encode_opened>0);
 
     spin_unlock_irqrestore(&lock, flags);
     return hcodec_on;
