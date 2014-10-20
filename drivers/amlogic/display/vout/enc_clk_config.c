@@ -169,7 +169,7 @@ static void set_hpll_clk_out(unsigned clk)
 #endif
 
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
-    printk("%s[%d] clk = %d\n", clk);
+    printk("%s[%d] clk = %d\n", __func__, __LINE__, clk);
     switch(clk){
         case 1488:
             WRITE_CBUS_REG(HHI_VID_PLL_CNTL, 0x43e);
