@@ -225,7 +225,7 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
 #if 1           // Please match with H/W cec config
 // GPIOAO_12
     aml_set_reg32_bits(P_AO_RTI_PIN_MUX_REG, 0, 14, 1);       // bit[14]: AO_PWM_C pinmux                  //0xc8100014
-    aml_set_reg32_bits(P_AO_RTI_PULL_UP_REG, 0, 12, 1);       // bit[12]: disable AO_12 internal pull-up   //0xc810002c
+    aml_set_reg32_bits(P_AO_RTI_PULL_UP_REG, 1, 12, 1);       // bit[12]: enable AO_12 internal pull-up   //0xc810002c
     aml_set_reg32_bits(P_AO_RTI_PIN_MUX_REG, 1, 17, 1);       // bit[17]: AO_CEC pinmux                    //0xc8100014
     ao_cec_init();
 #else
