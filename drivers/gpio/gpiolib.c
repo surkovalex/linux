@@ -455,7 +455,7 @@ static const struct {
 	{ "rising",  BIT(FLAG_TRIG_RISE) },
 	{ "both",    BIT(FLAG_TRIG_FALL) | BIT(FLAG_TRIG_RISE) },
 };
-
+#if 0
 static ssize_t gpio_edge_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -510,8 +510,11 @@ found:
 
 	return status;
 }
+#endif
 
+#if 0
 static DEVICE_ATTR(edge, 0644, gpio_edge_show, gpio_edge_store);
+#endif
 
 static int sysfs_set_active_low(struct gpio_desc *desc, struct device *dev,
 				int value)
