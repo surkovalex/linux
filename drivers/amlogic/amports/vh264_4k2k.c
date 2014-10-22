@@ -60,6 +60,7 @@
 
 #define H264_4K2K_SINGLE_CORE   IS_MESON_M8M2_CPU
 
+#define SLICE_TYPE_I 2
 
 extern void amvenc_dos_top_reg_fix(void);
 
@@ -91,6 +92,7 @@ static u32 frame_width, frame_height, frame_dur, frame_ar;
 static struct timer_list recycle_timer;
 static u32 stat;
 static u32 error_watchdog_count;
+static u32 sync_outside;
 
 #ifdef DEBUG_PTS
 static unsigned long pts_missed, pts_hit;
@@ -645,7 +647,7 @@ WRITE_VREG(DOS_SCRATCH1, 0x004c);
 
 static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
 {
-    int drop_status, display_buff_id, display_POC;
+    int drop_status, display_buff_id, display_POC, slice_type;
     unsigned stream_offset;
     vframe_t *vf = NULL;
     int ret = READ_VREG(MAILBOX_COMMAND);
@@ -659,6 +661,7 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
         ret >>= 8;
         display_buff_id = (ret >> 0) & 0x3f;
         drop_status = (ret >> 8) & 0x1;
+        slice_type = (ret >> 9) & 0x7;
         display_POC = READ_VREG(MAILBOX_DATA_0);
         stream_offset = READ_VREG(MAILBOX_DATA_1);
 
@@ -677,8 +680,10 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
         if (vf) {
             vfbuf_use[display_buff_id]++;
 
-            if (pts_lookup_offset(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0) != 0) {
-                vf->pts = 0;
+            vf->pts = 0;
+
+            if ((!sync_outside) || (sync_outside && (slice_type == SLICE_TYPE_I))) {
+                pts_lookup_offset(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0);
             }
 
             vf->index = display_buff_id;
@@ -1150,6 +1155,7 @@ static void vh264_4k2k_local_init(void)
     if (frame_width && frame_height) {
         frame_ar = frame_height * 0x100 / frame_width;
     }
+    sync_outside = ((u32)vh264_4k2k_amstream_dec_info.param & 0x02) >> 1;
     error_watchdog_count = 0;
 
     printk("H264_4K2K: decinfo: %dx%d rate=%d\n", frame_width, frame_height, frame_dur);
@@ -1406,6 +1412,8 @@ static int amvdec_h264_4k2k_probe(struct platform_device *pdev)
     cma_dev = pdata->cma_dev;
 
     printk("H.264 4k2k decoder mem resource 0x%x -- 0x%x\n", decoder_buffer_start, decoder_buffer_end);
+    printk("                   sysinfo: %dx%d, rate = %d, param = 0x%x\n",
+           vh264_4k2k_amstream_dec_info.width, vh264_4k2k_amstream_dec_info.height, vh264_4k2k_amstream_dec_info.rate, (u32)vh264_4k2k_amstream_dec_info.param);
 
     if (!H264_4K2K_SINGLE_CORE) {
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8)&&(HAS_HDEC)
