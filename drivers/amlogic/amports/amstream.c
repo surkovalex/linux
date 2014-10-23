@@ -936,7 +936,7 @@ static ssize_t amstream_sub_read(struct file *file, char __user *buf, size_t cou
     sub_wp = stbuf_sub_wp_get();
     sub_start = stbuf_sub_start_get();
 
-    if (sub_wp == sub_rp) {
+    if (sub_wp == sub_rp||sub_rp==0) {
         return 0;
     }
 
