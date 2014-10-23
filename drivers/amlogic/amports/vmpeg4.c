@@ -84,6 +84,7 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_LEVEL_DESC, LOG_DEFAULT_MASK_DESC);
 #define MP4_NOT_CODED_CNT   AV_SCRATCH_A
 #define MP4_VOP_TIME_INC    AV_SCRATCH_B
 #define MP4_OFFSET_REG      AV_SCRATCH_C
+#define MP4_SYS_RATE        AV_SCRATCH_E
 #define MEM_OFFSET_REG      AV_SCRATCH_F
 
 #define PARC_FORBIDDEN              0
@@ -745,7 +746,8 @@ static void vmpeg4_prot_init(void)
     WRITE_VREG(MDEC_PIC_DC_THRESH, 0x404038aa);
 #endif
 
-WRITE_VREG(MP4_PIC_WH, (vmpeg4_amstream_dec_info.width << 16) | vmpeg4_amstream_dec_info.height);
+    WRITE_VREG(MP4_PIC_WH, (vmpeg4_amstream_dec_info.width << 16) | vmpeg4_amstream_dec_info.height);
+    WRITE_VREG(MP4_SYS_RATE, vmpeg4_amstream_dec_info.rate);
 }
 
 static void vmpeg4_local_init(void)
