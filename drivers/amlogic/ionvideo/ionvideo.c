@@ -191,6 +191,11 @@ static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *b
                 dev->pts = vf->pts_us64;
         } else
             dev->pts = vf->pts_us64;
+
+        if (vf->width <= ((dev->width+31)&(~31))) //for omx AdaptivePlayback
+            dev->ppmgr2_dev.dst_width = vf->width;
+        if (vf->height <= dev->height)
+            dev->ppmgr2_dev.dst_height = vf->height;
         ret = ppmgr2_process(vf, &dev->ppmgr2_dev, vb->v4l2_buf.index);
         if (ret) {
             vf_put(vf, RECEIVER_NAME);
@@ -200,6 +205,8 @@ static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *b
         vf_put(vf, RECEIVER_NAME);
         buf->vb.v4l2_buf.timestamp.tv_sec = dev->pts >> 32;
         buf->vb.v4l2_buf.timestamp.tv_usec = dev->pts & 0xFFFFFFFF;
+        buf->vb.v4l2_buf.timecode.type = dev->ppmgr2_dev.dst_width;
+        buf->vb.v4l2_buf.timecode.flags = dev->ppmgr2_dev.dst_height;
     }
 //-------------------------------------------------------
     return 0;
