@@ -313,7 +313,7 @@ void root_func(){
 		dev_name = "mesonvout";
 		status = "okay";
 	};
-/*
+
 /// ***************************************************************************************
 ///	-	DISP&MM-A/V Amvideocap
 //$$ MODULE = "DISP&MM-Amvideocap"
@@ -328,7 +328,6 @@ void root_func(){
 		reserve-iomap = "true";
 	};
 
-*/
 /// ***************************************************************************************
 ///	-	RTC
 //$$ MODULE="RTC"
