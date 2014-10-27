@@ -207,7 +207,7 @@ static void init_pmu4_phy(struct phy_device *phydev)
         phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
         phy_write(phydev,SMI_ADDR_TSTWRITE,0x2636);//write val
         phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A5CFG);//write addr 0x16
-        phy_write(phydev,SMI_ADDR_TSTWRITE,3);//write val
+        phy_write(phydev,SMI_ADDR_TSTWRITE,5);//write val
         phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x0108);
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A9CFG);//write addr 0x1b	
@@ -238,7 +238,7 @@ void init_pmu4_phy_10B(struct phy_device *phydev)
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x246);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A5CFG);//write addr 0x16
-	phy_write(phydev,SMI_ADDR_TSTWRITE,3);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,5);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x40a4);//write val by chandle (2)
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A9CFG);//write addr 0x1b
@@ -280,7 +280,7 @@ void init_pmu4_phy_100B(struct phy_device *phydev)
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A4CFG);//write addr 0x15
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x8446);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A5CFG);//write addr 0x16
-	phy_write(phydev,SMI_ADDR_TSTWRITE,0x0003);//write val
+	phy_write(phydev,SMI_ADDR_TSTWRITE,0x0005);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A7CFG);//write addr 0x18
 	phy_write(phydev,SMI_ADDR_TSTWRITE,0x40a6);//write val
 	phy_write(phydev,SMI_ADDR_TSTCNTL,TSTCNTL_WR|WR_ADDR_A9CFG);//write addr 0x1b
