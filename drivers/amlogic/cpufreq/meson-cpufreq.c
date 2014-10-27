@@ -42,6 +42,7 @@ struct meson_cpufreq {
 };
 
 static struct meson_cpufreq cpufreq;
+static int fix_syspll = 0;
 
 static DEFINE_MUTEX(meson_cpufreq_mutex);
 
@@ -100,6 +101,9 @@ static int meson_cpufreq_target_locked(struct cpufreq_policy *policy,
     uint cpu = policy ? policy->cpu : 0;
     int ret = -EINVAL;
     unsigned int freqInt = 0;
+	struct cpufreq_frequency_table *freq_table = NULL;
+    unsigned int freq_new, index;
+
 	if (cpu > (NR_CPUS - 1)) {
         printk(KERN_ERR"cpu %d set target freq error\n",cpu);
         return ret;
@@ -123,7 +127,21 @@ static int meson_cpufreq_target_locked(struct cpufreq_policy *policy,
         }
     }
 
-
+    /*
+     * CPU frequent should only select from aviliable frequent table 
+     * if under fix syspll mode
+     */
+    if (fix_syspll) {
+        freq_table = cpufreq_frequency_get_table(policy->cpu);
+        ret        = cpufreq_frequency_table_target(policy, freq_table, target_freq,
+        		                                    CPUFREQ_RELATION_H, &index);
+        if(ret >= 0) {
+        	freq_new = freq_table[index].frequency;
+            target_freq = freq_new;
+        } else {
+            printk(KERN_ERR"input frequent :%d cannot found in frequent table, ret:%d\n", target_freq, ret);
+        }
+    }
 
     freqs.old = clk_get_rate(cpufreq.armclk) / 1000;
     freqs.new = clk_round_rate(cpufreq.armclk, target_freq * 1000) / 1000;
@@ -227,8 +245,13 @@ static int meson_cpufreq_init(struct cpufreq_policy *policy)
                                          policy->cpu);
     } else {
 #endif
+    if (fix_syspll) {           // select fix pll table if syspll_fixed is enabled in dts
+	    cpufreq_frequency_table_get_attr(meson_freq_table_fix_syspll,
+                                         policy->cpu);
+    } else {
 	    cpufreq_frequency_table_get_attr(meson_freq_table,
                                          policy->cpu);
+    }
 #if 0
     }
 #endif
@@ -348,7 +371,14 @@ static int __init meson_cpufreq_probe(struct platform_device *pdev)
 
 #ifdef CONFIG_USE_OF
 		const void *prop;
-
+    int err = 0;
+    if (pdev->dev.of_node) {
+        err = of_property_read_bool(pdev->dev.of_node, "syspll_fixed");
+        if (err) {
+            printk("%s:SYSPLL request to be fixed\n", __func__);
+            fix_syspll = 1;
+        }
+    }
 		if (pdev->dev.of_node) {
 			prop = of_get_property(pdev->dev.of_node, "voltage_control", NULL);
 			if(prop)

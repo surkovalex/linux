@@ -1503,6 +1503,7 @@ void root_func(){
 //$$ L2 PROP_STR = "status"
     cpufreq-meson{
         compatible = "amlogic,cpufreq-meson";
+        syspll_fixed;
         status = "okay";
     };
 
