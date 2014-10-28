@@ -38,7 +38,8 @@
 /* Globals */
 static int zram_major;
 struct zram *zram_devices;
-
+void *compress_addr = NULL;
+void *user_addr = NULL;
 /* Module params (documentation at end) */
 static unsigned int num_devices = 1;
 
@@ -593,7 +594,45 @@ static void zram_slot_free_notify(struct block_device *bdev,
 	zram_stat64_inc(zram, &zram->stats.notify_free);
 }
 
+static int zram_ioctl(struct block_device *bdev, fmode_t f_mode,
+					  unsigned page_addr, unsigned long compress_len)
+{
+	int ret = 0;
+	size_t clen;
+	unsigned char *src = NULL, *uncmem = NULL, *user_mem = NULL;
+	unsigned long *compress_len_temp = (unsigned long *)compress_len;
+	void *compress_workmem = NULL;
+
+	switch(f_mode){
+		case 80:
+		if(!compress_addr){
+			*compress_len_temp = 0;
+			return -ENOMEM;
+		}
+
+		uncmem = kmap_atomic((struct page *)page_addr);
+		user_mem = user_addr;
+		memcpy(user_mem, uncmem, PAGE_SIZE);
+		src = user_mem + PAGE_SIZE;
+		compress_workmem = compress_addr;
+
+		ret = lzo1x_1_compress(user_mem, PAGE_SIZE, src, &clen,
+					   compress_workmem);
+
+		kunmap_atomic(uncmem);
+
+		*compress_len_temp = (unsigned long)clen;
+		break;
+
+		default:
+		break;
+	}
+
+	return ret;
+}
+
 static const struct block_device_operations zram_devops = {
+	.ioctl = zram_ioctl,
 	.swap_slot_free_notify = zram_slot_free_notify,
 	.owner = THIS_MODULE
 };
@@ -692,6 +731,16 @@ static int __init zram_init(void)
 		pr_warn("Invalid value for num_devices: %u\n",
 				num_devices);
 		ret = -EINVAL;
+		goto out;
+	}
+	compress_addr = kzalloc(LZO1X_MEM_COMPRESS, GFP_KERNEL);
+	if(!compress_addr){
+		ret = -ENOMEM;
+		goto out;
+	}
+	user_addr = kzalloc(PAGE_SIZE << 1, GFP_KERNEL);
+	if(!user_addr){
+		ret = -ENOMEM;
 		goto out;
 	}
 
