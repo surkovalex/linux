@@ -611,6 +611,64 @@
 
         max_lane_count=<1>; /** max lane count supported */
     };
+	
+//$$ MATCH "lcd_model_config_match" = <&lcd_B140RTN02>
+//$$ L2 PROP_STR = "model_name"
+//$$ L2 PROP_STR = "interface"
+//$$ L2 PROP_U32 2 = "active_area"
+//$$ L2 PROP_U32 2 = "lcd_bits_option"
+//$$ L2 PROP_U32 2 = "resolution"
+//$$ L2 PROP_U32 2 = "period"
+//$$ L2 PROP_U32 2 = "clock_hz_pol"
+//$$ L2 PROP_U32 2 = "hsync_width_backporch"
+//$$ L2 PROP_U32 2 = "vsync_width_backporch"
+//$$ L2 PROP_U32 2 = "pol_hsync_vsync"
+//$$ L2 PROP_U32 = "max_lane_count"
+    lcd_B140RTN02:lcd_B140RTN02{
+        model_name="B140RTN02"; /** lcd model name */
+        interface="edp";		/** lcd_interface(mipi, lvds, edp, ttl) */
+        active_area=<309 174>;	/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
+        lcd_bits_option=<6 0>;	/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
+
+        resolution=<1600 900>;	/** horizontal resolution, vertical resolution */
+        period=<2032 930>;		/** horizontal period(htotal), vertical period(vtotal) */
+
+        clock_hz_pol=<113385600 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
+        hsync_width_backporch=<32 200>;	/** hsync_width, hsync_backporch(include hsync_width) */
+        vsync_width_backporch=<2 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+        pol_hsync_vsync=<1 1>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+
+        max_lane_count=<1>; /** max lane count supported */
+    };
+	
+//$$ MATCH "lcd_model_config_match" = <&lcd_LP097QX2>
+//$$ L2 PROP_STR = "model_name"
+//$$ L2 PROP_STR = "interface"
+//$$ L2 PROP_U32 2 = "active_area"
+//$$ L2 PROP_U32 2 = "lcd_bits_option"
+//$$ L2 PROP_U32 2 = "resolution"
+//$$ L2 PROP_U32 2 = "period"
+//$$ L2 PROP_U32 2 = "clock_hz_pol"
+//$$ L2 PROP_U32 2 = "hsync_width_backporch"
+//$$ L2 PROP_U32 2 = "vsync_width_backporch"
+//$$ L2 PROP_U32 2 = "pol_hsync_vsync"
+//$$ L2 PROP_U32 = "max_lane_count"
+	lcd_LP097QX2:lcd_LP097QX2{
+		model_name="LP097QX2";	/** lcd model name */
+		interface="edp";	 /** lcd_interface(mipi, lvds, edp, ttl) */
+		active_area=<163 208>;	/** lcd active_area or display_area horizontal size, vertical size : (unit in mm, you can find them on the home page of lcd spec) */
+		lcd_bits_option=<8 0>;	/** lcd_bits(6,8), bits_option(0=only support one mode as lcd_bits define, 1=both support 6/8bit) */
+
+		resolution=<1536 2048>;	/** horizontal resolution, vertical resolution */
+		period=<1759 2081>;	 /** horizontal period(htotal), vertical period(vtotal) */
+
+		clock_hz_pol=<200000000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
+		hsync_width_backporch=<15 67>;	/** hsync_width, hsync_backporch(include hsync_width) */
+		vsync_width_backporch=<1 4>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		pol_hsync_vsync=<1 1>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
+ 
+		max_lane_count=<4>; /** max lane count supported */
+	};
 
 //******************************************************************************
 //lvds
