@@ -588,14 +588,14 @@ void aml_sdhc_init_debugfs(struct mmc_host *mmc)
 		goto err;
 	}
 
-	debugfs_create_x32("sdhc_dbg", S_IRWXUGO, root, (u32 *)&sdhc_debug);
+	debugfs_create_x32("sdhc_dbg", S_IRUGO | S_IWUSR, root, (u32 *)&sdhc_debug);
 
-	node = debugfs_create_file("sdhc_regs", S_IRWXUGO, root, mmc,
+	node = debugfs_create_file("sdhc_regs", S_IRUGO, root, mmc,
                 &aml_sdhc_regs_fops);
 	if (IS_ERR(node))
 		return;
 
-	node = debugfs_create_file("params", S_IRWXUGO, root, mmc,
+	node = debugfs_create_file("params", S_IRUGO, root, mmc,
                 &amlsd_param_fops);
 	if (IS_ERR(node))
 		return;
@@ -627,14 +627,14 @@ void aml_sdio_init_debugfs(struct mmc_host *mmc)
 		goto err;
 	}
 
-	debugfs_create_x32("sdio_dbg", S_IRWXUGO, root, (u32 *)&sdio_debug);
+	debugfs_create_x32("sdio_dbg", S_IRUGO | S_IWUSR, root, (u32 *)&sdio_debug);
 
-	node = debugfs_create_file("sdio_regs", S_IRWXUGO, root, mmc,
+	node = debugfs_create_file("sdio_regs", S_IRUGO, root, mmc,
                 &aml_sdio_regs_fops);
 	if (IS_ERR(node))
 		return;
 
-	node = debugfs_create_file("params", S_IRWXUGO, root, mmc,
+	node = debugfs_create_file("params", S_IRUGO, root, mmc,
                 &amlsd_param_fops);
 	if (IS_ERR(node))
 		return;
