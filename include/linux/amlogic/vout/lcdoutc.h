@@ -217,6 +217,7 @@ typedef struct {
 	unsigned char preemphasis;
 	unsigned int bit_rate;
 	unsigned int sync_clock_mode;
+	unsigned char edid_timing_used;
 } EDP_Config_t;
 
 typedef struct {
@@ -296,6 +297,7 @@ typedef struct {
     void (*module_disable)(void);
     void (*lcd_test)(unsigned num);
     void (*print_version)(void);
+    void (*edp_edid_load)(void);
 } Lcd_Misc_Ctrl_t;
 
 typedef struct {

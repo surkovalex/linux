@@ -197,7 +197,7 @@ static int lcd_power_ctrl(Bool_t status)
 					break;
 				case LCD_POWER_TYPE_SIGNAL:
 					if (pDev->pConf->lcd_power_ctrl.ports_ctrl == NULL)
-						printk("no lcd_ports_ctrl\n");
+						lcd_print("no lcd_ports_ctrl\n");
 					else
 						pDev->pConf->lcd_power_ctrl.ports_ctrl(ON);
 					break;
@@ -261,7 +261,7 @@ static int lcd_power_ctrl(Bool_t status)
 					break;
 				case LCD_POWER_TYPE_SIGNAL:
 					if (pDev->pConf->lcd_power_ctrl.ports_ctrl == NULL)
-						printk("no lcd_ports_ctrl\n");
+						lcd_print("no lcd_ports_ctrl\n");
 					else
 						pDev->pConf->lcd_power_ctrl.ports_ctrl(OFF);
 					break;
@@ -793,7 +793,8 @@ static int temp_ttl_rb_swap, temp_ttl_bit_swap;
 static int temp_lvds_repack, temp_pn_swap, temp_lvds_vswing;
 static unsigned char temp_dsi_lane_num;
 static unsigned temp_dsi_bit_rate_min, temp_dsi_bit_rate_max, temp_factor_denominator, temp_factor_numerator;
-static unsigned char temp_edp_link_rate, temp_edp_lane_count, temp_edp_vswing, temp_edp_preemphasis;
+static unsigned char temp_edp_link_rate, temp_edp_lane_count, temp_edp_vswing, temp_edp_preemphasis, temp_edp_edid_timing_used;
+static unsigned int temp_edp_sync_clock_mode;
 
 static const char * lcd_common_usage_str =
 {"Usage:\n"
@@ -846,11 +847,12 @@ static const char * lcd_usage_str =
 "    echo mctl <init_mode> <disp_mode> <lp_clk_auto_stop> <transfer_switch> > debug ; write mipi-dsi control config\n"
 #endif
 #ifdef CONFIG_LCD_IF_EDP_VALID
-"    echo edp <link_rate> <lane_count> <vswing_level> > debug ; write edp config\n"
+"    echo edp <link_rate> <lane_count> <vswing_level> > debug ; write edp lane config\n"
+"    echo ectl <edid_timing_used> <sync_clock_mode> > debug; write edp control config"
 #endif
 "data format:\n"
 "    <xx_swap>      : 0=normal, 1=swap\n"
-"    <vswing_level> : lvds support level 0~4 (Default=1);"
+"    <vswing_level> : lvds support level 0~4 (Default=1),"
 #ifdef CONFIG_LCD_IF_EDP_VALID
 " edp support level 0~3 (default=0)"
 #endif
@@ -865,7 +867,9 @@ static const char * lcd_usage_str =
 "    <transfer_switch>  : 0=auto, 1=standard, 2=slow\n"
 #endif
 #ifdef CONFIG_LCD_IF_EDP_VALID
-"    <link_rate>    : 0=1.62G, 1=2.7G\n"
+"    <link_rate>        : 0=1.62G, 1=2.7G\n"
+"    <edid_timing_used> : 0=no use, 1=use, default=0\n"
+"    <sync_clock_mode>  : 0=asyncronous, 1=synchronous, default=1\n"
 #endif
 "\n"
 "    echo offset <h_sign> <h_offset> <v_sign> <v_offset> > debug ; write ttl display offset\n"
@@ -960,10 +964,11 @@ static void read_current_lcd_config(Lcd_Config_t *pConf)
                    "link_adaptive     %u\n"
                    "vswing            %u\n"
                    "max_lane_count    %u\n"
-                   "sync_clock_mode   %u\n\n",
+                   "sync_clock_mode   %u\n"
+                   "EDID timing used  %u\n\n",
                    ((pConf->lcd_control.edp_config->link_rate == 0) ? "1.62G":"2.7G"), pConf->lcd_control.edp_config->lane_count,
                    pConf->lcd_control.edp_config->link_adaptive, pConf->lcd_control.edp_config->vswing,
-                   pConf->lcd_control.edp_config->max_lane_count, pConf->lcd_control.edp_config->sync_clock_mode);
+                   pConf->lcd_control.edp_config->max_lane_count, pConf->lcd_control.edp_config->sync_clock_mode, pConf->lcd_control.edp_config->edid_timing_used);
             break;
         default:
             break;
@@ -1019,6 +1024,8 @@ static void save_lcd_config(Lcd_Config_t *pConf)
 			temp_edp_lane_count = pConf->lcd_control.edp_config->lane_count;
 			temp_edp_vswing = pConf->lcd_control.edp_config->vswing;
 			temp_edp_preemphasis = pConf->lcd_control.edp_config->preemphasis;
+			temp_edp_sync_clock_mode = pConf->lcd_control.edp_config->sync_clock_mode;
+			temp_edp_edid_timing_used = pConf->lcd_control.edp_config->edid_timing_used;
 			break;
 		case LCD_DIGITAL_LVDS:
 			temp_lvds_repack = pConf->lcd_control.lvds_config->lvds_repack;
@@ -1090,6 +1097,8 @@ static void reset_lcd_config(Lcd_Config_t *pConf)
 			pConf->lcd_control.edp_config->lane_count = temp_edp_lane_count;
 			pConf->lcd_control.edp_config->vswing = temp_edp_vswing;
 			pConf->lcd_control.edp_config->preemphasis = temp_edp_preemphasis;
+			pConf->lcd_control.edp_config->sync_clock_mode = temp_edp_sync_clock_mode;
+			pConf->lcd_control.edp_config->edid_timing_used = temp_edp_edid_timing_used;
 			break;
 		case LCD_DIGITAL_LVDS:
 			pConf->lcd_control.lvds_config->lvds_repack = temp_lvds_repack;
@@ -1295,10 +1304,7 @@ static ssize_t lcd_debug(struct class *class, struct class_attribute *attr, cons
 				t[1] = 4;
 				t[2] = 0;
 				ret = sscanf(buf, "edp %u %u %u", &t[0], &t[1], &t[2]);
-				if (t[0] == 0)
-					pDev->pConf->lcd_control.edp_config->link_rate = 0;
-				else
-					pDev->pConf->lcd_control.edp_config->link_rate = 1;
+				pDev->pConf->lcd_control.edp_config->link_rate = ((t[0] == 0) ? 0 : 1);
 				switch (t[1]) {
 					case 1:
 					case 2:
@@ -1310,6 +1316,15 @@ static ssize_t lcd_debug(struct class *class, struct class_attribute *attr, cons
 				}
 				pDev->pConf->lcd_control.edp_config->vswing = t[2];
 				printk("set edp link_rate = %s, lane_count = %u, vswing_level = %u\n", ((pDev->pConf->lcd_control.edp_config->link_rate == 0) ? "1.62G":"2.7G"), pDev->pConf->lcd_control.edp_config->lane_count, pDev->pConf->lcd_control.edp_config->vswing);
+			}
+			else if (buf[1] == 'c') {
+				t[0] = 0;
+				t[1] = 1;
+				ret = sscanf(buf, "ectl %u %u", &t[0], &t[1]);
+				pDev->pConf->lcd_control.edp_config->edid_timing_used = ((t[0] == 0) ? 0 : 1);
+				pDev->pConf->lcd_control.edp_config->sync_clock_mode = ((t[1] == 0) ? 0 : 1);
+				printk("set edp edid_timing_used = %u, sync_clock_mode = %u\n", pDev->pConf->lcd_control.edp_config->edid_timing_used, pDev->pConf->lcd_control.edp_config->sync_clock_mode);
+				pDev->pConf->lcd_misc_ctrl.edp_edid_load();
 			}
 #endif
 			else {
@@ -1591,7 +1606,7 @@ static int _get_lcd_model_timing(Lcd_Config_t *pConf, struct platform_device *pd
 		lcd_print("pol hsync = %u, vsync = %u\n", (pConf->lcd_timing.pol_ctrl >> POL_CTRL_HS) & 1, (pConf->lcd_timing.pol_ctrl >> POL_CTRL_VS) & 1);
 		ret = of_property_read_u32_array(lcd_model_node,"vsync_horizontal_phase",&lcd_para[0], 2);
 		if(ret){
-			printk("faild to get vsync_horizontal_phase\n");
+			lcd_print("faild to get vsync_horizontal_phase\n");
 			pConf->lcd_timing.vsync_h_phase = 0;
 		} else {
 			pConf->lcd_timing.vsync_h_phase = ((lcd_para[0] << 31) | ((lcd_para[1] & 0xffff) << 0));
@@ -2003,6 +2018,15 @@ static int _get_lcd_default_config(Lcd_Config_t *pConf, struct platform_device *
 			else {
 				pConf->lcd_control.edp_config->sync_clock_mode = (val & 1);
 				printk("edp sync_clock_mode = %u\n", pConf->lcd_control.edp_config->sync_clock_mode);
+			}
+			ret = of_property_read_u32(pdev->dev.of_node,"edp_edid_timing_used",&val);
+			if(ret){
+				printk("don't find to match edp_edid_timing_used, use default setting.\n");
+				pConf->lcd_control.edp_config->edid_timing_used = 0;
+			}
+			else {
+				pConf->lcd_control.edp_config->edid_timing_used = (unsigned char)(val & 1);
+				printk("edp edid_timing_used = %u\n", pConf->lcd_control.edp_config->edid_timing_used);
 			}
 		}
 		ret = of_property_read_u32_array(pdev->dev.of_node,"rgb_base_coeff",&lcd_para[0], 2);

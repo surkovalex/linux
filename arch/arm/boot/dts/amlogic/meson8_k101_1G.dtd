@@ -938,6 +938,7 @@ sdio{
 //$$ L4 PROP_U32 3 = "edp_user_link_rate_lane_count"
 //$$ L4 PROP_U32 2 = "edp_link_adaptive_vswing"
 //$$ L4 PROP_U32 = "edp_sync_clock_mode"
+//$$ L4 PROP_U32 = "edp_edid_timing_used"
 //$$ L4 PROP_U32 2 = "rgb_base_coeff"
 
 //$$ L2 PROP_STR 3 = "power_on_uboot"
@@ -1025,6 +1026,7 @@ sdio{
 		edp_user_link_rate_lane_count=<1 1 4>;	/** edp_user(0=auto setting, 1=user define), link_rate(0=1.62G, 1=2.7G, only valid when edp_user=1), lane_count(support 1,2,4, only valid when edp_user=1) */
 		edp_link_adaptive_vswing=<0 0>;	/** adaptive(0=fixed user defined vswing, 1=auto setting vswing by training), vswing(support level 0,1,2,3, user defined vswing, only valid when adaptive=0) */
 		edp_sync_clock_mode=<1>; /** clocking mode for the user data: (0=asyncronous clock, 1=synchronous clock. default 1) */
+		edp_edid_timing_used=<0>; /** edp use edid timing: (0=no use, 1=use) */
 		rgb_base_coeff=<0xf0 0x74a>;	/** rgb_base, rgb_coeff */
 
 		//lcd power ctrl	//support up to 15 steps for each sequence
