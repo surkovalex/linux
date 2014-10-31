@@ -307,6 +307,7 @@ void root_func(){
 //$$ L2 PROP_STR = "status"
     rtc{
 		compatible = "amlogic,aml_rtc";
+		sec_adjust = <1735>;
 		status = "okay";
 	};
 
@@ -502,18 +503,18 @@ void root_func(){
 //$$ L3 PROP_U32 = "f_max"
 //$$ L3 PROP_U32 = "max_req_size"
 //$$ L2 PROP_U32 = "card_type"    
-        sdio{
-            status = "ok";
-            port = <0>;          /*0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
-            pinname = "sdio";
-            ocr_avail = <0x200000>;          /*VDD voltage 3.3 ~ 3.4 */
-            caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_SDIO_IRQ","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE";
-            f_min = <300000>;
+ //       sdio{
+ //           status = "ok";
+ //           port = <0>;          /*0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+ //           pinname = "sdio";
+ //           ocr_avail = <0x200000>;          /*VDD voltage 3.3 ~ 3.4 */
+ //           caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_SDIO_IRQ","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE";
+ //           f_min = <300000>;
 //            f_max = <50000000>;
-            f_max = <30000000>;
-            max_req_size = <0x20000>;          /**128KB*/
-            card_type = <3>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-        };
+//            f_max = <30000000>;
+ //           max_req_size = <0x20000>;          /**128KB*/
+ //           card_type = <3>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+//        };
     };
 
 /// ***************************************************************************************
@@ -615,17 +616,17 @@ void root_func(){
 //$$ L3 PROP_U32 = "f_max"
 //$$ L3 PROP_U32 = "max_req_size"    
 //$$ L2 PROP_U32 = "card_type"    
-        // sdio{
-        //     status = "okay";
-        //     port = <3>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
-        //     pinname = "sdio";
-        //     ocr_avail = <0x00200080>; // 3.3:0x200000, 1.8+3.3:0x00200080
-        //     caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE", "MMC_CAP_UHS_SDR12","MMC_CAP_UHS_SDR25","MMC_CAP_UHS_SDR50","MMC_CAP_UHS_SDR104";
-        //     f_min = <300000>;
-        //     f_max = <100000000>;
-        //     max_req_size = <0x20000>;          /**128KB*/
-        //     card_type = <3>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
-        // };
+         sdio{
+             status = "okay";
+             port = <3>;          /**0:sdio_a, 1:sdio_b, 2:sdio_c, 3:sdhc_a, 4:sdhc_b, 5:sdhc_c */
+             pinname = "sdio";
+             ocr_avail = <0x00200080>; // 3.3:0x200000, 1.8+3.3:0x00200080
+             caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE", "MMC_CAP_UHS_SDR12","MMC_CAP_UHS_SDR25","MMC_CAP_UHS_SDR50","MMC_CAP_UHS_SDR104";
+             f_min = <300000>;
+             f_max = <140000000>;
+             max_req_size = <0x20000>;          /**128KB*/
+             card_type = <3>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
+         };
     };
     
 
@@ -743,7 +744,10 @@ void root_func(){
         vcck_dvfs {
             dvfs_id     = <1>;                                  /** must be value of (1 << n)            */
             table_count = <12>;                                 /** must be correct count for dvfs_table */
-            dvfs_table  = <
+            change-frequent-only;
+            post-reduce;
+			inc_threshold = <800000>;
+	    dvfs_table  = <
             /* NOTE: frequent in this table must be ascending order */
             /* frequent(Khz)    min_uV      max_uV                  */
                   96000         860000      860000
@@ -771,7 +775,7 @@ void root_func(){
 	meson_vcck_dvfs_driver{
         compatible = "amlogic, meson_vcck_dvfs";
         dev_name = "meson_vcck_dvfs_driver";
-        status = "ok";
+        status = "disable";
         pinctrl-names = "default";
         pinctrl-0 = <&aml_pwm_pins>;
         use_pwm = <1>; 
@@ -1693,11 +1697,11 @@ void root_func(){
 //$$ L2 PROP_U32 = "amlogic,pullup"
 //$$ L2 PROP_U32 = "amlogic,pullupen"
         sdhc_emmc_clk_cmd_pins:sdhc_emmc_clk_cmd_pins{
-            amlogic,setmask=<4 0x0c000000>;         /*bit[26-27] */
+            amlogic,setmask=<7 0xc0000>;         /*bit[18-19] */
             amlogic,clrmask=<2 0x04c000f0           /*sdhc b & nand*/
                                 5 0x00007c00        /*sdhc a*/
-                                6 0x3f000000>;        /*sdio c*/
-            amlogic,pins = "BOOT_16","BOOT_17"; /** BOOT_16:CMD, BOOT_17:CLK */
+                                6 0xff000000>;        /*sdio c*/
+            amlogic,pins = "BOOT_8","BOOT_10"; /** BOOT_10:CMD, BOOT_8:CLK */
             amlogic,enable-output=<1>; /** 0:output, 1:input */
             amlogic,pullup=<1>;
             amlogic,pullupen=<1>;
@@ -1836,4 +1840,15 @@ void root_func(){
 		};
 
 	};
+
+/// ***************************************************************************************
+///	-	RNG
+//$$ MODULE="RNG"
+//$$ DEVICE="meson-rng"
+//$$ L2 PROP_STR = "status"
+	meson-rng{
+		compatible = "amlogic,meson-rng";
+		status = "ok";
+	};
+
 }; /* end of / */
