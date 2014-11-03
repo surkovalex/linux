@@ -39,7 +39,7 @@ static int i2s_pos_sync = 0;
 #endif
 
 static int i2sbuf[32+16];
-static void  aml_i2s_play()
+static void  aml_i2s_play(void)
 {
         audio_util_set_dac_i2s_format(AUDIO_ALGOUT_DAC_FORMAT_DSP); 	
 	audio_set_i2s_mode(AIU_I2S_MODE_PCM16);
