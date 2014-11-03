@@ -67,9 +67,31 @@ static int s_venc_mux = 0;
 **	sysfs impletement part  
 **
 ******************************************************************/
-static  void   func_default_null(char  *str)
+static  int   func_default_null(char  *str)
 {
-	return ;
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+    int val;
+    unsigned int cntl0=0, cntl1=0;
+    int r = sscanf(str, "%d", &val);
+    if (r != 1) {
+        return -EINVAL;
+    }
+    if ((val < 0) || (val > 1)) {
+        return -EINVAL;
+    }
+    if(!val){
+        cntl0 = 0;
+        cntl1 = 8;
+        WRITE_MPEG_REG(HHI_VDAC_CNTL0, cntl0);//close cvbs
+        WRITE_MPEG_REG(HHI_VDAC_CNTL1, cntl1);
+    }else{
+        cntl0 = 1;
+        cntl1 = 0;
+        WRITE_MPEG_REG(HHI_VDAC_CNTL0, cntl0);//open cvbs
+        WRITE_MPEG_REG(HHI_VDAC_CNTL1, cntl1);
+    }
+#endif
+    return 0;
 }
 static   int* parse_para(char *para,char   *para_num)
 {

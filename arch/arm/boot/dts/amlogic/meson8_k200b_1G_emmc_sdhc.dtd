@@ -254,7 +254,22 @@ void root_func(){
 //	
 /// ***************************************************************************************
 ///	-	DISP&MM-VDIN
-//$$ MODULE = "DISP&MM-VDIN"	
+//$$ MODULE = "DISP&MM-VDIN"
+//$$ DEVICE="vdin0"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 2 = "reg"
+//$$ L2 PROP_U32 = "irq"
+//$$ L2 PROP_U32 = "vdin_id"
+	vdin0{
+		compatible = "amlogic,vdin";
+		dev_name = "vdin0";
+		status = "ok";
+		reserve-memory = <0x01000000>;
+		reserve-iomap = "true";
+		irq = <115>;
+		vdin_id = <0>;
+	};
+
 //$$ DEVICE="vdin1"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 2 = "reg"
@@ -306,6 +321,14 @@ void root_func(){
 	mesonvout{
 		compatible = "amlogic,mesonvout";
 		dev_name = "mesonvout";
+		status = "okay";
+	};
+
+//$$ DEVICE = "mesonvout2"
+//$$ L2 PROP_STR = "status"
+	mesonvout2{
+		compatible = "amlogic,mesonvout2";
+		dev_name = "mesonvout2";
 		status = "okay";
 	};
 

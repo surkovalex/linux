@@ -262,7 +262,7 @@ static void vfm_init(void)
 #endif
 #ifdef CONFIG_TVIN_VIUIN
     char def_ext_id[] = "default_ext";
-    char def_ext_name_chain[] = "vdin amvideo2";
+    char def_ext_name_chain[] = "vdin0 amvideo2";
 #else
 #ifdef CONFIG_AMLOGIC_VIDEOIN_MANAGER
     char def_ext_id[] = "default_ext";

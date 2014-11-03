@@ -14,6 +14,12 @@ config  VSYNC_RDMA
 	default n
 	help
 	  Select to enable VSYNC CBUS RDMA.
+
+config TVIN_VIUIN
+	bool "Amlogic TVIN VIUIN device"
+	default n
+	help
+	  VIUIN device driver.
 	
 config AM_VIDEO
 	bool "Video management"

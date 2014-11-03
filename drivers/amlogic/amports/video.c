@@ -2339,6 +2339,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     if(vdin_ops){
 	arg.cmd = VDIN_CMD_ISR;
 	vdin_ops->tvin_vdin_func(1,&arg);
+	vdin_ops->tvin_vdin_func(0,&arg);
     }
 #endif
     vout_type = detect_vout_type();
@@ -3177,6 +3178,9 @@ static void video_vf_light_unreg_provider(void)
 
 static int video_receiver_event_fun(int type, void* data, void* private_data)
 {
+#ifdef CONFIG_AM_VIDEO2
+    char* provider_name;
+#endif
     if(type == VFRAME_EVENT_PROVIDER_UNREG){
         video_vf_unreg_provider();
 #ifdef CONFIG_AM_VIDEO2
@@ -3192,7 +3196,7 @@ static int video_receiver_event_fun(int type, void* data, void* private_data)
     else if(type == VFRAME_EVENT_PROVIDER_REG){
         enable_video_discontinue_report = 1;
 #ifdef CONFIG_AM_VIDEO2
-        char* provider_name = (char*)data;
+        provider_name = (char*)data;
         if(strncmp(provider_name, "decoder", 7)==0
             || strncmp(provider_name, "ppmgr", 5)==0
             || strncmp(provider_name, "deinterlace", 11)==0

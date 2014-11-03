@@ -366,7 +366,7 @@ static const reg_t tvregs_480p[] = {
 };
 
 static const reg_t tvregs_576i[] = {
-    {VENC_VDAC_SETTING,          0xff,  },
+    {P_VENC_VDAC_SETTING,          0xff,  },
 //	{VCLK_SD},
     {P_ENCI_CFILT_CTRL,                 0x12,    },
     {P_ENCI_CFILT_CTRL2,                 0x12,    },
@@ -417,7 +417,7 @@ static const reg_t tvregs_576i[] = {
 };
 
 static const reg_t tvregs_576cvbs[] = {
-    {VENC_VDAC_SETTING,          0xff,  },
+    {P_VENC_VDAC_SETTING,          0xff,  },
 //	{VCLK_SD},
     {P_ENCI_CFILT_CTRL,                 0x12,    },
     {P_ENCI_CFILT_CTRL2,                 0x12,    },
@@ -732,36 +732,83 @@ static const reg_t tvregs_1080p_50hz[] = {
     {MREG_END_MARKER,            0      }
 };
 
+static const reg_t tvregs_1080p_24hz[] = {
+};
+
+static const reg_t tvregs_4k2k_30hz[] = {
+};
+
+static const reg_t tvregs_4k2k_25hz[] = {
+};
+
+static const reg_t tvregs_4k2k_24hz[] = {
+};
+
+static const reg_t tvregs_4k2k_smpte[] = {
+};
+
+static const reg_t tvregs_vga_640x480[] = {
+};
+
+static const reg_t tvregs_svga_800x600[]={
+};
+
+static const reg_t tvregs_xga_1024x768[] = {
+};
 
 /* The sequence of register tables items must match the enum define in tvmode.h */
 static const reg_t *tvregsTab[] = {
     tvregs_480i,
+    tvregs_480i,
     tvregs_480cvbs,		
     tvregs_480p,
+    tvregs_480p,
+    tvregs_576i,
     tvregs_576i,
     tvregs_576cvbs,
+    tvregs_576p,
     tvregs_576p,
     tvregs_720p,
     tvregs_1080i,       //Adjust tvregs_* sequences and match the enum define in tvmode.h
     tvregs_1080p,
     tvregs_720p_50hz,
     tvregs_1080i_50hz,
-    tvregs_1080p_50hz
+    tvregs_1080p_50hz,
+    tvregs_1080p_24hz,
+    tvregs_4k2k_30hz,
+    tvregs_4k2k_25hz,
+    tvregs_4k2k_24hz,
+    tvregs_4k2k_smpte,
+    tvregs_vga_640x480,
+    tvregs_svga_800x600,
+    tvregs_xga_1024x768
 };
 
 static const tvinfo_t tvinfoTab[] = {
     {.xres =  720, .yres =  480, .id = "480i"},
+    {.xres =  720, .yres =  480, .id = "480i_rpt"},
     {.xres =  720, .yres =  480, .id = "480cvbs"},		
     {.xres =  720, .yres =  480, .id = "480p"},
+    {.xres =  720, .yres =  480, .id = "480p_rpt"},
     {.xres =  720, .yres =  576, .id = "576i"},
+    {.xres =  720, .yres =  576, .id = "576i_rpt"},
     {.xres =  720, .yres =  576, .id = "576cvbs"},
     {.xres =  720, .yres =  576, .id = "576p"},
+    {.xres =  720, .yres =  576, .id = "576p_prt"},
     {.xres = 1280, .yres =  720, .id = "720p"},
     {.xres = 1920, .yres = 1080, .id = "1080i"},
     {.xres = 1920, .yres = 1080, .id = "1080p"},
     {.xres = 1280, .yres =  720, .id = "720p50hz"},
     {.xres = 1920, .yres = 1080, .id = "1080i50hz"},
-    {.xres = 1920, .yres = 1080, .id = "1080p50hz"}
+    {.xres = 1920, .yres = 1080, .id = "1080p50hz"},
+    {.xres = 1920, .yres = 1080, .id = "1080p24hz"},
+    {.xres = 3840, .yres = 2160, .id = "4k2k30hz"},
+    {.xres = 3840, .yres = 2160, .id = "4k2k25hz"},
+    {.xres = 3840, .yres = 2160, .id = "4k2k24hz"},
+    {.xres = 4096, .yres = 2160, .id = "4k2ksmpte"},
+    {.xres = 640, .yres = 480, .id = "vga"},
+    {.xres = 800, .yres = 600, .id = "svga"},
+    {.xres = 1024, .yres = 768, .id = "xga"},
 };
 
 static inline void setreg(const reg_t *r)
