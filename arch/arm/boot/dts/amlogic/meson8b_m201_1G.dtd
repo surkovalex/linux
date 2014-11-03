@@ -4,6 +4,7 @@
 //$$ REMOVE 1
 void root_func(){
 //$$ ADD /{
+	amlogic-dt-id = "m8b_m201_1G";
 	compatible = "AMLOGIC,8726_M8B";
 	model = "AMLOGIC";
 	interrupt-parent = <&gic>;
