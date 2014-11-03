@@ -1790,6 +1790,27 @@ sdio{
 //			bt_path = "gpio";
 //			status = "okay";
 //		};
+/// - hm1375
+//$$ DEVICE="hm1375"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "front_back"
+//$$ L2 PROP_STR = "i2c_bus"
+//$$ L2 PROP_STR = "gpio_pwdn"
+//$$ L2 PROP_STR = "gpio_rst"
+//$$ L2 PROP_U32 = "mirror_flip"
+//$$ L2 PROP_U32 = "vertical_flip"
+//$$ L2 PROP_STR = "bt_path"
+//   cam_11{
+//     cam_name = "hm1375";
+//     front_back = <0>;
+//     i2c_bus = "i2c_bus_d";
+//     gpio_pwdn = "GPIOH_5";
+//     gpio_rst = "GPIOH_4";
+//     mirror_flip = <0>;
+//     vertical_flip = <0>;  
+//     bt_path = "gpio";
+//     status = "okay";
+//   };
 	};	
 
 /// ***************************************************************************************
