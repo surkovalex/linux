@@ -254,6 +254,7 @@ int tvoutc_setmode2(tvmode_t mode)
 		case TVMODE_576CVBS:
 		case TVMODE_576P:
 			  //WRITE_MPEG_REG(HHI_VIID_CLK_DIV, (READ_MPEG_REG(HHI_VIID_CLK_DIV)&(~(0xff)))|0x3); // reg 0x104a 
+			  #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 			  WRITE_VCBUS_REG_BITS(VPU_VIU_VENC_MUX_CTRL, 1, 2, 2); //reg0x271a, select ENCT to VIU2
 			  WRITE_CBUS_REG_BITS(HHI_VIID_DIVIDER_CNTL, 0x03, 0, 2);
 			  WRITE_CBUS_REG_BITS(HHI_VID2_PLL_CNTL5, 1, 16, 1);
@@ -279,6 +280,7 @@ int tvoutc_setmode2(tvmode_t mode)
 			  WRITE_CBUS_REG_BITS(HHI_VIID_CLK_DIV, 0x09, 24, 4); //0x104a, select v2_clk_div2 for cts_vdac_clk[1] (DAC3)
 			  WRITE_CBUS_REG_BITS(HHI_VID2_PLL_CNTL, 0x01, 29, 1);//reset
 			  WRITE_CBUS_REG_BITS(HHI_VID2_PLL_CNTL, 0x00, 29, 1);//clean reset
+			  #endif
 			  break;
 		case TVMODE_720P:
 		case TVMODE_720P_50HZ:
@@ -296,10 +298,12 @@ int tvoutc_setmode2(tvmode_t mode)
     //WRITE_MPEG_REG(HHI_VIID_CLK_CNTL, 0x8001f); //reg 0x104b, select vid_pll_clk as source of v2_clk_divN
     //WRITE_MPEG_REG(HHI_VID_CLK_DIV, (READ_MPEG_REG(HHI_VID_CLK_DIV)&(~(0xff<<24)))|(0x88<<24)); // reg 0x1059, select cts_encp_clk and cts_enci_clk from v2_clk_div1
     //aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, 2, 2, 2); //reg0x271a, select ENCP to VIU2
+    #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     aml_write_reg32(P_HHI_VDAC_CNTL0, 0x00000001);
     aml_write_reg32(P_HHI_VDAC_CNTL1, 0x00000000);
     aml_write_reg32(P_ENCI_MACV_N0, 0x00000000);
     aml_write_reg32(P_HHI_GCLK_OTHER, aml_read_reg32(P_HHI_GCLK_OTHER)|(1<<8));
+    #endif
     aml_write_reg32(P_VPP2_POSTBLEND_H_SIZE, tvinfoTab[mode].xres);
     
 // For debug only
