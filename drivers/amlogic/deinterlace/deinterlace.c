@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-09-18a";//set drop count to 1 for tv channel
+static char version_s[] = "2014-11-3a";//remap dup_p buffer to mtnp
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -4765,9 +4765,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    case PULL_DONW_BLEND_0:
 	    case PULL_DOWN_NORMAL:
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
-		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
+		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[0], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
-		config_canvas_idx(di_buf->di_buf_dup_p[0], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
+		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);//remove from m8
 		break;
 	    case PULL_DOWN_BLEND_2:
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
@@ -4800,8 +4800,8 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    case PULL_DOWN_NORMAL:
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
-		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
-		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[0]->mtn_canvas_idx;
+		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
+		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
 		post_blend_mode = 3;
 		blend_mtn_en = 1;
 		ei_en = 1;
