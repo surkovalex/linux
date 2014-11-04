@@ -346,6 +346,7 @@ static int usb_audio_source_info_Insert(u32 usbid, int num)
     struct mutex usb_audio_mutex2;
     struct usb_audio_source_config u1;
     
+    memset(&u1, 0, sizeof(struct usb_audio_source_config));
     mutex_init(&usb_audio_mutex2);
     mutex_lock(&usb_audio_mutex2);
     for(i = 1; i <= num; i++)
