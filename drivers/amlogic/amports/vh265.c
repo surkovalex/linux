@@ -3766,10 +3766,9 @@ static s32 vh265_init(void)
     else 
 #endif
     if(debug&H265_DEBUG_SEND_PARAM_WITH_REG){
-        if (amhevc_loadmc(vh265_mc_send_param_with_reg_mc) < 0) {
-            amhevc_disable();
-            return -EBUSY;
-        }
+        printk("Error, H265_DEBUG_SEND_PARAM_WITH_REG not support!!!\n");
+        amhevc_disable();
+        return -EBUSY;
     }
     else{
         if (amhevc_loadmc(vh265_mc) < 0) {
