@@ -40,6 +40,7 @@ static int zram_major;
 struct zram *zram_devices;
 void *compress_addr = NULL;
 void *user_addr = NULL;
+void *meta_addr = NULL;
 /* Module params (documentation at end) */
 static unsigned int num_devices = 1;
 
@@ -605,7 +606,7 @@ static int zram_ioctl(struct block_device *bdev, fmode_t f_mode,
 
 	switch(f_mode){
 		case 80:
-		if(!compress_addr){
+		if(!compress_addr || !user_addr || !meta_addr){
 			*compress_len_temp = 0;
 			return -ENOMEM;
 		}
@@ -613,7 +614,7 @@ static int zram_ioctl(struct block_device *bdev, fmode_t f_mode,
 		uncmem = kmap_atomic((struct page *)page_addr);
 		user_mem = user_addr;
 		memcpy(user_mem, uncmem, PAGE_SIZE);
-		src = user_mem + PAGE_SIZE;
+		src = meta_addr;
 		compress_workmem = compress_addr;
 
 		ret = lzo1x_1_compress(user_mem, PAGE_SIZE, src, &clen,
@@ -738,8 +739,13 @@ static int __init zram_init(void)
 		ret = -ENOMEM;
 		goto out;
 	}
-	user_addr = kzalloc(PAGE_SIZE << 1, GFP_KERNEL);
+	user_addr = kzalloc(PAGE_SIZE, GFP_KERNEL);
 	if(!user_addr){
+		ret = -ENOMEM;
+		goto out;
+	}
+	meta_addr = kzalloc(PAGE_SIZE << 1, GFP_KERNEL);
+	if(!meta_addr){
 		ret = -ENOMEM;
 		goto out;
 	}
@@ -795,6 +801,9 @@ static void __exit zram_exit(void)
 	unregister_blkdev(zram_major, "zram");
 
 	kfree(zram_devices);
+	kfree(meta_addr);
+	kfree(compress_addr);
+	kfree(user_addr);
 	pr_debug("Cleanup done!\n");
 }
 
