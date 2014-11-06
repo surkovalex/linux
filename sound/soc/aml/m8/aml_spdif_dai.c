@@ -309,9 +309,9 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 	}
 	ALSA_DEBUG("aiu 958 pcm buffer size %d \n",size);	
 	audio_set_958_mode(iec958_mode, &set);
-	if(IEC958_mode_codec == 4 || IEC958_mode_codec == 5 || IEC958_mode_codec == 7){  //dd+
+	if(IEC958_mode_codec == 4 || IEC958_mode_codec == 5 || IEC958_mode_codec == 7 ||IEC958_mode_codec == 8){  //dd+
 		WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 0, 4, 2); // 4x than i2s
-        	printk("DEBUG--> IEC958_mode_codec/%d  4x than i2s\n",IEC958_mode_codec);
+        	printk("IEC958_mode_codec/%d  4x than i2s\n",IEC958_mode_codec);
 	}else
 #if OVERCLOCK == 1 || IEC958_OVERCLOCK == 1	
 		WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 3, 4, 2);//512fs divide 4 == 128fs
@@ -327,8 +327,8 @@ static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
         else if(IEC958_mode_codec == 4){
                 aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DOBLY_DIGITAL_PLUS,substream);
         }else if(IEC958_mode_codec == 5){
-		aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS_HD,substream);
-        }else if(IEC958_mode_codec == 7){
+                aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS_HD,substream);
+        }else if(IEC958_mode_codec == 7 || IEC958_mode_codec == 8){
 		    WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1902);
 		    WRITE_MPEG_REG(AIU_958_CHSTAT_L1, 0x900);
 		    WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1902);

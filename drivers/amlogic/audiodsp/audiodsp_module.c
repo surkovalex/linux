@@ -794,8 +794,8 @@ static ssize_t digital_raw_store(struct class* class, struct class_attribute* at
   printk("IEC958_mode_raw=%d\n", IEC958_mode_raw);
   return count;
 }
-#define SUPPORT_TYPE_NUM  8
-static unsigned char *codec_str[SUPPORT_TYPE_NUM] = {"2 CH PCM","DTS RAW Mode","Dolby Digital","DTS","DD+","DTSHD","8 CH PCM","TrueHD"};
+#define SUPPORT_TYPE_NUM  9
+static unsigned char *codec_str[SUPPORT_TYPE_NUM] = {"2 CH PCM","DTS RAW Mode","Dolby Digital","DTS","DD+","DTSHD","8 CH PCM","TrueHD","DTSLL"};
 static ssize_t digital_codec_show(struct class*cla, struct class_attribute* attr, char* buf)
 {
   char* pbuf = buf;
