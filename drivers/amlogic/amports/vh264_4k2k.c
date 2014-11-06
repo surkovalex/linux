@@ -98,6 +98,7 @@ static struct timer_list recycle_timer;
 static u32 stat;
 static u32 error_watchdog_count;
 static u32 sync_outside;
+static u32 vh264_4k2k_rotation;
 
 #ifdef DEBUG_PTS
 static unsigned long pts_missed, pts_hit;
@@ -279,6 +280,7 @@ static void set_frame_info(vframe_t *vf)
 
     ar = min(frame_ar, (u32)DISP_RATIO_ASPECT_RATIO_MAX);
     vf->ratio_control = (ar << DISP_RATIO_ASPECT_RATIO_BIT);
+    vf->orientation = vh264_4k2k_rotation;
 
     return;
 }
@@ -1154,6 +1156,7 @@ static void vh264_4k2k_local_init(void)
     pts_hit = 0;
 #endif
 
+    vh264_4k2k_rotation = (((u32)vh264_4k2k_amstream_dec_info.param) >> 16) & 0xffff;
     frame_width = vh264_4k2k_amstream_dec_info.width;
     frame_height = vh264_4k2k_amstream_dec_info.height;
     frame_dur = (vh264_4k2k_amstream_dec_info.rate == 0) ? 3600 : vh264_4k2k_amstream_dec_info.rate;
