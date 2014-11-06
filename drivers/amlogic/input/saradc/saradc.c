@@ -102,13 +102,13 @@ static void saradc_reset(void)
 //	set_sc_phase();
 	enable_sample_engine();
 
-//	printk("ADCREG reg0 =%x\n", get_reg(SAR_ADC_REG0));
-//	printk("ADCREG ch list =%x\n", get_reg(SAR_ADC_CHAN_LIST));
-//	printk("ADCREG avg =%x\n", get_reg(SAR_ADC_AVG_CNTL));
-//	printk("ADCREG reg3=%x\n", get_reg(SAR_ADC_REG3));
-//	printk("ADCREG ch72 sw=%x\n", get_reg(SAR_ADC_AUX_SW));
-//	printk("ADCREG ch10 sw=%x\n", get_reg(SAR_ADC_CHAN_10_SW));
-//	printk("ADCREG detect&idle=%x\n", get_reg(SAR_ADC_DETECT_IDLE_SW));
+//	printk("ADCREG reg0 =%x\n", get_reg(PP_SAR_ADC_REG0));
+//	printk("ADCREG ch list =%x\n", get_reg(PP_SAR_ADC_CHAN_LIST));
+//	printk("ADCREG avg =%x\n", get_reg(PP_SAR_ADC_AVG_CNTL));
+//	printk("ADCREG reg3=%x\n", get_reg(PP_SAR_ADC_REG3));
+//	printk("ADCREG ch72 sw=%x\n", get_reg(PP_SAR_ADC_AUX_SW));
+//	printk("ADCREG ch10 sw=%x\n", get_reg(PP_SAR_ADC_CHAN_10_SW));
+//	printk("ADCREG detect&idle=%x\n", get_reg(PP_SAR_ADC_DETECT_IDLE_SW));
 }
 
 #ifdef ENABLE_CALIBRATION
@@ -196,11 +196,11 @@ int get_adc_sample(int chan)
 
 	// Read any CBUS register to delay one clock cycle after starting the sampling engine
 	// The bus is really fast and we may miss that it started
-	value = get_reg(ISA_TIMERE);
+	value = get_reg(P_ISA_TIMERE);
 	count = 0;
 	while (delta_busy() || sample_busy() || avg_busy()) {
 		if (++count > 10000) {
-			printk(KERN_ERR "ADC busy error=%x.\n", READ_CBUS_REG(SAR_ADC_REG0));
+			printk(KERN_ERR "ADC busy error=%x.\n", get_reg(PP_SAR_ADC_REG0));
 			value = -1;
 			goto end;
 		}
@@ -372,7 +372,7 @@ static int get_celius(void)
      *
      */
     ///@todo fix it later
-    if(aml_read_reg32(P_SAR_ADC_REG3)&(1<<29))
+    if(aml_read_reg32(PP_SAR_ADC_REG3)&(1<<29))
     {
         x=23077;
         y=-88;
@@ -399,7 +399,7 @@ static ssize_t temperature_show(struct class *cla, struct class_attribute *attr,
 }
 static ssize_t temperature_mode_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
-    return sprintf(buf, "%d\n", aml_read_reg32(P_SAR_ADC_REG3)&(1<<29)?1:0);
+    return sprintf(buf, "%d\n", aml_read_reg32(PP_SAR_ADC_REG3)&(1<<29)?1:0);
 }
 static ssize_t temperature_mode_store(struct class *cla, struct class_attribute *attr, const char *buf, ssize_t count)
 {
