@@ -72,7 +72,7 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_LEVEL_DESC, LOG_DEFAULT_MASK_DESC);
 #define ORI_BUFFER_START_ADDR   0x01000000
 
 #define INTERLACE_FLAG          0x80
-#define BOTTOM_FIELD_FIRST_FLAG 0x40
+#define TOP_FIELD_FIRST_FLAG    0x40
 
 /* protocol registers */
 #define MP4_PIC_RATIO       AV_SCRATCH_5
@@ -410,7 +410,7 @@ static irqreturn_t vmpeg4_isr(int irq, void *dev_id)
             vf->pts_us64 = pts_us64;
             vf->duration = duration >> 1;
             vf->duration_pulldown = 0;
-            vf->type = (reg & BOTTOM_FIELD_FIRST_FLAG) ? VIDTYPE_INTERLACE_BOTTOM : VIDTYPE_INTERLACE_TOP;
+            vf->type = (reg & TOP_FIELD_FIRST_FLAG) ? VIDTYPE_INTERLACE_TOP : VIDTYPE_INTERLACE_BOTTOM;
 #ifdef NV21
             vf->type |= VIDTYPE_VIU_NV21;
 #endif
@@ -441,7 +441,7 @@ static irqreturn_t vmpeg4_isr(int irq, void *dev_id)
             vf->duration = duration >> 1;
 
             vf->duration_pulldown = 0;
-            vf->type = (reg & BOTTOM_FIELD_FIRST_FLAG) ? VIDTYPE_INTERLACE_BOTTOM : VIDTYPE_INTERLACE_TOP;
+            vf->type = (reg & TOP_FIELD_FIRST_FLAG) ? VIDTYPE_INTERLACE_BOTTOM : VIDTYPE_INTERLACE_TOP;
 #ifdef NV21
             vf->type |= VIDTYPE_VIU_NV21;
 #endif
