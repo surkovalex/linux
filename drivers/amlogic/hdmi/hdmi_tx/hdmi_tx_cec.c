@@ -1716,7 +1716,7 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
     value = aml_read_reg32(P_AO_DEBUG_REG0) & 0x1;
     aml_set_reg32_bits(P_AO_DEBUG_REG0, param[0], 0, 4);
     hdmitx_device->cec_func_config = aml_read_reg32(P_AO_DEBUG_REG0);
-    if(!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK))) {
+    if(!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) || !hdmitx_device->hpd_state ) {
         return ;
     }
     if((0 == value) && (1 == (param[0] & 1))){
