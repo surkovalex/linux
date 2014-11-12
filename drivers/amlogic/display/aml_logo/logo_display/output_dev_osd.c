@@ -211,7 +211,7 @@ static int osd0_init(logo_object_t *plogo)
 #if defined(CONFIG_AM_HDMI_ONLY)
 	int hpd_state = 0;
 #endif
-#if defined(CONFIG_AM_HDMI_ONLY) || (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+#if defined(CONFIG_AM_HDMI_ONLY) || (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6)
 	vmode_t cur_mode = plogo->para.vout_mode;
 #endif
 
@@ -281,7 +281,7 @@ static int osd1_init(logo_object_t *plogo)
 #if defined(CONFIG_AM_HDMI_ONLY)
 	int hpd_state = 0;
 #endif
-#if defined(CONFIG_AM_HDMI_ONLY) || (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+#if defined(CONFIG_AM_HDMI_ONLY) || (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6)
 	vmode_t cur_mode = plogo->para.vout_mode;
 #endif
 
