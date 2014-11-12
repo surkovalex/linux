@@ -153,7 +153,7 @@ static int meson_tick_set_next_event(unsigned long evt,
 #define meson_tick_rating 300
 #endif
 
-#if 0
+#ifndef CONFIG_SMP
 static struct meson_clock meson_timer_a = {
         .clockevent={
             .name           = "MESON TIMER-A",
@@ -177,7 +177,8 @@ static struct meson_clock meson_timer_a = {
         .mux_reg=P_ISA_TIMER_MUX,
         .reg=P_ISA_TIMERA
 };
-#endif
+
+#else
 
 static struct meson_clock meson_timer_f = {
         .clockevent={
@@ -352,7 +353,7 @@ static struct meson_clock meson_timer_i = {
         .mux_reg=P_ISA_TIMER_MUX1,
         .reg=P_ISA_TIMERI,
 };
-
+#endif
 static struct meson_clock *clockevent_to_clock(struct clock_event_device *evt)
 {
 	//return container_of(evt, struct meson_clock, clockevent);
@@ -567,8 +568,10 @@ static void __init meson_clockevent_init(void)
  */
 void __init meson_timer_init(void)
 {
+#ifdef CONFIG_SMP
 	int i;
 	struct meson_clock *clk;
+#endif
 	meson_clocksource_init();
 	meson_clockevent_init();
 #ifdef CONFIG_SMP
