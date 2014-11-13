@@ -1989,9 +1989,16 @@ static ssize_t record_type_show(struct class* class, struct class_attribute* att
      }
 }
 
-
+static int dtsm6_stream_type=0;
+static int dtsm6_apre_cnt=0;
+static int dtsm6_apre_sel=0;
+static int dtsm6_apre_assets_sel=0;
+static int dtsm6_mulasset_hint=0;
+static char dtsm6_apres_assets_Array[32]={0};//Max num of Audiopresentation contains in a dtsm6 stream is 32 
+static int dtsm6_HPS_hint=0;
 static ssize_t store_debug(struct class* class, struct class_attribute* attr,  const char* buf, size_t count )
 {
+    char *after;
     if(strncmp(buf, "chstatus_set", 12)==0)
      {     
                WRITE_MPEG_REG(AIU_958_VALID_CTRL,0);//disable 958 invalid bit			
@@ -2001,13 +2008,48 @@ static ssize_t store_debug(struct class* class, struct class_attribute* attr,  c
             	WRITE_MPEG_REG(AIU_958_VALID_CTRL,3);//enable 958 invalid bit				
             	WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1902);		
               WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1902);	 
-      }
-      return count;
+     }else if(strncmp(buf, "dtsm6_stream_type_set", 21)==0){
+           dtsm6_stream_type=simple_strtoul(buf+21,&after,10); 
+     }else if(strncmp(buf, "dtsm6_apre_cnt_set",18)==0){
+           dtsm6_apre_cnt=simple_strtoul(buf+18,&after,10);
+     }else if(strncmp(buf, "dtsm6_apre_sel_set",18)==0){
+           dtsm6_apre_sel=simple_strtoul(buf+18,&after,10);
+     }else if(strncmp(buf, "dtsm6_apres_assets_set",22)==0){
+           if(dtsm6_apre_cnt>32){
+              printk("[%s %d]unvalid dtsm6_apre_cnt/%d\n",__FUNCTION__,__LINE__,dtsm6_apre_cnt);
+           }else{
+              memcpy(dtsm6_apres_assets_Array,buf+22,dtsm6_apre_cnt);
+           }
+     }else if(strncmp(buf, "dtsm6_apre_assets_sel_set",25)==0){
+           dtsm6_apre_assets_sel=simple_strtoul(buf+25,&after,10);
+     }else if(strncmp(buf, "dtsm6_mulasset_hint",19)==0){
+           dtsm6_mulasset_hint=simple_strtoul(buf+19,&after,10);
+     }else if(strncmp(buf, "dtsm6_clear_info",16)==0){
+           dtsm6_stream_type=0;
+           dtsm6_apre_cnt=0;
+           dtsm6_apre_sel=0;
+           dtsm6_apre_assets_sel=0;
+           dtsm6_mulasset_hint=0;
+           dtsm6_HPS_hint=0;
+           memset(dtsm6_apres_assets_Array,0,sizeof(dtsm6_apres_assets_Array));
+     }else if(strncmp(buf, "dtsm6_hps_hint",14)==0){
+           dtsm6_HPS_hint=simple_strtoul(buf+14,&after,10);;
+     }
+     return count;
 }
-
 static ssize_t show_debug(struct class* class, struct class_attribute* attr,  char* buf)
 {
-      return 0;
+    int pos=0;
+    pos +=sprintf(buf+pos,"dtsM6:StreamType%d \n",dtsm6_stream_type);
+    pos +=sprintf(buf+pos,"ApreCnt%d \n",dtsm6_apre_cnt);
+    pos +=sprintf(buf+pos,"ApreSel%d \n",dtsm6_apre_sel);
+    pos +=sprintf(buf+pos,"ApreAssetSel%d \n",dtsm6_apre_assets_sel);
+    pos +=sprintf(buf+pos,"MulAssetHint%d \n",dtsm6_mulasset_hint);
+    pos +=sprintf(buf+pos,"HPSHint%d \n",dtsm6_HPS_hint);
+    pos +=sprintf(buf+pos,"ApresAssetsArray");
+    memcpy(buf+pos,dtsm6_apres_assets_Array,sizeof(dtsm6_apres_assets_Array));
+    pos +=sizeof(dtsm6_apres_assets_Array);
+    return pos;
 }
 
 static ssize_t show_mute_left_right(struct class* class, struct class_attribute* attr, char* buf)
