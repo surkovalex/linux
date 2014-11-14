@@ -552,6 +552,10 @@ RESTART:
 
 	/*aspect ratio match*/
 	if ((wide_mode >= VIDEO_WIDEOPTION_4_3_IGNORE) && (wide_mode <= VIDEO_WIDEOPTION_16_9_COMBINED) && orig_aspect) {
+		if(vinfo->width && vinfo->height){
+			aspect_ratio_out = (vinfo->height << 8) / vinfo->width;
+		}
+
 		if ((video_height << 8) > (video_width * aspect_ratio_out)) {
 			u32 real_video_height = (video_width * aspect_ratio_out) >> 8;
 
