@@ -1003,10 +1003,14 @@ static ssize_t show_freescale_mode(struct device *device, struct device_attribut
 {
 	struct fb_info *fb_info = dev_get_drvdata(device);
 	unsigned int free_scale_mode=0;
+	char *help_info = "free scale mode:\n"\
+						"    0: VPU free scaler\n" \
+						"    1: OSD free scaler\n" \
+						"    2: OSD super scaler\n";
 
 	osddev_get_free_scale_mode(fb_info->node, &free_scale_mode);
 
-	return snprintf(buf, PAGE_SIZE, "free_scale_mode:%s\n",free_scale_mode?"new":"default");
+	return snprintf(buf, PAGE_SIZE, "%scurrent free_scale_mode:%d\n", help_info, free_scale_mode);
 }
 
 static ssize_t store_scale(struct device *device, struct device_attribute *attr,
