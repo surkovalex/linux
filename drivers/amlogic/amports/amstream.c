@@ -81,6 +81,11 @@
 u32 amstream_port_num;
 u32 amstream_buf_num;
 
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV
+#define NO_VDEC2_INIT 1
+#elif MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
+#define NO_VDEC2_INIT IS_MESON_M8M2_CPU
+#endif
 extern void set_real_audio_info(void *arg);
 
 //#define DATA_DEBUG
@@ -702,7 +707,7 @@ static  int amstream_port_init(stream_port_t *port)
     }
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TVD
-    if (!IS_MESON_M8M2_CPU) {
+    if (!NO_VDEC2_INIT) {
         if ((port->type & PORT_TYPE_VIDEO) && (port->vformat == VFORMAT_H264_4K2K)) {
             stbuf_vdec2_init(pvbuf);
         }
