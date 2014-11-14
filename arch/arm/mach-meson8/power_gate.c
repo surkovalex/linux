@@ -211,11 +211,9 @@ static int _switch_gate(mod_type_t type, int flag)
 	case MOD_VDEC:
 		PRINT_INFO("turn %s vdec module\n", flag?"on":"off");
 		if (flag) {			   
-			//__CLK_GATE_ON(DOS);
-			//aml_set_reg32_mask(P_HHI_VDEC_CLK_CNTL, 1 << 8);
+			__CLK_GATE_ON(DOS);
 		} else {
-			//__CLK_GATE_OFF(DOS);
-			//aml_clr_reg32_mask(P_HHI_VDEC_CLK_CNTL, 1 << 8);
+			__CLK_GATE_OFF(DOS);
 		}
 		break;
 	case MOD_AUDIO:
