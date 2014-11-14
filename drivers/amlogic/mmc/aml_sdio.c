@@ -705,18 +705,30 @@ void aml_sdio_request(struct mmc_host *mmc, struct mmc_request *mrq)
     struct amlsd_host *host;
     unsigned long flags;
     unsigned int timeout;
+    u32 virqc ;
+    struct sdio_irq_config* irqc ;
+
 
     BUG_ON(!mmc);
     BUG_ON(!mrq);
-
+    
     pdata = mmc_priv(mmc);
     host = (void*)pdata->host;
-
+    
+    virqc = readl(host->base + SDIO_IRQC);
+    irqc = (void*)&virqc;
+    
+		if(aml_card_type_non_sdio(pdata)){
+			irqc->arc_if_int_en = 0;
+    	writel(virqc, host->base + SDIO_IRQC);
+		}
+			
+		
     if (aml_check_unsupport_cmd(mmc, mrq))
         return;
 
     //only for SDCARD hotplag
-    if(!pdata->is_in || (!host->init_flag && aml_card_type_sd(pdata))){
+    if(!pdata->is_in || (!host->init_flag && aml_card_type_non_sdio(pdata))&& (mrq->cmd->opcode != 0)){
         spin_lock_irqsave(&host->mrq_lock, flags);
         mrq->cmd->error = -ENOMEDIUM;
         mrq->cmd->retries = 0;
