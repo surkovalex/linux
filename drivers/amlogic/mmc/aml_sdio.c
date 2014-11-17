@@ -728,7 +728,7 @@ void aml_sdio_request(struct mmc_host *mmc, struct mmc_request *mrq)
         return;
 
     //only for SDCARD hotplag
-    if(!pdata->is_in || (!host->init_flag && aml_card_type_non_sdio(pdata))&& (mrq->cmd->opcode != 0)){
+    if((!pdata->is_in || (!host->init_flag && aml_card_type_non_sdio(pdata)))&& (mrq->cmd->opcode != 0)){
         spin_lock_irqsave(&host->mrq_lock, flags);
         mrq->cmd->error = -ENOMEDIUM;
         mrq->cmd->retries = 0;
