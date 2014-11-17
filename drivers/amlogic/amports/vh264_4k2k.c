@@ -408,7 +408,7 @@ int init_canvas(int start_addr, long dpb_size, int dpb_number, int mb_width, int
 
             if (!buffer_spec[i].alloc_pages) {
                 buffer_spec[i].alloc_count = page_count;
-                buffer_spec[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, page_count, 0);
+                buffer_spec[i].alloc_pages = dma_alloc_from_contiguous(cma_dev, page_count, 4);
             } 
             alloc_count++;
 
