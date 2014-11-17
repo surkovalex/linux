@@ -54,7 +54,7 @@ static int amlogic_usb3_suspend(struct usb_phy *x, int suspend)
 	return 0;
 }
 
-void cr_bus_addr (int addr)
+void cr_bus_addr (unsigned int addr)
 {
 	usb_r2_t usb_r2 = {.d32 = 0};
 	usb_r6_t usb_r6 = {.d32 = 0};
@@ -84,7 +84,7 @@ void cr_bus_addr (int addr)
 	} while (usb_r6.b.p30_cr_ack == 1);
 }
 
-int cr_bus_read (int addr)
+int cr_bus_read (unsigned int addr)
 {
 	int data;
 	usb_r2_t usb_r2 = {.d32 = 0};
@@ -118,7 +118,7 @@ int cr_bus_read (int addr)
 	return data;
 }
 
-void cr_bus_write (int addr, int data)
+void cr_bus_write (unsigned int addr, unsigned int data)
 {
 	usb_r2_t usb_r2 = {.d32 = 0};
 	usb_r6_t usb_r6 = {.d32 = 0};
