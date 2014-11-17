@@ -243,6 +243,7 @@ static int amlogic_usb3_init(struct usb_phy *x)
 	 	*/
 		r1.d32 = usb_aml_regs->usb_r1;
 		r1.b.p30_pcs_tx_swing_full = 127;
+		r1.b.u3h_fladj_30mhz_reg = 0x20;
 		usb_aml_regs->usb_r1 = r1.d32;
 
 		/*
