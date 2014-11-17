@@ -200,13 +200,16 @@ config AMLOGIC_TS2_INVERT_S2P1_FEC_CLK
 
 endif
 
+
 if ARCH_MESON6TV || ARCH_MESON6TVD
-config AM_M6_DEMOD
-	tristate "M6 demod driver"
+config ATMB_DEMOD
+	tristate "ATMB demod driver"
 	default n
 	depends on AM_DVB
 	help
-		Select to enable M6 demod driver.
+		Select to enable ATMB demod driver.
+	
+
 endif
 
 isource "../hardware/dvb/altobeam/drivers/atbm887x/Kconfig"

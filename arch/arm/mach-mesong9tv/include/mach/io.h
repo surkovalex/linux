@@ -50,6 +50,7 @@
 #define IO_A9_PERIPH_PHY_BASE		0xc4300000  ///4k
 #define IO_MMC_PHY_BASE			0xc8000000  ///32k
 #define IO_TV_BASE				0xc8008000  ///32k
+#define IO_DEMOD_PHY_BASE		0xc8020000  ///128k
 #define IO_AOBUS_PHY_BASE		0xc8100000  ///1M
 #define IO_USB_A_PHY_BASE		0xc9040000  ///256k
 #define IO_USB_B_PHY_BASE		0xc90C0000  ///256k
@@ -79,7 +80,7 @@
 #define IO_ETH_BASE			(IO_REGS_BASE + 0x0C0000) // 64K
 #define IO_SECBUS_BASE			(IO_REGS_BASE + 0x0D0000) // 32k
 #define IO_TV_BUS_BASE			(IO_REGS_BASE + 0x0D8000) // 32k
-#define IO_RESERVED_2			(IO_REGS_BASE + 0x0E0000) // 128K
+#define IO_DEMOD_BASE			(IO_REGS_BASE + 0x0E0000) // 128k
 #define IO_CBUS_BASE			(IO_REGS_BASE + 0x100000) // 1M
 #define IO_AXI_BUS_BASE			(IO_REGS_BASE + 0x200000) // 2M
 #define IO_APB_BUS_BASE			(IO_REGS_BASE + 0x400000) // 2M
@@ -112,6 +113,7 @@
 #define IO_PL310_BASE			IO_PL310_PHY_BASE      ///4k
 #define IO_PERIPH_BASE			IO_PERIPH_PHY_BASE     ///4k
 #define IO_APB_BUS_BASE			IO_APB_BUS_PHY_BASE    ///8k
+//#define IO_DEMOD_BASE			IO_DEMOD_PHY_BASE		//32k
 #define IO_DOS_BUS_BASE			IO_DOS_BUS_PHY_BASE    ///64k
 #define IO_AOBUS_BASE			IO_AOBUS_PHY_BASE      ///1M
 #define IO_USB_A_BASE			IO_USB_A_PHY_BASE      ///256k
@@ -158,6 +160,9 @@
 #define APB_REG_OFFSET(reg)		(reg&0xfffff)
 #define APB_REG_ADDR(reg)		(IO_APB_BUS_BASE + APB_REG_OFFSET(reg))
 #define APB_REG_ADDR_VALID(reg)		(((unsigned long)(reg) & 3) == 0)
+
+#define DEMOD_REG_OFFSET(reg)		(reg&0xfffff)
+#define DEMOD_REG_ADDR(reg)		(IO_DEMOD_BASE + DEMOD_REG_OFFSET(reg))
 
 #define HDMI_TX_REG_ADDR(reg)		(IO_HDMI_PHY_BASE + reg)
 

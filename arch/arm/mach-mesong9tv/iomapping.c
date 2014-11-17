@@ -74,6 +74,11 @@ static __initdata struct map_desc meson_default_io_desc[]  = {
 	.length		= SZ_32K,
 	.type		= MT_DEVICE,
 	}, {
+	.virtual	= IO_DEMOD_BASE,
+	.pfn		= __phys_to_pfn(IO_DEMOD_PHY_BASE),
+	.length		= SZ_128K,
+	.type		= MT_DEVICE,
+	}, {
 	.virtual	= IO_CBUS_BASE,
 	.pfn		= __phys_to_pfn(IO_CBUS_PHY_BASE),
 	.length		= SZ_1M,

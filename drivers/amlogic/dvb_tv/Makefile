@@ -10,7 +10,7 @@ obj-$(CONFIG_AM_DVB) += aml_fe.o
 
 obj-$(CONFIG_AM_CI) += amlci/
 
-obj-$(CONFIG_AM_M6_DEMOD) += amldemod/
+obj-$(CONFIG_AM_DTVDEMOD) += amldemod/
 
 obj-$(CONFIG_AM_ATVDEMOD) += amlatvdemod/
 

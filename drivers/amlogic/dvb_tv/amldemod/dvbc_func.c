@@ -238,7 +238,7 @@ int dvbc_cci_task(void *data)
 
 		printk("[cci][%s]--------------------------\n",__func__);
 	}
-
+	return 0;
 }
 
 int dvbc_get_cci_task(void)

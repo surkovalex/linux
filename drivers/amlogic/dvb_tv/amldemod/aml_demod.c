@@ -232,10 +232,11 @@ static struct class aml_demod_class = {
     .name = "aml_demod",
     .class_attrs = aml_demod_class_attrs,
 };
+#if 0
 
 static irqreturn_t aml_demod_isr(int irq, void *dev_id)
 {
-#if 0
+
     if (demod_sta.dvb_mode == 0) {
 	//dvbc_isr(&demod_sta);
 	if(dvbc_isr_islock()){
@@ -247,9 +248,10 @@ static irqreturn_t aml_demod_isr(int irq, void *dev_id)
     else {
 	dvbt_isr(&demod_sta);
     }
-#endif
+
     return IRQ_HANDLED;
 }
+#endif
 
 static int aml_demod_open(struct inode *inode, struct file *file)
 {
@@ -549,7 +551,7 @@ int aml_demod_ui_init(void)
 
 	r = class_register(&aml_demod_ui_class);
     if (r) {
-        printk("create aml_demod class fail\n");
+        printk("create aml_demod class fail\r\n");
         class_unregister(&aml_demod_ui_class);
 		return r;
     }
@@ -630,7 +632,7 @@ static int __init aml_demod_init(void)
     init_waitqueue_head(&lock_wq);
 
     /* hook demod isr */
-    r = request_irq(INT_DEMOD, &aml_demod_isr,
+/*    r = request_irq(INT_DEMOD, &aml_demod_isr,
                     IRQF_SHARED, "aml_demod",
                     (void *)aml_demod_dev_id);
 
@@ -638,12 +640,12 @@ static int __init aml_demod_init(void)
         printk("aml_demod irq register error.\n");
         r = -ENOENT;
         goto err0;
-    }
+    }*/
 
     /* sysfs node creation */
     r = class_register(&aml_demod_class);
     if (r) {
-        printk("create aml_demod class fail\n");
+        printk("create aml_demod class fail\r\n");
         goto err1;
     }
 
@@ -696,12 +698,12 @@ static int __init aml_demod_init(void)
     unregister_chrdev_region(aml_demod_devno, 1);
 
   err2:
-    free_irq(INT_DEMOD, (void *)aml_demod_dev_id);
+//    free_irq(INT_DEMOD, (void *)aml_demod_dev_id);
 
   err1:
     class_unregister(&aml_demod_class);
 
-  err0:
+//  err0:
     return r;
 }
 
@@ -718,7 +720,7 @@ static void __exit aml_demod_exit(void)
     cdev_del(aml_demod_cdevp);
     kfree(aml_demod_cdevp);
 
-    free_irq(INT_DEMOD, (void *)aml_demod_dev_id);
+ //   free_irq(INT_DEMOD, (void *)aml_demod_dev_id);
 
     class_unregister(&aml_demod_class);
 
