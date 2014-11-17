@@ -67,6 +67,10 @@ static void saradc_reset(void)
 {
 	int i;
 
+#ifdef CONFIG_ARCH_MESONG9TV
+	set_sar_adc_clk();
+#endif
+
 	//set adc clock as 1.28Mhz
 	set_clock_divider(20);
 	saradc_power_control(1);

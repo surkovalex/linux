@@ -20,6 +20,8 @@
 #define PP_SAR_ADC_CHAN_10_SW			P_AO_SAR_ADC_CHAN_10_SW
 #define PP_SAR_ADC_DETECT_IDLE_SW	P_AO_SAR_ADC_DETECT_IDLE_SW
 #define PP_SAR_ADC_DELTA_10				P_AO_SAR_ADC_DELTA_10
+
+#define set_sar_adc_clk() 					set_reg(P_AO_SAR_CLK,(get_reg(P_AO_SAR_CLK) &~ (0x7ff)) | (0x1 << 8) | (0xc0))
 #else
 #define PP_SAR_ADC_REG0						P_SAR_ADC_REG0
 #define PP_SAR_ADC_CHAN_LIST 			P_SAR_ADC_CHAN_LIST
@@ -220,8 +222,13 @@ enum {
 
 // REG10
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#ifdef CONFIG_ARCH_MESONG9TV
+#define enable_bandgap()    set_bits(P_AO_SAR_ADC_REG11, 1, 13, 1)
+#define disable_bandgap()   set_bits(P_AO_SAR_ADC_REG11, 0, 13, 1)
+#else
 #define enable_bandgap()    set_bits(PP_SAR_ADC_DELTA_10, 1, 10, 1)
 #define disable_bandgap()   set_bits(PP_SAR_ADC_DELTA_10, 0, 10, 1)
+#endif
 #define set_trimming(x)     set_bits(PP_SAR_ADC_DELTA_10, x, 11, 4)
 #define enable_temp__()     set_bits(PP_SAR_ADC_DELTA_10, 1, 15, 1)
 #define disable_temp__()    set_bits(PP_SAR_ADC_DELTA_10, 0, 15, 1)
