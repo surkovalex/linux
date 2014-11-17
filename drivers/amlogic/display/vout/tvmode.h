@@ -68,6 +68,8 @@ typedef enum {
 	TVMODE_4K2K_23HZ , // for framerate automation 4k2k 23.97hz
 #endif
     TVMODE_4K2K_SMPTE ,
+    TVMODE_4K2K_FAKE_5G ,
+    TVMODE_4K2K_60HZ ,
     TVMODE_VGA ,
     TVMODE_SVGA,
     TVMODE_XGA,

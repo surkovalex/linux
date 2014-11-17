@@ -58,6 +58,12 @@ static void set_hpll_clk_out(unsigned clk)
     check_clk_config(clk);
     printk("config HPLL\n");
 
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV
+    printk("%s[%d]\n", __FILE__, __LINE__);
+    printk("TODO\n");
+    return;
+#endif
+
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     printk("%s[%d] clk = %d\n", __func__, __LINE__, clk);
     aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c88000);

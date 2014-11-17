@@ -159,6 +159,8 @@
 #define APB_REG_ADDR(reg)		(IO_APB_BUS_BASE + APB_REG_OFFSET(reg))
 #define APB_REG_ADDR_VALID(reg)		(((unsigned long)(reg) & 3) == 0)
 
+#define HDMI_TX_REG_ADDR(reg)		(IO_HDMI_PHY_BASE + reg)
+
 #define AOBUS_REG_OFFSET(reg)		((reg) )
 #define AOBUS_REG_ADDR(reg)		(IO_AOBUS_BASE + AOBUS_REG_OFFSET(reg))
 

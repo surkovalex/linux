@@ -461,8 +461,8 @@ int tvoutc_setmode(tvmode_t mode)
 		(mode==TVMODE_1080I) || (mode==TVMODE_1080I_50HZ) ||
 		(mode==TVMODE_1080P) || (mode==TVMODE_1080P_50HZ) ||
 		(mode==TVMODE_1080P_24HZ) || (mode==TVMODE_4K2K_24HZ) ||
-		(mode==TVMODE_4K2K_25HZ) || (mode==TVMODE_4K2K_30HZ) ||
-		(mode==TVMODE_4K2K_SMPTE) )
+		(mode==TVMODE_4K2K_25HZ) || (mode==TVMODE_4K2K_30HZ) || (mode==TVMODE_4K2K_FAKE_5G) ||
+		(mode==TVMODE_4K2K_SMPTE) || (mode==TVMODE_4K2K_60HZ) )
 	{
 		WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 0x0, 30, 1);
 	}
@@ -483,7 +483,7 @@ int tvoutc_setmode(tvmode_t mode)
     }else{
 	aml_write_reg32(P_PERIPHS_PIN_MUX_0, (aml_read_reg32(P_PERIPHS_PIN_MUX_0)&(~(3<<20))));
     }
-
+printk("%s[%d] mode is %d\n", __func__, __LINE__, mode);
 #if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
 	// for hdmi mode, leave the hpll setting to be done by hdmi module.
 	if( (mode==TVMODE_480CVBS) || (mode==TVMODE_576CVBS) )
@@ -546,6 +546,8 @@ int tvoutc_setmode(tvmode_t mode)
 		case TVMODE_4K2K_23HZ:
 #endif
         case TVMODE_4K2K_SMPTE:
+        case TVMODE_4K2K_FAKE_5G:
+        case TVMODE_4K2K_60HZ:
 		case TVMODE_VGA:
 		case TVMODE_SVGA:
 		case TVMODE_XGA:

@@ -239,6 +239,7 @@ static  unsigned int clk_util_clk_msr(unsigned int clk_mux)
 
 int    clk_measure(char  index )
 {
+    unsigned int clk_mrs_result = 0;
     const char* clk_table[]={
     " CTS_AOCLK_INT(76)",
     " CTS_AOCLKx2_INT(75)",
@@ -324,12 +325,14 @@ int    clk_measure(char  index )
 	{
 	 	for(i = 0;i < len;i++)
 		{
-			printk("[%10d]%s\n",clk_util_clk_msr(i),clk_table[len-i]);
+            clk_mrs_result = clk_util_clk_msr(i);
+			printk("[%10d]%s\n", clk_mrs_result, clk_table[len-i]);
 		}
 		return 0;
 	}
-	printk("[%10d]%s\n",clk_util_clk_msr(index),clk_table[len-index]);
-	return 0;
+    clk_mrs_result = clk_util_clk_msr(index);
+	printk("[%10d]%s\n", clk_mrs_result ,clk_table[len-index]);
+	return clk_mrs_result;
 }
 
 long clk_round_rate_sys(struct clk *clk, unsigned long rate)

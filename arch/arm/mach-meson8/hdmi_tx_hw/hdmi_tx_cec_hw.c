@@ -34,6 +34,8 @@ void cec_enable_irq(void)
     hdmi_print(INF, CEC "enable:int mask:0x%x\n", aml_read_reg32(P_AO_CEC_INTR_MASKN));
 }
 
+void cec_arbit_bit_time_set(unsigned bit_set, unsigned time_set, unsigned flag);
+
 void cec_hw_reset(void)
 {
     //unsigned long data32;

@@ -70,6 +70,9 @@ typedef enum {
 	VMODE_4K2K_23HZ , // for framerate automation 4k2k 23.97hz
 #endif
     VMODE_4K2K_SMPTE,
+    VMODE_4K2K_FAKE_5G,   // timing same as 4k2k30hz, Vsync from 30hz to 50hz
+    VMODE_4K2K_60HZ,	  // timing same as 4k2k30hz, Vsync from 30hz to 60hz
+    VMODE_4K2K_5G,
     VMODE_VGA,
     VMODE_SVGA,
     VMODE_XGA,
