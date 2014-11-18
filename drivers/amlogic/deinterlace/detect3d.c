@@ -4,7 +4,7 @@
 /* Amlogic Headers */
 #include <mach/am_regs.h>
 
-#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)
+#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)||( MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV) 
 /* Local include */
 #include <linux/amlogic/tvin/tvin.h>
 #include "detect3d.h"

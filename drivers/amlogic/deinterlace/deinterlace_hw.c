@@ -38,10 +38,6 @@ uint ei_ctrl2;
 #ifdef NEW_DI_V1
 uint ei_ctrl3;
 #endif
-uint nr_ctrl0;
-uint nr_ctrl1;
-uint nr_ctrl2;
-uint nr_ctrl3;
 uint mtn_ctrl;
 uint mtn_ctrl_char_diff_cnt;
 uint mtn_ctrl_low_level;
@@ -96,6 +92,11 @@ module_param(frame_dynamic_level, int, 0664);
 
 MODULE_PARM_DESC(cue_enable, "\n cue_enable\n");
 module_param(cue_enable, bool, 0664);
+#ifdef NEW_DI_V3
+static unsigned short mcen_mode = 1;
+MODULE_PARM_DESC(mcen_mode, "\n blend mc enable\n");
+module_param(mcen_mode, ushort, 0664);
+#endif
 
 #ifdef DET3D
 static unsigned int det3d_cfg = 0;
@@ -147,22 +148,6 @@ static void init_pd_para(void)
 
 void reset_di_para(void)
 {
-  	int nr_zone_0 = 4, nr_zone_1 = 8, nr_zone_2 = 12;
-    //int nr_hfilt_en = 0;
-    int nr_hfilt_mb_en = 0;
-    //int mtn_modify_en = 1;
-    //int post_mb_en = 0;
-    //int blend_mtn_filt_en = 1;
-    //int blend_data_filt_en = 1;
-    unsigned int nr_strength = 0, nr_gain2 = 0, nr_gain1 = 0, nr_gain0 = 0;
-
-    nr_strength = noise_reduction_level;
-    if (nr_strength > 64)
-        nr_strength = 64;
-    nr_gain2 = 64 - nr_strength;
-    nr_gain1 = nr_gain2 - ((nr_gain2 * nr_strength + 32) >> 6);
-    nr_gain0 = nr_gain1 - ((nr_gain1 * nr_strength + 32) >> 6);
-    nr_ctrl1 = (64 << 24) | (nr_gain2 << 16) | (nr_gain1 << 8) | (nr_gain0 << 0);
 
 #if 1          //if input is pal and ntsc
     ei_ctrl0 =  (255 << 16) |     		// ei_filter.
@@ -199,33 +184,6 @@ void reset_di_para(void)
                   (10 << 8 ) |       				// far2
                    255;             				// far1
 #endif
-       nr_ctrl0 =     (1 << 31 ) |          									// nr yuv enable.
-                       	(1 << 30 ) |          												// nr range. 3 point
-                       	(0 << 29 ) |          												// max of 3 point.
-                       	(nr_hfilt_en << 28 ) |          									// nr hfilter enable.
-                       	(nr_hfilt_mb_en << 27 ) |          									// nr hfilter motion_blur enable.
-#ifdef NEW_DI_V1
-                                (1 << 25)|//enable nr 2
-#endif
-                                (nr_zone_2 <<16 ) |   												// zone 2
-                       	(nr_zone_1 << 8 ) |    												// zone 1
-                       	(nr_zone_0 << 0 ) ;   												// zone 0
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
-     	nr_ctrl2 =      ( 8 << 24 ) |         									//intra noise level
-                     	( 1 << 16 )  |         												// intra no noise level.
-                     	( 10 << 8 ) |          												// inter noise level.
-                     	( 1 << 0 ) ;          												// inter no noise level.
-#else
-     	nr_ctrl2 =      ( 10 << 24 ) |         									//intra noise level
-                     	( 1 << 16 )  |         												// intra no noise level.
-                     	( 10 << 8 ) |          												// inter noise level.
-                     	( 1 << 0 ) ;          												// inter no noise level.
-#endif
-     	nr_ctrl3 =      ( 16 << 16 ) |         									// if any one of 3 point  mtn larger than 16 don't use 3 point.
-                       	720 ;               												// if one line eq cnt is larger than this number, this line is not conunted.
-
-
 	    mtn_ctrl_char_diff_cnt = 2;
 		mtn_ctrl_diff_level = 40;
 		mtn_ctrl_high_level = 196;
@@ -326,20 +284,37 @@ static void set_di_chan2_mif ( DI_MIF_t *mif, int urgent, int hold_line );
 
 static void set_di_if0_mif ( DI_MIF_t *mif, int urgent, int hold_line );
 
+static void di_nr_init(void);
 
+#ifdef NEW_DI_V3
+static void mc_di_param_init(void)
+{
+    Wr(MCDI_CHK_EDGE_GAIN_OFFST,0x4f6124);
+    Wr(MCDI_LMV_RT,0x7455);
+    Wr(MCDI_LMV_GAINTHD,0x6014d409);
+    Wr(MCDI_REL_DET_LPF_MSK_22_30,0x0a010001);
+    Wr(MCDI_REL_DET_LPF_MSK_31_34,0x01010101);
+}
+#endif
 void di_hw_init(void)
 {
+#ifdef NEW_DI_V1
+    unsigned short fifo_size = 0x120;
+#endif
+#ifdef NEW_DI_V3
+    fifo_size = 0x300;
+#endif
 #ifdef NEW_DI_V1
     Wr(DI_MTN_1_CTRL1, Rd(DI_MTN_1_CTRL1)&(~(1<<31))); //enable old DI mode for m6tv
     Wr(DI_CLKG_CTRL, Rd(DI_CLKG_CTRL)|0x1); //di no clock gate
 
     /* fifo size setting from 0x1be60 to 0x1bf20 */
-    Wr(VD1_IF0_LUMA_FIFO_SIZE, 0x1bf20);  // 1a63 is vd1_if0_luma_fifo_size
-    Wr(VD2_IF0_LUMA_FIFO_SIZE, 0x1bf20);  // 1a83 is vd2_if0_luma_fifo_size
-    Wr(DI_INP_LUMA_FIFO_SIZE, 0x1bf20);   // 17d8 is DI_INP_luma_fifo_size
-    Wr(DI_MEM_LUMA_FIFO_SIZE, 0x1bf20);   // 17e5 is DI_MEM_luma_fifo_size
-    Wr(DI_IF1_LUMA_FIFO_SIZE, 0x1bf20);   // 17f2 is  DI_IF1_luma_fifo_size
-    Wr(DI_CHAN2_LUMA_FIFO_SIZE, 0x1bf20); // 17b3 is DI_chan2_luma_fifo_size
+    Wr(VD1_IF0_LUMA_FIFO_SIZE,  fifo_size);  // 1a63 is vd1_if0_luma_fifo_size
+    Wr(VD2_IF0_LUMA_FIFO_SIZE,  fifo_size);  // 1a83 is vd2_if0_luma_fifo_size
+    Wr(DI_INP_LUMA_FIFO_SIZE,   fifo_size);  // 17d8 is DI_INP_luma_fifo_size
+    Wr(DI_MEM_LUMA_FIFO_SIZE,   fifo_size);  // 17e5 is DI_MEM_luma_fifo_size
+    Wr(DI_IF1_LUMA_FIFO_SIZE,   fifo_size);  // 17f2 is  DI_IF1_luma_fifo_size
+    Wr(DI_CHAN2_LUMA_FIFO_SIZE, fifo_size);  // 17b3 is DI_chan2_luma_fifo_size
 #endif
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
@@ -347,14 +322,15 @@ void di_hw_init(void)
 #else
     Wr(DI_PRE_HOLD, (1 << 31) | (31 << 16) | 31);
 #endif
-#if defined(CONFIG_ARCH_MESON)
-    Wr(DI_NRMTN_CTRL0, 0xb00a0603);
-#endif
-
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
         //need not set DI_CLKG_CTRL, hardware default value of this register is already 0
     //Wr_reg_bits(DI_CLKG_CTRL, 0x0, 0, 2);    // bit 0: 1, no clock; bit 1: 0, auto clock gate
+#endif
+	//nr default setting
+    di_nr_init();
+#ifdef NEW_DI_V3
+    mc_di_param_init();
 #endif
 }
 
@@ -401,12 +377,10 @@ void enable_di_pre_aml (
   	{
        	set_di_chan2_mif(di_chan2_mif, urgent, hold_line);   	// set urgent 0.
        	#ifdef NEW_DI_V1
-            Wr(DI_NR_CTRL0, nr_ctrl0 | (cue_enable << 26));
-	#else
-     	    Wr(DI_NR_CTRL0, nr_ctrl0);
+            Wr_reg_bits(DI_NR_CTRL0,cue_enable,26,1);
 	#endif
   	}else{
-            Wr(DI_NR_CTRL0, nr_ctrl0 | (0 << 26));
+            Wr_reg_bits(DI_NR_CTRL0,0,26,1);
   	}
 
   	// set nr wr mif interface.
@@ -421,11 +395,7 @@ void enable_di_pre_aml (
      	Wr(DI_NRWR_CTRL, di_nrwr_mif->canvas_num );     						// canvas index.
      	                                                                    // urgent bit 8
 #endif
-#if !defined(CONFIG_ARCH_MESON)
-     	Wr(DI_NR_CTRL1, nr_ctrl1);
-     	Wr(DI_NR_CTRL2, nr_ctrl2);
-     	Wr(DI_NR_CTRL3, nr_ctrl3);
-#endif
+
    	}
 
    	// motion wr mif.
@@ -461,12 +431,13 @@ void enable_di_pre_aml (
 #else
                       (0 << 8));       															// urgent.
 #endif
-#if !defined(CONFIG_ARCH_MESON)
+
        //	Wr(DI_MTN_CTRL, (1 << 31) | (1 << 30) | (1 << 29) |  (mtn_ctrl_char_diff_cnt<< 24) |  (mtn_ctrl_diff_level<<16) |   (mtn_ctrl_high_level<<8) |    (mtn_ctrl_low_level<< 0));
        //   Wr(DI_MTN_CTRL,0x2300f080);
+        #ifndef NEW_DI_V3
         Wr(DI_MTN_CTRL,mtn_ctrl);
+        #endif
        	Wr(DI_MTN_CTRL1, (mtn_ctrl1_shift<< 8) |  mtn_ctrl1_reduce);
-#endif
     }
 
 #ifdef NEW_DI_V1
@@ -489,25 +460,6 @@ void enable_di_pre_aml (
   	Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL) |
                    1 << 31 );                  						// frame reset for the pre modules.
 
-#if defined(CONFIG_ARCH_MESON)
-  	Wr(DI_PRE_CTRL, nr_en |        						// NR enable
-                    (mtn_en << 1 ) |        						// MTN_EN
-                    (pd32_check_en << 2 ) |        					// check 3:2 pulldown
-                    (pd22_check_en << 3 ) |        					// check 2:2 pulldown
-                    (1 << 4 ) |        								// 2:2 check mid pixel come from next field after MTN.
-                    (hist_check_en << 5 ) |        					// hist check enable
-                    (hist_check_only << 6 ) |        				// hist check  use chan2.
-                    ((!nr_en) << 7 ) |        						// hist check use data before noise reduction.
-                    ((pd22_check_en || hist_check_only) << 8 ) |	// chan 2 enable for 2:2 pull down check.
-                    (pd22_check_en << 9) |        					// line buffer 2 enable
-                    (0 << 10) |        								// pre drop first.
-                    (0 << 11) |        								// pre repeat.
-                    (0 << 12) |        								// pre viu link
-                    (hold_line << 16) |      						// pre hold line number
-                    (pre_field_num << 29) |        					// pre field number.
-                    (0x1 << 30 )      								// pre soft rst, pre frame rst.
-                   );
-#else
   	Wr(DI_PRE_CTRL, nr_en |        						// NR enable
                     (mtn_en << 1 ) |        						// MTN_EN
                     (pd32_check_en << 2 ) |        					// check 3:2 pulldown
@@ -526,7 +478,7 @@ void enable_di_pre_aml (
                     (pre_field_num << 29) |        					// pre field number.
                     (0x1 << 30 )      								// pre soft rst, pre frame rst.
                    );
-#endif
+
 #ifdef SUPPORT_MPEG_TO_VDIN
 	if(mpeg2vdin_flag)
 		WRITE_MPEG_REG_BITS(DI_PRE_CTRL,1,13,1);// pre sync with vdin vsync
@@ -541,7 +493,55 @@ void enable_di_pre_aml (
     }
 #endif
 }
+#ifdef NEW_DI_V3
+void enable_mc_di_pre(DI_MC_MIF_t *di_mcinford_mif,DI_MC_MIF_t *di_mcinfowr_mif,DI_MC_MIF_t *di_mcvecwr_mif)
+{
+    Wr(MCDI_MCVECWR_X, di_mcvecwr_mif->size_x);
+    Wr(MCDI_MCVECWR_Y, di_mcvecwr_mif->size_y);
+    Wr(MCDI_MCINFOWR_X, di_mcinfowr_mif->size_x);
+    Wr(MCDI_MCINFOWR_Y, di_mcinfowr_mif->size_y);
 
+    Wr(MCDI_MCINFORD_X, di_mcinford_mif->size_x);
+    Wr(MCDI_MCINFORD_Y, di_mcinford_mif->size_y);
+    Wr(MCDI_MCVECWR_CANVAS_SIZE,(di_mcvecwr_mif->size_x<<16)+di_mcvecwr_mif->size_y);
+    Wr(MCDI_MCINFOWR_CANVAS_SIZE,(di_mcinfowr_mif->size_x<<16)+di_mcinfowr_mif->size_y);
+    Wr(MCDI_MCINFORD_CANVAS_SIZE,(di_mcinford_mif->size_x<<16)+di_mcinford_mif->size_y);
+
+    //Wr(MCDI_MOTINEN,1<<1);    //enable motin refinement
+    
+   Wr(MCDI_MCVECWR_CTRL ,di_mcvecwr_mif->canvas_num |
+                         (0<<14) |   // sync latch en
+			 (0<<8 ) |   //urgent
+			 (1<<12) |   // enable reset by frame rst
+			 (0xc031<<16));   
+   Wr(MCDI_MCINFOWR_CTRL,di_mcinfowr_mif->canvas_num |
+                         (0<<14) |   // sync latch en
+		         (0<<8 ) |   //urgent
+			 (1<<12) |   // enable reset by frame rst
+			 (0xc042<<16));          
+   Wr(MCDI_MCINFORD_CTRL,di_mcinford_mif->canvas_num |
+                         (0<<10) |   // sync latch en
+			 (0<<8 ) |   //urgent
+			 (1<<9)  |      // enable reset by frame rst
+			 (0x8042<<16));
+}
+
+void enable_mc_di_post(DI_MC_MIF_t *di_mcvecrd_mif)
+{
+    VSYNC_WR_MPEG_REG(MCDI_MCVECRD_X, di_mcvecrd_mif->start_x<<16|(di_mcvecrd_mif->size_x+di_mcvecrd_mif->start_x));
+    VSYNC_WR_MPEG_REG(MCDI_MCVECRD_Y, di_mcvecrd_mif->start_y<<16|(di_mcvecrd_mif->size_y+di_mcvecrd_mif->start_y));
+    VSYNC_WR_MPEG_REG(MCDI_MCVECRD_CANVAS_SIZE,(di_mcvecrd_mif->size_x<<16)+di_mcvecrd_mif->size_y);
+    VSYNC_WR_MPEG_REG(MCDI_MCVECRD_CTRL, di_mcvecrd_mif->canvas_num |  // canvas index. 
+                                         (1<<9)   |  // canvas enable
+                                         (0<< 10) |
+                                         (0x8031<<16));  
+   if(di_mcvecrd_mif->blend_mode == 3)  
+       VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL,mcen_mode,0,2);  //open mc
+   else
+       VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL,0,0,2);  //disable mc
+}
+
+#endif
 
 static void set_vd1_fmt_more (
 		int hfmt_en,
@@ -1561,6 +1561,9 @@ void di_post_switch_buffer (
    DI_SIM_MIF_t    *di_diwr_mif,
    DI_SIM_MIF_t    *di_mtncrd_mif,
    DI_SIM_MIF_t    *di_mtnprd_mif,
+#ifdef NEW_DI_V3
+   DI_MC_MIF_t     *di_mcvecrd_mif,
+#endif
    int ei_en, int blend_en, int blend_mtn_en, int blend_mode, int di_vpp_en, int di_ddr_en,
    int post_field_num, int hold_line, int urgent,
    unsigned long * reg_mtn_info )
@@ -1609,14 +1612,6 @@ void di_post_switch_buffer (
     }
    	if ( ei_only == 0)
    	{
-#if defined(CONFIG_ARCH_MESON)
-      	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,  (Rd(DI_BLEND_CTRL) & (~((1 << 25) | (3 << 20 )))) | // clean some bit we need to set.
-                              (blend_mtn_en << 26 ) |   													// blend mtn enable.
-                              (0 << 25 ) |   																// blend with the mtn of the pre display field and next display field.
-                              (1 << 24 ) |   																// blend with pre display field.
-                              (blend_mode << 20)    														// motion adaptive blend.
-               );
-#else
 
 	//VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&(~(3<<20))&~(0xff))|(blend_mode<<20)|kdeint);
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)| (blend_mode<<20) | (0xff&kdeint0));
@@ -1628,11 +1623,18 @@ void di_post_switch_buffer (
 	if(reg_mtn_info[4]>mtn_thre_2_high){
 	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,((blend_ctrl&0xffcfff00) | (blend_mode<<20)| (0xff&kdeint2)));
 	}
+	#ifndef NEW_DI_V3
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL1, (blend_ctrl1_char_level<< 24 ) |    ( blend_ctrl1_angle_thd << 16 ) |    ( blend_ctrl1_filt_thd<< 8 )  |    ( blend_ctrl1_diff_thd));
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL2,   (blend_ctrl2_black_level<< 8 ) |     (blend_ctrl2_mtn_no_mov)  );
-#ifdef NEW_DI_V1
-//    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)&(~(1<<31)));
-#endif
+  #else
+  	VSYNC_WR_MPEG_REG(MCDI_MCVECRD_CTRL, (Rd(MCDI_MCVECRD_CTRL) & 0xffffff00 ) |
+			( 1<<9 ) |									  // canvas enable
+							di_mcvecrd_mif->canvas_num |  // canvas index.
+		    (0 << 8));
+        if(di_mcvecrd_mif->blend_mode == 3)  
+            VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL,mcen_mode,0,2);  //open mc
+        else
+   	    VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL,0,0,2);  //diable mc
 #endif
    	}
 
@@ -1679,8 +1681,10 @@ void enable_di_post_2 (
     {
         VSYNC_WR_MPEG_REG(DI_MTNPRD_X, (di_mtnprd_mif->start_x <<16) | (di_mtnprd_mif->end_x));   			// start_x 0 end_x 719.
         VSYNC_WR_MPEG_REG(DI_MTNPRD_Y, (di_mtnprd_mif->start_y <<16) | (di_mtnprd_mif->end_y));   			// start_y 0 end_y 239.
+   #ifndef NEW_DI_V3
       	VSYNC_WR_MPEG_REG(DI_MTNCRD_X, (di_mtncrd_mif->start_x <<16) | (di_mtncrd_mif->end_x));   				// start_x 0 end_x 719.
       	VSYNC_WR_MPEG_REG(DI_MTNCRD_Y, (di_mtncrd_mif->start_y <<16) | (di_mtncrd_mif->end_y));             	// start_y 0 end_y 239.
+	 #endif
 	VSYNC_WR_MPEG_REG(DI_MTNRD_CTRL, (di_mtnprd_mif->canvas_num <<8 ) |									//mtnp canvas index.
 					 (urgent << 16) |// urgent
 					 di_mtncrd_mif->canvas_num );
@@ -1701,14 +1705,6 @@ void enable_di_post_2 (
 
    	if ( ei_only == 0)
    	{
-#if defined(CONFIG_ARCH_MESON)
-      	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,  (Rd(DI_BLEND_CTRL) & (~((1 << 25) | (3 << 20 )))) | // clean some bit we need to set.
-                              (blend_mtn_en << 26 ) |   													// blend mtn enable.
-                              (0 << 25 ) |   																// blend with the mtn of the pre display field and next display field.
-                              (1 << 24 ) |   																// blend with pre display field.
-                              (blend_mode << 20)    														// motion adaptive blend.
-               );
-#else
 
 	//VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&(~(3<<20))&~(0xff))|(blend_mode<<20)|kdeint);
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)|(blend_mode<<20)|(0xff&kdeint0));
@@ -1721,33 +1717,15 @@ void enable_di_post_2 (
 	if(reg_mtn_info[4]>mtn_thre_2_high){
 	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,((blend_ctrl&0xffcfff00) | (blend_mode<<20)| (0xff&kdeint2)));
 	}
+	#ifndef NEW_DI_V3
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL1, (blend_ctrl1_char_level<< 24 ) |    ( blend_ctrl1_angle_thd << 16 ) |    ( blend_ctrl1_filt_thd<< 8 )  |    ( blend_ctrl1_diff_thd));
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL2,   (blend_ctrl2_black_level<< 8 ) |     (blend_ctrl2_mtn_no_mov)  );
+    #endif
 #ifdef NEW_DI_V1
 //    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)&(~(1<<31)));
 #endif
-#endif
    	}
 
-#if defined(CONFIG_ARCH_MESON)
-   	VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en | blend_en) << 0 ) | 		// line buffer 0 enable
-                      (0 << 1)  |        							// line buffer 1 enable
-                      (ei_en << 2) |        						// ei  enable
-                      (blend_mtn_en << 3) |        					// mtn line buffer enable
-                      (blend_mtn_en  << 4) |        				// mtnp read mif enable
-                      ((post_ctrl__di_blend_en!=0xff)?(post_ctrl__di_blend_en&0x1):(blend_en << 5)) |        						// di blend enble.
-                      (1 << 6) |        							// di mux output enable
-                      (di_ddr_en << 7) |        					// di write to SDRAM enable.
-                      (di_vpp_en << 8) |        					// di to VPP enable.
-                      (0 << 9) |        							// mif0 to VPP enable.
-                      (0 << 10) |        							// post drop first.
-                      (0 << 11) |        							// post repeat.
-                      (1 << 12) |        							// post viu link
-                      (hold_line << 16) |       					// post hold line number
-                      (post_field_num << 29) |        				// post field number.
-                      (0x1 << 30 )       							// post soft rst  post frame rst.
-        );
-#else
    	VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en | blend_en) << 0 ) | 		// line buffer 0 enable
                       (0 << 1)  |        							// line buffer 1 enable
                       (ei_en << 2) |        						// ei  enable
@@ -1765,7 +1743,6 @@ void enable_di_post_2 (
                       (post_field_num << 29) |        				// post field number.
                       (0x1 << 30 )       							// post soft rst  post frame rst.
         );
-#endif
 #ifdef NEW_DI_V1
         VSYNC_WR_MPEG_REG(DI_EI_CTRL3, ei_ctrl3);
 #endif
@@ -1822,14 +1799,6 @@ void di_post_switch_buffer_pd (
     }
 
     if (ei_only == 0) {
-#if defined(CONFIG_ARCH_MESON)
-        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (Rd(DI_BLEND_CTRL) & (~((1 << 25) | (3 << 20)))) |   // clean some bit we need to set.
-                       (blend_mtn_en << 26) |                                                        // blend mtn enable.
-                       (0 << 25) |                                                                   // blend with the mtn of the pre display field and next display field.
-                       (1 << 24) |                                                                   // blend with pre display field.
-                       (blend_mode << 20)                                                            // motion adaptive blend.
-                      );
-#else
         VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, 
 	#ifdef NEW_DI_V1
        		       (1<<31) |        //enable new ei(remove from m8b)
@@ -1844,7 +1813,6 @@ void di_post_switch_buffer_pd (
                        (blend_mode << 20) |                                                       // motion adaptive blend.
                        25                                                                            // kdeint.
                       );
-#endif
     }
     VSYNC_WR_MPEG_REG_BITS(DI_POST_CTRL, post_field_num, 29, 1);
 }
@@ -1899,14 +1867,6 @@ void enable_di_post_pd(
     }
 
     if (ei_only == 0) {
-#if defined(CONFIG_ARCH_MESON)
-        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (Rd(DI_BLEND_CTRL) & (~((1 << 25) | (3 << 20)))) |   // clean some bit we need to set.
-                       (blend_mtn_en << 26) |                                                        // blend mtn enable.
-                       (0 << 25) |                                                                   // blend with the mtn of the pre display field and next display field.
-                       (1 << 24) |                                                                   // blend with pre display field.
-                       (blend_mode << 20)                                                            // motion adaptive blend.
-                      );
-#else
         VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, 
      	#ifdef NEW_DI_V1
        		       (1<<31)   |      //enable new ei(remove from m8b)
@@ -1927,28 +1887,8 @@ void enable_di_post_pd(
                        (64));                                                                         // all 4 equal
         VSYNC_WR_MPEG_REG(DI_BLEND_CTRL2, (4 << 8) |                                                           // mtn no mov level.
                        (48));                                                                        //black level.
-#endif
     }
 
-#if defined(CONFIG_ARCH_MESON)
-    VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en | blend_en) << 0) |        // line buffer 0 enable
-                   (0 << 1)  |                                   // line buffer 1 enable
-                   (ei_en << 2) |                                // ei  enable
-                   (blend_mtn_en << 3) |                         // mtn line buffer enable
-                   (blend_mtn_en  << 4) |                        // mtnp read mif enable
-                   (blend_en << 5) |                             // di blend enble.
-                   (1 << 6) |                                    // di mux output enable
-                   (di_ddr_en << 7) |                            // di write to SDRAM enable.
-                   (di_vpp_en << 8) |                            // di to VPP enable.
-                   (0 << 9) |                                    // mif0 to VPP enable.
-                   (0 << 10) |                                   // post drop first.
-                   (0 << 11) |                                   // post repeat.
-                   (1 << 12) |                                   // post viu link
-                   (hold_line << 16) |                           // post hold line number
-                   (post_field_num << 29) |                      // post field number.
-                   (0x1 << 30)                                   // post soft rst  post frame rst.
-                  );
-#else
     VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en | blend_en) << 0) |        // line buffer 0 enable
                    (0 << 1)  |                                   // line buffer 1 enable
                    (ei_en << 2) |                                // ei  enable
@@ -1966,7 +1906,6 @@ void enable_di_post_pd(
                    (post_field_num << 29) |                      // post field number.
                    (0x1 << 30)                                   // post soft rst  post frame rst.
                   );
-#endif
 }
 #endif
 
@@ -2121,15 +2060,24 @@ void read_mtn_info(unsigned long* mtn_info, unsigned long * reg_mtn_info)
 }
 void di_post_read_reverse(bool reverse)
 {
-#if ((MESON_CPU_TYPE ==  MESON_CPU_TYPE_MESON6TV)||	(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD	))
+#ifdef NEW_DI_TV
     if(reverse) {
         Wr_reg_bits(DI_IF1_GEN_REG2,    3, 2, 2);
         Wr_reg_bits(VD1_IF0_GEN_REG2, 0xf, 2, 4);
         Wr_reg_bits(VD2_IF0_GEN_REG2, 0xf, 2, 4);
+        #ifdef NEW_DI_V3
+        /* motion vector read reverse*/
+        Wr_reg_bits(MCDI_MCVECRD_X, 1, 30, 1);
+        Wr_reg_bits(MCDI_MCVECRD_Y, 1, 30, 1);
+        #endif
     } else {
         Wr_reg_bits(DI_IF1_GEN_REG2,  0, 2, 2);
 	Wr_reg_bits(VD1_IF0_GEN_REG2, 0, 2, 4);
 	Wr_reg_bits(VD2_IF0_GEN_REG2, 0, 2, 4);
+	#ifdef NEW_DI_V3
+	Wr_reg_bits(MCDI_MCVECRD_X, 0, 30, 1);
+        Wr_reg_bits(MCDI_MCVECRD_Y, 0, 30, 1);
+        #endif
     }
 #endif    
 }
@@ -2191,9 +2139,38 @@ unsigned char di_get_power_control(unsigned char type)
 
 }
 
-void di_load_nr_setting()
+static void di_nr_init()
 {
-#ifdef NEW_DI_V1
+#ifdef NEW_DI_V3
+    Wr(DI_NR_CTRL0,0xc60c0804);
+    Wr(DI_NR_CTRL1,0x403e3c3a);
+    Wr(DI_NR_CTRL2,0x08010a01);
+    Wr(NR2_MET_NM_CCTRL,0x45056410);
+    Wr(NR2_MATNR_SNR_NRM_GAIN,0x4);
+    Wr(NR2_MATNR_SNR_LPF_CFG,0xc1d64);
+    Wr(NR2_MATNR_SNR_EDGE2B,0xcff08);
+    Wr(NR2_MATNR_YBETA_SCL,0x00ff2000);
+    Wr(NR2_MATNR_MTN_CRTL2,0x32020);
+    Wr(NR2_MATNR_MTN_COR,0x3333);
+    Wr(NR2_MATNR_DEGHOST,0x133);
+    Wr(NR2_MATNR_ALPHALP_LUT1,0x80805040);
+    Wr(NR2_MATNR_ALPHALP_LUT2,0x90808080);
+    Wr(NR2_MATNR_ALPHALP_LUT3,0xffe0c0a4);
+    Wr(NR2_MATNR_ALPHAHP_LUT1,0x80805040);
+    Wr(NR2_MATNR_ALPHAHP_LUT2,0x90808080);
+    Wr(NR2_MATNR_ALPHAHP_LUT3,0xffe0c0a4);
+    Wr(NR3_MODE,0x3);
+    Wr(NR3_COOP_PARA,0x28ff00);
+    Wr(NR3_CNOOP_GAIN,0x881900);
+    Wr(NR3_YMOT_PARA,0x0c0a1e);
+    Wr(NR3_CMOT_PARA,0x08140f);
+    Wr(NR3_SUREMOT_YGAIN,0x100c4014);
+    Wr(NR3_SUREMOT_CGAIN,0x22264014);
+#elif (defined NEW_DI_V1)
+    Wr(DI_NR_CTRL0,0xc60c0804);
+    Wr(DI_NR_CTRL1,0x403e3c3a);
+    Wr(DI_NR_CTRL2,0x08010a01);
+    Wr(DI_NR_CTRL3,0x001002d0);
     Wr(NR2_3DEN_MODE, 0x77);
     Wr(NR2_SNR_SAD_CFG, 0x134f);
     Wr(NR2_MATNR_SNR_NRM_GAIN, 0x0);
