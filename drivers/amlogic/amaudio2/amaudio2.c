@@ -30,6 +30,12 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("kevin.wang@amlogic.com");
 MODULE_VERSION("2.0.0");
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#define IRQ_OUT INT_I2S_DDR
+#else
+#define IRQ_OUT INT_AMRISC_DC_PCMLAST
+#endif
+
 static const struct file_operations amaudio_fops = {
   .owner    =   THIS_MODULE,
   .open     =   amaudio_open,
@@ -154,7 +160,7 @@ static int amaudio_open(struct inode *inode, struct file *file)
   	spin_lock_init(&amaudio->hw.lock);
 	spin_lock_init(&amaudio->sw_read.lock);
 	
-  	if(request_irq(INT_AMRISC_DC_PCMLAST, i2s_out_callback, IRQF_SHARED, "i2s_out",amaudio)){
+  	if(request_irq(IRQ_OUT, i2s_out_callback, IRQF_SHARED, "i2s_out",amaudio)){
   		res = -EINVAL;
   		goto error;
   	}
@@ -188,15 +194,9 @@ error:
 
 static int amaudio_release(struct inode *inode, struct file *file)
 {
-	//unsigned long irqflags;
-	
 	amaudio_t * amaudio = (amaudio_t *)file->private_data;
-	
-	//spin_lock_irqsave(&amaudio->hw.lock,irqflags);
 
-	free_irq(INT_AMRISC_DC_PCMLAST, amaudio);
-
-	//spin_unlock_irqrestore(&amaudio->hw.lock,irqflags);
+	free_irq(IRQ_OUT, amaudio);
 	
 	if(amaudio->sw.addr){
 		dma_free_coherent(amaudio->dev, amaudio->sw.size, (void*)amaudio->sw.addr, amaudio->sw.paddr);
@@ -399,10 +399,6 @@ static void i2s_copy(amaudio_t* amaudio)
 	if(audio_out_mode != 3){
 		valid_data = sw->level&~0x3f;
 		if(valid_data < INT_BLOCK) {
-			sw->wr = ((sw->rd+INT_BLOCK)%sw->size);
-			sw->wr /= INT_BLOCK;
-			sw->wr *= INT_BLOCK;
-			sw->level = INT_BLOCK;
 			goto EXIT;
 		}
 	}
@@ -410,10 +406,6 @@ static void i2s_copy(amaudio_t* amaudio)
 	if(audio_out_read_enable == 1){
 		valid_data = sw_read->level&~0x3f;
 		if(valid_data < INT_BLOCK) {
-			sw_read->wr = ((sw_read->rd+INT_BLOCK)%sw_read->size);
-			sw_read->wr /= INT_BLOCK;
-			sw_read->wr *= INT_BLOCK;
-			sw_read->level = INT_BLOCK;
 			goto EXIT;
 		}
 	}
@@ -771,7 +763,7 @@ static int __init amaudio2_init(void)
 
   ret = alloc_chrdev_region(&amaudio_devno, 0, AMAUDIO_DEVICE_COUNT, AMAUDIO_DEVICE_NAME);
   if(ret < 0){
-    printk(KERN_ERR "amaudio: faild to alloc major number\n");
+    printk(KERN_ERR "amaudio2: faild to alloc major number\n");
     ret = - ENODEV;
     goto err;
   }
@@ -785,7 +777,7 @@ static int __init amaudio2_init(void)
   
   amaudio_cdevp = kmalloc(sizeof(struct cdev), GFP_KERNEL);
   if(!amaudio_cdevp){
-    printk(KERN_ERR "amaudio: failed to allocate memory\n");
+    printk(KERN_ERR "amaudio2: failed to allocate memory\n");
     ret = -ENOMEM;
     goto err2;
   }
@@ -795,18 +787,18 @@ static int __init amaudio2_init(void)
   // connect the major/minor number to cdev
   ret = cdev_add(amaudio_cdevp, amaudio_devno, AMAUDIO_DEVICE_COUNT);
   if(ret){
-    printk(KERN_ERR "amaudio:failed to add cdev\n");
+    printk(KERN_ERR "amaudio2:failed to add cdev\n");
     goto err3;
   } 
   for(ap = &amaudio_ports[0], i=0; i< AMAUDIO_DEVICE_COUNT; ap++,  i++){    
     ap->dev = device_create(amaudio_clsp, NULL, MKDEV(MAJOR(amaudio_devno),i), NULL,amaudio_ports[i].name);
     if(IS_ERR(ap->dev)){
-      printk(KERN_ERR "amaudio: failed to create amaudio device node\n");
+      printk(KERN_ERR "amaudio2: failed to create amaudio device node\n");
       goto err4;
     }
   }
 
-  printk(KERN_INFO "amaudio: device %s created\n", AMAUDIO_DEVICE_NAME);
+  printk(KERN_INFO "amaudio2: device %s created\n", AMAUDIO_DEVICE_NAME);
   return 0;
 
 err4:

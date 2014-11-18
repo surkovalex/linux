@@ -231,6 +231,7 @@ static int _switch_gate(mod_type_t type, int flag)
 			__CLK_GATE_ON(AIU_PCLK);
 			__CLK_GATE_ON(AIU_AOCLK);
 			__CLK_GATE_ON(AIU_ICE958_AMCLK);
+			__CLK_GATE_ON(AUD_IN);
 		} else { 
 			__CLK_GATE_OFF(AIU_AI_TOP_GLUE);
 			__CLK_GATE_OFF(AIU_IEC958);
@@ -244,7 +245,7 @@ static int _switch_gate(mod_type_t type, int flag)
 			__CLK_GATE_OFF(AIU_PCLK);
 			__CLK_GATE_OFF(AIU_AOCLK);
 			__CLK_GATE_OFF(AIU_ICE958_AMCLK);
-	  
+			__CLK_GATE_OFF(AUD_IN);
 		}
 		break;
 	#if 0

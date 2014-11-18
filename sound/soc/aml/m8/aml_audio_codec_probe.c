@@ -89,6 +89,8 @@ static int test_codec_of_node(struct device_node* p_node, aml_audio_codec_info_t
 	/* if aml pmu codec, do not test i2c for it was done in power domain */
 	if (!strcmp(audio_codec_dev->name, "amlpmu3"))
 		goto exit;
+	if (!strcmp(audio_codec_dev->name, "amlpmu4"))
+		goto exit;
 	if (!strcmp(audio_codec_dev->name, "dummy_codec"))
 		goto exit;
 
@@ -228,7 +230,14 @@ static int aml_audio_codec_probe(struct platform_device *pdev)
 		strlcpy(codec_info.name, "amlpmu3", NAME_SIZE);
 		goto exit;
 	}
-    
+
+	if (ext_codec &&(!strcmp(audio_codec_dev->name, "amlpmu4"))){
+		printk("using aml pmu4 codec\n");
+		strlcpy(codec_info.name_bus, "aml_pmu4_codec.0", NAME_SIZE);
+		strlcpy(codec_info.name, "amlpmu4", NAME_SIZE);
+		goto exit;
+	}	
+
 	if (ext_codec &&(!strcmp(audio_codec_dev->name, "dummy_codec"))){
 		printk("using external dummy codec\n");
 		strlcpy(codec_info.name_bus, "dummy_codec.0", NAME_SIZE);
