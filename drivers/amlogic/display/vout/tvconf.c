@@ -729,11 +729,11 @@ static int get_target_frame_rate(int framerate_vsource, int policy)
 	return framerate_target;
 }
 
-extern int hdmitx_is_vmode_supported(char *mode_name);
+//extern int hdmitx_is_vmode_supported(char *mode_name);
 
 static int get_target_vmode(int framerate_target)
 {
-	int is_receiver_supported = 0;
+//	int is_receiver_supported = 0;
 	const vinfo_t *pvinfo ;
 	vmode_t mode_target = VMODE_INIT_NULL;
 
@@ -770,6 +770,7 @@ static int get_target_vmode(int framerate_target)
 				break;
 		}
 	}
+/*
 	is_receiver_supported = hdmitx_is_vmode_supported(get_name_from_vmode(mode_target));
 	
 	switch( is_receiver_supported )
@@ -785,6 +786,7 @@ static int get_target_vmode(int framerate_target)
 		default:
 			break;
 	}
+*/
 	return mode_target;
 }
 
