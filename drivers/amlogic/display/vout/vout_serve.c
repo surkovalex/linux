@@ -150,7 +150,9 @@ static  void  set_vout_mode(char * name)
 		return ; 
 	}
 
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 	mode_by_user = mode;
+#endif
 
 	if(mode==get_current_vmode())
 	{
