@@ -5706,8 +5706,10 @@ static void do_vpu_delay_work(struct work_struct *work)
                 ((r & VPP_VD1_PREBLEND) == 0)) {
                 vpu_delay_work_flag &= ~VPU_DELAYWORK_MEM_POWER_OFF_PROT;
 
+#if HAS_VPU_PROT
                 switch_vpu_mem_pd_vmod(VPU_PIC_ROT2, VPU_MEM_POWER_DOWN);
                 switch_vpu_mem_pd_vmod(VPU_PIC_ROT3, VPU_MEM_POWER_DOWN);
+#endif
             }
         }
     }
