@@ -5,7 +5,11 @@
 # Common support
 
 
-obj-y := cpu.o clock.o
+obj-y := cpu.o clock.o time.o iomapping.o vpu.o
+obj-y += power_gate.o
+obj-m :=
+obj-n :=
+obj-  :=
 
 # Board support
 obj-$(CONFIG_MACH_MESONG9TV_COMMON_BOARD) += board-mesong9tv-common.o
@@ -33,8 +37,9 @@ obj-$(CONFIG_MESON_SUSPEND)	+= power_suspend.o
 #ifneq ($(CONFIG_MESON_SUSPEND),y)
 #obj-$(CONFIG_SUSPEND) += sleep.o
 #endif
+obj-$(CONFIG_AMLOGIC_THERMAL) += thermal.o
 
-obj-$(CONFIG_AML_HDMI_TX)	+=  hdmi_tx_hw/
+#obj-$(CONFIG_AML_HDMI_TX)	+=  hdmi_tx_hw/
 
 # ARM Trustzone
 obj-$(CONFIG_MESON_TRUSTZONE)	+= meson-smc.o meson-secure.o
