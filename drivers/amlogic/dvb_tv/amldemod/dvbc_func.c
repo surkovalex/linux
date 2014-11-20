@@ -1,7 +1,7 @@
 #include <linux/kernel.h>
 #include <linux/i2c.h>
 #include <linux/delay.h>
-#include "aml_demod.h"
+#include <linux/dvb/aml_demod.h>
 #include "demod_func.h"
 #include <linux/kthread.h>
 
@@ -18,8 +18,6 @@ static void dvbc_cci_timer(unsigned long data)
 	int maxCCI_p,re,im,j,i,times,maxCCI,sum,sum1,reg_0xf0,tmp1,tmp,tmp2,reg_0xa8,reg_0xac;
 	int reg_0xa8_t, reg_0xac_t;
 	count=100;
-//	while(1){
-		    // search cci((si2176_get_strength()-256)<(-85))
 		if((((apb_read_reg(QAM_BASE+0x18))&0x1)==1)){
 				printk("[cci]lock ");
 				if(cciflag==0){
@@ -140,7 +138,6 @@ int dvbc_cci_task(void *data)
 	count=100;
 	while(1){
 			msleep(200);
-		    // search cci((si2176_get_strength()-256)<(-85))
 		if((((apb_read_reg(QAM_BASE+0x18))&0x1)==1)){
 				printk("[cci]lock ");
 				if(cciflag==0){

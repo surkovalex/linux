@@ -6,7 +6,7 @@
 //#include "a9_l2_func.h"
 
 #include "demod_func.h"
-#include "aml_demod.h"
+#include <linux/dvb/aml_demod.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
 #include "acf_filter_coefficient.h"
@@ -281,15 +281,13 @@ static atsc_cfg_t list_qam256[113] = {
 	{0x0001, 0x05, 1},
 	{0x0000, 0x00, 1}};
 
-
+#if 0 
 #if (defined CONFIG_AM_SI2176)
-#include "si2176_func.h"
+#include "../si2176/si2176_func.h"
 extern struct si2176_device_s *si2176_devp;
 extern void si2176_set_frequency(unsigned int freq);
-#elif (defined CONFIG_AM_SI2177)
-//#include "si2177_func.h"
-#include "../../../../hardware/dvb/silabs/drivers/si2177/si2177_func.h"
-
+#elif ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
+#include "si2177_func.h"
 extern struct si2177_device_s *si2177_devp;
 extern void si2177_set_frequency(unsigned int freq);
 #endif
@@ -336,7 +334,7 @@ int demod_set_tuner(struct aml_demod_sta *demod_sta,
 		tuner_sys->rssi=si2176_get_strength();
 		return 0;
 }
-#elif (defined CONFIG_AM_SI2177)
+#elif ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
 int demod_set_tuner(struct aml_demod_sta *demod_sta,
 		  struct aml_demod_i2c *demod_i2c,
 		  struct aml_tuner_sys *tuner_sys)
@@ -375,6 +373,7 @@ int demod_set_tuner(struct aml_demod_sta *demod_sta,
 }
 
 
+#endif
 #endif
 
 #ifndef G9_TV
@@ -1225,13 +1224,17 @@ int dtmb_read_snr(void){
              	  if(mobi_det_power > 10) {
              	      mobile_times = 8;
              	      dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9) + (1 << 1)); // set mobile mode
-             	   //   dtmb_write_reg(0x50, 0x1241);
+             	      #ifdef dtmb_mobile_mode
+             	      dtmb_write_reg(0x50, 0x1241);	//180m mobile mode
+             	      #endif
              	  }
              	  else {
              	      mobile_times -= 1;
              	      if(mobile_times <= 0) {
              	          dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9)); // set static mode
-             	       //   dtmb_write_reg(0x50, 0x1120);
+             	          #ifdef dtmb_mobile_mode
+             	          dtmb_write_reg(0x50, 0x1120);	//180m mobile mode
+             	          #endif
              	          mobile_times = 0;
              	      }
              	  }

@@ -33,7 +33,7 @@
 #include <linux/gpio.h>
 #include "../aml_fe.h"
 
-#include "aml_demod.h"
+#include <linux/dvb/aml_demod.h>
 #include "demod_func.h"
 #include "../aml_dvb.h"
 #include "amlfrontend.h"
@@ -97,9 +97,7 @@ static ssize_t dvbc_auto_sym_store(struct class *cls, struct class_attribute *at
 
 }
 
-#ifdef CONFIG_AM_SI2176
-extern	int si2176_get_strength(void);
-#endif
+
 static ssize_t dvbc_para_show(struct class *cls,struct class_attribute *attr,char *buf)
 {
 	struct aml_demod_sts demod_sts;
@@ -110,9 +108,6 @@ static ssize_t dvbc_para_show(struct class *cls,struct class_attribute *attr,cha
 	mutex_lock(&aml_lock);
 
 	dvbc_status(&demod_status,&demod_i2c, &demod_sts);
-	#ifdef CONFIG_AM_SI2176
-			 strength=si2176_get_strength();
-	#endif
 	pbuf+=sprintf(pbuf, "dvbc_para: ch_sts is %d", demod_sts.ch_sts);
 	pbuf+=sprintf(pbuf, "snr %d dB \n", demod_sts.ch_snr/100);
 	pbuf+=sprintf(pbuf, "ber %d", demod_sts.ch_ber);
@@ -1096,7 +1091,11 @@ int M6_Demod_Dtmb_Init(struct aml_fe_dev *dev)
 	// 0 -DVBC, 1-DVBT, ISDBT, 2-ATSC
 	demod_status.dvb_mode = M6_Dtmb;
 	sys.adc_clk=Adc_Clk_25M;//Adc_Clk_26M;
+	#ifdef dtmb_mobile_mode
+	sys.demod_clk=Demod_Clk_180M;
+	#else
 	sys.demod_clk=Demod_Clk_100M;
+	#endif
 	demod_status.ch_if=Si2176_5M_If;
 	demod_status.tmp=Adc_mode;
 	demod_set_sys(&demod_status, &i2c, &sys);;

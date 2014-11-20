@@ -8,13 +8,15 @@
 /*#include <mach/register.h>
 #include <mach/avosstyle_io.h>
 #include <mach/io.h>*/
-#include "aml_demod.h"
+#include <linux/dvb/aml_demod.h>
 #include "../aml_fe.h"
 #include "amlfrontend.h"
 #define G9_TV
 
 #define PWR_ON    1
 #define PWR_OFF   0
+
+#define dtmb_mobile_mode
 
 
 //#define DEMOD_BASE     APB_REG_ADDR(0x20000)
@@ -112,10 +114,6 @@ int tda18273_tuner_set_frequncy(unsigned int dwFrequency,unsigned int dwStandard
 
 int tuner_set_ch (struct aml_demod_sta *demod_sta,
 		  struct aml_demod_i2c *demod_i2c);
-int demod_set_tuner(struct aml_demod_sta *demod_sta,
-		  struct aml_demod_i2c *demod_i2c,
-		  struct aml_tuner_sys *tuner_sys);
-
 
 //dvbt
 int dvbt_set_ch(struct aml_demod_sta *demod_sta,

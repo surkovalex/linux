@@ -562,13 +562,15 @@ extern u32 dvbc_get_status(void);
 extern unsigned long atsc_read_iqr_reg(void);
 
 #endif
+
+#if 0 
 #if (defined CONFIG_AM_SI2176)
 int si2176_get_strength(void);
 #endif
-#if (defined CONFIG_AM_SI2177)
+#if ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
 int si2177_get_strength(void);
 #endif
-
+#endif
 
 static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 {
@@ -577,7 +579,7 @@ static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 	int time;
 	struct dvb_frontend_private *fepriv = fe->frontend_priv;
 	struct dtv_frontend_properties *c = &fe->dtv_property_cache, tmp;
-#if ((defined CONFIG_AM_SI2176) || (defined CONFIG_AM_SI2177))&&(defined CONFIG_AM_M6_DEMOD)
+#if ((defined CONFIG_AM_SI2176) || (defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))&&(defined CONFIG_AM_M6_DEMOD)
 	int strength;
 #endif
 #if (defined CONFIG_AM_M6_DEMOD)
@@ -692,7 +694,7 @@ static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 	//	fepriv->parameters_out = fepriv->parameters_in;
 		msleep(100);
 		#if (defined CONFIG_AM_SI2176)
-		strength=si2176_get_strength()-256;
+		strength=fe->ops.tuner_ops.get_strength(fe)-256;
 		if(strength<=(-85)){
 			s=32;
 			printk("5-strength is %d\n",strength);
@@ -705,8 +707,8 @@ static void dvb_frontend_swzigzag(struct dvb_frontend *fe)
 			return;
 
 		}
-		#elif (defined CONFIG_AM_SI2177)
-		strength=si2177_get_strength()-256;
+		#elif ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
+		strength=fe->ops.tuner_ops.get_strength(fe)-256;
 		if(strength<=(-85)){
 			s=32;
 			printk("5-strength is %d\n",strength);

@@ -25,7 +25,7 @@
 
 #include <asm/fiq.h>
 #include <asm/uaccess.h>
-#include "aml_demod.h"
+#include <linux/dvb/aml_demod.h>
 #include "demod_func.h"
 
 #include <linux/slab.h>
@@ -290,42 +290,36 @@ void mem_read(struct aml_demod_mem* arg)
 //	memcpy(mem_buf[addr],data,1);
 	printk("[addr %x] data is %x\n",addr,data);
 }
-#ifdef CONFIG_AM_SI2176
-extern	int si2176_get_strength(void);
-#endif
-
-#ifdef CONFIG_AM_SI2177
-extern	int si2177_get_strength(void);
-#endif
 
 static long aml_demod_ioctl(struct file *file,
                         unsigned int cmd, unsigned long arg)
 {
 	int i=0;
 	int step;
-	int strength;
 
-	strength=0;
+#if ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
+	int strength=0;
+	struct dvb_frontend *dvbfe;
+#endif
 
     switch (cmd) {
-
-		case AML_DEMOD_GET_RSSI :
-			printk("Ioctl Demod GET_RSSI. \n");
-			#ifdef CONFIG_AM_SI2176
-			 strength=si2176_get_strength();
-			 printk("[si2176] strength is %d\n",strength-256);
-			#endif
-
-			#ifdef CONFIG_AM_SI2177
-			 strength=si2177_get_strength();
-			 printk("[si2177] strength is %d\n",strength-256);
-			#endif
-
-			break;
+	case AML_DEMOD_GET_RSSI :
+		printk("Ioctl Demod GET_RSSI. \n");
+#if ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
+		dvbfe = get_si2177_tuner();
+		if (dvbfe != NULL)
+			strength=dvbfe->ops.tuner_ops.get_strength(dvbfe);
+		 printk("[si2177] strength is %d\n",strength-256);
+#endif
+		break;
 
 	case AML_DEMOD_SET_TUNER :
-	     printk("Ioctl Demod Set Tuner.\n");
-		  demod_set_tuner(&demod_sta, &demod_i2c, (struct aml_tuner_sys *)arg);
+		 printk("Ioctl Demod Set Tuner.\n");
+#if ((defined CONFIG_AM_SI2177) || (defined CONFIG_AM_SI2157))
+		dvbfe = get_si2177_tuner();
+		if (dvbfe != NULL)
+			dvbfe->ops.tuner_ops.set_tuner(dvbfe, &demod_sta, &demod_i2c, (struct aml_tuner_sys *)arg);
+#endif
 		break;
 
     	case AML_DEMOD_SET_SYS :
