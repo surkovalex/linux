@@ -276,7 +276,11 @@ static void set_hpll_hdmi_od(unsigned div)
             WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 1, 18, 2);
             break;
         case 4:
-            WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 2, 18, 2);
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6           
+			WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 3, 18, 2);
+#else                                                 
+			WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 2, 18, 2);
+#endif  
             break;
         case 8:
             WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 1, 16, 2);
