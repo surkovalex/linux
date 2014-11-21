@@ -136,40 +136,50 @@ static int  wifi_power_release(struct inode *inode,struct file *file)
 }
 
 static long wifi_power_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
-{	
-	struct wifi_power_platform_data *pdata = NULL;
-	    
-        
-  pdata = (struct wifi_power_platform_data*)devp->platform_data;
-  if(pdata == NULL){
-  	printk("%s platform data is required!\n",__FUNCTION__);
-  	return -1;
-  }
-    
-	amlogic_gpio_request(pdata->power_gpio,WIFI_POWER_MODULE_NAME);
-
-	if(wifi_power_on_pin2)
- 	   amlogic_gpio_request(pdata->power_gpio2,WIFI_POWER_MODULE_NAME);
-    
-	switch (cmd) 
+{
+	switch (cmd)
 	{
 		case POWER_UP:
-			set_wifi_power(power_gpio_valid_level);	
-     	printk(KERN_INFO "Set usb wifi power up!\n");
-    	break;
-    		
-    case POWER_DOWN:
-   	  set_wifi_power(!power_gpio_valid_level);           
-    	printk(KERN_INFO "Set usb wifi power down!\n");
-    	break;	
-    
+			wifi_power_control(1);
+			break;
+
+		case POWER_DOWN:
+			wifi_power_control(0);
+			break;
+
 		default:
-			printk(KERN_ERR "usb wifi_power_ioctl: default !!!\n");
-			return  - EINVAL;
+			pr_err("usb wifi_power_ioctl: default !!!\n");
+			return -EINVAL;
 	}
-	
 	return 0;
 }
+
+int wifi_power_control(int power_up)
+{
+	struct wifi_power_platform_data *pdata = NULL;
+
+	pdata = (struct wifi_power_platform_data*)devp->platform_data;
+	if (pdata == NULL) {
+		pr_err("%s platform data is required!\n", __FUNCTION__);
+		return -1;
+	}
+
+	amlogic_gpio_request(pdata->power_gpio, WIFI_POWER_MODULE_NAME);
+
+	if (wifi_power_on_pin2) {
+		amlogic_gpio_request(pdata->power_gpio2,WIFI_POWER_MODULE_NAME);
+	}
+
+	if (power_up) {
+		set_wifi_power(power_gpio_valid_level);
+		pr_info("Set usb wifi power up!\n");
+	} else {
+		set_wifi_power(!power_gpio_valid_level);
+		pr_info("Set usb wifi power down!\n");
+	}
+	return 0;
+}
+EXPORT_SYMBOL(wifi_power_control);
 
 int wifi_set_power(int val)
 {
