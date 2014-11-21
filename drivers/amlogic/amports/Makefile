@@ -64,8 +64,8 @@ ifeq ($(CONFIG_ARCH_MESONG9TV),y)
 amports-objs := $(AMPORTS_OBJS)
 amports-y    := $(AMPORTS_OBJS)
 else
-amports-objs := $(AMPORTS_OBJS) amve.o amcm.o
-amports-y    := $(AMPORTS_OBJS) amve.o amcm.o
+amports-objs := $(AMPORTS_OBJS)
+amports-y    := $(AMPORTS_OBJS)
 endif
 endif
 endif

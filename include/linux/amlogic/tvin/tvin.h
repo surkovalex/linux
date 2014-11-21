@@ -15,23 +15,8 @@
 #ifndef __TVIN_H
 #define __TVIN_H
 
-#include <plat/io.h>
-#include <linux/amlogic/amports/cm.h>
-
-#define R_CBUS_REG(reg) aml_read_reg32(CBUS_REG_ADDR(reg))
-#define W_CBUS_REG(reg, val) aml_write_reg32(CBUS_REG_ADDR(reg), val)
-#define R_CBUS_BIT(reg, start, len) \
-	aml_get_reg32_bits(CBUS_REG_ADDR(reg), start, len)
-#define W_CBUS_BIT(reg, val, start, len) \
-	aml_set_reg32_bits(CBUS_REG_ADDR(reg), val, start, len)
-
-#define R_APB_REG(reg) aml_read_reg32(APB_REG_ADDR(reg))
-#define W_APB_REG(reg, val) aml_write_reg32(APB_REG_ADDR(reg), val)
-#define R_APB_BIT(reg, start, len) \
-	aml_get_reg32_bits(APB_REG_ADDR(reg), start, len)
-#define W_APB_BIT(reg, val, start, len) \
-	aml_set_reg32_bits(APB_REG_ADDR(reg), val, start, len)
-
+#include <linux/amlogic/cm.h>
+#include <mach/am_regs.h>
 
 enum {
     MEMP_VDIN_WITHOUT_3D = 0,

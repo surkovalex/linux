@@ -132,15 +132,16 @@ typedef struct cm_regmap_s {
 
 typedef enum reg_bus_type_e {
     REG_TYPE_PHY = 0,
-    REG_TYPE_CBUS,
-    REG_TYPE_APB,
-    REG_TYPE_AXI,
-    REG_TYPE_AHB,
-    REG_TYPE_MPEG,
-    REG_TYPE_INDEX_VPPCHROMA,
-    REG_TYPE_INDEX_GAMMA,
-    VALUE_TYPE_CONTRAST_BRIGHTNESS,
-    REG_TYPE_INDEX_VPP_COEF,
+    REG_TYPE_CBUS = 1,
+    REG_TYPE_APB = 2,
+    REG_TYPE_AXI = 3,
+    REG_TYPE_AHB = 4,
+    REG_TYPE_MPEG = 5,
+    REG_TYPE_INDEX_VPPCHROMA = 6,
+    REG_TYPE_INDEX_GAMMA = 7,
+    VALUE_TYPE_CONTRAST_BRIGHTNESS = 8,
+    REG_TYPE_INDEX_VPP_COEF = 9,
+    REG_TYPE_VCBUS = 10,
     REG_TYPE_MAX,
 } reg_bus_type_t;
 
@@ -152,16 +153,9 @@ typedef struct am_reg_s {
     unsigned int  val; //32-bits; Register Value
 } am_reg_t;
 
-#ifdef AMVIDEO_REG_TABLE_DYNAMIC
-typedef struct am_regs_s {
-    unsigned int    length; // Length of total am_reg
-    struct am_reg_s *am_reg;
-} am_regs_t;
-#else
 typedef struct am_regs_s {
     unsigned int    length; // Length of total am_reg
     struct am_reg_s am_reg[512];
 } am_regs_t;
-#endif
 
 #endif  // _TVOUT_CM_H

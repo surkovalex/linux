@@ -17,7 +17,7 @@
 #include "linux/amlogic/vframe.h"
 #include "linux/amlogic/ve.h"
 
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+#if ((MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8))//&&(MESON_CPU_TYPE != MESON_CPU_TYPE_MESONG9TV))
 #undef WRITE_CBUS_REG
 #undef WRITE_CBUS_REG_BITS
 #undef READ_CBUS_REG
@@ -64,12 +64,20 @@ extern void vpp_enable_lcd_gamma_table(void);
 extern void vpp_disable_lcd_gamma_table(void);
 extern void vpp_set_lcd_gamma_table(u16 *data, u32 rgb_mask);
 extern void vpp_set_rgb_ogo(struct tcon_rgb_ogo_s *p);
-extern void vd1_brightness_contrast(signed int brightness, signed int contrast);
 extern void vpp_phase_lock_on_vs(unsigned int cycle,
                                  unsigned int stamp,
                                  bool         lock50,
                                  unsigned int range_fast,
                                  unsigned int range_slow);
+#if (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESON6TVD)
+extern void ve_frame_size_patch(unsigned int width,unsigned int height);
+#endif
+extern void ve_dnlp_latch_process(void);
+extern void ve_lcd_gamma_process(void);
+extern void lvds_freq_process(void);
+extern void ve_dnlp_param_update(void);
+extern void ve_new_dnlp_param_update(void);
+extern void ve_ogo_param_update(void);
 
 extern unsigned int vecm_latch_flag;
 extern unsigned int cm_size;
