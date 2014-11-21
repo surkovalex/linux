@@ -488,7 +488,7 @@ static unsigned int cts_clk_match(vmode_t mode)
 {
     unsigned int i = 0, j = 0;
     unsigned int clk_msr = 0;
-
+return 1;
     for(i = 0; i < ARRAY_SIZE(hdmitx_clk); i ++) {
         for(j = 0; j < MAX_SAME_CONF; j ++) {
             if((mode == hdmitx_clk[i].mode[j]) && (hdmitx_clk[i].mode[j] != VMODE_MAX)) {
@@ -535,7 +535,6 @@ static int vmode_clk_match(vmode_t mode)
 {
     unsigned int clk_msr = 0;
 
-return 0;
     if(!(aml_read_reg32(P_HHI_HDMI_PLL_CNTL) & (1 << 31)))
         return 0;
     if((aml_read_reg32(P_HHI_HDMI_PLL_CNTL) & 0xfff) != 0x23d)
@@ -544,6 +543,7 @@ return 0;
         return 0;
 
     clk_msr = clk_measure(55);
+    printk("%s[%d], mode = %d, clkmsr = %d\n", __func__, __LINE__, mode, clk_msr);
     switch(mode) {
     case VMODE_720P:
     case VMODE_1080I:
@@ -560,6 +560,11 @@ return 0;
         if(  (clk_msr == 148000000) || (clk_msr == 149000000)
           || (clk_msr == 593000000) || (clk_msr == 594000000) || (clk_msr == 595000000)
           || (clk_msr == 74000000) || (clk_msr == 73000000) || (clk_msr == 75000000))
+            return 1;
+        break;
+    case VMODE_4K2K_FAKE_5G:
+    case VMODE_4K2K_5G:
+        if((clk_msr == 493000000) || (clk_msr == 494000000) || (clk_msr == 493000000) || (clk_msr == 247000000))
             return 1;
         break;
     default:
@@ -609,15 +614,15 @@ printk("set_vmode_clk mode is %d\n", mode);
 
 		return;
 	}
-
+    aml_write_reg32(P_HHI_HDMI_PLL_CNTL2, 0x00444e00);
+    aml_write_reg32(P_HHI_HDMI_PLL_CNTL3, 0x135c5091);
+    aml_write_reg32(P_HHI_HDMI_PLL_CNTL4, 0x801da72c);
+    aml_write_reg32(P_HHI_HDMI_PLL_CNTL5, 0x71486900);    //5940 0x71c86900      // 0x71486900 2970
+    aml_write_reg32(P_HHI_HDMI_PLL_CNTL6, 0x00000e55);
     if(!vmode_clk_match(mode)) {
         printk("%s[%d] reset hdmi hpll\n", __func__, __LINE__);
+        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x0000023d);
         aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x5000023d);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL2, 0x00454e00);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL3, 0x135c5091);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL4, 0x801da72c);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL5, 0x71486900);    //5940 0x71c86900      // 0x71486900 2970
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL6, 0x00000e55);
         aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x4000023d);
 
         WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
