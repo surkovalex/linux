@@ -547,6 +547,12 @@ typedef enum tvafe_cvbs_video_e {
 // for pin selection
 typedef enum tvafe_adc_pin_e {
         TVAFE_ADC_PIN_NULL = 0,
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+	TVAFE_CVBS_IN0		= 1,
+	TVAFE_CVBS_IN1		= 2,
+	TVAFE_CVBS_IN2		= 3,
+	TVAFE_CVBS_IN3		= 4,//as atvdemod to tvafe
+#else
 	TVAFE_ADC_PIN_A_PGA_0	= 1,
 	TVAFE_ADC_PIN_A_PGA_1	= 2,
 	TVAFE_ADC_PIN_A_PGA_2	= 3,
@@ -595,10 +601,17 @@ typedef enum tvafe_adc_pin_e {
 	TVAFE_ADC_PIN_SOG_5	= 46,
 	TVAFE_ADC_PIN_SOG_6	= 47,
 	TVAFE_ADC_PIN_SOG_7	= 48,
+#endif
 	TVAFE_ADC_PIN_MAX,
 } tvafe_adc_pin_t;
 
 typedef enum tvafe_src_sig_e {
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+	CVBS_IN0 = 0,
+	CVBS_IN1,
+	CVBS_IN2,
+	CVBS_IN3,
+#else
         CVBS0_Y = 0,
         CVBS0_SOG,
         CVBS1_Y,
@@ -735,6 +748,7 @@ typedef enum tvafe_src_sig_e {
         SCART7_B,
         SCART7_R,
         SCART7_CVBS,
+#endif
         TVAFE_SRC_SIG_MAX_NUM,
 } tvafe_src_sig_t;
 
