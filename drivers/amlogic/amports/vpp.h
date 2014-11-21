@@ -115,10 +115,25 @@ typedef struct {
     		      //bit[3]0:pic0 first,1:pic1 first
     bool vpp_3d_scale;
 
+    bool supsc0_enable;
+    bool supsc1_enable;
+    u32  supscl_path;
+    u32  supsc0_hori_ratio;
+    u32  supsc1_hori_ratio;
+    u32  supsc0_vert_ratio;
+    u32  supsc1_vert_ratio;
 } vpp_frame_par_t;
 
 #if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)
 #define TV_3D_FUNCTION_OPEN
+#define TV_REVERSE
+#endif
+#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)
+#define SUPER_SCALER_OPEN
+typedef enum{
+    sup0_sp1_pp_scpath,
+    sup0_pp_sp1_scpath
+} select_scaler_path_e;
 #endif
 
 #ifdef TV_3D_FUNCTION_OPEN

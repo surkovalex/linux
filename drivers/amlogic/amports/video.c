@@ -379,8 +379,10 @@ static unsigned int force_3d_scaler =10;
 
 static int mode_3d_changed = 0;
 static int last_mode_3d = 0;
+#endif
 
-
+#ifdef TV_REVERSE
+bool reverse = false;
 #endif
 
 const char video_dev_id[] = "amvideo-dev";
@@ -1250,6 +1252,10 @@ static void vpp_settings_h(vpp_frame_par_t *framePtr)
     r1 = framePtr->VPP_hsc_linear_startp - framePtr->VPP_hsc_startp;
     r2 = framePtr->VPP_hsc_linear_endp   - framePtr->VPP_hsc_startp;
     r3 = framePtr->VPP_hsc_endp          - framePtr->VPP_hsc_startp;
+    #ifdef SUPER_SCALER_OPEN
+    if(framePtr->supscl_path == sup0_pp_sp1_scpath)
+	r3 >>= framePtr->supsc1_hori_ratio;
+    #endif
 
     VSYNC_WR_MPEG_REG(VPP_POSTBLEND_VD1_H_START_END + cur_dev->vpp_off,
                    ((framePtr->VPP_hsc_startp & VPP_VD_SIZE_MASK) << VPP_VD1_START_BIT) |
@@ -1309,6 +1315,10 @@ static void vpp_settings_v(vpp_frame_par_t *framePtr)
     VSYNC_WR_MPEG_REG(VPP_VSC_REGION34_STARTP + cur_dev->vpp_off,
                    ((r & VPP_REGION_MASK) << VPP_REGION3_BIT) |
                    ((r & VPP_REGION_MASK) << VPP_REGION4_BIT));
+    #ifdef SUPER_SCALER_OPEN
+    if(framePtr->supscl_path == sup0_pp_sp1_scpath)
+	r >>= framePtr->supsc1_vert_ratio;
+    #endif
     VSYNC_WR_MPEG_REG(VPP_VSC_REGION4_ENDP + cur_dev->vpp_off, r);
 
     VSYNC_WR_MPEG_REG(VPP_VSC_START_PHASE_STEP + cur_dev->vpp_off,
@@ -3830,7 +3840,21 @@ static void _set_video_window(int *p)
 {
     int w, h;
     int *parsed = p;
+#ifdef TV_REVERSE
+    int temp,temp1;
+    const vinfo_t *info = get_current_vinfo();
 
+    //printk(KERN_DEBUG "%s: %u get vinfo(%d,%d).\n", __func__, __LINE__, info->width, info->height);
+    if(reverse)
+    {
+	temp = parsed[0];
+	temp1 = parsed[1];
+	parsed[0] = info->width - parsed[2] - 1;
+	parsed[1] = info->height- parsed[3] - 1;
+	parsed[2] = info->width - temp - 1;
+	parsed[3] = info->height- temp1 - 1;
+    }
+#endif
     if (parsed[0] < 0 && parsed[2] < 2) {
         parsed[2] = 2;
         parsed[0] = 0;
@@ -4463,7 +4487,7 @@ static ssize_t video_state_show(struct class *cla, struct class_attribute *attr,
     len += sprintf(buf + len, "zoom_start_y_lines:%u.zoom_end_y_lines:%u.\n", zoom_start_y_lines,zoom_end_y_lines);
     len += sprintf(buf + len,"frame parameters: pic_in_height %u.\n", cur_frame_par->VPP_pic_in_height_);
     len += sprintf(buf + len,"vscale_skip_count %u.\n", cur_frame_par->vscale_skip_count);
-    len += sprintf(buf + len,"vscale_skip_count %u.\n", cur_frame_par->hscale_skip_count);
+    len += sprintf(buf + len,"hscale_skip_count %u.\n", cur_frame_par->hscale_skip_count);
     #ifdef TV_3D_FUNCTION_OPEN
     len += sprintf(buf + len,"vpp_2pic_mode %u.\n", cur_frame_par->vpp_2pic_mode);
     len += sprintf(buf + len,"vpp_3d_scale %u.\n", cur_frame_par->vpp_3d_scale);
@@ -5541,6 +5565,22 @@ static struct class amvideo_class = {
 #endif
     };
 
+#ifdef TV_REVERSE
+static int __init vpp_axis_reverse(char *str)
+{
+    unsigned char *ptr = str;
+    pr_info("%s: bootargs is %s.\n",__func__,str);
+    if(strstr(ptr,"1")){
+        reverse = true;
+    }
+    else{
+        reverse = false;
+    }
+
+    return 0;
+}
+__setup("panel_reverse=",vpp_axis_reverse);
+#endif
 static struct device *amvideo_dev;
 
 int vout_notify_callback(struct notifier_block *block, unsigned long cmd , void *para)
@@ -5734,6 +5774,9 @@ static int __init video_early_init(void)
     if(NULL==init_logo_obj || !init_logo_obj->para.loaded){
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 		WRITE_VCBUS_REG_BITS(VPP_OFIFO_SIZE, 0x77f, VPP_OFIFO_SIZE_BIT, VPP_OFIFO_SIZE_WID);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
+		WRITE_VCBUS_REG_BITS(VPP_OFIFO_SIZE, 0x800, VPP_OFIFO_SIZE_BIT, VPP_OFIFO_SIZE_WID);
+#endif
 #endif // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     }
 
@@ -5771,6 +5814,39 @@ static int __init video_early_init(void)
 #endif
     return 0;
 }
+#ifdef SUPER_SCALER_OPEN
+static void super_scaler_init(void)
+{
+    /*load super scaler default cub setting*/
+    WRITE_VCBUS_REG(0x3102,0xf84848f8);
+    WRITE_VCBUS_REG(0x3103,0xf84848f8);
+    WRITE_VCBUS_REG(0x3104,0xf84848f8);
+    WRITE_VCBUS_REG(0x3105,0xf84848f8);
+    WRITE_VCBUS_REG(0x3106,0x02330344);
+    WRITE_VCBUS_REG(0x310a,0x0080a0eb);
+    WRITE_VCBUS_REG(0x310c,0x0080a0eb);
+    WRITE_VCBUS_REG(0x310d,0x7a7a3a50);
+
+    WRITE_VCBUS_REG(0x3112,0x00017f00);
+    WRITE_VCBUS_REG(0x3113,0x00017f00);
+    WRITE_VCBUS_REG(0x3114,0x00017f00);
+    WRITE_VCBUS_REG(0x3115,0x00017f00);
+    WRITE_VCBUS_REG(0x311a,0xf84848f8);
+    WRITE_VCBUS_REG(0x311b,0xf84848f8);
+    WRITE_VCBUS_REG(0x311c,0xf84848f8);
+    WRITE_VCBUS_REG(0x311d,0xf84848f8);
+
+    WRITE_VCBUS_REG(0x311e,0x02330344);
+    WRITE_VCBUS_REG(0x3122,0x0080a0eb);
+    WRITE_VCBUS_REG(0x3124,0x0080a0eb);
+    WRITE_VCBUS_REG(0x3125,0x7a7a3a50);
+
+    WRITE_VCBUS_REG(0x312b,0x00017f00);
+    WRITE_VCBUS_REG(0x312c,0x00017f00);
+    WRITE_VCBUS_REG(0x312d,0x00017f00);
+    WRITE_VCBUS_REG(0x312e,0x00017f00);
+}
+#endif
 static int __init video_init(void)
 {
     int r = 0;
@@ -5803,6 +5879,9 @@ static int __init video_init(void)
                        (1 << 8)    |   // enable clock gating
                        (1 << 0));      // DDR clk / 2
     }
+#endif
+#ifdef SUPER_SCALER_OPEN
+    super_scaler_init();
 #endif
 
 #ifdef RESERVE_CLR_FRAME
@@ -6121,6 +6200,10 @@ module_param(cur_dev_idx, uint, 0664);
 MODULE_PARM_DESC(new_frame_count, "\n new_frame_count\n");
 module_param(new_frame_count, uint, 0664);
 
+#ifdef TV_REVERSE
+module_param(reverse,bool,0644);
+MODULE_PARM_DESC(reverse,"reverse /disable reverse");
+#endif
 MODULE_DESCRIPTION("AMLOGIC video output driver");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Tim Yao <timyao@amlogic.com>");
