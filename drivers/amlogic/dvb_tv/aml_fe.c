@@ -50,7 +50,7 @@ MODULE_PARM_DESC(debug_fe, "\n\t\t Enable frontend debug information");
 static int debug_fe = 0;
 module_param(debug_fe, int, 0644);
 
-#define AFC_BEST_LOCK      50
+#define AFC_BEST_LOCK      100//50
 #define ATV_AFC_1_0MHZ   1000000
 #define ATV_AFC_2_0MHZ	 2000000
 
@@ -159,6 +159,21 @@ int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv)
 }
 EXPORT_SYMBOL(aml_unregister_fe_drv);
 
+struct dvb_frontend * get_si2177_tuner(void)
+{
+	int i;
+	struct aml_fe_dev *dev;
+
+	for(i = 0; i < FE_DEV_COUNT; i++){
+		dev = &fe_man.tuner[i];
+		if (!strcmp(dev->drv->name, "si2177_tuner")){
+			return dev->fe->fe;
+		}
+	}
+	pr_error("can not find out tuner drv\n");
+	return NULL;
+}
+EXPORT_SYMBOL(get_si2177_tuner);
 
 int aml_fe_analog_set_frontend(struct dvb_frontend* fe)
 {
@@ -340,7 +355,7 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 		{
 			pr_dbg("[%s] p->frequency=[%d] is processing\n",__func__,p->frequency);
 			do{
-				if((fe->ops.tuner_ops.get_pll_status == NULL)||(fe->ops.tuner_ops.get_pll_status == NULL)){
+				if((fe->ops.tuner_ops.get_pll_status == NULL)||(fe->ops.analog_ops.get_pll_status == NULL)){
 					printk("[%s]error:the func of get_pll_status is NULL.\n",__func__);
 					return DVBFE_ALGO_SEARCH_FAILED;
 				}
@@ -425,12 +440,14 @@ static int aml_fe_afc_closer(struct dvb_frontend *fe,int minafcfreq,int maxafcfq
 	int count=10;
 
 	//do the auto afc make sure the afc<50k or the range from api
-	if(fe->ops.analog_ops.get_afc &&fe->ops.set_frontend){
+	if((fe->ops.analog_ops.get_afc || fe->ops.tuner_ops.get_afc) &&fe->ops.set_frontend){
 		set_freq=c->frequency;
 
 		while(afc > AFC_BEST_LOCK){
-
-			fe->ops.analog_ops.get_afc(fe, &afc);
+			if(fe->ops.analog_ops.get_afc)
+				fe->ops.analog_ops.get_afc(fe, &afc);
+			else if(fe->ops.tuner_ops.get_afc)
+				fe->ops.tuner_ops.get_afc(fe, &afc);
 			c->frequency += afc*1000;
 
 			if(unlikely(c->frequency>maxafcfqreq) ){
@@ -1598,7 +1615,7 @@ probe_end:
 
 	fe_man.pdev = pdev;
 
-	pr_dbg("[aml_fe..] probe ok.\n");
+	printk("[aml_fe..] probe ok.\n");
 
 	return 0;
 }

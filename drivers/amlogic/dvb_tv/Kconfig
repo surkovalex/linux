@@ -11,6 +11,19 @@ config AM_DVB
 	help
 		Select to enable AMLogic DVB driver.
 
+config AM_ATVDEMOD
+	tristate "Amlogic ATVDEMOD device driver"
+	default n
+	help
+	  ATVDEMOD device driver.
+
+config AM_DTVDEMOD
+	tristate "Amlogic DTVDEMOD device driver"
+	default n
+	depends on AM_DVB
+	help
+	  DTVDEMOD device driver.
+	  
 menu "AMLOGIC CI Driver"
 
 config AM_CI
@@ -197,6 +210,13 @@ config AM_M6_DEMOD
 endif
 
 isource "../hardware/dvb/altobeam/drivers/atbm887x/Kconfig"
+
+config AM_SI2157
+	tristate "SI2157 tuner"
+	default n
+	depends on AM_DVB
+	help
+		select the 2157 tuner.
 
 config AM_SI2177
 	tristate "SI2177 tuner"

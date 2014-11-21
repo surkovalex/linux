@@ -68,7 +68,8 @@ typedef enum{
 	AM_ATV_DEMOD_FQ1216 =3,
 	AM_ATV_DEMOD_HTM = 4,
 	AM_ATV_DEMOD_CTC703 = 5,
-	AM_ATV_DEMOD_SI2177 =6
+	AM_ATV_DEMOD_SI2177 =6,
+	AM_ATV_DEMOD_AML =7
 }aml_atv_demod_type_t;
 
 typedef enum{
@@ -167,6 +168,7 @@ extern int aml_register_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
 
 extern int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
 
+extern struct dvb_frontend * get_si2177_tuner(void);
 extern const char* soundsys_to_str(unsigned short soundsys);
 extern const char* audmode_to_str(unsigned short soundsys);
 extern const char* v4l2_std_to_str(v4l2_std_id std);
