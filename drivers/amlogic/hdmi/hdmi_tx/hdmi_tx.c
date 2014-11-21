@@ -939,8 +939,10 @@ static DEVICE_ATTR(cec_lang_config, S_IWUSR | S_IRUGO | S_IWGRP, show_cec_lang_c
 ******************************/
 static int hdmitx_notify_callback_v(struct notifier_block *block, unsigned long cmd , void *para)
 {
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 	const vinfo_t *info = NULL;
 	HDMI_Video_Codes_t vic_ready = HDMI_Unkown;
+#endif
 	if(get_cur_vout_index()!=1)
         return 0;
 
