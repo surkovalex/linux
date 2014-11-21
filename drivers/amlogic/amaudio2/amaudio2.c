@@ -117,6 +117,10 @@ static unsigned latency = MIN_LATENCY*2; //20ms
 static u64 amaudio_pcm_dmamask = DMA_BIT_MASK(32);
 #define HRTIMER_PERIOD (1000000000UL/1000)
 
+#define INT_NUM		(16)	//min 2, max 32
+#define I2S_BLOCK	(64)	// block_size = 32byte*channel_num, normal is 2 channel
+#define INT_BLOCK ((INT_NUM)*(I2S_BLOCK))
+
 static int amaudio_open(struct inode *inode, struct file *file)
 {
   amaudio_port_t* this = &amaudio_ports[iminor(inode)];
@@ -151,11 +155,17 @@ static int amaudio_open(struct inode *inode, struct file *file)
   	amaudio->hw.size = get_i2s_out_size();
   	amaudio->hw.rd = get_i2s_out_ptr();
 		
-	//printk(KERN_DEBUG "amaudio->sw.addr=%08x,amaudio->sw.paddr=%08x \n amaudio->hw.addr=%08x,amaudio->hw.paddr=%08x\n",
-	//(unsigned int)amaudio->sw.addr,amaudio->sw.paddr,(unsigned int)amaudio->hw.addr,amaudio->hw.paddr);
+	printk(KERN_DEBUG "sw.addr=%08x,sw.paddr=%08x \n hw.addr=%08x,hw.paddr=%08x\n hw.size=%08x,hw.rd=%08x\n",
+						(unsigned int)amaudio->sw.addr,amaudio->sw.paddr,
+						(unsigned int)amaudio->hw.addr,amaudio->hw.paddr,
+						amaudio->hw.size,(unsigned int)amaudio->hw.rd);
 	
-  	WRITE_MPEG_REG_BITS(AIU_MEM_I2S_MASKS,0, 16, 16);
-	
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
+	WRITE_MPEG_REG_BITS(AIU_MEM_I2S_MASKS, INT_NUM, 16, 16);
+#else
+	WRITE_MPEG_REG_BITS(AIU_MEM_I2S_MASKS,0, 16, 16);
+#endif
+
 	spin_lock_init(&amaudio->sw.lock);
   	spin_lock_init(&amaudio->hw.lock);
 	spin_lock_init(&amaudio->sw_read.lock);
@@ -350,10 +360,6 @@ void interleave_memcpy(BUF *des, int a, BUF *src, int b, unsigned count)
 	}
 }
 
-#define INT_NUM		(16)	//min 2, max 32
-#define I2S_BLOCK	(64)
-#define INT_BLOCK ((INT_NUM)*(I2S_BLOCK))
-
 //#define AMAUDIO2_DEBUG
 #ifdef AMAUDIO2_DEBUG
 static int counter = 0;
@@ -381,8 +387,8 @@ static void i2s_copy(amaudio_t* amaudio)
 	}
 
 	if((alsa_delay - amaudio_delay) <= INT_BLOCK){
-		//printk(KERN_DEBUG "Reset hw pointer: alsa_delay:%x, amaudio_delay:%x, latency = %x\n",
-		//	alsa_delay,amaudio_delay,latency);
+		printk(KERN_DEBUG "Reset hw pointer: alsa_delay:%x, amaudio_delay:%x, latency = %x, hw->size = %x\n",
+			alsa_delay,amaudio_delay,latency,hw->size);
 		goto EXIT;
 	}
 	
@@ -396,11 +402,10 @@ static void i2s_copy(amaudio_t* amaudio)
 	counter++;
 #endif
 
-	if(audio_out_mode != 3){
-		valid_data = sw->level&~0x3f;
-		if(valid_data < INT_BLOCK) {
-			goto EXIT;
-		}
+	valid_data = sw->level&~0x3f;
+	if(valid_data < INT_BLOCK) {
+		printk(KERN_DEBUG "i2s copy: system locked!\n");
+		goto EXIT;
 	}
 	
 	if(audio_out_read_enable == 1){
@@ -445,17 +450,17 @@ EXIT:
 static irqreturn_t i2s_out_callback(int irq, void* data)
 {
 	amaudio_t* amaudio = (amaudio_t*)data;
-	BUF* hw = &amaudio->hw;
-	unsigned tmp;
 
-	//printk("irq: hw: rd=%d, wr=%d,level=%d\n", hw->rd, hw->wr, hw->level);
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESONG9TV
+	BUF* hw = &amaudio->hw;
+	unsigned tmp = 0;
 	tmp = READ_MPEG_REG_BITS(AIU_MEM_I2S_MASKS, 16, 16);
-  	//printk("rd=%d, tmp=%d\n", hw->rd, tmp);
   	tmp = (tmp + INT_NUM + (hw->size>>6)) % (hw->size>>6);
   	WRITE_MPEG_REG_BITS(AIU_MEM_I2S_MASKS, tmp, 16, 16);
-	
+#endif
+
   	i2s_copy(amaudio);
-  	
+
   	return IRQ_HANDLED;
 }
 
@@ -524,8 +529,7 @@ static long amaudio_ioctl(struct file *file,unsigned int cmd, unsigned long arg)
 			// audio_out_mode = 0, covered alsa audio mode; 
 			// audio_out_mode = 1, karaOK mode, Linein left and right channel inter mixed with android alsa audio;
 			// audio_out_mode = 2, TV in direct mix with android audio; 
-			// audio_out_mode = 3, don't copy data to Hardware buffer 
-			if(arg < 0 || arg > 3){
+			if(arg < 0 || arg > 2){
               return -EINVAL;
             }
             audio_out_mode = arg;
@@ -637,9 +641,6 @@ static ssize_t store_audio_out_mode(struct class* class, struct class_attribute*
 	}else if(buf[0] == '2'){
 		printk(KERN_INFO "Audio_in data direct mixed with the android local data as output!\n");
 		audio_out_mode = 2;
-	}else if(buf[0] == '3'){
-		printk(KERN_INFO "Audio_in don't copy data to hardware buffer!\n");
-		audio_out_mode = 3;
 	}
 	return count;
 }
