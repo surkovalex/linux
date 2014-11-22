@@ -145,12 +145,14 @@ void am_set_regmap(struct am_regs_s *p)
 				WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
 #endif
 			break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 		case REG_TYPE_VCBUS:
 			if (p->am_reg[i].mask == 0xffffffff)
 				WRITE_VCBUS_REG(p->am_reg[i].addr, p->am_reg[i].val);
 			else
 				WRITE_VCBUS_REG(p->am_reg[i].addr, (READ_VCBUS_REG(p->am_reg[i].addr) & (~(p->am_reg[i].mask))) | (p->am_reg[i].val & p->am_reg[i].mask));
 			break;
+#endif
 		default:
 			break;
 		}
