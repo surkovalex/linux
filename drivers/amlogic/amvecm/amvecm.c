@@ -876,6 +876,7 @@ static ssize_t amvecm_gamma_store(struct class *cls,
 	kfree(gammaB);
 	return count;
 }
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
 void init_sharpness(void)
 {
 	WRITE_CBUS_REG(VPP_VE_ENABLE_CTRL, 0x2);
@@ -911,7 +912,7 @@ void init_sharpness(void)
 	WRITE_CBUS_REG(PK_DRTFB_HP_CORING, 0x00043f04);
 	printk("**********sharpness init ok!*********\n");
 }
-
+#endif
 static struct class_attribute amvecm_class_attrs[] = {
 	__ATTR(dnlp, S_IRUGO | S_IWUSR,
 		amvecm_dnlp_show, amvecm_dnlp_store),
@@ -975,7 +976,9 @@ static int __init amvecm_init(void)
 		ret = PTR_ERR(devp->dev);
 		goto fail_create_device;
 	}
+	#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
 	init_sharpness();
+	#endif
 	return 0;
 
 fail_create_device:

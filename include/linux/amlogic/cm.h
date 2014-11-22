@@ -90,7 +90,7 @@ typedef struct cm_region_s {
     unsigned char       hue_gain;
     unsigned char       hue_clockwise;
     unsigned char       hue_shf_ran;
-    ushort              hue_shf_sta;
+    unsigned short      hue_shf_sta;
     // hue - lum
     unsigned char       hue_lum_h_slope;
     unsigned char       hue_lum_l_slope;
@@ -122,12 +122,12 @@ typedef struct cm_demo_s {
     unsigned char       en;
     enum cm_demo_pos_e  pos;
     unsigned char       hlight_adj;
-    ushort              wid;
+    unsigned short      wid;
     struct cm_cbar_s   cbar;
 } cm_demo_t;
 
 typedef struct cm_regmap_s {
-    ulong reg[50];
+    unsigned long reg[50];
 } cm_regmap_t;
 
 typedef enum reg_bus_type_e {
