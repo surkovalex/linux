@@ -75,13 +75,13 @@ MODULE_AMLOG(LOG_LEVEL_ERROR, 0, LOG_DEFAULT_LEVEL_DESC, LOG_MASK_DESC);
 
 #undef CONFIG_AM_DEINTERLACE
 
-#include "linux/amlogic/amports/ve.h"
-#include "linux/amlogic/amports/cm.h"
+#include "linux/amlogic/ve.h"
+#include "linux/amlogic/cm.h"
 
-#include "ve_regs.h"
-#include "amve.h"
-#include "cm_regs.h"
-#include "amcm.h"
+//#include "ve_regs.h"
+//#include "amve.h"
+//#include "cm_regs.h"
+//#include "amcm.h"
 
 
 //*************************************************
