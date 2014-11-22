@@ -83,7 +83,9 @@ static int g_mdcclk = 2;
 static int g_rxnum = 64;
 static int g_txnum = 64;
 static int new_maclogic = 0;
+#ifdef CONFIG_AML1220
 static int used_pmu4_phy = 0;
+#endif
 static unsigned int ethbaseaddr = ETHBASE;
 static unsigned int savepowermode = 0;
 static int interruptnum = ETH_INTERRUPT;

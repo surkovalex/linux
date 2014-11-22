@@ -18,7 +18,7 @@ static int mdio_read(struct mii_bus *bus, int phyaddr, int phyreg)
 	unsigned int mii_address;
 	unsigned int mii_data;
 	unsigned regValue;
-#if CONFIG_AML1220
+#ifdef CONFIG_AML1220
 	int data1;
 	uint8_t data_lo;
 	uint8_t data_hi;
@@ -41,7 +41,7 @@ static int mdio_read(struct mii_bus *bus, int phyaddr, int phyreg)
         do {} while (((readl((void*)(priv->base_addr + mii_address))) & MII_BUSY) == 1);
         /* Read the data from the MII data register */
         data = (int)readl((void*)(priv->base_addr + mii_data));
-#if CONFIG_AML1220
+#ifdef CONFIG_AML1220
         return data1;
 #else
 	return data;
@@ -114,7 +114,7 @@ int aml_mdio_register(struct net_device *ndev)
         priv->mii = new_bus;
 
         found = 0;
-#if CONFIG_AML1220
+#ifdef CONFIG_AML1220
 for (addr = 8; addr == 8; addr++) {
 	struct phy_device *phydev = new_bus->phy_map[addr];
 	if (phydev) {
