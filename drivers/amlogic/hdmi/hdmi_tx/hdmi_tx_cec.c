@@ -159,7 +159,7 @@ void cec_isr_post_process(void)
 
 void cec_usr_cmd_post_process(void)
 {
-    cec_tx_message_list_t *p, *ptmp;
+    cec_usr_message_list_t *p, *ptmp;
     /* usr command post process */
     list_for_each_entry_safe(p, ptmp, &cec_tx_msg_phead, list) {
         cec_ll_tx(p->msg, p->length);
@@ -393,10 +393,10 @@ void register_cec_rx_msg(unsigned char *msg, unsigned char len )
 
 void register_cec_tx_msg(unsigned char *msg, unsigned char len )
 {
-    cec_tx_message_list_t* cec_usr_message_list = kmalloc(sizeof(cec_tx_message_list_t), GFP_ATOMIC);
+    cec_usr_message_list_t* cec_usr_message_list = kmalloc(sizeof(cec_usr_message_list_t), GFP_ATOMIC);
 
     if (cec_usr_message_list != NULL) {
-        memset(cec_usr_message_list, 0, sizeof(cec_tx_message_list_t));
+        memset(cec_usr_message_list, 0, sizeof(cec_usr_message_list_t));
         memcpy(cec_usr_message_list->msg, msg, len);
         cec_usr_message_list->length = len;
 
@@ -434,7 +434,7 @@ void cec_input_handle_message(void)
     }
 }
 
-void unregister_cec_tx_msg(cec_tx_message_list_t* cec_tx_message_list)
+void unregister_cec_tx_msg(cec_usr_message_list_t* cec_tx_message_list)
 {
 
     if (cec_tx_message_list != NULL) {

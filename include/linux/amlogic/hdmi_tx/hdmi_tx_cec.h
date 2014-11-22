@@ -610,6 +610,19 @@ void cec_clear_buf(unsigned int flag);
 
 void cec_tx_irq_handle(void);
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+void cec_arbit_bit_time_set(unsigned bit_set, unsigned time_set, unsigned flag);
+void tx_irq_handle(void);
+void cec_arbit_bit_time_read(void);
+void tx_irq_handle(void);
+void ao_cec_init(void);
+#endif
+
+#ifdef CONFIG_ARCH_MESON6
+void cec_gpi_init(void);
+#endif
+
+
 unsigned char check_cec_msg_valid(const cec_rx_message_t* pcec_message);
 void cec_send_event(cec_rx_message_t* pcec_message);
 void cec_user_control_pressed(cec_rx_message_t* pcec_message);
