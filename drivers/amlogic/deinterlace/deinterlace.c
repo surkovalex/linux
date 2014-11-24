@@ -2497,7 +2497,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
         di_pre_stru.prog_proc_type = 0;
 #ifdef NEW_DI_V3
 	/*nr_size(bits)=w*active_h*8*2(yuv422) mtn(bits)=w*active_h*4 cont(bits)=w*active_h*4 mv(bits)=w*active_h/5*16 mcinfo(bits)=active_h*16*/
-	di_buf_size = width*canvas_height*6/4 + width*canvas_height/5 + canvas_height;
+	di_buf_size = width*canvas_height*6/4 + width*canvas_height/5 + canvas_height;//3552320 bytes
 #elif defined NEW_DI_V1
         di_buf_size = width*canvas_height*6/4;
 #else

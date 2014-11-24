@@ -702,8 +702,8 @@
 		compatible = "amlogic,deinterlace";
 		dev_name = "deinterlace";
 		status = "ok";
-		reserve-memory = <0x024c0000>;
-		/** 8x(1920x1088x(3/2+1/5)+1088/2)=33M **/
+		reserve-memory = <0x02200000>;
+		/** 10x(1920x1088x(3/2+1/5)+1088)=34M **/
 	};
 
 
