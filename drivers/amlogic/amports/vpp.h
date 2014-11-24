@@ -134,6 +134,8 @@ typedef enum{
     sup0_sp1_pp_scpath,
     sup0_pp_sp1_scpath
 } select_scaler_path_e;
+#define SUPER_CORE0_WIDTH_MAX  1024
+#define SUPER_CORE1_WIDTH_MAX  2048
 #endif
 
 #ifdef TV_3D_FUNCTION_OPEN

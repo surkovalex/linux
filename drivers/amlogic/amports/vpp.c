@@ -199,21 +199,21 @@ module_param(force_filter_mode, int, 0664);
 
 #endif
 
-static unsigned int super_scaler = 0;
-module_param(super_scaler,uint,0664);
-MODULE_PARM_DESC(super_scaler, "\n super_scaler  \n");
-
 static unsigned int super_debug = 0;
 module_param(super_debug,uint,0664);
 MODULE_PARM_DESC(super_debug, "\n super_debug  \n");
 
 #ifdef SUPER_SCALER_OPEN
 
+static unsigned int super_scaler = 1;
+module_param(super_scaler,uint,0664);
+MODULE_PARM_DESC(super_scaler, "\n super_scaler  \n");
+
 static unsigned int scaler_path_sel = 0;
 module_param(scaler_path_sel,uint,0664);
 MODULE_PARM_DESC(scaler_path_sel, "\n scaler_path_sel  \n");
 
-static unsigned int bypass_spscl0=1;
+static unsigned int bypass_spscl0 = 0;
 module_param(bypass_spscl0,uint,0664);
 MODULE_PARM_DESC(bypass_spscl0, "\n bypass_spscl0  \n");
 
@@ -430,12 +430,12 @@ vpp_set_filters2(u32 width_in,
 	u32 screen_aspect = 0;
 
 #ifdef SUPER_SCALER_OPEN
-    if ((likely(w_in > (video_source_crop_left + video_source_crop_right)))&&( super_scaler==0)) {
+    if ((likely(w_in > (video_source_crop_left + video_source_crop_right)))&&(super_scaler==0)) {
         w_in -= video_source_crop_left + video_source_crop_right;
         h_crop_enable = true;
     }
 
-    if ((likely(h_in > (video_source_crop_top + video_source_crop_bottom)))&&( super_scaler==0)) {
+    if ((likely(h_in > (video_source_crop_top + video_source_crop_bottom)))&&(super_scaler==0)) {
         h_in -= video_source_crop_top + video_source_crop_bottom;
         v_crop_enable = true;
     }
@@ -1015,125 +1015,129 @@ static void vpp_set_scaler(u32 src_width,
                         vframe_t *vf)
 {
 
-	unsigned int spsc0_h_in,spsc0_w_in,spsc1_h_in,spsc1_w_in;
-	unsigned int spsc0_h_out,spsc0_w_out,spsc1_h_out,spsc1_w_out;
-	unsigned int ppsc_h_in,ppsc_w_in;
-	unsigned int ppsc_h_out,ppsc_w_out;
-	unsigned int hor_sc_multiple_num,ver_sc_multiple_num;
-	bool h_crop_enable = false, v_crop_enable = false;
-	u32 width_out = vinfo->width;
-    	u32 height_out = vinfo->height;
+    unsigned int spsc0_h_in,spsc0_w_in,spsc1_h_in,spsc1_w_in;
+    unsigned int spsc0_h_out,spsc0_w_out,spsc1_h_out,spsc1_w_out;
+    unsigned int ppsc_h_in,ppsc_w_in;
+    unsigned int ppsc_h_out,ppsc_w_out;
+    unsigned int hor_sc_multiple_num,ver_sc_multiple_num;
+    bool h_crop_enable = false, v_crop_enable = false;
+    u32 width_out = vinfo->width;
+    u32 height_out = vinfo->height;
     if ((likely(src_width > (video_source_crop_left + video_source_crop_right)))&&(super_scaler==1)) {
         src_width -= video_source_crop_left + video_source_crop_right;
-       h_crop_enable = true;
+        h_crop_enable = true;
     }
 
     if ((likely(src_height > (video_source_crop_top + video_source_crop_bottom)))&&(super_scaler==1)) {
         src_height -= video_source_crop_top + video_source_crop_bottom;
         v_crop_enable = true;
     }
-	hor_sc_multiple_num = width_out/src_width;
-	ver_sc_multiple_num = height_out/src_height;
+    hor_sc_multiple_num = width_out/src_width;
+    ver_sc_multiple_num = height_out/src_height;
 
-	//just calcuate the enable sclaer module
-	if((hor_sc_multiple_num>=4) || (ver_sc_multiple_num>=4)){
-		next_frame_par->supsc0_enable =1;
-		next_frame_par->supsc1_enable =1;
-	}else if((hor_sc_multiple_num>=2)||(ver_sc_multiple_num>=2)){
-		next_frame_par->supsc0_enable =1;
-		next_frame_par->supsc1_enable =0;
-	}else{
-		next_frame_par->supsc0_enable =0;
-		next_frame_par->supsc1_enable =0;
+    //just calcuate the enable sclaer module
+    if((hor_sc_multiple_num>=4) || (ver_sc_multiple_num>=4)){
+        next_frame_par->supsc0_enable =1;
+        next_frame_par->supsc1_enable =1;
+    }else if((hor_sc_multiple_num>=2)||(ver_sc_multiple_num>=2)){
+        if(src_width > SUPER_CORE0_WIDTH_MAX && src_width <= SUPER_CORE1_WIDTH_MAX){
+            next_frame_par->supsc0_enable =0;
+            next_frame_par->supsc1_enable =1;
+        }else{
+            next_frame_par->supsc0_enable =1;
+	    next_frame_par->supsc1_enable =0;
 	}
-	if (hor_sc_multiple_num>=4){
+    }else{
+        next_frame_par->supsc0_enable =0;
+        next_frame_par->supsc1_enable =0;
+    }
+    if (hor_sc_multiple_num>=4){
         next_frame_par->supsc0_hori_ratio = 1;
         next_frame_par->supsc1_hori_ratio = 1;
-    }else if ( hor_sc_multiple_num>=2 ){
-        next_frame_par->supsc0_hori_ratio = 1;
-        next_frame_par->supsc1_hori_ratio = 0;
+    }else if (hor_sc_multiple_num>=2){
+        next_frame_par->supsc0_hori_ratio = next_frame_par->supsc0_enable?1:0;
+        next_frame_par->supsc1_hori_ratio = next_frame_par->supsc1_enable?1:0;
     }else {
        	next_frame_par->supsc0_hori_ratio = 0;
         next_frame_par->supsc1_hori_ratio = 0;
     }
 
-	if (ver_sc_multiple_num>=4) {
+    if (ver_sc_multiple_num>=4) {
     	next_frame_par->supsc0_vert_ratio = 1;
     	next_frame_par->supsc1_vert_ratio = 1;
-	}else if ( ver_sc_multiple_num>=2 ){
-    	next_frame_par->supsc0_vert_ratio = 1;
-    	next_frame_par->supsc1_vert_ratio = 0;
-	}else {
+    }else if (ver_sc_multiple_num>=2){
+    	next_frame_par->supsc0_vert_ratio = next_frame_par->supsc0_enable?1:0;
+    	next_frame_par->supsc1_vert_ratio = next_frame_par->supsc1_enable?1:0;
+    }else{
     	next_frame_par->supsc0_vert_ratio = 0;
     	next_frame_par->supsc1_vert_ratio = 0;
-	}
-	if(bypass_spscl0)
-		{
-		next_frame_par->supsc0_enable = 0;
-		next_frame_par->supsc0_hori_ratio = 0;
-		next_frame_par->supsc0_vert_ratio = 0;
-	}
-	if(bypass_spscl1)
-		{
-		next_frame_par->supsc1_enable = 0;
-		next_frame_par->supsc1_hori_ratio = 0;
-		next_frame_par->supsc1_vert_ratio = 0;
-	}
-    	spsc0_h_in = src_height;
-    	spsc0_w_in = src_width;
-		if(super_debug)
+    }
+    if(bypass_spscl0){
+	next_frame_par->supsc0_enable = 0;
+	next_frame_par->supsc0_hori_ratio = 0;
+	next_frame_par->supsc0_vert_ratio = 0;
+    }
+    if(bypass_spscl1){
+	next_frame_par->supsc1_enable = 0;
+	next_frame_par->supsc1_hori_ratio = 0;
+	next_frame_par->supsc1_vert_ratio = 0;
+    }
+    spsc0_h_in = src_height;
+    spsc0_w_in = src_width;
+    if(super_debug)
         printk("supsc0_hori=%d,supsc1_hori=%d,supsc0_vert=%d,supsc1_vert=%d\n",next_frame_par->supsc0_hori_ratio,next_frame_par->supsc1_hori_ratio,next_frame_par->supsc0_vert_ratio,next_frame_par->supsc1_vert_ratio);
 	//select the scaler path:[super 1   =>>   ppscaler  =>>  super 2 ]  or   [super 1   =>>   super 2  =>>  ppsaler]
-	if(next_frame_par->supscl_path == sup0_sp1_pp_scpath){
-		ppsc_h_out =  height_out;
-		ppsc_w_out =  width_out;
-		spsc1_h_in = spsc0_h_out = (spsc0_h_in << next_frame_par->supsc0_vert_ratio);
-		spsc1_w_in = spsc0_w_out = (spsc0_w_in << next_frame_par->supsc0_hori_ratio);
-		ppsc_h_in  = spsc1_h_out = (spsc1_h_in << next_frame_par->supsc1_vert_ratio);
-		ppsc_w_in  = spsc1_w_out = (spsc1_w_in << next_frame_par->supsc1_hori_ratio);
+    if(next_frame_par->supscl_path == sup0_sp1_pp_scpath){
+	ppsc_h_out =  height_out;
+	ppsc_w_out =  width_out;
+	spsc1_h_in = spsc0_h_out = (spsc0_h_in << next_frame_par->supsc0_vert_ratio);
+	spsc1_w_in = spsc0_w_out = (spsc0_w_in << next_frame_par->supsc0_hori_ratio);
+	ppsc_h_in  = spsc1_h_out = (spsc1_h_in << next_frame_par->supsc1_vert_ratio);
+	ppsc_w_in  = spsc1_w_out = (spsc1_w_in << next_frame_par->supsc1_hori_ratio);
 
-	}else if(next_frame_par->supscl_path == sup0_pp_sp1_scpath){
-		ppsc_h_in = (spsc0_h_in << next_frame_par->supsc0_vert_ratio);
-		ppsc_w_in = (spsc0_w_in << next_frame_par->supsc0_hori_ratio);
-		spsc1_h_out =  height_out;
-		spsc1_w_out =  width_out;
-		ppsc_h_out = (spsc1_h_out >> next_frame_par->supsc1_vert_ratio);
-		ppsc_w_out = (spsc1_w_out >> next_frame_par->supsc1_hori_ratio);
-		spsc1_h_in = ppsc_h_out;
-		spsc1_w_in = ppsc_w_out;
+    }else if(next_frame_par->supscl_path == sup0_pp_sp1_scpath){
+	ppsc_h_in = (spsc0_h_in << next_frame_par->supsc0_vert_ratio);
+	ppsc_w_in = (spsc0_w_in << next_frame_par->supsc0_hori_ratio);
+	spsc1_h_out =  height_out;
+	spsc1_w_out =  width_out;
+	ppsc_h_out = (spsc1_h_out >> next_frame_par->supsc1_vert_ratio);
+	ppsc_w_out = (spsc1_w_out >> next_frame_par->supsc1_hori_ratio);
+	spsc1_h_in = ppsc_h_out;
+	spsc1_w_in = ppsc_w_out;
 
-	}else{
-		next_frame_par->supsc0_enable =0;
-		next_frame_par->supsc1_enable =0;
-		ppsc_h_in = src_height;
-		ppsc_w_in = src_width;
-		ppsc_h_out = height_out;
-		ppsc_w_out = width_out;
-		spsc1_h_in = 0;
-		spsc1_w_in = 0;
-		//spsc1_h_in  spsc1_w_in are just iinitialized
-	}
-	vpp_set_filters2(ppsc_w_in, ppsc_h_in, ppsc_w_out, ppsc_h_out, vinfo, vpp_flags, next_frame_par,vf);
-	if(next_frame_par->supscl_path == sup0_pp_sp1_scpath){
-		spsc1_h_in = next_frame_par->VPP_vsc_endp - next_frame_par->VPP_vsc_startp +1;//(ppsc_h_in<<18)/(next_frame_par->vpp_filter.vpp_vsc_start_phase_step>>6);
-		spsc1_w_in = next_frame_par->VPP_hsc_endp - next_frame_par->VPP_hsc_startp +1;//(ppsc_w_in<<18)/(next_frame_par->vpp_filter.vpp_hsc_start_phase_step>>6);
-	}
-	vpp_set_super_sclaer_regs(next_frame_par->supscl_path,
-					next_frame_par->supsc0_enable,
-					spsc0_w_in,
-					spsc0_h_in,
-					next_frame_par->supsc0_hori_ratio,
-					next_frame_par->supsc0_vert_ratio,
-					next_frame_par->supsc1_enable,
-					spsc1_w_in,
-					spsc1_h_in,
-					next_frame_par->supsc1_hori_ratio,
-					next_frame_par->supsc1_vert_ratio);
-	if(super_debug)
-		pr_info("ppsc_w_in=%u, ppsc_h_in=%u, ppsc_w_out=%u, ppsc_h_out=%u.\n",ppsc_w_in, ppsc_h_in, ppsc_w_out, ppsc_h_out);
+    }else{
+	next_frame_par->supsc0_enable =0;
+	next_frame_par->supsc1_enable =0;
+	ppsc_h_in = src_height;
+	ppsc_w_in = src_width;
+	ppsc_h_out = height_out;
+	ppsc_w_out = width_out;
+	spsc1_h_in = 0;
+	spsc1_w_in = 0;
+	//spsc1_h_in  spsc1_w_in are just iinitialized
+    }
+    vpp_set_filters2(ppsc_w_in, ppsc_h_in, ppsc_w_out, ppsc_h_out, vinfo, vpp_flags, next_frame_par,vf);
+    if(next_frame_par->supscl_path == sup0_pp_sp1_scpath){
+	spsc1_h_in = next_frame_par->VPP_vsc_endp - next_frame_par->VPP_vsc_startp +1;//(ppsc_h_in<<18)/(next_frame_par->vpp_filter.vpp_vsc_start_phase_step>>6);
+	spsc1_w_in = next_frame_par->VPP_hsc_endp - next_frame_par->VPP_hsc_startp +1;//(ppsc_w_in<<18)/(next_frame_par->vpp_filter.vpp_hsc_start_phase_step>>6);
+    }
+    vpp_set_super_sclaer_regs(next_frame_par->supscl_path,
+			      next_frame_par->supsc0_enable,
+			      spsc0_w_in,
+			      spsc0_h_in,
+			      next_frame_par->supsc0_hori_ratio,
+			      next_frame_par->supsc0_vert_ratio,
+			      next_frame_par->supsc1_enable,
+			      spsc1_w_in,
+			      spsc1_h_in,
+			      next_frame_par->supsc1_hori_ratio,
+			      next_frame_par->supsc1_vert_ratio);
+    if(super_debug)
+	pr_info("ppsc_w_in=%u, ppsc_h_in=%u, ppsc_w_out=%u, ppsc_h_out=%u.\n",ppsc_w_in, ppsc_h_in, ppsc_w_out, ppsc_h_out);
+
 //vpp_set_ppsclaer(src_width,src_height,ppsc_w_in,ppsc_h_in,vinfo,vpp_flags,next_frame_par);
 //cause the next_frame_par amlost were set at ppsclaer,and new supper scaler maybe need to change the param .
-    if((next_frame_par->supscl_path == sup0_sp1_pp_scpath)&&( next_frame_par->supsc1_enable))
+    if((next_frame_par->supscl_path == sup0_sp1_pp_scpath)&&(next_frame_par->supsc1_enable))
     {
 	next_frame_par->VPP_hd_start_lines_ >>= next_frame_par->supsc1_hori_ratio;
  	next_frame_par->VPP_hd_end_lines_ >>= next_frame_par->supsc1_hori_ratio;
@@ -1404,15 +1408,14 @@ vpp_set_filters(u32 process_3d_type,u32 wide_mode,
     next_frame_par->VPP_post_blend_h_size_ = vinfo->width;
 
 #ifdef SUPER_SCALER_OPEN
-    if(vinfo->height > 1080 || vinfo->width > 1920)
-        super_scaler = 1;
-    if(super_scaler) {
+    if(super_scaler && (vpp_wide_mode != VIDEO_WIDEOPTION_NORMAL_NOSCALEUP)) {
     	next_frame_par->supscl_path = scaler_path_sel;
     	vpp_set_scaler(src_width,src_height,
     			vinfo,
                  	vpp_flags,
                  	next_frame_par,vf);
     }else{
+    	vpp_set_super_sclaer_regs(0,0,0,0,0,0,0,0,0,0,0);//disable super scaler
     	vpp_set_filters2(src_width, src_height, vinfo->width, vinfo->height, vinfo, vpp_flags, next_frame_par, vf);
     }
     if(super_debug)
