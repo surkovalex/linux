@@ -970,7 +970,7 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
 #else
        dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
 #endif
-         return 0;
+
         if(dat3 == 1){
             // if (cnt)
                 // sdhc_err("cnt=%d\n", cnt);
