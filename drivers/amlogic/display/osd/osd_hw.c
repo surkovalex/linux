@@ -2169,9 +2169,9 @@ static void osd2_update_disp_freescale_enable(void)
 		VSYNCOSD_WR_MPEG_REG(VPP_OSD_SC_CTRL0, 0);
 	}
 
-	hf_phase_step = (src_h<< 18) / dst_w;
+	hf_phase_step = (src_w << 18) / dst_w;
 	hf_phase_step = (hf_phase_step << 6);
-	vf_phase_step = (src_w << 20) / dst_h;
+	vf_phase_step = (src_h << 20) / dst_h;
 
 	if (osd_hw.field_out_en){  //interface output
 		bot_ini_phase = ((vf_phase_step/2) >> 4);
