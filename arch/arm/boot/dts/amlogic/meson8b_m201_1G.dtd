@@ -519,8 +519,7 @@ void root_func(){
             ocr_avail = <0x200000>;          /*VDD voltage 3.3 ~ 3.4 */
             caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_SDIO_IRQ","MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED", "MMC_CAP_NONREMOVABLE";
             f_min = <300000>;
-//            f_max = <50000000>;
-            f_max = <30000000>;
+            f_max = <50000000>;
             max_req_size = <0x20000>;          /**128KB*/
             card_type = <3>; /* 0:unknown, 1:mmc card(include eMMC), 2:sd card(include tSD), 3:sdio device(ie:sdio-wifi), 4:SD combo (IO+mem) card, 5:NON sdio device(means sd/mmc card), other:reserved */
         };
