@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-11-13a";//update mvrd start/end
+static char version_s[] = "2014-11-20a";//modify vscale skip for g9tv
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -240,7 +240,7 @@ static int post_ready_empty_count = 0;
 static int force_width = 0;
 static int force_height = 0;
 #ifdef NEW_DI_V1
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#if ((MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)&&(MESON_CPU_TYPE != MESON_CPU_TYPE_MESONG9TV))
 static int di_vscale_skip_enable = 7;
 /*
 bit[2]: enable bypass all for progressive
