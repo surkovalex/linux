@@ -619,7 +619,7 @@ static u32 force_blackout = 0;
 static u32 disable_video = VIDEO_DISABLE_NONE;
 
 /* show first frame*/
-static bool show_first_frame_nosync=true;
+static bool show_first_frame_nosync=false;
 //static bool first_frame=false;
 
 /* test screen*/
