@@ -17,16 +17,16 @@
 #include "linux/amlogic/vframe.h"
 #include "linux/amlogic/ve.h"
 
-#if ((MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8))//&&(MESON_CPU_TYPE != MESON_CPU_TYPE_MESONG9TV))
-#undef WRITE_CBUS_REG
-#undef WRITE_CBUS_REG_BITS
-#undef READ_CBUS_REG
-#undef READ_CBUS_REG_BITS
-
-#define WRITE_CBUS_REG(x,val)				WRITE_VCBUS_REG(x,val)
-#define WRITE_CBUS_REG_BITS(x,val,start,length)		WRITE_VCBUS_REG_BITS(x,val,start,length)
-#define READ_CBUS_REG(x)				READ_VCBUS_REG(x)
-#define READ_CBUS_REG_BITS(x,start,length)		READ_VCBUS_REG_BITS(x,start,length)
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+#define WRITE_VPP_REG(x,val)				WRITE_VCBUS_REG(x,val)
+#define WRITE_VPP_REG_BITS(x,val,start,length)		WRITE_VCBUS_REG_BITS(x,val,start,length)
+#define READ_VPP_REG(x)					READ_VCBUS_REG(x)
+#define READ_VPP_REG_BITS(x,start,length)		READ_VCBUS_REG_BITS(x,start,length)
+#else
+#define WRITE_VPP_REG(x,val)				WRITE_CBUS_REG(x,val)
+#define WRITE_VPP_REG_BITS(x,val,start,length)		WRITE_CBUS_REG_BITS(x,val,start,length)
+#define READ_VPP_REG(x)					READ_CBUS_REG(x)
+#define READ_VPP_REG_BITS(x,start,length)		READ_CBUS_REG_BITS(x,start,length)
 #endif
 
 typedef struct ve_regs_s {
@@ -44,7 +44,7 @@ typedef struct ve_regs_s {
 } ve_regs_t;
 
 
-//void ve_on_vs(vframe_t *vf, int* change_notify);
+void ve_on_vs(vframe_t *vf);
 
 void ve_set_bext(struct ve_bext_s *p);
 void ve_set_dnlp(struct ve_dnlp_s *p);

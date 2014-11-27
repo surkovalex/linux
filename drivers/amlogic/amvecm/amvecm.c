@@ -68,13 +68,12 @@ module_param(vecm_latch_flag, uint, 0664);
 MODULE_PARM_DESC(vecm_latch_flag, "\n vecm_latch_flag \n");
 
 #if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
-unsigned int vlock_en = 0;
-module_param(vlock_en, uint, 0664);
-MODULE_PARM_DESC(vlock_en, "\n vlock_en \n");
+#define VLOCK_MODE_ENC          0
+#define VLOCK_MODE_PLL         	1
 
-unsigned int sync_3d_en = 0;
-module_param(sync_3d_en, uint, 0664);
-MODULE_PARM_DESC(sync_3d_en, "\n 3d_sync_en \n");
+unsigned int vlock_mode = VLOCK_MODE_ENC;//0:enc;1:pll
+module_param(vlock_mode, uint, 0664);
+MODULE_PARM_DESC(vlock_mode, "\n vlock_mode \n");
 
 unsigned int sync_3d_h_start = 0;
 module_param(sync_3d_h_start, uint, 0664);
@@ -99,10 +98,6 @@ MODULE_PARM_DESC(sync_3d_polarity, "\n sync_3d_polarity \n");
 unsigned int sync_3d_out_inv = 0;
 module_param(sync_3d_out_inv, uint, 0664);
 MODULE_PARM_DESC(sync_3d_out_inv, "\n sync_3d_out_inv \n");
-
-unsigned int sync_3d_black_en = 0;
-module_param(sync_3d_black_en, uint, 0664);
-MODULE_PARM_DESC(sync_3d_black_en, "\n sync_3d_black_en \n");
 
 unsigned int sync_3d_black_color = 0x008080;//yuv black
 module_param(sync_3d_black_color, uint, 0664);
@@ -142,11 +137,11 @@ extern struct tcon_rgb_ogo_s     video_rgb_ogo;
 static void amvecm_size_patch(void)
 {
 	unsigned int hs, he, vs, ve;
-	hs = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,16,12);
-	he = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,0,12);
+	hs = READ_VPP_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,16,12);
+	he = READ_VPP_REG_BITS(VPP_POSTBLEND_VD1_H_START_END,0,12);
 
-	vs = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,16,12);
-	ve = READ_CBUS_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,0,12);
+	vs = READ_VPP_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,16,12);
+	ve = READ_VPP_REG_BITS(VPP_POSTBLEND_VD1_V_START_END,0,12);
 #if ((MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B))
 	if(cm_en)
 #endif
@@ -165,7 +160,7 @@ static void vd1_brightness_contrast(signed int brightness, signed int contrast)
 	unsigned int gc0 =    0, gc1 =    0, gc2 =    0, gc3 =    0, gc4 =   0;
 	unsigned int a01 =    0, a_2 =    0, p01 =    0, p_2 =    0;
 	// enable vd0_csc
-	unsigned int ori = READ_CBUS_REG(VPP_MATRIX_CTRL) | 0x00000020;
+	unsigned int ori = READ_VPP_REG(VPP_MATRIX_CTRL) | 0x00000020;
 	// point to vd0_csc
 	unsigned int ctl = (ori & 0xfffffcff) | 0x00000100;
 	po0 += brightness >> 1;
@@ -209,17 +204,17 @@ static void vd1_brightness_contrast(signed int brightness, signed int contrast)
 	p01 = ((po0 << 16) & 0x07ff0000) | ((po1 <<  0) & 0x000007ff);
 	p_2 = ((po2 <<  0) & 0x000007ff);
 	#endif
-	WRITE_CBUS_REG(VPP_MATRIX_CTRL         , ctl);
-	WRITE_CBUS_REG(VPP_MATRIX_COEF00_01    , gc0);
-	WRITE_CBUS_REG(VPP_MATRIX_COEF02_10    , gc1);
-	WRITE_CBUS_REG(VPP_MATRIX_COEF11_12    , gc2);
-	WRITE_CBUS_REG(VPP_MATRIX_COEF20_21    , gc3);
-	WRITE_CBUS_REG(VPP_MATRIX_COEF22       , gc4);
-	WRITE_CBUS_REG(VPP_MATRIX_PRE_OFFSET0_1, a01);
-	WRITE_CBUS_REG(VPP_MATRIX_PRE_OFFSET2  , a_2);
-	WRITE_CBUS_REG(VPP_MATRIX_OFFSET0_1    , p01);
-	WRITE_CBUS_REG(VPP_MATRIX_OFFSET2      , p_2);
-	WRITE_CBUS_REG(VPP_MATRIX_CTRL         , ori);
+	WRITE_VPP_REG(VPP_MATRIX_CTRL         , ctl);
+	WRITE_VPP_REG(VPP_MATRIX_COEF00_01    , gc0);
+	WRITE_VPP_REG(VPP_MATRIX_COEF02_10    , gc1);
+	WRITE_VPP_REG(VPP_MATRIX_COEF11_12    , gc2);
+	WRITE_VPP_REG(VPP_MATRIX_COEF20_21    , gc3);
+	WRITE_VPP_REG(VPP_MATRIX_COEF22       , gc4);
+	WRITE_VPP_REG(VPP_MATRIX_PRE_OFFSET0_1, a01);
+	WRITE_VPP_REG(VPP_MATRIX_PRE_OFFSET2  , a_2);
+	WRITE_VPP_REG(VPP_MATRIX_OFFSET0_1    , p01);
+	WRITE_VPP_REG(VPP_MATRIX_OFFSET2      , p_2);
+	WRITE_VPP_REG(VPP_MATRIX_CTRL         , ori);
 }
 
 static void amvecm_bricon_process(void)
@@ -233,40 +228,39 @@ static void amvecm_bricon_process(void)
 #if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 static void amvecm_vlock_process(void)
 {
-	return;
-	if(vlock_en == 0){
-		WRITE_CBUS_REG_BITS(VPU_VLOCK_CTRL,0,31,1);//disable vid_lock_en
+	if(vecm_latch_flag & FLAG_VLOCK_DIS){
+		WRITE_VPP_REG_BITS(VPU_VLOCK_CTRL,0,31,1);//disable vid_lock_en
+		vecm_latch_flag &= ~FLAG_VLOCK_DIS;
 		return;
 	}
-	WRITE_CBUS_REG(HHI_VID_LOCK_CLK_CNTL,0x80);
-	if (vecm_latch_flag & FLAG_VLOCK_ENC){
-		am_set_regmap(&vlock_enc);
-		vecm_latch_flag &= ~FLAG_VLOCK_ENC;
+	if(vecm_latch_flag & FLAG_VLOCK_EN){
+		WRITE_CBUS_REG(HHI_VID_LOCK_CLK_CNTL,0x80);
+		if (vlock_mode == VLOCK_MODE_ENC)
+			am_set_regmap(&vlock_enc);
+		if (vlock_mode == VLOCK_MODE_PLL)
+			am_set_regmap(&vlock_pll);
+		WRITE_VPP_REG(ENCL_MAX_LINE_SWITCH_POINT,READ_VPP_REG(ENCL_MAX_LINE_SWITCH_POINT)|0x2000);
+		vecm_latch_flag &= ~FLAG_VLOCK_EN;
 	}
-	if (vecm_latch_flag & FLAG_VLOCK_PLL){
-		am_set_regmap(&vlock_pll);
-		vecm_latch_flag &= ~FLAG_VLOCK_PLL;
-	}
-	WRITE_CBUS_REG(ENCL_MAX_LINE_SWITCH_POINT,READ_CBUS_REG(ENCL_MAX_LINE_SWITCH_POINT)|0x2000);
 }
 static void amvecm_3d_black_process(void)
 {
 	if(vecm_latch_flag & FLAG_3D_BLACK_DIS){
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,0,31,1);//disable reg_3dsync_enable
-		WRITE_CBUS_REG_BITS(VIU_MISC_CTRL0,0,8,1);
-		WRITE_CBUS_REG_BITS(VPP_BLEND_ONECOLOR_CTRL,0,26,1);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,0,13,1);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC2,0,31,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,0,31,1);//disable reg_3dsync_enable
+		WRITE_VPP_REG_BITS(VIU_MISC_CTRL0,0,8,1);
+		WRITE_VPP_REG_BITS(VPP_BLEND_ONECOLOR_CTRL,0,26,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,0,13,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,0,31,1);
 		vecm_latch_flag &= ~FLAG_3D_BLACK_DIS;
 	}
 	if(vecm_latch_flag & FLAG_3D_BLACK_EN){
-		WRITE_CBUS_REG_BITS(VIU_MISC_CTRL0,1,8,1);
-		WRITE_CBUS_REG_BITS(VPP_BLEND_ONECOLOR_CTRL,1,26,1);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC2,1,31,1);
-		WRITE_CBUS_REG_BITS(VPP_BLEND_ONECOLOR_CTRL,sync_3d_black_color&0xffffff,0,24);
+		WRITE_VPP_REG_BITS(VIU_MISC_CTRL0,1,8,1);
+		WRITE_VPP_REG_BITS(VPP_BLEND_ONECOLOR_CTRL,1,26,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,1,31,1);
+		WRITE_VPP_REG_BITS(VPP_BLEND_ONECOLOR_CTRL,sync_3d_black_color&0xffffff,0,24);
 		if(sync_3d_sync_to_vbo)
-			WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,1,13,1);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,1,31,1);//enable
+			WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,1,13,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,1,31,1);//enable
 		vecm_latch_flag &= ~FLAG_3D_BLACK_EN;
 	}
 }
@@ -274,17 +268,17 @@ static void amvecm_3d_sync_process(void)
 {
 
 	if(vecm_latch_flag & FLAG_3D_SYNC_DIS){
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,0,31,1);//disable reg_3dsync_enable
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,0,31,1);//disable reg_3dsync_enable
 		vecm_latch_flag &= ~FLAG_3D_SYNC_DIS;
 	}
 	if(vecm_latch_flag & FLAG_3D_SYNC_EN){
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_start,0,13);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_end,16,13);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_start,0,13);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_end,16,13);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_polarity,29,1);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_out_inv,15,1);
-		WRITE_CBUS_REG_BITS(VPU_VPU_3D_SYNC1,1,31,1);//enable
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_start,0,13);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_end,16,13);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_start,0,13);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_end,16,13);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_polarity,29,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_out_inv,15,1);
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,1,31,1);//enable
 		vecm_latch_flag &= ~FLAG_3D_SYNC_EN;
 	}
 }
@@ -305,7 +299,12 @@ void amvecm_video_latch(void)
 	amvecm_3d_black_process();
 #endif
 }
-EXPORT_SYMBOL(amvecm_video_latch);
+void amvecm_on_vs(vframe_t *vf)
+{
+	amvecm_video_latch();
+	ve_on_vs(vf);
+}
+EXPORT_SYMBOL(amvecm_on_vs);
 
 static int amvecm_open(struct inode *inode, struct file *file)
 {
@@ -345,9 +344,9 @@ static long amvecm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		}
 		if(copy_from_user(&amregs_ext, (void __user *)arg, sizeof(struct am_regs_s))) {
 			pr_amvecm_dbg(KERN_ERR "[amcm..]0x%x load reg errors: can't get buffer lenght\n",FLAG_REG_MAP0);
-			ret = 0;
-		}
-		ret = cm_load_reg(&amregs_ext);
+			ret = -EFAULT;
+		} else
+			ret = cm_load_reg(&amregs_ext);
 		break;
 	case AMVECM_IOC_VE_DNLP_EN:
 		vecm_latch_flag |= FLAG_VE_DNLP_EN;
@@ -509,7 +508,7 @@ static ssize_t amvecm_contrast_store(struct class *cla, struct class_attribute *
 
 static ssize_t amvecm_saturation_hue_show(struct class *cla, struct class_attribute *attr, char *buf)
 {
-	return sprintf(buf, "0x%x\n", READ_CBUS_REG(VPP_VADJ1_MA_MB));
+	return sprintf(buf, "0x%x\n", READ_VPP_REG(VPP_VADJ1_MA_MB));
 }
 
 static ssize_t amvecm_saturation_hue_store(struct class *cla, struct class_attribute *attr, const char *buf,size_t count)
@@ -521,15 +520,15 @@ static ssize_t amvecm_saturation_hue_store(struct class *cla, struct class_attri
 	if ((r != 1) || (mab&0xfc00fc00)) {
 		return -EINVAL;
 	}
-	WRITE_CBUS_REG(VPP_VADJ1_MA_MB, mab);
+	WRITE_VPP_REG(VPP_VADJ1_MA_MB, mab);
 	mc = (s16)((mab<<22)>>22); // mc = -mb
 	mc = 0 - mc;
 	if (mc> 511) mc= 511;
 	if (mc<-512) mc = -512;
 	md = (s16)((mab<<6)>>22);  // md =  ma;
 	mab = ((mc&0x3ff)<<16)|(md&0x3ff);
-	WRITE_CBUS_REG(VPP_VADJ1_MC_MD, mab);
-	WRITE_CBUS_REG_BITS(VPP_VADJ_CTRL, 1, 0, 1);
+	WRITE_VPP_REG(VPP_VADJ1_MC_MD, mab);
+	WRITE_VPP_REG_BITS(VPP_VADJ_CTRL, 1, 0, 1);
 	pr_amvecm_dbg(KERN_INFO "%s set video_saturation_hue OK!!!\n", __func__);
 	return count;
 }
@@ -598,15 +597,15 @@ static ssize_t amvecm_saturation_hue_pre_store(struct class *cla, struct class_a
 	if (mb < -512) mb = -512;
 	mab =  ((ma & 0x3ff) << 16) | (mb & 0x3ff);
 	printk("\n[amvideo..] saturation_pre:%d hue_pre:%d mab:%x\n", saturation_pre,hue_pre,mab);
-	WRITE_CBUS_REG(VPP_VADJ2_MA_MB, mab);
+	WRITE_VPP_REG(VPP_VADJ2_MA_MB, mab);
 	mc = (s16)((mab<<22)>>22); // mc = -mb
 	mc = 0 - mc;
 	if (mc > 511)  mc = 511;
 	if (mc < -512) mc = -512;
 	md = (s16)((mab<<6)>>22);  // md =	ma;
 	mab = ((mc&0x3ff)<<16)|(md&0x3ff);
-	WRITE_CBUS_REG(VPP_VADJ1_MC_MD, mab);
-	WRITE_CBUS_REG_BITS(VPP_VADJ_CTRL, 1, 0, 1);
+	WRITE_VPP_REG(VPP_VADJ1_MC_MD, mab);
+	WRITE_VPP_REG_BITS(VPP_VADJ_CTRL, 1, 0, 1);
 	return count;
 }
 
@@ -647,15 +646,15 @@ static ssize_t amvecm_saturation_hue_post_store(struct class *cla, struct class_
 	if (mb < -512) mb = -512;
 	mab =  ((ma & 0x3ff) << 16) | (mb & 0x3ff);
 	printk("\n[amvideo..] saturation_post:%d hue_post:%d mab:%x\n", saturation_post,hue_post,mab);
-	WRITE_CBUS_REG(VPP_VADJ2_MA_MB, mab);
+	WRITE_VPP_REG(VPP_VADJ2_MA_MB, mab);
 	mc = (s16)((mab<<22)>>22); // mc = -mb
 	mc = 0 - mc;
 	if (mc > 511)  mc = 511;
 	if (mc < -512) mc = -512;
 	md = (s16)((mab<<6)>>22);  // md =	ma;
 	mab = ((mc&0x3ff)<<16)|(md&0x3ff);
-	WRITE_CBUS_REG(VPP_VADJ2_MC_MD, mab);
-	WRITE_CBUS_REG_BITS(VPP_VADJ_CTRL, 1, 2, 1);
+	WRITE_VPP_REG(VPP_VADJ2_MC_MD, mab);
+	WRITE_VPP_REG_BITS(VPP_VADJ_CTRL, 1, 2, 1);
 	return count;
 }
 
@@ -704,29 +703,16 @@ static ssize_t amvecm_cm2_store(struct class *cls,
 		data[2] = simple_strtol(parm[4], NULL, 16);
 		data[3] = simple_strtol(parm[5], NULL, 16);
 		data[4] = simple_strtol(parm[6], NULL, 16);
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr);
-		aml_write_reg32(VCBUS_REG_ADDR(data_port), data[0]);
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr + 1);
-		aml_write_reg32(VCBUS_REG_ADDR(data_port), data[1]);
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr + 2);
-		aml_write_reg32(VCBUS_REG_ADDR(data_port), data[2]);
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr + 3);
-		aml_write_reg32(VCBUS_REG_ADDR(data_port), data[3]);
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr + 4);
-		aml_write_reg32(VCBUS_REG_ADDR(data_port), data[4]);
-#else
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr);
-		aml_write_reg32(CBUS_REG_ADDR(data_port), data[0]);
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr + 1);
-		aml_write_reg32(CBUS_REG_ADDR(data_port), data[1]);
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr + 2);
-		aml_write_reg32(CBUS_REG_ADDR(data_port), data[2]);
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr + 3);
-		aml_write_reg32(CBUS_REG_ADDR(data_port), data[3]);
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr + 4);
-		aml_write_reg32(CBUS_REG_ADDR(data_port), data[4]);
-#endif
+		WRITE_VPP_REG(addr_port, addr);
+		WRITE_VPP_REG(data_port, data[0]);
+		WRITE_VPP_REG(addr_port, addr + 1);
+		WRITE_VPP_REG(data_port, data[1]);
+		WRITE_VPP_REG(addr_port, addr + 2);
+		WRITE_VPP_REG(data_port, data[2]);
+		WRITE_VPP_REG(addr_port, addr + 3);
+		WRITE_VPP_REG(data_port, data[3]);
+		WRITE_VPP_REG(addr_port, addr + 4);
+		WRITE_VPP_REG(data_port, data[4]);
 		pr_info("wm: [0x%x] <-- 0x0 \n",addr);
 	}
 	else if ((parm[0][0] == 'r') && parm[0][1] == 'm' ) {
@@ -738,49 +724,26 @@ static ssize_t amvecm_cm2_store(struct class *cls,
 		}
 		addr = simple_strtol(parm[1], NULL, 16);
 		addr = addr - addr%8;
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr);
-		data[0] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[0] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[0] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr+1);
-		data[1] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[1] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[1] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr+2);
-		data[2] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[2] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[2] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr+3);
-		data[3] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[3] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[3] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		aml_write_reg32(VCBUS_REG_ADDR(addr_port), addr+4);
-		data[4] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[4] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-		data[4] = aml_read_reg32(VCBUS_REG_ADDR(data_port));
-#else
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr);
-		data[0] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[0] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[0] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr+1);
-		data[1] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[1] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[1] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr+2);
-		data[2] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[2] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[2] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr+3);
-		data[3] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[3] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[3] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		aml_write_reg32(CBUS_REG_ADDR(addr_port), addr+4);
-		data[4] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[4] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-		data[4] = aml_read_reg32(CBUS_REG_ADDR(data_port));
-#endif
+		WRITE_VPP_REG(addr_port, addr);
+		data[0] = READ_VPP_REG(data_port);
+		data[0] = READ_VPP_REG(data_port);
+		data[0] = READ_VPP_REG(data_port);
+		WRITE_VPP_REG(addr_port, addr+1);
+		data[1] = READ_VPP_REG(data_port);
+		data[1] = READ_VPP_REG(data_port);
+		data[1] = READ_VPP_REG(data_port);
+		WRITE_VPP_REG(addr_port, addr+2);
+		data[2] = READ_VPP_REG(data_port);
+		data[2] = READ_VPP_REG(data_port);
+		data[2] = READ_VPP_REG(data_port);
+		WRITE_VPP_REG(addr_port, addr+3);
+		data[3] = READ_VPP_REG(data_port);
+		data[3] = READ_VPP_REG(data_port);
+		data[3] = READ_VPP_REG(data_port);
+		WRITE_VPP_REG(addr_port, addr+4);
+		data[4] = READ_VPP_REG(data_port);
+		data[4] = READ_VPP_REG(data_port);
+		data[4] = READ_VPP_REG(data_port);
 		pr_info("rm:[0x%x]-->[0x%x][0x%x][0x%x][0x%x][0x%x] \n",addr, data[0],data[1],data[2],data[3],data[4]);
 	} else {
 		pr_info("invalid command\n");
@@ -879,37 +842,38 @@ static ssize_t amvecm_gamma_store(struct class *cls,
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
 void init_sharpness(void)
 {
-	WRITE_CBUS_REG(VPP_VE_ENABLE_CTRL, 0x2);
-	WRITE_CBUS_REG(NR_GAUSSIAN_MODE, 0x0);
-	WRITE_CBUS_REG(PK_HVCON_LPF_MODE, 0x11111111);
-	WRITE_CBUS_REG(PK_CON_2CIRHPGAIN_LIMIT, 0x05600500);
-	WRITE_CBUS_REG(PK_CON_2CIRBPGAIN_LIMIT, 0x05280500);
-	WRITE_CBUS_REG(PK_CON_2DRTHPGAIN_LIMIT, 0x05600500);
-	WRITE_CBUS_REG(PK_CON_2DRTBPGAIN_LIMIT, 0x05280500);
+	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1,1,1);
+	WRITE_VPP_REG(NR_GAUSSIAN_MODE, 0x0);
+	WRITE_VPP_REG(PK_HVCON_LPF_MODE, 0x11111111);
+	WRITE_VPP_REG(PK_CON_2CIRHPGAIN_LIMIT, 0x05600500);
+	WRITE_VPP_REG(PK_CON_2CIRBPGAIN_LIMIT, 0x05280500);
+	WRITE_VPP_REG(PK_CON_2DRTHPGAIN_LIMIT, 0x05600500);
+	WRITE_VPP_REG(PK_CON_2DRTBPGAIN_LIMIT, 0x05280500);
 
-	WRITE_CBUS_REG(PK_CIRFB_BLEND_GAIN, 0x8f808f80);
-	WRITE_CBUS_REG(NR_ALP0_MIN_MAX, 0x003f003f);
-	WRITE_CBUS_REG(PK_ALP2_MIERR_CORING, 0x00010101);
-	WRITE_CBUS_REG(PK_ALP2_ERR2CURV_TH_RATE, 0x50504010);
-	WRITE_CBUS_REG(PK_FINALGAIN_HP_BP, 0x00002820);
-	WRITE_CBUS_REG(PK_OS_STATIC, 0x22014014);
-	WRITE_CBUS_REG(PK_DRT_SAD_MISC, 0x18180418);
-	WRITE_CBUS_REG(NR_TI_DNLP_BLEND, 0x00000406);
-	WRITE_CBUS_REG(LTI_CTI_DF_GAIN, 0x18181818);
-	WRITE_CBUS_REG(LTI_CTI_DIR_AC_DBG, 0x57ff0000);
-	WRITE_CBUS_REG(HCTI_FLT_CLP_DC, 0x1a555310);
-	WRITE_CBUS_REG(HCTI_BST_CORE, 0x05050503);
-	WRITE_CBUS_REG(HCTI_CON_2_GAIN_0, 0x28193c00);
-	WRITE_CBUS_REG(HLTI_FLT_CLP_DC, 0x19552104);
-	WRITE_CBUS_REG(HLTI_BST_GAIN, 0x20201c0c);
-	WRITE_CBUS_REG(HLTI_CON_2_GAIN_0, 0x24193c5a);
-	WRITE_CBUS_REG(VLTI_FLT_CON_CLP, 0x00006a90);
-	WRITE_CBUS_REG(VLTI_CON_2_GAIN_0, 0x193c0560);
-	WRITE_CBUS_REG(VCTI_FLT_CON_CLP, 0x00006a90);
-	WRITE_CBUS_REG(VCTI_BST_GAIN, 0x00101010);
-	WRITE_CBUS_REG(VCTI_BST_CORE, 0x00050503);
-	WRITE_CBUS_REG(PK_CIRFB_BP_CORING, 0x00043f04);
-	WRITE_CBUS_REG(PK_DRTFB_HP_CORING, 0x00043f04);
+	WRITE_VPP_REG(PK_CIRFB_BLEND_GAIN, 0x8f808f80);
+	WRITE_VPP_REG(NR_ALP0_MIN_MAX, 0x003f003f);
+	WRITE_VPP_REG(PK_ALP2_MIERR_CORING, 0x00010101);
+	WRITE_VPP_REG(PK_ALP2_ERR2CURV_TH_RATE, 0x50504010);
+	WRITE_VPP_REG(PK_FINALGAIN_HP_BP, 0x00002820);
+	WRITE_VPP_REG(PK_OS_STATIC, 0x22014014);
+	WRITE_VPP_REG(PK_DRT_SAD_MISC, 0x18180418);
+	WRITE_VPP_REG(NR_TI_DNLP_BLEND, 0x00000406);
+	WRITE_VPP_REG(LTI_CTI_DF_GAIN, 0x18181818);
+	WRITE_VPP_REG(LTI_CTI_DIR_AC_DBG, 0x57ff0000);
+	WRITE_VPP_REG(HCTI_FLT_CLP_DC, 0x1a555310);
+	WRITE_VPP_REG(HCTI_BST_CORE, 0x05050503);
+	WRITE_VPP_REG(HCTI_CON_2_GAIN_0, 0x28193c00);
+	WRITE_VPP_REG(HLTI_FLT_CLP_DC, 0x19552104);
+	WRITE_VPP_REG(HLTI_BST_GAIN, 0x20201c0c);
+	WRITE_VPP_REG(HLTI_CON_2_GAIN_0, 0x24193c5a);
+	WRITE_VPP_REG(VLTI_FLT_CON_CLP, 0x00006a90);
+	WRITE_VPP_REG(VLTI_CON_2_GAIN_0, 0x193c0560);
+	WRITE_VPP_REG(VCTI_FLT_CON_CLP, 0x00006a90);
+	WRITE_VPP_REG(VCTI_BST_GAIN, 0x00101010);
+	WRITE_VPP_REG(VCTI_BST_CORE, 0x00050503);
+	WRITE_VPP_REG(PK_CIRFB_BP_CORING, 0x00043f04);
+	WRITE_VPP_REG(PK_DRTFB_HP_CORING, 0x00043f04);
+	WRITE_VPP_REG(SHARP_HVBLANK_NUM, 0x00003c3c);
 	printk("**********sharpness init ok!*********\n");
 }
 #endif

@@ -2831,10 +2831,6 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     }
 #endif
 
-#if defined(CONFIG_AM_VECM)
-	/* amvecm video latch function */
-	amvecm_video_latch();
-#endif
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 
@@ -3007,7 +3003,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
             amlog_mask_if(toggle_cnt > 0, LOG_MASK_FRAMESKIP, "skipped\n");
 
 #if defined(CONFIG_AM_VECM)
-            ve_on_vs(vf);
+            amvecm_on_vs(vf);
 #endif
 
             vf = video_vf_get();

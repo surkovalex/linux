@@ -104,46 +104,26 @@ void am_set_regmap(struct am_regs_s *p)
 				else
 					cm2_patch_flag = 0;
 			}
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
-			WRITE_VCBUS_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
+			WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
 			if (p->am_reg[i].mask == 0xffffffff)
-				WRITE_VCBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
+				WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
 			else{
-				temp = READ_VCBUS_REG(VPP_CHROMA_DATA_PORT);
-				WRITE_VCBUS_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
-				WRITE_VCBUS_REG(VPP_CHROMA_DATA_PORT, (temp & (~(p->am_reg[i].mask))) | (p->am_reg[i].val & p->am_reg[i].mask));
+				temp = READ_VPP_REG(VPP_CHROMA_DATA_PORT);
+				WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
+				WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, (temp & (~(p->am_reg[i].mask))) | (p->am_reg[i].val & p->am_reg[i].mask));
 			}
-#else
-			WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
-			if (p->am_reg[i].mask == 0xffffffff)
-				WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
-			else{
-				temp = READ_CBUS_REG(VPP_CHROMA_DATA_PORT);
-				WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
-				WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, (temp & (~(p->am_reg[i].mask))) | (p->am_reg[i].val & p->am_reg[i].mask));
-			}
-#endif
 			break;
 		case REG_TYPE_INDEX_GAMMA:
 			break;
 		case VALUE_TYPE_CONTRAST_BRIGHTNESS:
 			break;
 		case REG_TYPE_INDEX_VPP_COEF:
-#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 			if (((p->am_reg[i].addr&0xf) == 0)||((p->am_reg[i].addr&0xf) == 0x8)){
-				WRITE_VCBUS_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
-				WRITE_VCBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
+				WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
+				WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
 			}
 			else
-				WRITE_VCBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
-#else
-			if (((p->am_reg[i].addr&0xf) == 0)||((p->am_reg[i].addr&0xf) == 0x8)){
-				WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, p->am_reg[i].addr);
-				WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
-			}
-			else
-				WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
-#endif
+				WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, p->am_reg[i].val);
 			break;
 #if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 		case REG_TYPE_VCBUS:
@@ -162,7 +142,7 @@ void am_set_regmap(struct am_regs_s *p)
 
 void amcm_enable(void)
 {
-	WRITE_CBUS_REG_BITS(VPP_MISC,0,28,1);//CM manage enable
+	WRITE_VPP_REG_BITS(VPP_MISC,0,28,1);//CM manage enable
 }
 
 void cm_regmap_latch(am_regs_t *am_regs,unsigned int reg_map)
@@ -184,27 +164,27 @@ void amcm_level_sel(unsigned int cm_level)
 		am_set_regmap(&cmreg_enhancement);
 	else
 		am_set_regmap(&cmreg_optimize);
-	WRITE_CBUS_REG_BITS(VPP_MISC,1,28,1);//CM manage enable
+	WRITE_VPP_REG_BITS(VPP_MISC,1,28,1);//CM manage enable
 }
 
 void cm2_frame_size_patch(unsigned int width,unsigned int height)
 {
 	unsigned int vpp_size;
 	/*check if the cm2 enable/disable to config the cm2 size*/
-	if(!(READ_CBUS_REG(VPP_MISC)&(0x1<<28)))
+	if(!(READ_VPP_REG(VPP_MISC)&(0x1<<28)))
 		return;
 	vpp_size = width|(height << 16);
 	if(cm_size == 0){
-		WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x205);
-		cm_size = READ_CBUS_REG(VPP_CHROMA_DATA_PORT);
+		WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, 0x205);
+		cm_size = READ_VPP_REG(VPP_CHROMA_DATA_PORT);
 	}
 	if (cm_size != vpp_size) {
-		WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x205);
-		WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, vpp_size);
-		WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x209);
-		WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, width<<15);
-		WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x20a);
-		WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, height<<16);
+		WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, 0x205);
+		WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, vpp_size);
+		WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, 0x209);
+		WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, width<<15);
+		WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, 0x20a);
+		WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, height<<16);
 		cm_size =  vpp_size;
 		pr_amcm_dbg("\n[amcm..]cm2_frame_patch: set cm2 framesize %x, set demo mode  %x\n",
 				vpp_size, cm2_patch_flag);
@@ -216,8 +196,8 @@ void cm2_frame_size_patch(unsigned int width,unsigned int height)
 */
 void cm2_frame_switch_patch(void)
 {
-	WRITE_CBUS_REG(VPP_CHROMA_ADDR_PORT, 0x20f);
-	WRITE_CBUS_REG(VPP_CHROMA_DATA_PORT, cm2_patch_flag);
+	WRITE_VPP_REG(VPP_CHROMA_ADDR_PORT, 0x20f);
+	WRITE_VPP_REG(VPP_CHROMA_DATA_PORT, cm2_patch_flag);
 }
 
 void cm_latch_process(void)

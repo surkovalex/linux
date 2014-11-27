@@ -45,15 +45,15 @@ extern void cm_latch_process(void);
 extern int cm_load_reg(am_regs_t *arg);
 
 #if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
-#undef WRITE_CBUS_REG
-#undef WRITE_CBUS_REG_BITS
-#undef READ_CBUS_REG
-#undef READ_CBUS_REG_BITS
-
-#define WRITE_CBUS_REG(x,val)				WRITE_VCBUS_REG(x,val)
-#define WRITE_CBUS_REG_BITS(x,val,start,length)		WRITE_VCBUS_REG_BITS(x,val,start,length)
-#define READ_CBUS_REG(x)				READ_VCBUS_REG(x)
-#define READ_CBUS_REG_BITS(x,start,length)		READ_VCBUS_REG_BITS(x,start,length)
+#define WRITE_VPP_REG(x,val)				WRITE_VCBUS_REG(x,val)
+#define WRITE_VPP_REG_BITS(x,val,start,length)		WRITE_VCBUS_REG_BITS(x,val,start,length)
+#define READ_VPP_REG(x)					READ_VCBUS_REG(x)
+#define READ_VPP_REG_BITS(x,start,length)		READ_VCBUS_REG_BITS(x,start,length)
+#else
+#define WRITE_VPP_REG(x,val)				WRITE_CBUS_REG(x,val)
+#define WRITE_VPP_REG_BITS(x,val,start,length)		WRITE_CBUS_REG_BITS(x,val,start,length)
+#define READ_VPP_REG(x)					READ_CBUS_REG(x)
+#define READ_VPP_REG_BITS(x,start,length)		READ_CBUS_REG_BITS(x,start,length)
 #endif
 
 #endif

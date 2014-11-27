@@ -161,7 +161,7 @@ static void ve_dnlp_calculate_tgt_ext(vframe_t *vf)
 	ulong div1  = 0, div2  = 0, step_h  = 0, step_l  = 0;
 	ulong data[55];
 	bool  flag[55], previous_state_high = false;
-	unsigned int cnt = READ_CBUS_REG(ASSIST_SPARE8_REG1);
+	unsigned int cnt = READ_VPP_REG(ASSIST_SPARE8_REG1);
 	// old historic luma sum
 	sum_b = sum_c;
 	sum_c = ve_dnlp_luma_sum;
@@ -271,7 +271,7 @@ static void ve_dnlp_calculate_tgt_ext(vframe_t *vf)
 		if(cnt){
 			for(i=0;i<64;i++)
 				pr_amve_dbg(" ve_dnlp_tgte[%ld]=%d\n",i,ve_dnlp_tgt[i]);
-			WRITE_CBUS_REG(ASSIST_SPARE8_REG1, 0);
+			WRITE_VPP_REG(ASSIST_SPARE8_REG1, 0);
 		}
 	}
 }
@@ -315,8 +315,8 @@ static void ve_dnlp_calculate_tgtx(vframe_t *vf)
 	ulong i = 0, j = 0, sum = 0, max = 0;
 	ulong cLmt=0, nStp=0, stp=0, uLmt=0;
 	long nExc=0;
-	unsigned int cnt = READ_CBUS_REG(ASSIST_SPARE8_REG1);
-	unsigned int cnt2 = READ_CBUS_REG(ASSIST_SPARE8_REG2);
+	unsigned int cnt = READ_VPP_REG(ASSIST_SPARE8_REG1);
+	unsigned int cnt2 = READ_VPP_REG(ASSIST_SPARE8_REG2);
 	unsigned int clip_rate = ve_dnlp_cliprate; //8bit
 	unsigned int low_range = ve_dnlp_lowrange;//18; //6bit [0-54]
 	unsigned int hgh_range = ve_dnlp_hghrange;//18; //6bit [0-54]
@@ -371,7 +371,7 @@ static void ve_dnlp_calculate_tgtx(vframe_t *vf)
 	uLmt = cLmt-nStp;
 	if(cnt2){
 		pr_amve_dbg(" ve_dnlp_tgtx:cLmt=%ld,nStp=%ld,uLmt=%ld\n",cLmt,nStp,uLmt);
-		WRITE_CBUS_REG(ASSIST_SPARE8_REG2, 0);
+		WRITE_VPP_REG(ASSIST_SPARE8_REG2, 0);
 	}
 	if(clip_rate<=4 || tAvg<=2){
 		cLmt = (sum+28)/55;
@@ -465,7 +465,7 @@ static void ve_dnlp_calculate_tgtx(vframe_t *vf)
 	if(cnt){
 		for(i=0;i<64;i++)
 			pr_amve_dbg(" ve_dnlp_tgtx[%ld]=%d\n",i,ve_dnlp_tgt[i]);
-		WRITE_CBUS_REG(ASSIST_SPARE8_REG1, 0);
+		WRITE_VPP_REG(ASSIST_SPARE8_REG1, 0);
 	}
 	return;
 }
@@ -476,7 +476,7 @@ static void ve_dnlp_calculate_tgt(vframe_t *vf)
 	ulong data[5];
 	static unsigned int sum_b = 0, sum_c = 0;
 	ulong i = 0, j = 0, ave = 0, max = 0, div = 0;
-	unsigned int cnt = READ_CBUS_REG(ASSIST_SPARE8_REG1);
+	unsigned int cnt = READ_VPP_REG(ASSIST_SPARE8_REG1);
 	// old historic luma sum
 	sum_b = sum_c;
 	sum_c = ve_dnlp_luma_sum;
@@ -562,7 +562,7 @@ static void ve_dnlp_calculate_tgt(vframe_t *vf)
 	if(cnt){
 		for(i=0;i<64;i++)
 			pr_amve_dbg(" ve_dnlp_tgt[%ld]=%d\n",i,ve_dnlp_tgt[i]);
-		WRITE_CBUS_REG(ASSIST_SPARE8_REG1, 0);
+		WRITE_VPP_REG(ASSIST_SPARE8_REG1, 0);
 	}
 }
 
@@ -591,39 +591,39 @@ static void ve_dnlp_calculate_reg(void)
 static void ve_dnlp_load_reg(void)
 {
 #ifdef NEW_DNLP_IN_SHARPNESS
-	WRITE_CBUS_REG(DNLP_00, ve_dnlp_reg[0]);
-	WRITE_CBUS_REG(DNLP_01, ve_dnlp_reg[1]);
-	WRITE_CBUS_REG(DNLP_02, ve_dnlp_reg[2]);
-	WRITE_CBUS_REG(DNLP_03, ve_dnlp_reg[3]);
-	WRITE_CBUS_REG(DNLP_04, ve_dnlp_reg[4]);
-	WRITE_CBUS_REG(DNLP_05, ve_dnlp_reg[5]);
-	WRITE_CBUS_REG(DNLP_06, ve_dnlp_reg[6]);
-	WRITE_CBUS_REG(DNLP_07, ve_dnlp_reg[7]);
-	WRITE_CBUS_REG(DNLP_08, ve_dnlp_reg[8]);
-	WRITE_CBUS_REG(DNLP_09, ve_dnlp_reg[9]);
-	WRITE_CBUS_REG(DNLP_10, ve_dnlp_reg[10]);
-	WRITE_CBUS_REG(DNLP_11, ve_dnlp_reg[11]);
-	WRITE_CBUS_REG(DNLP_12, ve_dnlp_reg[12]);
-	WRITE_CBUS_REG(DNLP_13, ve_dnlp_reg[13]);
-	WRITE_CBUS_REG(DNLP_14, ve_dnlp_reg[14]);
-	WRITE_CBUS_REG(DNLP_15, ve_dnlp_reg[15]);
+	WRITE_VPP_REG(DNLP_00, ve_dnlp_reg[0]);
+	WRITE_VPP_REG(DNLP_01, ve_dnlp_reg[1]);
+	WRITE_VPP_REG(DNLP_02, ve_dnlp_reg[2]);
+	WRITE_VPP_REG(DNLP_03, ve_dnlp_reg[3]);
+	WRITE_VPP_REG(DNLP_04, ve_dnlp_reg[4]);
+	WRITE_VPP_REG(DNLP_05, ve_dnlp_reg[5]);
+	WRITE_VPP_REG(DNLP_06, ve_dnlp_reg[6]);
+	WRITE_VPP_REG(DNLP_07, ve_dnlp_reg[7]);
+	WRITE_VPP_REG(DNLP_08, ve_dnlp_reg[8]);
+	WRITE_VPP_REG(DNLP_09, ve_dnlp_reg[9]);
+	WRITE_VPP_REG(DNLP_10, ve_dnlp_reg[10]);
+	WRITE_VPP_REG(DNLP_11, ve_dnlp_reg[11]);
+	WRITE_VPP_REG(DNLP_12, ve_dnlp_reg[12]);
+	WRITE_VPP_REG(DNLP_13, ve_dnlp_reg[13]);
+	WRITE_VPP_REG(DNLP_14, ve_dnlp_reg[14]);
+	WRITE_VPP_REG(DNLP_15, ve_dnlp_reg[15]);
 #else
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_00, ve_dnlp_reg[0]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_01, ve_dnlp_reg[1]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_02, ve_dnlp_reg[2]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_03, ve_dnlp_reg[3]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_04, ve_dnlp_reg[4]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_05, ve_dnlp_reg[5]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_06, ve_dnlp_reg[6]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_07, ve_dnlp_reg[7]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_08, ve_dnlp_reg[8]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_09, ve_dnlp_reg[9]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_10, ve_dnlp_reg[10]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_11, ve_dnlp_reg[11]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_12, ve_dnlp_reg[12]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_13, ve_dnlp_reg[13]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_14, ve_dnlp_reg[14]);
-	WRITE_CBUS_REG(VPP_DNLP_CTRL_15, ve_dnlp_reg[15]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_00, ve_dnlp_reg[0]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_01, ve_dnlp_reg[1]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_02, ve_dnlp_reg[2]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_03, ve_dnlp_reg[3]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_04, ve_dnlp_reg[4]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_05, ve_dnlp_reg[5]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_06, ve_dnlp_reg[6]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_07, ve_dnlp_reg[7]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_08, ve_dnlp_reg[8]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_09, ve_dnlp_reg[9]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_10, ve_dnlp_reg[10]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_11, ve_dnlp_reg[11]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_12, ve_dnlp_reg[12]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_13, ve_dnlp_reg[13]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_14, ve_dnlp_reg[14]);
+	WRITE_VPP_REG(VPP_DNLP_CTRL_15, ve_dnlp_reg[15]);
 #endif
 }
 
@@ -666,7 +666,6 @@ void ve_on_vs(vframe_t *vf)
 				lock_range_60hz_slow);
 	}
 }
-EXPORT_SYMBOL(ve_on_vs);
 
 // ***************************************************************************
 // *** IOCTL-oriented functions *********************************************
@@ -674,27 +673,27 @@ EXPORT_SYMBOL(ve_on_vs);
 
 void vpp_enable_lcd_gamma_table(void)
 {
-	WRITE_CBUS_REG_BITS(L_GAMMA_CNTL_PORT, 1, GAMMA_EN, 1);
+	WRITE_VPP_REG_BITS(L_GAMMA_CNTL_PORT, 1, GAMMA_EN, 1);
 }
 
 void vpp_disable_lcd_gamma_table(void)
 {
-	WRITE_CBUS_REG_BITS(L_GAMMA_CNTL_PORT, 0, GAMMA_EN, 1);
+	WRITE_VPP_REG_BITS(L_GAMMA_CNTL_PORT, 0, GAMMA_EN, 1);
 }
 
 void vpp_set_lcd_gamma_table(u16 *data, u32 rgb_mask)
 {
 	int i;
-	while (!(READ_CBUS_REG(L_GAMMA_CNTL_PORT) & (0x1 << ADR_RDY)));
-	WRITE_CBUS_REG(L_GAMMA_ADDR_PORT, (0x1 << H_AUTO_INC) |
+	while (!(READ_VPP_REG(L_GAMMA_CNTL_PORT) & (0x1 << ADR_RDY)));
+	WRITE_VPP_REG(L_GAMMA_ADDR_PORT, (0x1 << H_AUTO_INC) |
 	                            (0x1 << rgb_mask)   |
 	                            (0x0 << HADR));
 	for (i=0;i<256;i++){
-		while (!( READ_CBUS_REG(L_GAMMA_CNTL_PORT) & (0x1 << WR_RDY) )) ;
-		WRITE_CBUS_REG(L_GAMMA_DATA_PORT, data[i]);
+		while (!( READ_VPP_REG(L_GAMMA_CNTL_PORT) & (0x1 << WR_RDY) )) ;
+		WRITE_VPP_REG(L_GAMMA_DATA_PORT, data[i]);
 	}
-	while (!(READ_CBUS_REG(L_GAMMA_CNTL_PORT) & (0x1 << ADR_RDY)));
-	WRITE_CBUS_REG(L_GAMMA_ADDR_PORT, (0x1 << H_AUTO_INC) |
+	while (!(READ_VPP_REG(L_GAMMA_CNTL_PORT) & (0x1 << ADR_RDY)));
+	WRITE_VPP_REG(L_GAMMA_ADDR_PORT, (0x1 << H_AUTO_INC) |
 	                            (0x1 << rgb_mask)   |
 	                            (0x23 << HADR));
 }
@@ -702,25 +701,25 @@ void vpp_set_lcd_gamma_table(u16 *data, u32 rgb_mask)
 void vpp_set_rgb_ogo(struct tcon_rgb_ogo_s *p)
 {
 	// write to registers
-	WRITE_CBUS_REG(VPP_GAINOFF_CTRL0, ((p->en << 31) & 0x80000000) |
+	WRITE_VPP_REG(VPP_GAINOFF_CTRL0, ((p->en << 31) & 0x80000000) |
 	                      ((p->r_gain << 16) & 0x07ff0000) |
 	                      ((p->g_gain <<  0) & 0x000007ff));
-	WRITE_CBUS_REG(VPP_GAINOFF_CTRL1, ((p->b_gain        << 16) & 0x07ff0000) |
+	WRITE_VPP_REG(VPP_GAINOFF_CTRL1, ((p->b_gain        << 16) & 0x07ff0000) |
 	                      ((p->r_post_offset <<  0) & 0x000007ff));
-	WRITE_CBUS_REG(VPP_GAINOFF_CTRL2, ((p->g_post_offset << 16) & 0x07ff0000) |
+	WRITE_VPP_REG(VPP_GAINOFF_CTRL2, ((p->g_post_offset << 16) & 0x07ff0000) |
 	                      ((p->b_post_offset <<  0) & 0x000007ff));
-	WRITE_CBUS_REG(VPP_GAINOFF_CTRL3, ((p->r_pre_offset  << 16) & 0x07ff0000) |
+	WRITE_VPP_REG(VPP_GAINOFF_CTRL3, ((p->r_pre_offset  << 16) & 0x07ff0000) |
 	                      ((p->g_pre_offset  <<  0) & 0x000007ff));
-	WRITE_CBUS_REG(VPP_GAINOFF_CTRL4, ((p->b_pre_offset  <<  0) & 0x000007ff));
+	WRITE_VPP_REG(VPP_GAINOFF_CTRL4, ((p->b_pre_offset  <<  0) & 0x000007ff));
 }
 
 void ve_enable_dnlp(void)
 {
 	ve_en = 1;
 #ifdef NEW_DNLP_IN_SHARPNESS
-	WRITE_CBUS_REG_BITS(DNLP_EN, 1, 0, 1);
+	WRITE_VPP_REG_BITS(DNLP_EN, 1, 0, 1);
 #else
-	WRITE_CBUS_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
+	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
 #endif
 }
 
@@ -728,9 +727,9 @@ void ve_disable_dnlp(void)
 {
 	ve_en = 0;
 #ifdef NEW_DNLP_IN_SHARPNESS
-	WRITE_CBUS_REG_BITS(DNLP_EN, 0, 0, 1);
+	WRITE_VPP_REG_BITS(DNLP_EN, 0, 0, 1);
 #else
-	WRITE_CBUS_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
+	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
 #endif
 }
 
@@ -758,17 +757,17 @@ void ve_set_dnlp(struct ve_dnlp_s *p)
 		ve_dnlp_load_reg();
 #ifdef NEW_DNLP_IN_SHARPNESS
 		// enable dnlp
-		WRITE_CBUS_REG_BITS(DNLP_EN, 1, 0, 1);
+		WRITE_VPP_REG_BITS(DNLP_EN, 1, 0, 1);
 	}else{
 		// disable dnlp
-		WRITE_CBUS_REG_BITS(DNLP_EN, 0, 0, 1);
+		WRITE_VPP_REG_BITS(DNLP_EN, 0, 0, 1);
 	}
 #else
 	// enable dnlp
-		WRITE_CBUS_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
+		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
 	}else{
 		// disable dnlp
-		WRITE_CBUS_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
+		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
 	}
 #endif
 }
@@ -823,24 +822,24 @@ void ve_set_new_dnlp(struct ve_dnlp_table_s *p)
 		ve_dnlp_load_reg();
 #ifdef NEW_DNLP_IN_SHARPNESS
 		// enable dnlp
-		WRITE_CBUS_REG_BITS(DNLP_EN, 1, 0, 1);
+		WRITE_VPP_REG_BITS(DNLP_EN, 1, 0, 1);
 	}else{
 		// disable dnlp
-		WRITE_CBUS_REG_BITS(DNLP_EN, 0, 0, 1);
+		WRITE_VPP_REG_BITS(DNLP_EN, 0, 0, 1);
 	}
 #else
 		// enable dnlp
-		WRITE_CBUS_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
+		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
 	}else{
 		// disable dnlp
-		WRITE_CBUS_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
+		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
 	}
 #endif
 }
 
 unsigned int ve_get_vs_cnt(void)
 {
-	return (READ_CBUS_REG(VPP_VDO_MEAS_VS_COUNT_LO));
+	return (READ_VPP_REG(VPP_VDO_MEAS_VS_COUNT_LO));
 }
 
 void vpp_phase_lock_on_vs(unsigned int cycle,
@@ -849,12 +848,12 @@ void vpp_phase_lock_on_vs(unsigned int cycle,
                           unsigned int range_fast,
                           unsigned int range_slow)
 {
-	unsigned int vtotal_ori = READ_CBUS_REG(ENCL_VIDEO_MAX_LNCNT);
+	unsigned int vtotal_ori = READ_VPP_REG(ENCL_VIDEO_MAX_LNCNT);
 	unsigned int vtotal     = lock50 ? 1349 : 1124;
-	unsigned int stamp_in   = READ_CBUS_REG(VDIN_MEAS_VS_COUNT_LO);
+	unsigned int stamp_in   = READ_VPP_REG(VDIN_MEAS_VS_COUNT_LO);
 	unsigned int stamp_out  = ve_get_vs_cnt();
 	unsigned int phase      = 0;
-	unsigned int cnt = READ_CBUS_REG(ASSIST_SPARE8_REG1);
+	unsigned int cnt = READ_VPP_REG(ASSIST_SPARE8_REG1);
 	int step = 0, i = 0;
 	// get phase
 	if (stamp_out < stamp)
@@ -881,10 +880,10 @@ void vpp_phase_lock_on_vs(unsigned int cycle,
 		step = 0;
 	}
 	if (vtotal != vtotal_ori)
-		WRITE_CBUS_REG(ENCL_VIDEO_MAX_LNCNT, vtotal);
+		WRITE_VPP_REG(ENCL_VIDEO_MAX_LNCNT, vtotal);
 	if (cnt){
 		cnt--;
-		WRITE_CBUS_REG(ASSIST_SPARE8_REG1, cnt);
+		WRITE_VPP_REG(ASSIST_SPARE8_REG1, cnt);
 		if (cnt){
 			vpp_log[cnt][0] = stamp;
 			vpp_log[cnt][1] = stamp_in;
@@ -909,7 +908,7 @@ void ve_frame_size_patch(unsigned int width,unsigned int height)
 {
 	unsigned int vpp_size = height|(width << 16);
 	if(ve_size != vpp_size){
-		WRITE_CBUS_REG(VPP_VE_H_V_SIZE, vpp_size);
+		WRITE_VPP_REG(VPP_VE_H_V_SIZE, vpp_size);
 		ve_size = vpp_size;
 	}
 }
@@ -1002,24 +1001,24 @@ void lvds_freq_process(void)
 	/* lvds freq 50Hz/60Hz */
 	if (frame_lock_freq == 1){//50 hz
 		// panel freq is 60Hz => change back to 50Hz
-		if (READ_CBUS_REG(ENCP_VIDEO_MAX_LNCNT) < 1237) // (1124 + 1349 +1) / 2
-			WRITE_CBUS_REG(ENCP_VIDEO_MAX_LNCNT, 1349);
+		if (READ_VPP_REG(ENCP_VIDEO_MAX_LNCNT) < 1237) // (1124 + 1349 +1) / 2
+			WRITE_VPP_REG(ENCP_VIDEO_MAX_LNCNT, 1349);
 	}
 	else if (frame_lock_freq == 2){//60 hz
 		// panel freq is 50Hz => change back to 60Hz
-		if(READ_CBUS_REG(ENCP_VIDEO_MAX_LNCNT) >= 1237) // (1124 + 1349 + 1) / 2
-			WRITE_CBUS_REG(ENCP_VIDEO_MAX_LNCNT, 1124);
+		if(READ_VPP_REG(ENCP_VIDEO_MAX_LNCNT) >= 1237) // (1124 + 1349 + 1) / 2
+			WRITE_VPP_REG(ENCP_VIDEO_MAX_LNCNT, 1124);
 	}
 	else if (frame_lock_freq == 0){
 		/* lvds freq 50Hz/60Hz */
 		if (vecm_latch_flag & FLAG_LVDS_FREQ_SW){  //50 hz
 			// panel freq is 60Hz => change back to 50Hz
-			if (READ_CBUS_REG(ENCP_VIDEO_MAX_LNCNT) < 1237) // (1124 + 1349 +1) / 2
-				WRITE_CBUS_REG(ENCP_VIDEO_MAX_LNCNT, 1349);
+			if (READ_VPP_REG(ENCP_VIDEO_MAX_LNCNT) < 1237) // (1124 + 1349 +1) / 2
+				WRITE_VPP_REG(ENCP_VIDEO_MAX_LNCNT, 1349);
 		}else{	 //60 hz
 			// panel freq is 50Hz => change back to 60Hz
-			if (READ_CBUS_REG(ENCP_VIDEO_MAX_LNCNT) >= 1237) // (1124 + 1349 + 1) / 2
-				WRITE_CBUS_REG(ENCP_VIDEO_MAX_LNCNT, 1124);
+			if (READ_VPP_REG(ENCP_VIDEO_MAX_LNCNT) >= 1237) // (1124 + 1349 + 1) / 2
+				WRITE_VPP_REG(ENCP_VIDEO_MAX_LNCNT, 1124);
 		}
 	}
 #endif
