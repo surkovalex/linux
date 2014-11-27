@@ -540,20 +540,6 @@ vmode_t get_current_hdmi_vmode(void)
 }
 #endif
 
-static int __init get_cvbs_mode(char *str)
-{
-    if(strncmp("480", str, 3) == 0){
-        cvbsmode_hdmionly = VMODE_480CVBS;
-    }else if(strncmp("576", str, 3) == 0){
-        cvbsmode_hdmionly = VMODE_576CVBS;
-    }else{
-	cvbsmode_hdmionly = VMODE_480CVBS;
-    }
-    printk("kernel get cvbsmode form uboot is %s\n", str);
-    return 1;
-}
-__setup("cvbsmode=", get_cvbs_mode);
-
 #ifdef CONFIG_AM_HDMI_ONLY
 static int __init get_hdmi_mode(char *str)
 {
@@ -572,4 +558,20 @@ static int __init get_hdmi_mode(char *str)
    return 1;
 }
 __setup("hdmimode=", get_hdmi_mode);
+
+static int __init get_cvbs_mode(char *str)
+{
+    if(strncmp("480", str, 3) == 0){
+        cvbsmode_hdmionly = VMODE_480CVBS;
+    }else if(strncmp("576", str, 3) == 0){
+        cvbsmode_hdmionly = VMODE_576CVBS;
+    }else if (strncmp("nocvbs", str, 6) == 0){
+        cvbsmode_hdmionly = hdmimode_hdmionly;
+    }else{
+        cvbsmode_hdmionly = VMODE_480CVBS;
+    }
+    printk("kernel get cvbsmode form uboot is %s\n", str);
+    return 1;
+}
+__setup("cvbsmode=", get_cvbs_mode);
 #endif
