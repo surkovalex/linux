@@ -896,7 +896,7 @@ static int mac_pmt_enable(unsigned int enable)
  */
 /* --------------------------------------------------------------------------*/
 //#undef CONFIG_AML_NAND_KEY
-#ifdef CONFIG_AML_NAND_KEY
+#if defined (CONFIG_AML_NAND_KEY) || defined (CONFIG_SECURITYKEY)
 extern int get_aml_key_kernel(const char* key_name, unsigned char* data, int ascii_flag);
 extern int extenal_api_key_set_version(char *devvesion);
 static char print_buff[1025];
@@ -907,7 +907,7 @@ void read_mac_from_nand(struct net_device *ndev)
 	char *endp;
 	int j;
 	ret = get_aml_key_kernel("mac", print_buff, 0);
-	extenal_api_key_set_version("nand3");
+	extenal_api_key_set_version("auto");
 	printk("ret = %d\nprint_buff=%s\n", ret, print_buff);
 	if (ret >= 0) {
 		strcpy(ndev->dev_addr, print_buff);
@@ -931,7 +931,7 @@ static int aml_mac_init(struct net_device *ndev)
 	printk("--1--write mac add to:");
 
 	data_dump(ndev->dev_addr, 6);
-#ifdef CONFIG_AML_NAND_KEY
+#if defined (CONFIG_AML_NAND_KEY) || defined (CONFIG_SECURITYKEY)
 	read_mac_from_nand(ndev);
 #endif
 	printk("--2--write mac add to:");
