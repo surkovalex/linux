@@ -85,6 +85,13 @@ void root_func(){
 
         #address-cells = <1>;
         #size-cells = <1>;
+//$$ DEVICE="mem_4k2k_decoder"
+//$$ L3 PROP_U32 2 ="reg" 
+		mem_4k2k_decoder: region@1 {
+			region_name = "cma_4k2k";
+			linux,contiguous-region;
+			reg = <0x00000000 0x0c000000>;
+		};
 
         cma_0:region@0 {
            region_name = "cma_0";
@@ -175,8 +182,9 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-                reserve-memory = <0x10000000>;
-                reserve-iomap = "true";
+                reserve-memory = <0x04000000>; // 64M
+//		reserve-iomap = "true";
+		linux,contiguous-region = <&mem_4k2k_decoder>;
         };
 
 /// ***************************************************************************************
