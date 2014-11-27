@@ -176,7 +176,7 @@ static int aml_atvdemod_get_snr(struct dvb_frontend *fe)
 	unsigned int snr_val;
 	int ret;
 	snr_val = atv_dmd_rd_long(APB_BLOCK_ADDR_VDAGC,0x50)>>8;
-	if(snr_val > 700000)
+	if(snr_val > 900000)
 		ret = 5;
 	else if(snr_val > 158000)
 		ret = 15;
