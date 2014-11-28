@@ -221,6 +221,14 @@ static unsigned int bypass_spscl1 = 0;
 module_param(bypass_spscl1,uint,0664);
 MODULE_PARM_DESC(bypass_spscl1, "\n bypass_spscl1  \n");
 #endif
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+static unsigned int bypass_ratio = 150;
+#else
+static unsigned int bypass_ratio = 196;
+#endif
+module_param(bypass_ratio,uint,0664);
+MODULE_PARM_DESC(bypass_ratio, "\n bypass_ratio  \n");
+
 #if 0
 #define DECL_PARM(name)\
 static int name;\
@@ -349,7 +357,7 @@ vpp_process_speed_check(s32 width_in,
                         const vinfo_t *vinfo,
                         vframe_t *vf)
 {
-#if ((MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)&&(MESON_CPU_TYPE != MESON_CPU_TYPE_MESONG9TV))
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
     if ((width_in <= 0) || (height_in <= 0) || (height_out <= 0) || (height_screen <= 0)) {
         return SPEED_CHECK_DONE;
     }
@@ -359,7 +367,7 @@ vpp_process_speed_check(s32 width_in,
         if(vf->type & VIDTYPE_VIU_422)
         {
             if (height_out == 0 || div_u64(VPP_SPEED_FACTOR * width_in * height_in * vinfo->sync_duration_num * height_screen,
-                        height_out * vinfo->sync_duration_den * 196) > get_vpu_clk()) {
+                        height_out * vinfo->sync_duration_den * bypass_ratio) > get_vpu_clk()) {
                 return SPEED_CHECK_VSKIP;
             }else {
                 return SPEED_CHECK_DONE;
@@ -475,7 +483,7 @@ RESTART:
     wide_mode = vpp_flags & VPP_FLAG_WIDEMODE_MASK;
 
     /* keep 8 bits resolution for aspect conversion */
-    if (wide_mode == VIDEO_WIDEOPTION_4_3) {	
+    if (wide_mode == VIDEO_WIDEOPTION_4_3) {
         if (vpp_flags & VPP_FLAG_PORTRAIT_MODE)
             aspect_factor = 0x155;
         else
@@ -603,7 +611,7 @@ RESTART:
 		else {
 			screen_width  = video_width * vpp_zoom_ratio / 100;
 			screen_height = video_height * vpp_zoom_ratio / 100;
-			
+
 			ratio_x = (w_in << 18) / screen_width;
 			ratio_y = (h_in << 18) / screen_height;
 		}
