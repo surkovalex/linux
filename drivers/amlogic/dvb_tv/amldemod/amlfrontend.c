@@ -1234,9 +1234,9 @@ static int m6_demod_fe_suspend(struct aml_fe_dev *dev)
 
 static int m6_demod_fe_enter_mode(struct aml_fe *fe, int mode)
 {
+	struct aml_fe_dev *dev=fe->dtv_demod;
 	autoFlagsTrig = 1;
-	/*struct aml_fe_dev *dev=fe->dtv_demod;
-	printk("fe->mode is %d",fe->mode);
+	/*printk("fe->mode is %d",fe->mode);
 	if(fe->mode==AM_FE_OFDM){
 		M1_Demod_Dvbt_Init(dev);
 	}else if(fe->mode==AM_FE_QAM){
@@ -1249,7 +1249,7 @@ static int m6_demod_fe_enter_mode(struct aml_fe *fe, int mode)
 		if(dvbc_get_cci_task()==1)
 			dvbc_create_cci_task();
 	}
-
+	M6_Demod_Dtmb_Init(dev);
 	memstart = fe->dtv_demod->mem_start;
 	mem_buf=(long*)phys_to_virt(memstart);
 	return 0;

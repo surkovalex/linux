@@ -1172,7 +1172,7 @@ int dtmb_read_snr(void){
 	int time_cnt=0,fec_bch_add;
 	int ddc_phase,icfo_phase,fcfo_phase,ddc_phase_new,reg_6b;
 	int mobi_det_power;
-    int mobile_times;
+    int mobile_times,front_cci0_count;
     int ctrl_che_working_state,pm_change,constell;
 	mobile_times = 0;
 	pm_change = 0;
@@ -1198,7 +1198,7 @@ int dtmb_read_snr(void){
 		dtmb_reset();
 		return 0;
 	}else{
-		 if(fec_lock && fec_ldpc_it_avg < (3 * 256)){
+		 if(fec_lock && fec_ldpc_it_avg < (4 * 256)){
 			 pr_dbg("-----------  lock ! ------------ \n");
 			 return 1;
 		 }else{
@@ -1222,7 +1222,7 @@ int dtmb_read_snr(void){
 			  	  mobi_det_power = (dtmb_read_reg(0xf1)>>8) & 0x7ffff;
 
              	  if(mobi_det_power > 10) {
-             	      mobile_times = 8;
+             	      mobile_times = 15;//8;
              	      dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9) + (1 << 1)); // set mobile mode
              	      #ifdef dtmb_mobile_mode
              	      dtmb_write_reg(0x50, 0x1241);	//180m mobile mode
@@ -1254,7 +1254,7 @@ int dtmb_read_snr(void){
 		     	  local_state = 4;
 		     	  pr_dbg("*************** local_state = %d ************ \n", local_state);
 		     	  if(mobile_times > 0)
-                         pr_dbg("***************  mobile state ************ \n");
+                         pr_dbg("***************  mobile state ************,mobile_times is %d \n",mobile_times);
 		     	  if(time_eq){  // in time_eq mode
 		     	      local_state = 5;
 		     	      pr_dbg("*************** local_state = %d ************ \n", local_state);
@@ -1273,9 +1273,10 @@ int dtmb_read_snr(void){
 		        }
 		        else {
 		            local_state = 7;
-		            pr_dbg("*************** local_state = %d ************ \n", local_state);
+					front_cci0_count=(dtmb_read_reg(0xe9) >> 22) & 0xff;
+		            pr_dbg("*************** local_state = %d ************ ,front_cci0_count is %d\n", local_state,front_cci0_count);
 		            constell = (dtmb_read_reg(0xe5) >> 16) & 0x3;
-		            if((SC_mode == 0) && (fbe_in_num > 30) && (fec_ldpc_it_avg > 640)&& (constell > 1)/*2.5*256*/) { // switch to time_eq mode
+		            if((SC_mode == 0)&&(fec_ldpc_it_avg > 640)&& (constell > 1)/*2.5*256*/&& ((fbe_in_num > 30)||(front_cci0_count>0))) { // switch to time_eq mode
 		                ddc_phase  = dtmb_read_reg(0x15) & 0x1ffffff;
 		                icfo_phase = dtmb_read_reg(0xe0) & 0xfffff;
 		                fcfo_phase = dtmb_read_reg(0xe1) & 0xfffff;
