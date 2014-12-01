@@ -288,7 +288,9 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 	set_freq=p->frequency;
 	if(p->analog.flag == ANALOG_FLAG_MANUL_SCAN){/*manul search force to ntsc_m*/
 		std_bk = p->analog.std;
+		#if (MESON_CPU_TYPE != MESON_CPU_TYPE_MESONG9TV)
 		p->analog.std = (p->analog.std&(~(V4L2_STD_B|V4L2_STD_GH)))|V4L2_STD_NTSC_M;
+		#endif
 		if( fe->ops.set_frontend(fe)){
 			printk("[%s]the func of set_param err.\n",__func__);
 			p->analog.std = std_bk;
@@ -296,9 +298,15 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 			std_bk = 0;
 			return DVBFE_ALGO_SEARCH_FAILED;
 		}
+		#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+		fe->ops.tuner_ops.get_pll_status(fe, &tuner_state);
+		fe->ops.analog_ops.get_pll_status(fe, &ade_state);
+		mdelay(delay_cnt);
+		#else
 		fe->ops.tuner_ops.get_status(fe, &tuner_state);
 		fe->ops.analog_ops.get_status(fe, &ade_state);
-		if(FE_HAS_LOCK==ade_state && FE_HAS_LOCK==tuner_state){
+		#endif
+		if((FE_HAS_LOCK==ade_state) || (FE_HAS_LOCK==tuner_state)){
 			if(aml_fe_afc_closer(fe,p->frequency - ATV_AFC_1_0MHZ ,p->frequency + ATV_AFC_1_0MHZ)==0){
 				printk("[%s] manul scan mode:p->frequency=[%d] has lock,search success.\n",__func__,p->frequency);
 				p->analog.std = std_bk;
@@ -313,8 +321,10 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 				return DVBFE_ALGO_SEARCH_FAILED;
 			}
 		}
-		else
+		else{
+			pr_dbg("[%s][%d] unlock \n",__func__,__LINE__);
 		    return DVBFE_ALGO_SEARCH_FAILED;
+		}
 	}
 	if(p->analog.afc_range==0)
 	{
