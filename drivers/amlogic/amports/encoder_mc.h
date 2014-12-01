@@ -15,10 +15,8 @@ extern const u32 half_encoder_mc[];
 extern const u32 mix_sw_mc[];
 extern const u32 mix_sw_mc_hdec_dblk[];
 extern const u32 mix_dump_mc_dblk[];
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
 extern const u32 mix_sw_mc_hdec_m2_dblk[];
 extern const u32 mix_sw_mc_vdec2_dblk[];
 extern const u32 vdec2_encoder_mc[];
-#endif
 #endif
 #endif /* ENCODER_MC_H */

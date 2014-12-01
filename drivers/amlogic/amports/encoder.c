@@ -291,11 +291,10 @@ extern bool jpegenc_on(void);
 
 static void dma_flush(unsigned buf_start , unsigned buf_size );
 
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
 static const u32 *select_ucode(u32 ucode_index)
 {
     const u32 * p = mix_dump_mc;
-
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     switch(ucode_index){
         case UCODE_MODE_FULL:
             if(enable_dblk)
@@ -304,45 +303,89 @@ static const u32 *select_ucode(u32 ucode_index)
                 p = mix_dump_mc;
             break;
         case UCODE_MODE_SW_MIX:
-            if(IS_MESON_M8B_CPU){
+            if(enable_dblk)
+                p = mix_sw_mc_hdec_m2_dblk;
+            else
+                p = mix_sw_mc;
+            break;
+        default:
+            break;
+    }
+
+    encode_manager.dblk_fix_flag = (p==mix_sw_mc_hdec_m2_dblk);
+    return p;
+}
+
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B
+static const u32 *select_ucode(u32 ucode_index)
+{
+    const u32 * p = mix_dump_mc;
+    switch(ucode_index){
+        case UCODE_MODE_FULL:
+            if(enable_dblk)
+                p = mix_dump_mc_dblk;
+            else
+                p = mix_dump_mc;
+            break;
+        case UCODE_MODE_SW_MIX:
+            if(enable_dblk)
+                p = mix_sw_mc_hdec_dblk;
+            else
+                p = mix_sw_mc;
+            break;
+        default:
+            break;
+    }
+    encode_manager.dblk_fix_flag = false;
+    return p;
+}
+
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+static const u32 *select_ucode(u32 ucode_index)
+{
+    const u32 * p = mix_dump_mc;
+    switch(ucode_index){
+        case UCODE_MODE_FULL:
+            if(enable_dblk)
+                p = mix_dump_mc_dblk;
+            else
+                p = mix_dump_mc;
+            break;
+        case UCODE_MODE_SW_MIX:
+            if(IS_MESON_M8M2_CPU){
                 if(enable_dblk)
-                    p = mix_sw_mc_hdec_dblk;
+                    p = mix_sw_mc_hdec_m2_dblk;
                 else
                     p = mix_sw_mc;
-            }
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
-            else if(IS_MESON_M8_CPU){
+            }else{
                 if(enable_dblk == 1)
                     p = mix_sw_mc_vdec2_dblk;
                 else if (enable_dblk ==2)
                     p = mix_sw_mc_hdec_dblk;
                 else
                     p = mix_sw_mc;
-            }else if(IS_MESON_M8M2_CPU){
-                if(enable_dblk)
-                    p = mix_sw_mc_hdec_m2_dblk;
-                else
-                    p = mix_sw_mc;
             }
-#endif
             break;
         default:
             break;
     }
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     if(IS_MESON_M8M2_CPU){
         encode_manager.dblk_fix_flag = (p==mix_sw_mc_hdec_m2_dblk);
-    }else
-#endif
-    {
+    }else{
         encode_manager.dblk_fix_flag = false;
     }
-#else
-    encode_manager.dblk_fix_flag = false;
-#endif
     return p;
 }
+
+#else
+static const u32 *select_ucode(u32 ucode_index)
+{
+    const u32 * p = mix_dump_mc;
+    encode_manager.dblk_fix_flag = false;
+    return p;
+}
+#endif
 
 /*output stream buffer setting*/
 static void avc_init_output_buffer(encode_wq_t* wq)
@@ -1335,8 +1378,9 @@ static s32 reload_mc(encode_wq_t* wq)
     WRITE_VREG(DOS_SW_RESET1, 0);
 
     udelay(10);
-
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
+    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     if(IS_MESON_M8M2_CPU){
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
     }else{
@@ -1672,8 +1716,9 @@ s32 amvenc_avc_start(encode_wq_t* wq, int clock)
 
     avc_poweron(clock);
     avc_canvas_init(wq);
-
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
+    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
     if(IS_MESON_M8M2_CPU){
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
     }else{
@@ -2442,10 +2487,19 @@ static int encode_monitor_thread(void *data)
 static int encode_start_monitor(void)
 {
     int ret =0;
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
-    if(IS_MESON_M8M2_CPU)
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
+    clock_level = 3;
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+    if(IS_MESON_M8M2_CPU){
         clock_level = 3;
+    }else{
+        clock_level = 1;
+    }
+#else
+    clock_level = 1;
 #endif
+
     encode_debug_level(LOG_LEVEL_DEBUG, "encode start monitor.\n");
     encode_manager.process_queue_state=ENCODE_PROCESS_QUEUE_START;
     encode_manager.encode_thread=kthread_run(encode_monitor_thread,&encode_manager,"encode_monitor");

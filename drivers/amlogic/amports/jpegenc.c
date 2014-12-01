@@ -1315,14 +1315,14 @@ s32 jpegenc_loadmc(const u32 *p)
 
 
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
 #define  DMC_SEC_PORT8_RANGE0  0x840
 #define  DMC_SEC_CTRL  0x829
 #endif
 
 static void enable_hcoder_ddr_access(void)
 {
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TV
+#if MESON_CPU_TYPE < MESON_CPU_TYPE_MESON8
     WRITE_SEC_REG(DMC_SEC_PORT8_RANGE0 , 0xffff);
     WRITE_SEC_REG(DMC_SEC_CTRL , 0x80000000);
 #endif
@@ -1428,11 +1428,18 @@ static s32 jpegenc_init(void)
     int r;   
     jpegenc_poweron();
     jpegenc_canvas_init();
-
-    if(IS_MESON_M8M2_CPU)
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV
+    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
+#elif MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8
+    if(IS_MESON_M8M2_CPU){
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x32);
-    else
+    }else{
         WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
+    }
+#else
+    WRITE_HREG(HCODEC_ASSIST_MMC_CTRL1,0x2);
+#endif
+
     debug_level(1,"start to load microcode\n");
     if (jpegenc_loadmc(jpeg_encoder_mc) < 0) {
         //amvdec_disable();
