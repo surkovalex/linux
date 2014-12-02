@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-11-20a";//modify vscale skip for g9tv
+static char version_s[] = "2014-12-1a";//modify for old pulldown
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -4745,7 +4745,9 @@ static void get_vscale_skip_count(unsigned par)
 }
 
 #define get_vpp_reg_update_flag(par) ((par>>16)&0x1)
-
+static unsigned int post_blend = 0;
+module_param(post_blend,uint,0664);
+MODULE_PARM_DESC(post_blend,"/n show blend mode/n");
 static int de_post_process(void* arg, unsigned zoom_start_x_lines,
      unsigned zoom_end_x_lines, unsigned zoom_start_y_lines, unsigned zoom_end_y_lines, vframe_t* disp_vf)
 {
@@ -4840,9 +4842,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
              di_post_stru.next_canvas_id = 1;
         }
 #endif
-		
+	post_blend = di_buf->pulldown_mode;
 	switch(di_buf->pulldown_mode){
-	    case PULL_DONW_BLEND_0:
+	    case PULL_DOWN_BLEND_0:
 	    case PULL_DOWN_NORMAL:
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
 		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
@@ -4854,7 +4856,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		break;
 	    case PULL_DOWN_BLEND_2:
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
-		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
+		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[2], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
 		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
 		#ifdef NEW_DI_V3
@@ -4863,9 +4865,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		break;
 	    case PULL_DOWN_MTN:
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
-		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
+		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[0], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
-		config_canvas_idx(di_buf->di_buf_dup_p[0], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
+		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
 		break;
 	    case PULL_DOWN_BUF1://wave with buf1
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
@@ -4882,7 +4884,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
      	di_post_stru.next_canvas_id = di_post_stru.canvas_id?0:1;
 #endif
 	switch(di_buf->pulldown_mode){
-	    case PULL_DONW_BLEND_0:
+	    case PULL_DOWN_BLEND_0:
 	    case PULL_DOWN_NORMAL:
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
@@ -4891,7 +4893,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		#ifdef NEW_DI_V3
 		di_post_stru.di_mcvecrd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mcvec_canvas_idx;
 		#endif
-		post_blend_mode = 3;
+		post_blend_mode = di_buf->pulldown_mode==PULL_DOWN_NORMAL?3:1;
 		blend_mtn_en = 1;
 		ei_en = 1;
 		post_blend_en = 1;
@@ -4899,12 +4901,12 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    case PULL_DOWN_BLEND_2:
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[2]->nr_canvas_idx;
-		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
-		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
 		#ifdef NEW_DI_V3
 		di_post_stru.di_mcvecrd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mcvec_canvas_idx;
 		#endif
-		post_blend_mode = 3;
+		post_blend_mode = 1;
 		blend_mtn_en = 1;
 		ei_en = 1;
 		post_blend_en = 1;
@@ -4912,8 +4914,8 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    case PULL_DOWN_MTN:
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
-		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
-		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[0]->mtn_canvas_idx;
+		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
 		post_blend_mode = 0;
 		blend_mtn_en = 1;
 		ei_en = 1;
@@ -4939,7 +4941,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    default:
 		break;
 	}
-	di_print("post_blend_mode %d\n", post_blend_mode);
+
 #ifdef NEW_DI_V1
     if(get_new_mode_flag() == 1){
         blend_ctrl |= (1<<31);
@@ -5444,7 +5446,7 @@ static int pulldown_process(di_buf_t* di_buf, int buffer_count)
         di_print("\n");
     }
 
-    di_buf->pulldown_mode = PULL_DOWN_NORMAL;
+    di_buf->pulldown_mode = -1;
     if(pulldown_detect){
         if(pulldown_detect&0x1){
             di_buf->pulldown_mode = di_buf->di_buf_dup_p[1]->pulldown_mode; //used by de_post_process
@@ -5527,7 +5529,7 @@ static int pulldown_process(di_buf_t* di_buf, int buffer_count)
                 }
             }
             if(ii<5){
-                di_buf->pulldown_mode = PULL_DOWN_NORMAL;
+                di_buf->pulldown_mode = -1;
                 if(mode==1){
                //     printk("Deinterlace pulldown %s, win%d pd field_diff_num %08x/%08x is too big\n",
                //         (pulldown_type==0)?"2:2":"3:2", ii, pd_win_prop[ii].pixels_num,
@@ -5573,7 +5575,7 @@ static int pulldown_process(di_buf_t* di_buf, int buffer_count)
         }
 #if defined(NEW_DI_TV)
        if(di_buf->vframe->source_type == VFRAME_SOURCE_TYPE_TUNER)                      {
-                 di_buf->pulldown_mode = PULL_DOWN_NORMAL;
+                 di_buf->pulldown_mode = -1;
                  //printk("2:2 ignore\n");
         }
 #endif
@@ -5630,7 +5632,11 @@ static void force_bob_vframe(di_buf_t* di_buf)
     di_unlock_irqfiq_restore(irq_flag2, fiq_flag);
 }
 #endif
+#ifdef NEW_DI_TV
 static int blend_mode = -2;
+#else
+static int blend_mode = 5;
+#endif
 module_param(blend_mode,int,0664);
 MODULE_PARM_DESC(blend_mode,"\n force post blend mode \n");
 static int process_post_vframe(void)
@@ -5737,10 +5743,11 @@ static int process_post_vframe(void)
                 else{
                     if(di_buf->di_buf_dup_p[1]->post_proc_flag == 2){
                         reset_pulldown_state();
-                        di_buf->pulldown_mode = 1; /* blend with di_buf->di_buf_dup_p[2] */
+                        di_buf->pulldown_mode = PULL_DOWN_BLEND_2; /* blend with di_buf->di_buf_dup_p[2] */
                     }
-                    else{
-                        pulldown_mode_hise = pulldown_process(di_buf, buffer_keep_count);
+                    else{ 
+                    	if(blend_mode == -2)
+                            pulldown_mode_hise = pulldown_process(di_buf, buffer_keep_count);
                     }
 #ifdef FORCE_BOB_SUPPORT
         /*added for hisense*/
@@ -5773,14 +5780,13 @@ static int process_post_vframe(void)
                             di_buf->vframe->process_fun = NULL;
                             di_buf->process_fun_index = PROCESS_FUN_NULL;
                         }
-                        /*
-                        else if(di_buf->pulldown_mode >= 0){
-                            di_buf->vframe->process_fun = de_post_process;
-                            di_buf->process_fun_index = PROCESS_FUN_DI;
-                            inc_post_ref_count(di_buf);
-                        }
-                        */
                         else{
+                       	    if(di_buf->pulldown_mode == -1)
+                         	di_buf->pulldown_mode = PULL_DOWN_NORMAL;
+                            else if(di_buf->pulldown_mode == 0)
+                        	di_buf->pulldown_mode = PULL_DOWN_BLEND_0;
+                            else if(di_buf->pulldown_mode == 1)
+                        	di_buf->pulldown_mode = PULL_DOWN_BLEND_2;
                		    /*for debug*/
                             if(blend_mode != -2)				
                                 di_buf->pulldown_mode = blend_mode;

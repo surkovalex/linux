@@ -147,7 +147,7 @@ typedef enum {
 }process_fun_index_t;
 
 typedef enum {
-    PULL_DONW_BLEND_0 = 0,//buf1=dup[0]
+    PULL_DOWN_BLEND_0 = 0,//buf1=dup[0]
     PULL_DOWN_BLEND_2 = 1,//buf1=dup[2]
     PULL_DOWN_MTN     = 2,//mtn only
     PULL_DOWN_BUF1    = 3,//do wave with dup[0]
