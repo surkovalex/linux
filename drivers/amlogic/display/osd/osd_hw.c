@@ -775,11 +775,13 @@ int osd_set_scan_mode(int index)
 		}
 	}
 
-	if(osd_hw.free_scale_enable[OSD1] || osd_hw.free_scale_enable[OSD2]){
+	if(osd_hw.free_scale_enable[index]){
 		osd_hw.scan_mode = SCAN_MODE_PROGRESSIVE;
 	}
-
-	data32 = (aml_read_reg32(P_VIU_OSD1_BLK0_CFG_W0)&3)>>1;
+	if(index == OSD2)
+		data32 = (aml_read_reg32(P_VIU_OSD2_BLK0_CFG_W0)&3)>>1;
+	else
+		data32 = (aml_read_reg32(P_VIU_OSD1_BLK0_CFG_W0)&3)>>1;
 	if( data32 == osd_hw.scan_mode){
 		return 1;
 	}else{
