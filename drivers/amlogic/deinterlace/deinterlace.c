@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-12-1a";//modify for old pulldown
+static char version_s[] = "2014-12-2a";//remove pd patch coded by wf
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -5750,13 +5750,6 @@ static int process_post_vframe(void)
                             pulldown_mode_hise = pulldown_process(di_buf, buffer_keep_count);
                     }
 #ifdef FORCE_BOB_SUPPORT
-        /*added for hisense*/
-                    if(pd_enable){
-                        if(pulldown_mode_hise == 2)
-                            force_bob_flag = 1;
-                        else
-                            force_bob_flag = 0;
-                    }
                     if(force_bob_flag!=0){
                         force_bob_vframe(di_buf);
                         frame_count++;
