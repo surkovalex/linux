@@ -72,6 +72,7 @@ static void hdmitx_dump_tvenc_reg(int cur_VIC, int printk_flag);
 
 static void hdmi_phy_suspend(void);
 static void hdmi_phy_wakeup(hdmitx_dev_t* hdmitx_device);
+extern const vinfo_t *get_current_vinfo(void);
 
 unsigned char hdmi_pll_mode = 0; /* 1, use external clk as hdmi pll source */
 static unsigned char aud_para = 0x49;
@@ -1976,7 +1977,6 @@ static void hdmitx_config_tvenc_reg(int vic, unsigned reg, unsigned val)
 //		special vmode has same hdmi vic with normal mode, such as 1080p59hz - 1080p60hz
 //	so pll should not only be set according hdmi vic.
 //
-extern const vinfo_t *get_current_vinfo(void);
 static int hdmitx_set_pll_fr_auto(void)
 {
 	int ret = 0;
@@ -2407,8 +2407,11 @@ static Cts_conf_tab cts_table_192k[] = {
     {24576,  54000,  54000},
     {24576, 108000, 108000},
     {24576,  74250,  74250},
+    {46592,  74250 * 1000 / 1001, 140625},
     {24576, 148500, 148500},
+    {23296, 148500 * 1000 / 1001, 140625},
     {24576, 297000, 247500},
+    {23296, 297000 * 1000 / 1001, 281250},
 };
 
 static unsigned int get_cts(unsigned int clk)
@@ -2418,6 +2421,18 @@ static unsigned int get_cts(unsigned int clk)
     for(i = 0; i < ARRAY_SIZE(cts_table_192k); i++) {
         if(clk == cts_table_192k[i].tmds_clk)
             return cts_table_192k[i].fixed_cts;
+    }
+
+    return 0;
+}
+
+static unsigned int get_n(unsigned int clk)
+{
+    int i;
+
+    for(i = 0; i < ARRAY_SIZE(cts_table_192k); i++) {
+        if(clk == cts_table_192k[i].tmds_clk)
+            return cts_table_192k[i].fixed_n;
     }
 
     return 0;
@@ -2454,21 +2469,54 @@ static Vic_attr_map vic_attr_map_table[] = {
     {HDMI_4k2k_smpte_24,    297000},
 };
 
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+
+const static char *fr_auto_mode[] = {
+    "480p59hz",
+    "720p59hz",
+    "1080i59hz",
+    "1080p59hz",
+    "1080p23hz",
+    "4k2k29hz",
+    "4k2k23hz",
+};
+
+static int hdmitx_is_framerate_automation(void)
+{
+    int i;
+    const vinfo_t *vinfo = get_current_vinfo();
+    for(i = 0; i < ARRAY_SIZE(fr_auto_mode); i ++) {
+        if(strncmp(vinfo->name, fr_auto_mode[i], strlen(fr_auto_mode[i])) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+#endif
+
 static unsigned int vic_map_clk(HDMI_Video_Codes_t vic)
 {
     int i;
-
     for(i = 0; i < ARRAY_SIZE(vic_attr_map_table); i++) {
         if(vic == vic_attr_map_table[i].VIC)
+#ifndef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
             return vic_attr_map_table[i].tmds_clk;
+#else
+        {
+            if(hdmitx_is_framerate_automation())
+                return ((vic_attr_map_table[i].tmds_clk) * 1000 / 1001);
+            else
+                return vic_attr_map_table[i].tmds_clk;
+        }
+#endif
     }
-
     return 0;
 }
 
 static void hdmitx_set_aud_cts(audio_type_t type, Hdmi_tx_audio_cts_t cts_mode, HDMI_Video_Codes_t vic)
 {
     unsigned int cts_val = 0;
+    unsigned int n_val = 0;
 
     switch(type) {
     case CT_MAT:
@@ -2476,8 +2524,12 @@ static void hdmitx_set_aud_cts(audio_type_t type, Hdmi_tx_audio_cts_t cts_mode, 
             unsigned int clk = vic_map_clk(vic);
             if(clk) {
                 cts_val = get_cts(clk);
+                n_val = get_n(clk);
+                printk("get cts = %d   get n = %d\n", cts_val, n_val);
                 if(!cts_val)
                     hdmi_print(ERR, AUD "not find cts\n");
+                if(!n_val)
+                    hdmi_print(ERR, AUD "not find n\n");
             }
             else {
                 hdmi_print(ERR, AUD "not find tmds clk\n");
@@ -2499,6 +2551,9 @@ static void hdmitx_set_aud_cts(audio_type_t type, Hdmi_tx_audio_cts_t cts_mode, 
         hdmi_wr_reg(TX_SYS0_ACR_CTS_1, (cts_val >> 8) & 0xff);
         hdmi_wr_reg(TX_SYS0_ACR_CTS_2, ((cts_val >> 16) & 0xff) | (1 << 4));
         hdmi_print(IMP, AUD "type: %d  CTS Mode: %d  VIC: %d  CTS: %d\n", type, cts_mode, vic, cts_val);
+        hdmi_wr_reg(TX_SYS1_ACR_N_0, (n_val&0xff)); // N[7:0]
+        hdmi_wr_reg(TX_SYS1_ACR_N_1, (n_val>>8)&0xff); // N[15:8]
+        hdmi_set_reg_bits(TX_SYS1_ACR_N_2, ((n_val >> 16)&0xf), 0, 4);
     }
 }
 
