@@ -221,15 +221,26 @@ INT32 ffsMountVol(struct super_block *sb, INT32 drv)
 		return FFS_FORMATERR;
 	}
 
+	if(strncmp(p_pbr->oem_name,"EXFAT",5)!=0)
+	{
+		brelse(tmp_bh);
+		bdev_close(sb);
+		return FFS_FORMATERR;
+	}
+	
 	for (i = 0; i < 53; i++)
 		if (p_pbr->bpb[i])
 			break;
 
 	if (i < 53) {
-		if (GET16(p_pbr->bpb+11))
+		/*if (GET16(p_pbr->bpb+11))
 			ret = fat16_mount(sb, p_pbr);
 		else
-			ret = fat32_mount(sb, p_pbr);
+			ret = fat32_mount(sb, p_pbr);*/
+		printk("[EXFAT] not  exfat\n");
+		brelse(tmp_bh);
+		bdev_close(sb);
+		return FFS_FORMATERR;
 	} else {
 		ret = exfat_mount(sb, p_pbr);
 	}
