@@ -209,7 +209,7 @@ static unsigned int super_scaler = 1;
 module_param(super_scaler,uint,0664);
 MODULE_PARM_DESC(super_scaler, "\n super_scaler  \n");
 
-static unsigned int scaler_path_sel = 0;
+static unsigned int scaler_path_sel = 1;
 module_param(scaler_path_sel,uint,0664);
 MODULE_PARM_DESC(scaler_path_sel, "\n scaler_path_sel  \n");
 
@@ -542,17 +542,26 @@ RESTART:
              video_height = osd_layer_height;
         }
     } else {
-        video_top = video_layer_top;
-        video_left = video_layer_left;
-        video_width = video_layer_width;
-        video_height = video_layer_height;
-
+        #ifdef SUPER_SCALER_OPEN
+    	if(next_frame_par->supscl_path){
+            video_top = (video_layer_top>>next_frame_par->supsc1_vert_ratio);
+            video_height = (video_layer_height>>next_frame_par->supsc1_vert_ratio);
+            video_left = (video_layer_left>>next_frame_par->supsc1_hori_ratio);
+            video_width = (video_layer_width>>next_frame_par->supsc1_hori_ratio);
+        }else
+        #endif
+        {
+            video_top = video_layer_top;
+            video_left = video_layer_left;
+            video_width = video_layer_width;
+            video_height = video_layer_height;
+        }
         if ((video_top == 0) && (video_left == 0) && (video_width <= 1) && (video_height <= 1)) {
             /* special case to do full screen display */
             video_width = width_out;
             video_height = height_out;
         } else {
-        	  if ((video_layer_width < 16) && (video_layer_height < 16)) {
+            if ((video_layer_width < 16) && (video_layer_height < 16)) {
                 /* sanity check to move video out when the target size is too small */
                 video_width = width_out;
                 video_height = height_out;
@@ -1432,6 +1441,13 @@ vpp_set_filters(u32 process_3d_type,u32 wide_mode,
                  	vpp_flags,
                  	next_frame_par,vf);
     }else{
+    	next_frame_par->supsc0_enable = 0;
+	next_frame_par->supsc0_hori_ratio = 0;
+	next_frame_par->supsc0_vert_ratio = 0;
+
+	next_frame_par->supsc1_enable = 0;
+	next_frame_par->supsc1_hori_ratio = 0;
+	next_frame_par->supsc1_vert_ratio = 0;
     	vpp_set_super_sclaer_regs(0,0,0,0,0,0,0,0,0,0,0);//disable super scaler
     	vpp_set_filters2(src_width, src_height, vinfo->width, vinfo->height, vinfo, vpp_flags, next_frame_par, vf);
     }
