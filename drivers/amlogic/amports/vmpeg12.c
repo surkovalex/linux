@@ -148,6 +148,8 @@ static const u32 frame_rate_tab[16] = {
 };
 
 static struct vframe_s vfpool[VF_POOL_SIZE];
+static struct vframe_s vfpool2[VF_POOL_SIZE];
+static int cur_pool_idx = 0;
 static s32 vfbuf_use[DECODE_BUFFER_NUM_MAX];
 static u32 dec_control = 0;
 static u32 frame_width, frame_height, frame_dur, frame_prog;
@@ -165,6 +167,17 @@ static s32 frame_force_skip_flag = 0;
 static s32 error_frame_skip_level = 0;
 static s32 wait_buffer_counter = 0;
 static u32 first_i_frame_ready = 0;
+
+static inline int pool_index(vframe_t *vf)
+{
+    if ((vf >= &vfpool[0]) && (vf <= &vfpool[VF_POOL_SIZE-1])) {
+        return 0;
+    } else if ((vf >= &vfpool[1]) && (vf <= &vfpool2[VF_POOL_SIZE-1])) {
+        return 1;
+    } else {
+        return -1;
+    }
+}
 
 static inline u32 index2canvas(u32 index)
 {
@@ -476,7 +489,9 @@ static vframe_t *vmpeg_vf_get(void* op_arg)
 
 static void vmpeg_vf_put(vframe_t *vf, void* op_arg)
 {
-    kfifo_put(&recycle_q, (const vframe_t **)&vf);
+    if (pool_index(vf) == cur_pool_idx) {
+        kfifo_put(&recycle_q, (const vframe_t **)&vf);
+    }
 }
 
 static int vmpeg_event_cb(int type, void *data, void *private_data)
@@ -582,7 +597,9 @@ static void vmpeg_put_timer_func(unsigned long arg)
                 vf->index = -1;
             }
 
-            kfifo_put(&newframe_q, (const vframe_t **)&vf);
+            if (pool_index(vf) == cur_pool_idx) {
+                kfifo_put(&newframe_q, (const vframe_t **)&vf);
+            }
         }
     }
 
@@ -772,8 +789,10 @@ static void vmpeg12_local_init(void)
     INIT_KFIFO(recycle_q);
     INIT_KFIFO(newframe_q);
 
+    cur_pool_idx ^= 1;
+
     for (i=0; i<VF_POOL_SIZE; i++) {
-        const vframe_t *vf = &vfpool[i];
+        const vframe_t *vf = (cur_pool_idx == 0) ? &vfpool[i] : &vfpool2[i];
         vfpool[i].index = -1;
         kfifo_put(&newframe_q, &vf);
     }
