@@ -39,7 +39,11 @@
 // 3: Updated in 3D mode
 unsigned long flags;
 #if (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESONG9TV)
-#define NEW_DNLP_IN_SHARPNESS
+#define NEW_DNLP_IN_SHARPNESS 2
+#define NEW_DNLP_IN_VPP 1
+unsigned int dnlp_sel = NEW_DNLP_IN_VPP;
+module_param(dnlp_sel, int, 0664);
+MODULE_PARM_DESC(dnlp_sel, "dnlp_sel");
 #endif
 struct ve_hist_s video_ve_hist;
 
@@ -591,6 +595,7 @@ static void ve_dnlp_calculate_reg(void)
 static void ve_dnlp_load_reg(void)
 {
 #ifdef NEW_DNLP_IN_SHARPNESS
+	if(dnlp_sel == NEW_DNLP_IN_SHARPNESS){
 	WRITE_VPP_REG(DNLP_00, ve_dnlp_reg[0]);
 	WRITE_VPP_REG(DNLP_01, ve_dnlp_reg[1]);
 	WRITE_VPP_REG(DNLP_02, ve_dnlp_reg[2]);
@@ -607,7 +612,9 @@ static void ve_dnlp_load_reg(void)
 	WRITE_VPP_REG(DNLP_13, ve_dnlp_reg[13]);
 	WRITE_VPP_REG(DNLP_14, ve_dnlp_reg[14]);
 	WRITE_VPP_REG(DNLP_15, ve_dnlp_reg[15]);
-#else
+	}else
+#endif
+	{
 	WRITE_VPP_REG(VPP_DNLP_CTRL_00, ve_dnlp_reg[0]);
 	WRITE_VPP_REG(VPP_DNLP_CTRL_01, ve_dnlp_reg[1]);
 	WRITE_VPP_REG(VPP_DNLP_CTRL_02, ve_dnlp_reg[2]);
@@ -624,7 +631,7 @@ static void ve_dnlp_load_reg(void)
 	WRITE_VPP_REG(VPP_DNLP_CTRL_13, ve_dnlp_reg[13]);
 	WRITE_VPP_REG(VPP_DNLP_CTRL_14, ve_dnlp_reg[14]);
 	WRITE_VPP_REG(VPP_DNLP_CTRL_15, ve_dnlp_reg[15]);
-#endif
+	}
 }
 
 void ve_on_vs(vframe_t *vf)
@@ -717,20 +724,26 @@ void ve_enable_dnlp(void)
 {
 	ve_en = 1;
 #ifdef NEW_DNLP_IN_SHARPNESS
+	if(dnlp_sel == NEW_DNLP_IN_SHARPNESS){
 	WRITE_VPP_REG_BITS(DNLP_EN, 1, 0, 1);
-#else
-	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
+	}else
 #endif
+	{
+	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
+	}
 }
 
 void ve_disable_dnlp(void)
 {
 	ve_en = 0;
 #ifdef NEW_DNLP_IN_SHARPNESS
+	if(dnlp_sel == NEW_DNLP_IN_SHARPNESS){
 	WRITE_VPP_REG_BITS(DNLP_EN, 0, 0, 1);
-#else
-	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
+	}else
 #endif
+	{
+	WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
+	}
 }
 
 void ve_set_dnlp(struct ve_dnlp_s *p)
@@ -755,21 +768,12 @@ void ve_set_dnlp(struct ve_dnlp_s *p)
 		ve_dnlp_calculate_reg();
 		// load dnlp reg data
 		ve_dnlp_load_reg();
-#ifdef NEW_DNLP_IN_SHARPNESS
 		// enable dnlp
-		WRITE_VPP_REG_BITS(DNLP_EN, 1, 0, 1);
+		ve_enable_dnlp();
 	}else{
 		// disable dnlp
-		WRITE_VPP_REG_BITS(DNLP_EN, 0, 0, 1);
+		ve_disable_dnlp();
 	}
-#else
-	// enable dnlp
-		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
-	}else{
-		// disable dnlp
-		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
-	}
-#endif
 }
 
 void ve_set_dnlp_2(void)
@@ -820,21 +824,12 @@ void ve_set_new_dnlp(struct ve_dnlp_table_s *p)
 		ve_dnlp_calculate_reg();
 		// load dnlp reg data
 		ve_dnlp_load_reg();
-#ifdef NEW_DNLP_IN_SHARPNESS
 		// enable dnlp
-		WRITE_VPP_REG_BITS(DNLP_EN, 1, 0, 1);
+		ve_enable_dnlp();
 	}else{
 		// disable dnlp
-		WRITE_VPP_REG_BITS(DNLP_EN, 0, 0, 1);
+		ve_disable_dnlp();
 	}
-#else
-		// enable dnlp
-		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 1, DNLP_EN_BIT, DNLP_EN_WID);
-	}else{
-		// disable dnlp
-		WRITE_VPP_REG_BITS(VPP_VE_ENABLE_CTRL, 0, DNLP_EN_BIT, DNLP_EN_WID);
-	}
-#endif
 }
 
 unsigned int ve_get_vs_cnt(void)
