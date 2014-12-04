@@ -561,8 +561,8 @@ void switch_lcd_mod_gate(int flag)
 {
 	unsigned long flags;
 
-	spin_lock_irqsave(&gate_lock, flags);
 	PRINT_INFO("turn %s lcd module\n", flag?"on":"off");
+	spin_lock_irqsave(&gate_lock, flags);
 	if (flag) {
 		//__CLK_GATE_ON(VCLK2_ENCL);
 		__CLK_GATE_ON(VCLK2_VENCL);
