@@ -465,7 +465,10 @@ void sii5293_start_vdin(sii5293_vdin *info, int width, int height, int frame_rat
 		}
 		else{
 			if(info->vdin_info.cur_width == 1920 &&  info->vdin_info.cur_height == 1080){
-				para.fmt = TVIN_SIG_FMT_HDMI_1920X1080P_60HZ;
+				if( info->vdin_info.cur_frame_rate == 60 )
+					para.fmt = TVIN_SIG_FMT_HDMI_1920X1080P_60HZ;
+				else if( info->vdin_info.cur_frame_rate == 30 )
+					para.fmt = TVIN_SIG_FMT_MAX;//TVIN_SIG_FMT_HDMI_1920X1080P_30HZ;
 			}
 			else if(info->vdin_info.cur_width == 1280 &&  info->vdin_info.cur_height == 720){
 				para.fmt = TVIN_SIG_FMT_HDMI_1280X720P_60HZ;

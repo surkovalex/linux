@@ -1482,6 +1482,7 @@ typedef enum
 	CEA_576I50	= 21,
 
 	CEA_1080P50	= 31,
+	CEA_1080P30 = 34,
 
 	CEA_MAX = 60
 }SII5293_VIDEO_MODE;
@@ -1564,6 +1565,7 @@ unsigned int sii5293_get_output_mode(void)
 	{
 		case 11:		mode = CEA_1080P60;		break;
 		case 24:		mode = CEA_1080P50;		break;
+		case 27:		mode = CEA_1080P30;		break;
 		case  3:		mode = CEA_1080I60;		break;
 		case 14:		mode = CEA_1080I50;		break;
 		case  2:		mode = CEA_720P60;		break;
@@ -1623,7 +1625,11 @@ static void sii5293_start_vdin_mode(unsigned int mode)
 		case CEA_1080P50:
 			width = 1920;	height = 1080;	frame_rate = 50;	field_flag = 0;		
 			break;
-		
+
+		case CEA_1080P30:
+			width = 1920;	height = 1080;	frame_rate = 30;	field_flag = 0;
+			break;
+
 		default:
 			printk("[%s], invalid video mode!\n",__FUNCTION__);
 			return ;
@@ -1971,6 +1977,7 @@ static ssize_t sii5293_input_mode_show(struct class *class, struct class_attribu
 		case CEA_1080I50:	strcpy(mode_str, "1080i50hz");	break;
 		case CEA_1080P60:	strcpy(mode_str, "1080p");		break;
 		case CEA_1080P50:	strcpy(mode_str, "1080p50hz");	break;
+		case CEA_1080P30:	strcpy(mode_str, "1080p30hz");	break;
 		default:			strcpy(mode_str, "invalid");	break;
 	}
 
