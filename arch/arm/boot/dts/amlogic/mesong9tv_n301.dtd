@@ -696,8 +696,29 @@
 			9: 637.5M	10: 696M	*/
 		};
 
+// ****************************************************************************
+/// -   DISP&MM-LVDS
+//$$ MODULE = "DISP&MM-LVDS"
+//$$ DEVICE = "mesonfb"
+//$$ L2 PROP_STR = "status"
+	lvds {
+		compatible = "amlogic,lvds";
+		status = "okay";
+		basic_setting = <1920 1080 2200 1125 16 9 127 203 2 8>; /**  hactive,vactive,hperiod,vperiod,hstart,vstart, */
+		/**  hratio,vratio,screen_width,screen_height,lvd_type,lcd bit */
+		delay_setting = <500 50 20 20 50 0 0 200>;  /** CLK ON/OFF,PWM ON/OFF,PANEL_PWR ON/OFF,BL ON/OFF delay */
+	};
 
-
+	backlight{
+		compatible = "amlogic,backlight";
+		dev_name = "backlight";
+		status = "okay";
+//		power_pin = "GPIOX_2";
+		pwm_hz = <160>;   /* Hz */
+//		pinctrl-names = "pwm_a","pwm_vs";
+//		pinctrl-0 = <&lcd_bl_pwm_a_pins>;	/* pwma pinmux */
+//		pinctrl-1 = <&lcd_bl_pwm_vs_pins>;	/* pwm_vs pinmux */
+	};
 
 /// ****************************************************************************
 /// -   DISP&MM-FB

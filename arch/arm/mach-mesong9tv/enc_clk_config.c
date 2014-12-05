@@ -225,7 +225,6 @@ static void set_hpll_od3(unsigned div)
 // wire    [1:0]   clk_sel         = control[17:16];
 // wire            set_preset      = control[15];
 // wire    [14:0]  shift_preset    = control[14:0];
-extern void clocks_set_vid_clk_div(int div_sel);
 void clocks_set_vid_clk_div(int div_sel)
 {
     int shift_val = 0;
@@ -463,4 +462,109 @@ void set_vmode_clk(vmode_t mode)
     set_encl_div(p_enc[j].encl_div);
     set_vdac0_div(p_enc[j].vdac0_div);
 }
- 
+
+
+
+static int sHDMI_DPLL_DATA[][3] = {
+	//frequency(M)    HHI_HDMI_PLL_CNTL   HHI_HDMI_PLL_CNTL2: (bit18: OD1 is 1)
+	{   399.840,         0x60000663,         0x00520f5b},
+	{   378.000,         0x6000023e,         0x00920fff},
+	{  2079.000,         0x60000681,         0x00110eff},
+	{   810.000,         0x60000886,         0x00120fff},
+	{  1080.000,         0x6000022c,         0x00120fff},
+	{  2227.500,         0x6000068b,         0x00110380},
+	{  4455.000,         0x6000068b,         0x00100380},
+	{  2970.000,         0x6000023d,         0x00110dff},
+	{  5940.000,         0x6000023d,         0x00100dff},
+	{   540.000,         0x6000022c,         0x00520fff},
+	{   576.000,         0x6000022f,         0x00520fff},
+	{   594.000,         0x60000462,         0x00520fff},
+	{  1188.000,         0x60000462,         0x00120fff},
+	{   742.500,         0x6000023d,         0x00520dff},
+	{  1485.000,         0x6000023d,         0x00120dff},
+	{   928.125,         0x60000674,         0x00120040},
+	{  1856.250,         0x60000674,         0x00110040},
+	{  1039.500,         0x60000681,         0x00120eff},
+	{  2702.002,         0x60000470,         0x00110955},
+	{   337.500,         0x600008e0,         0x00920fff},
+	{   270.000,         0x6000022c,         0x00920fff},
+	{        0,                   0,                  0}
+};
+
+int set_hdmi_dpll(int freq, int od1)
+{
+	int i;
+	i=0;
+	while(sHDMI_DPLL_DATA[i][0]!=0) {
+		if(sHDMI_DPLL_DATA[i][0] == freq)
+			break;
+		i++;
+	}
+
+	if(sHDMI_DPLL_DATA[i][0]==0)
+		return 1;
+	else {
+		aml_write_reg32(P_HHI_HDMI_PLL_CNTL, sHDMI_DPLL_DATA[i][1]);
+		aml_write_reg32(P_HHI_HDMI_PLL_CNTL2,sHDMI_DPLL_DATA[i][2]);
+		aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2,od1,18,2);
+	}
+
+	printk("Wait 10us for phy_clk stable!\n");
+	// delay 10uS to wait clock is stable
+	udelay(10);
+
+	return 0;
+}
+
+void set_crt_video_enc (int vIdx, int inSel, int DivN)
+{
+	if(vIdx==0) //V1
+	{
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 0, 19, 1); //[19] -disable clk_div0
+
+		//delay 2uS
+		udelay(2);
+
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, inSel,   16, 3); // [18:16] - cntl_clk_in_sel
+		aml_set_reg32_bits(P_HHI_VID_CLK_DIV, (DivN-1), 0, 8); // [7:0]   - cntl_xd0
+
+		// delay 5uS
+		udelay(5);
+
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 1, 19, 1); //[19] -enable clk_div0
+
+	} else { //V2
+		aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL, 0, 19, 1); //[19] -disable clk_div0
+
+		//delay 2uS
+		udelay(2);
+
+		aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL, inSel,  16, 3); // [18:16] - cntl_clk_in_sel
+		aml_set_reg32_bits(P_HHI_VIID_CLK_DIV, (DivN-1),0, 8); // [7:0]   - cntl_xd0
+
+		// delay 5uS
+		udelay(5);
+
+		aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL, 1, 19, 1); //[19] -enable clk_div0
+	}
+
+	//delay 5uS
+	udelay(5);
+}
+
+void enable_crt_video_encl(int enable, int inSel)
+{
+	aml_set_reg32_bits(P_HHI_VIID_CLK_DIV,inSel,  12, 4); //encl_clk_sel:hi_viid_clk_div[15:12]
+
+	if(inSel<=4) //V1
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL,1, inSel, 1);
+	else
+		aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL,1, (inSel-5),1);
+
+	aml_set_reg32_bits(P_HHI_VID_CLK_CNTL2,enable, 3, 1); //gclk_encl_clk:hi_vid_clk_cntl2[3]
+
+#ifndef NO_EDP_DSI
+	aml_set_reg32_bits(P_VPU_MISC_CTRL, 1, 0, 1);    // vencl_clk_en_force: vpu_misc_ctrl[0]
+#endif
+}
+
