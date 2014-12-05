@@ -816,7 +816,9 @@ static int _clk_set_rate_cpu(struct clk *clk, unsigned long cpu, unsigned long g
 			// when decreasing frequency, lpj has not yet been adjusted
 			udelay_scaled(10, oldcpu / 1000000, 24 /*clk_get_rate_xtal*/);
 		}
-		//set_sys_pll(clk->parent, cpu);
+
+		if (!IS_MESON_MG9TV_CPU_REVA)
+			set_sys_pll(clk->parent, cpu);
 
 		// Read CBUS for short delay, then CPU switch to sys pll
 		cpu_clk_cntl = aml_read_reg32(P_HHI_SYS_CPU_CLK_CNTL);
@@ -1800,6 +1802,7 @@ static int __init meson_clock_init(void)
 	class_register(&meson_freq_limit_class);
 #endif
 
+	if (IS_MESON_MG9TV_CPU_REVA) {
 	aml_write_reg32(P_PERIPHS_PIN_MUX_2, (aml_read_reg32(P_PERIPHS_PIN_MUX_2) &~(0X1<<22)));	
 	aml_write_reg32(P_PERIPHS_PIN_MUX_3, (aml_read_reg32(P_PERIPHS_PIN_MUX_3) &~(0X1<<19)));
 	aml_write_reg32(P_PREG_PAD_GPIO3_EN_N, (aml_read_reg32(P_PREG_PAD_GPIO3_EN_N) &~(0X1<<1)));
@@ -1807,6 +1810,7 @@ static int __init meson_clock_init(void)
 	aml_write_reg32(P_PERIPHS_PIN_MUX_3, (aml_read_reg32(P_PERIPHS_PIN_MUX_3) | (0x1 << 19)));	
 	aml_write_reg32(P_AO_RTI_PWR_CNTL_REG0,((aml_read_reg32(P_AO_RTI_PWR_CNTL_REG0)&~(0x1 << 8))|(0x2 << 10)));
 	aml_write_reg32(P_HHI_MPEG_CLK_CNTL, (aml_read_reg32(P_HHI_MPEG_CLK_CNTL) |(0x5<<12)|(0x1<<9)|(0x1<<8)|(0x1<<7)|(0x03)));
+	}
 
 	return 0;
 }

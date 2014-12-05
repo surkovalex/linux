@@ -419,7 +419,9 @@ static void aml_g9tv_pinmux_init(struct snd_soc_card *card)
     const char *str=NULL;
     int ret;
     p_aml_audio = snd_soc_card_get_drvdata(card);   
-    p_aml_audio->pin_ctl = devm_pinctrl_get_select(card->dev, "aml_snd_g9tv");
+
+    if (!IS_MESON_MG9TV_CPU_REVA)
+    	p_aml_audio->pin_ctl = devm_pinctrl_get_select(card->dev, "aml_snd_g9tv");
     
     p_audio = p_aml_audio;
     printk(KERN_INFO "audio external codec = %d\n",ext_codec);
