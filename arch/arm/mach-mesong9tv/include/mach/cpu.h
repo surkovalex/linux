@@ -41,4 +41,16 @@ extern void meson_set_cpu_ctrl_reg(int cpu,int is_on);
 extern void meson_set_cpu_ctrl_addr(uint32_t cpu, const uint32_t addr);
 extern void meson_set_cpu_power_ctrl(uint32_t cpu,int is_power_on);
 
+#define MESON_CPU_MINOR_ID_MG9TV_REVA		0xA
+#define MESON_CPU_MINOR_ID_MG9TV_REVB		0xB
+
+#define IS_MESON_MG9TV_CPU_REVA						\
+	(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MINOR) ==		\
+	 MESON_CPU_MINOR_ID_MG9TV_REVA)
+
+#define IS_MESON_MG9TV_CPU_REVB						\
+	(get_meson_cpu_version(MESON_CPU_VERSION_LVL_MINOR) ==		\
+	 MESON_CPU_MINOR_ID_MG9TV_REVB)
+
+
 #endif /* __MACH_MESONG9TV_CPU_H */
