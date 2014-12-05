@@ -1425,7 +1425,8 @@ static int pwr_type_match(struct device_node *np, const char *str, int idx, stru
     int i = 0;
     int ret = 0;
     int gpio_val;
-    struct pwr_ctl_var (*var)[HDMI_TX_PWR_CTRL_NUM] = (struct pwr_ctl_var (*)[HDMI_TX_PWR_CTRL_NUM])pwr;
+    //struct pwr_ctl_var (*var)[HDMI_TX_PWR_CTRL_NUM] = (struct pwr_ctl_var (*)[HDMI_TX_PWR_CTRL_NUM])pwr;
+    struct pwr_ctl_var *var = (struct pwr_ctl_var*)pwr;
 
     const static char *pwr_types_id[] = {"none", "cpu", "axp202", NULL};     //match with dts file
     while(pwr_types_id[i]) {
@@ -1435,28 +1436,31 @@ static int pwr_type_match(struct device_node *np, const char *str, int idx, stru
         }
         i ++;
     }
+
+	var += idx;
+
     switch(i) {
     case CPU_GPO:
-        var[idx]->type = CPU_GPO;
+        var->type = CPU_GPO;
         ret = of_property_read_string_index(np, pwr_col, 1, &str);
         if(!ret) {
             gpio_val = amlogic_gpio_name_map_num(str);
             ret = amlogic_gpio_request(gpio_val, DEVICE_NAME);
             if (!ret) {
-                var[idx]->var.gpo.pin = gpio_val;
+                var->var.gpo.pin = gpio_val;
                 ret = of_property_read_string_index(np, pwr_col, 2, &str);
                 if(!ret) {
-                    var[idx]->var.gpo.val = (strcmp(str, "H") == 0);
+                    var->var.gpo.val = (strcmp(str, "H") == 0);
                 }
             }
         }
         break;
     case AXP202:
-        var[idx]->type = AXP202;
+        var->type = AXP202;
 // TODO later
         break;
     default:
-        var[idx]->type = NONE;
+        var->type = NONE;
     };
     return ret;
 }
