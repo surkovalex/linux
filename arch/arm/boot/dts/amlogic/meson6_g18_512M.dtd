@@ -173,6 +173,22 @@ void root_func(){
 	};
 
 /// ***************************************************************************************
+///	-	vdac hardware switch
+//$$ MODULE = "vdac hardware switch"
+//$$ DEVICE = "vdacswitch"
+//$$ L2 PROP_STR = "hw-switch"
+    vdacswitch{
+        compatible = "amlogic,vdacswitch";
+        dev_name = "vdacswitch";
+        hw-switch = <&hw_switch>;
+        hw_switch: hw_switch{
+            vout_cvbs = "GPIOC_2", "H", "GPIOC_3", "H";
+            vout_ypbr = "GPIOC_2", "L", "GPIOC_3", "L";
+            vout_vga  = "GPIOC_2", "H", "GPIOC_3", "L";
+        };
+    };
+
+/// ***************************************************************************************
 ///	-	EARLY_INIT
 //$$ MODULE="early_init"
 //$$ DEVICE = "early_init"

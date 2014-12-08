@@ -1,6 +1,7 @@
 obj-y 	+=display.o
 display-objs=vout_notify.o  vout_serve.o
-display-objs-$(CONFIG_AM_LCD_OUTPUT)  += vdac_switch.o
+
+obj-$(CONFIG_AML_VDAC_HW_SWITCH)  += vdac_switch.o
 
 
 obj-$(CONFIG_AM_TV_OUTPUT)  += am_tvout.o
