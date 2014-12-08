@@ -54,7 +54,9 @@ static DEFINE_MUTEX(clock_ops_lock);
 #define SYS_PLL_TABLE_MIN		24000000
 #define SYS_PLL_TABLE_MAX		2112000000
 
-#define CPU_FREQ_LIMIT			1488000000
+#define CPU_FREQ_LIMIT			1200000000
+#define CPU_FREQ_LIMIT_REVA		1488000000
+
 
 struct sys_pll_s {
 	unsigned int freq;
@@ -982,11 +984,16 @@ static int clk_set_rate_a9(struct clk *clk, unsigned long rate)
 {
 	int ret;
 	unsigned long irq_flags;
+	unsigned int cpu_freq_limit = CPU_FREQ_LIMIT;
 
 	//printk("clk_set_rate_a9() clk: %d\n",rate);
 
-	if(rate > CPU_FREQ_LIMIT)
-		rate = CPU_FREQ_LIMIT;
+	if (IS_MESON_MG9TV_CPU_REVA) {
+		cpu_freq_limit = CPU_FREQ_LIMIT_REVA;
+	}
+
+	if(rate > cpu_freq_limit)
+		rate = cpu_freq_limit;
 
 	irq_flags = arch_local_irq_save();
 	preempt_disable();
@@ -1748,6 +1755,9 @@ static int __init meson_clock_init(void)
 		printk("Error: clk81 not be selected at fixed_pll.\n");
 	}
 
+	if (IS_MESON_MG9TV_CPU_REVA) {
+		setup_a9_clk_max = CPU_FREQ_LIMIT_REVA;
+	}
 	// Add CPU clock
 	CLK_DEFINE(a9_clk, pll_sys, -1, clk_set_rate_a9, clk_get_rate_a9, NULL, NULL, NULL);
 	clk_a9_clk.min = setup_a9_clk_min;
