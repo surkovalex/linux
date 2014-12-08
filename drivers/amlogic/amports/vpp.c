@@ -394,7 +394,7 @@ vpp_process_speed_check(s32 width_in,
     return SPEED_CHECK_DONE;
 #else
     /* return okay if vpp preblend enabled */
-    if (aml_read_reg32(P_VPP_MISC) & VPP_PREBLEND_EN) {
+    if ((aml_read_reg32(P_VPP_MISC) & VPP_PREBLEND_EN)&&(aml_read_reg32(P_VPP_MISC) & VPP_OSD1_PREBLEND)) {
         return SPEED_CHECK_DONE;
     }
 
