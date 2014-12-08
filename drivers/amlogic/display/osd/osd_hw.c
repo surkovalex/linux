@@ -2340,110 +2340,85 @@ static   void  osd2_update_color_mode(void)
 
 static void osd1_update_enable(void)
 {
-    if (osd_hw.free_scale_mode[OSD1]){
-        if (osd_hw.enable[OSD1] == ENABLE){
-            aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-            aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
-        }else{
-            aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-        }
-    }else{
-        u32  video_enable=0;
-        video_enable |=aml_read_reg32(P_VPP_MISC)&VPP_VD1_PREBLEND;
+	u32 video_enable = 0;
 
-        if(osd_hw.enable[OSD1]==ENABLE)
-        {
-            if(osd_hw.free_scale_enable[OSD1])
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_PREBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_PREBLEND_EN);
-            }
-            else
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_PREBLEND);
-                if(!video_enable)
-                {
-                    aml_clr_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
-                }
-                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-            }
-
-        }
-        else
-        {
-            if(osd_hw.free_scale_enable[OSD1])
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_PREBLEND);
-            }
-            else
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-            }
-        }
-    }
-    remove_from_update_list(OSD1,OSD_ENABLE);
+	if (osd_hw.free_scale_mode[OSD1]) {
+		if (osd_hw.enable[OSD1] == ENABLE) {
+			VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND | VPP_POSTBLEND_EN);
+			VSYNCOSD_SET_MPEG_REG_MASK(VIU_OSD1_CTRL_STAT, 1 << 21);
+		} else {
+			VSYNCOSD_CLR_MPEG_REG_MASK(VIU_OSD1_CTRL_STAT, 1 << 21);
+			VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD1_POSTBLEND);
+		}
+	} else {
+		video_enable |= VSYNCOSD_RD_MPEG_REG(VPP_MISC)&VPP_VD1_PREBLEND;
+		if (osd_hw.enable[OSD1] == ENABLE) {
+			if (osd_hw.free_scale_enable[OSD1]) {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_POSTBLEND);
+				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_PREBLEND | VPP_VD1_POSTBLEND | VPP_PREBLEND_EN);
+			} else {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_PREBLEND);
+				if (!video_enable) {
+					VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_VD1_POSTBLEND);
+				}
+				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_POSTBLEND);
+			}
+		} else {
+			if (osd_hw.free_scale_enable[OSD1]) {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_PREBLEND);
+			} else {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_POSTBLEND);
+			}
+		}
+	}
+	remove_from_update_list(OSD1,OSD_ENABLE);
 }
-static   void  osd2_update_enable(void)
-{
-    if (osd_hw.free_scale_mode[OSD2]){
-        //spin_lock_irqsave(&osd_onoff_lock, flags);
-        if (osd_hw.enable[OSD2] == ENABLE){
-            // osd1 and osd2 share the only one freescale, so set  VPP_OSD1_POSTBLEND here.
-            if(osd_hw.free_scale_enable[OSD2]){
-                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
-            }else{
-				#ifndef CONFIG_FB_OSD2_CURSOR
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND);
-				#endif
-                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_POSTBLEND_EN);
-            }
-        }else{
-            if (osd_hw.enable[OSD1] == ENABLE){
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
-            } else {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD1_POSTBLEND|VPP_OSD2_POSTBLEND);
-            }
-        }
-        //spin_unlock_irqrestore(&osd_onoff_lock, flags);
-    }else{
-        u32  video_enable=0;
-        video_enable |=aml_read_reg32(P_VPP_MISC)&VPP_VD1_PREBLEND;
-        if(osd_hw.enable[OSD2]==ENABLE)
-        {
-            if(osd_hw.free_scale_enable[OSD2])
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_PREBLEND);
-                aml_set_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
-            }
-            else
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_PREBLEND);
-                if(!video_enable)
-                {
-                    aml_clr_reg32_mask(P_VPP_MISC,VPP_VD1_POSTBLEND);
-                }
-                aml_set_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
-            }
 
-        }
-        else
-        {
-            if(osd_hw.free_scale_enable[OSD2])
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_PREBLEND);
-            }
-            else
-            {
-                aml_clr_reg32_mask(P_VPP_MISC,VPP_OSD2_POSTBLEND);
-            }
-        }
-    }
-    remove_from_update_list(OSD2,OSD_ENABLE);
+static void osd2_update_enable(void)
+{
+	u32 video_enable = 0;
+
+	if (osd_hw.free_scale_mode[OSD2]){
+		if (osd_hw.enable[OSD2] == ENABLE) {
+			if (osd_hw.free_scale_enable[OSD2]) {
+				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_POSTBLEND | VPP_POSTBLEND_EN);
+				VSYNCOSD_SET_MPEG_REG_MASK(VIU_OSD2_CTRL_STAT, 1 << 21);
+			} else {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VIU_OSD2_CTRL_STAT, 1 << 21);
+#ifndef CONFIG_FB_OSD2_CURSOR
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_POSTBLEND);
+#endif
+				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_POSTBLEND | VPP_POSTBLEND_EN);
+			}
+		} else {
+			if (osd_hw.enable[OSD1] == ENABLE){
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_POSTBLEND);
+			} else {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD1_POSTBLEND | VPP_OSD2_POSTBLEND);
+			}
+		}
+	} else {
+		video_enable |= VSYNCOSD_RD_MPEG_REG(VPP_MISC)&VPP_VD1_PREBLEND;
+		if(osd_hw.enable[OSD2]==ENABLE) {
+			if(osd_hw.free_scale_enable[OSD2]) {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_POSTBLEND);
+				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_PREBLEND | VPP_VD1_POSTBLEND);
+			} else {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_PREBLEND);
+				if (!video_enable) {
+					VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_VD1_POSTBLEND);
+				}
+				VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_POSTBLEND);
+			}
+		} else {
+			if (osd_hw.free_scale_enable[OSD2]) {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, VPP_OSD2_PREBLEND);
+			} else {
+				VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC,VPP_OSD2_POSTBLEND);
+			}
+		}
+	}
+	remove_from_update_list(OSD2,OSD_ENABLE);
 }
 
 static void osd1_update_disp_osd_reverse(void)
