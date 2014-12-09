@@ -37,13 +37,17 @@ int __init meson_cpu_version_init(void)
 	version_map = (unsigned int *)IO_BOOTROM_BASE;
 	meson_cpu_version[MESON_CPU_VERSION_LVL_MISC] = version_map[1];
 
-	version = aml_read_reg32(P_METAL_REVISION);
+	//version = aml_read_reg32(P_METAL_REVISION);
+	version = version_map[1];
 	switch (version) {
-		case 0x11111111:
+		case 0x18D7:
 			ver = 0xA;
 			break;
-		default:/*changed?*/
+		case 0x1C64:
 			ver = 0xB;
+			break;
+		default:/*changed?*/
+			ver = 0xC;
 			break;
 	}
 	meson_cpu_version[MESON_CPU_VERSION_LVL_MINOR] = ver;
