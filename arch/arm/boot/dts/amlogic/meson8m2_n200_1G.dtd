@@ -1901,7 +1901,6 @@ sdio{
 		compatible = "amlogic,meson-eth";
 		dev_name = "meson-eth";
 		status = "okay";
-		ethbaseaddr = <0xfe0c0000>;
 		interruptnum = <40>;
                 phy_interface = <1>;
                 new_maclogic = <1>;
@@ -1909,6 +1908,15 @@ sdio{
                 reset_pin = "GPI0H_4";
                 reset_delay = <100>;
 	};
+        ethmac: ethernet@0xc9410000{
+                compatible = "amlogic,meson8n200-dwmac", "snps,dwmac";
+                reg = <0xc9410000 0x10000
+                       0xc1108108 0x4>;
+                interrupts = <0 8 1>;
+                interrupt-names = "macirq";
+                clocks = "clk81";
+                clock-names = "stmmaceth";
+        };
 
 /// ***************************************************************************************
 ///	-	DVB

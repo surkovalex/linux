@@ -1908,7 +1908,16 @@ void root_func(){
                 reset_delay = <100>;
 	};
 
-/// ***************************************************************************************
+/// **************************************************************************************             
+        ethmac: ethernet@0xc9410000{
+                compatible = "amlogic,meson8bm200-dwmac", "snps,dwmac";
+                reg = <0xc9410000 0x10000
+                       0xc1108108 0x4>;
+                interrupts = <0 8 1>;
+                interrupt-names = "macirq";
+                clocks = "clk81";
+                clock-names = "stmmaceth";
+        };
 ///	-	RNG
 //$$ MODULE="RNG"
 //$$ DEVICE="meson-rng"
