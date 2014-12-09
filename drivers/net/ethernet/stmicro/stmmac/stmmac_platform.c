@@ -35,12 +35,12 @@
 static const struct of_device_id stmmac_dt_ids[] = {
 #ifdef CONFIG_DWMAC_MESON
 	{ .compatible = "amlogic,meson6-dwmac", /*.data = &meson6_dwmac_data*/},
-	{ .compatible = "amlogic,meson8-dwmac", /*.data = &meson6_dwmac_data*/},
-	{ .compatible = "amlogic,meson8m2-dwmac", },
-	{ .compatible = "amlogic,meson8m2rmii-dwmac", },
-	{ .compatible = "amlogic,meson8bm200-dwmac", },
-	{ .compatible = "amlogic,meson8n200-dwmac", },
-	{ .compatible = "amlogic,meson8bm201-dwmac",.data = &meson6_dwmac_data },
+	{ .compatible = "amlogic,meson8-rmii-dwmac", /*s802 100m mode this chip have no gmac not support 1000m*/},
+	{ .compatible = "amlogic,meson8m2-rgmii-dwmac",},// s812 chip 1000m mode
+	{ .compatible = "amlogic,meson8m2-rmii-dwmac", .data = &meson6_dwmac_data },// s812 chip 100m mode
+	{ .compatible = "amlogic,meson8b-rgmii-dwmac", },// s805 chip 1000m mode
+	{ .compatible = "amlogic,meson8b-rmii-dwmac", .data = &meson6_dwmac_data },// s805 chip 100m mode
+	{ .compatible = "amlogic,meson6-rmii-dwmac",.data = &meson6_dwmac_data },// defined
 #endif
 	/* SoC specific glue layers should come before generic bindings */
 	{ .compatible = "st,spear600-gmac"},
@@ -267,8 +267,8 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 #endif
 	if (of_device_is_compatible(np, "st,spear600-gmac") ||
 		of_device_is_compatible(np, "snps,dwmac-3.70a") ||
-		of_device_is_compatible(np,"amlogic,meson8bm200-dwmac")||
-		of_device_is_compatible(np,"amlogic,meson8m2-dwmac")) {
+		of_device_is_compatible(np,"amlogic,meson8b-rgmii-dwmac")||
+		of_device_is_compatible(np,"amlogic,meson8m2-rgmii-dwmac")) {
 		/* Note that the max-frame-size parameter as defined in the
 		 * ePAPR v1.1 spec is defined as max-frame-size, it's
 		 * actually used as the IEEE definition of MAC Client
@@ -291,7 +291,9 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 
 	if (of_device_is_compatible(np, "snps,dwmac-3.610") ||
 		of_device_is_compatible(np,"amlogic,meson6-dwmac")||
-		of_device_is_compatible(np,"amlogic,mesonbm200-dwmac")||
+		of_device_is_compatible(np,"amlogic,meson8b-rmii-dwmac")||
+		of_device_is_compatible(np,"amlogic,meson8-rmii-dwmac")||
+		of_device_is_compatible(np,"amlogic,meson8m2-rmii-dwmac")||
 		of_device_is_compatible(np, "snps,dwmac-3.710")) {
 		plat->enh_desc = 1;
 		plat->bugged_jumbo = 1;

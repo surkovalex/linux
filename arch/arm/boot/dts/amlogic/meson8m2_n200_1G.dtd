@@ -1894,22 +1894,8 @@ sdio{
 	};
 /// ***************************************************************************************
 ///	-	Ethernet
-//$$ MODULE="Ethernet"
-//$$ DEVICE="meson-eth"
-//$$ L2 PROP_STR = "status"
-    meson-eth{
-		compatible = "amlogic,meson-eth";
-		dev_name = "meson-eth";
-		status = "okay";
-		interruptnum = <40>;
-                phy_interface = <1>;
-                new_maclogic = <1>;
-                reset_pin_enable = <0>;
-                reset_pin = "GPI0H_4";
-                reset_delay = <100>;
-	};
         ethmac: ethernet@0xc9410000{
-                compatible = "amlogic,meson8n200-dwmac", "snps,dwmac";
+                compatible = "amlogic,meson8m2-rmii-dwmac", "snps,dwmac";
                 reg = <0xc9410000 0x10000
                        0xc1108108 0x4>;
                 interrupts = <0 8 1>;
