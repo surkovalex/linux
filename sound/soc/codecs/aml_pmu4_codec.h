@@ -14,7 +14,6 @@
 
 
 /*Block Enable , Reg 0x02h*/
-#define PMU4_BIAS_CURRENT_MASK    (0x1<<13)
 #define PMU4_BIAS_CURRENT_EN    0xD
 #define PMU4_PGAL_IN_EN         0xB
 #define PMU4_PGAR_IN_EN         0xA
@@ -31,9 +30,7 @@
 
 
 /*Audio Config,Reg 0x04h*/
-#define PMU4_MCLK_FREQ_MASK               (0x1<<15)
 #define PMU4_MCLK_FREQ          0xF
-#define PMU4_I2S_MODE_MASK                (0x1<<14)
 #define PMU4_I2S_MODE           0xE
 #define PMU4_ADC_HPF_MODE       0xC
 #define PMU4_ADC_DEM_EN         0xA

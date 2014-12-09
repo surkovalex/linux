@@ -111,6 +111,7 @@ static struct snd_soc_ops aml_asoc_ops = {
 struct aml_audio_private_data *p_audio;
 static bool aml_audio_i2s_mute_flag = 0;
 static bool aml_audio_spdif_mute_flag = 0;
+static int aml_audio_Hardware_resample = 0;
 
 
 static int aml_audio_set_i2s_mute(struct snd_kcontrol *kcontrol,
@@ -272,6 +273,8 @@ static int hardware_resample_enable(int input_sr){
     clk_rate = clk_get_rate(clk_src);
     Avg_cnt_init = (unsigned short)(clk_rate*4/input_sr);
 
+    printk(KERN_INFO "clk_rate = %ld,input_sr = %d,Avg_cnt_init = %d\n",clk_rate,input_sr,Avg_cnt_init);
+	
     WRITE_MPEG_REG(AUD_RESAMPLE_CTRL0, 0);
     WRITE_MPEG_REG(AUD_RESAMPLE_CTRL0,  (0<<29)    //select the source [30:29]
                                         |(1<<28)   //enable the resample [28]
@@ -289,7 +292,7 @@ static int hardware_resample_disable(void){
 }
 
 static const char *hardware_resample_texts[] = {
-    "Disable", "Enable:32K", "Enable:44.1K","Enable:48K"
+    "Disable", "Enable:48K", "Enable:44K","Enable:32K"
 };
 
 static const struct soc_enum hardware_resample_enum =
@@ -300,20 +303,25 @@ static const struct soc_enum hardware_resample_enum =
 static int aml_hardware_resample_get_enum(struct snd_kcontrol *kcontrol,
     struct snd_ctl_elem_value *ucontrol)
 {
+    ucontrol->value.enumerated.item[0] = aml_audio_Hardware_resample;
     return 0;
 }
 
 static int aml_hardware_resample_set_enum(struct snd_kcontrol *kcontrol,
     struct snd_ctl_elem_value *ucontrol)
 {
-	if (ucontrol->value.enumerated.item[0] == 0){
+    if (ucontrol->value.enumerated.item[0] == 0){
         hardware_resample_disable();
+        aml_audio_Hardware_resample = 0;
     }else if (ucontrol->value.enumerated.item[0] == 1){
-        hardware_resample_enable(32000);
+        hardware_resample_enable(48000);
+        aml_audio_Hardware_resample = 1;
     }else if (ucontrol->value.enumerated.item[0] == 2){
         hardware_resample_enable(44100);
+        aml_audio_Hardware_resample = 2;
     }else if (ucontrol->value.enumerated.item[0] == 3){
-        hardware_resample_enable(48000);
+        hardware_resample_enable(32000);
+        aml_audio_Hardware_resample = 3;
     }
     return 0;
 }

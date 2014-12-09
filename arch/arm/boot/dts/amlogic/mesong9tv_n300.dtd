@@ -1051,7 +1051,7 @@
 			"LINEIN","Linein left 1",
 			"LINEIN","Linein right 1";
 		pinctrl-names = "aml_snd_g9tv";
-//		pinctrl-0 = <&audio_pins>;
+		pinctrl-0 = <&audio_pins>;
 		status = "okay";
 	};
 
@@ -1355,12 +1355,12 @@
 		//$$ L2 PROP_U32 4 = "amlogic,setmask"
 		//$$ L2 PROP_U32 10 = "amlogic,clrmask"
 		//$$ L2 PROP_STR 6 = "amlogic,pins"
-//		audio_pins:audio_pins {
-//			amlogic,setmask = <2 0x6B0000>; /* I2S */
-//			amlogic,clrmask = <2 0x140000
-//			                   3 0x80000>;
-//			amlogic,pins = "GPIOZ_1", "GPIOZ_2", "GPIOZ_3", "GPIOZ_4", "GPIOZ_5";
-//		};
+		audio_pins:audio_pins {
+			amlogic,setmask = <2 0x6B0000>; /* I2S */
+			amlogic,clrmask = <2 0x140000
+			                   3 0x80000>;
+			amlogic,pins = "GPIOZ_1", "GPIOZ_2", "GPIOZ_3", "GPIOZ_4", "GPIOZ_5";
+		};
 
 		//$$ MATCH "dvb_p_ts0_pins_match" = "&dvb_p_ts0_pins"
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"

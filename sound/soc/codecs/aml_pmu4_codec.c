@@ -41,7 +41,7 @@ static struct pmu4_audio_init_reg init_list[] = {
     {PMU4_AUDIO_CONFIG    , 0x3c00}, //
     {PMU4_PGA_IN_CONFIG   , 0x3535}, // ALI1,20dB;AR1,20dB
     {PMU4_ADC_VOL_CTR     , 0x5050}, // 0dB
-    {PMU4_DAC_SOFT_MUTE   , 0xF080}, //
+    {PMU4_DAC_SOFT_MUTE   , 0x0000}, //
     {PMU4_DAC_VOL_CTR     , 0xFFFF}, // 0dB
     {PMU4_LINE_OUT_CONFIG , 0x4242}, 
     
@@ -76,6 +76,7 @@ static int aml_pmu4_audio_write(struct snd_soc_codec *codec, unsigned int reg,
 
 	pmu4_audio_reg = PMU4_AUDIO_BASE + reg;
 	aml1220_write16(pmu4_audio_reg, val);
+
 	return 0;
 }
 
@@ -196,8 +197,8 @@ static const struct snd_soc_dapm_widget pmu4_audio_dapm_widgets[] = {
     	0, 0, &pgain_rn_mux),
     
 	/*ADC capture stream*/
-	SND_SOC_DAPM_ADC("Left ADC", "HIFI Capture", SND_SOC_NOPM, PMU4_ADCL_EN, 0),
-	SND_SOC_DAPM_ADC("Right ADC", "HIFI Capture", SND_SOC_NOPM, PMU4_ADCR_EN, 0),
+	SND_SOC_DAPM_ADC("Left ADC", "HIFI Capture", PMU4_BLOCK_ENABLE, PMU4_ADCL_EN, 0),
+	SND_SOC_DAPM_ADC("Right ADC", "HIFI Capture", PMU4_BLOCK_ENABLE, PMU4_ADCR_EN, 0),
 
 	/*Output*/
     SND_SOC_DAPM_OUTPUT("Lineout left N"),
@@ -206,8 +207,8 @@ static const struct snd_soc_dapm_widget pmu4_audio_dapm_widgets[] = {
     SND_SOC_DAPM_OUTPUT("Lineout right P"),
 
 	/*DAC playback stream*/
-	SND_SOC_DAPM_DAC("Left DAC", "HIFI Playback", SND_SOC_NOPM, PMU4_DACL_EN, 0),
-	SND_SOC_DAPM_DAC("Right DAC", "HIFI Playback", SND_SOC_NOPM, PMU4_DACR_EN, 0),
+	SND_SOC_DAPM_DAC("Left DAC", "HIFI Playback", PMU4_BLOCK_ENABLE, PMU4_DACL_EN, 0),
+	SND_SOC_DAPM_DAC("Right DAC", "HIFI Playback", PMU4_BLOCK_ENABLE, PMU4_DACR_EN, 0),
 
 	/*DRV output*/
 	SND_SOC_DAPM_OUT_DRV("LOLP_OUT_EN", PMU4_BLOCK_ENABLE,
@@ -282,12 +283,12 @@ static int aml_pmu4_set_dai_fmt(struct snd_soc_dai *dai, unsigned int fmt)
   
     switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
     case SND_SOC_DAIFMT_CBM_CFM:
-		snd_soc_update_bits(codec,PMU4_I2S_MODE,
-			PMU4_I2S_MODE_MASK,PMU4_I2S_MODE_MASK);
+		snd_soc_update_bits(codec,PMU4_AUDIO_CONFIG,
+			PMU4_I2S_MODE,PMU4_I2S_MODE);
         break;
     case SND_SOC_DAIFMT_CBS_CFS:
-		snd_soc_update_bits(codec,PMU4_I2S_MODE,
-			PMU4_I2S_MODE_MASK,0);
+		snd_soc_update_bits(codec,PMU4_AUDIO_CONFIG,
+			PMU4_I2S_MODE,0);
         break;
     default:
         return -EINVAL;
@@ -309,10 +310,10 @@ static int aml_pmu4_set_dai_sysclk(struct snd_soc_dai *dai,
 
 	if(256 == ps){
 		snd_soc_update_bits( codec,PMU4_AUDIO_CONFIG,
-			PMU4_MCLK_FREQ_MASK,0);
+			PMU4_MCLK_FREQ,0);
 	}else if(512 == ps){
 		snd_soc_update_bits( codec,PMU4_AUDIO_CONFIG,
-			PMU4_MCLK_FREQ_MASK,PMU4_MCLK_FREQ_MASK);
+			PMU4_MCLK_FREQ,PMU4_MCLK_FREQ);
 	}  
     return 0;
 #endif
