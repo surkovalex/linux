@@ -115,6 +115,7 @@ void root_func(){
 		dev_name = "deinterlace";
 		status = "okay";
 		reserve-memory = <0x01c00000>; // 27M
+		reserve-iomap = "true";
 	};
 
 /// ***************************************************************************************
