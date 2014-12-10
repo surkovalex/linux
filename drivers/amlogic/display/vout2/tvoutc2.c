@@ -228,19 +228,52 @@ int tvoutc_setclk2(tvmode_t mode)
 	return 0;
 }
 
+static const reg_t * tvregs_setting_mode(tvmode_t mode)
+{
+    int i = 0;
+    for(i = 0; i < ARRAY_SIZE(tvregsTab2); i++) {
+        if(mode == tvregsTab2[i].tvmode)
+            return tvregsTab2[i].reg_setting;
+    }
+    return NULL;
+}
+
+const static tvinfo_t * tvinfo_mode(tvmode_t mode)
+{
+    int i = 0;
+    for(i = 0; i < ARRAY_SIZE(tvinfoTab2); i++) {
+        if(mode == tvinfoTab2[i].tvmode)
+            return &tvinfoTab2[i];
+    }
+    return NULL;
+}
+
 int tvoutc_setmode2(tvmode_t mode)
 {
     const  reg_t *s;
+    const tvinfo_t * tvinfo;
 
     if (mode >= TVMODE_MAX) {
         printk(KERN_ERR "Invalid video output modes.\n");
         return -ENODEV;
     }
 
-    printk(KERN_DEBUG "TV mode %s selected.\n", tvinfoTab[mode].id);
-   
-    s = tvregsTab[mode];
-			
+    printk(KERN_DEBUG "TV mode %s selected.\n", tvinfoTab2[mode].id);
+
+    tvinfo = tvinfo_mode(mode);
+    if(!tvinfo) {
+        printk(KERN_ERR "tvinfo %d not find\n", mode);
+        return 0;
+    }
+    printk("TV mode %s selected.\n", tvinfo->id);
+
+    s = tvregs_setting_mode(mode);
+    if(!s) {
+        printk("display mode %d regs setting failed\n", mode);
+        return 0;
+    }
+    //s = tvregsTab[mode];
+
     while (MREG_END_MARKER != s->reg)
         setreg(s++);
 	//tvoutc_setclk2(mode);
@@ -304,7 +337,7 @@ int tvoutc_setmode2(tvmode_t mode)
     aml_write_reg32(P_ENCI_MACV_N0, 0x00000000);
     aml_write_reg32(P_HHI_GCLK_OTHER, aml_read_reg32(P_HHI_GCLK_OTHER)|(1<<8));
     #endif
-    aml_write_reg32(P_VPP2_POSTBLEND_H_SIZE, tvinfoTab[mode].xres);
+    aml_write_reg32(P_VPP2_POSTBLEND_H_SIZE, tvinfo->xres);
     
 // For debug only
 #if 0

@@ -364,6 +364,10 @@ static int set_disp_mode_auto(void)
     }
     else if(strncmp(mode, "4k2k60hz", strlen("4k2k60hz")) == 0) {
         vic = HDMI_3840x2160p60_16x9;
+        if(strncmp(mode+8, "420", 3) == 0)
+            hdmitx_device.mode420 = 1;
+        else
+            hdmitx_device.mode420 = 0;
     }
     else {
         //nothing

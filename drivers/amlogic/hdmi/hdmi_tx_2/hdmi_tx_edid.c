@@ -1309,6 +1309,7 @@ static dispmode_vic_t dispmode_VIC_tab[]=
     {"4k2k24hz",  HDMI_4k2k_24},
     {"4k2ksmpte", HDMI_4k2k_smpte_24},
     {"4k2k5g",    HDMI_3840x2160p50_16x9},
+    {"4k2k60hz420", HDMI_3840x2160p60_16x9},
     {"4k2k60hz",  HDMI_3840x2160p60_16x9},
 };
 

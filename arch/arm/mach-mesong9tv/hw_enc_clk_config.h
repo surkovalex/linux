@@ -32,10 +32,8 @@ typedef struct{
     unsigned hdmi_tx_pixel_div;
     unsigned encp_div;
     unsigned enci_div;
-    unsigned enct_div;
     unsigned encl_div;
     unsigned vdac0_div;
-    unsigned vdac1_div;
 }hw_enc_clk_val_t;
 
 #endif

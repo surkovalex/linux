@@ -72,6 +72,7 @@ typedef enum {
     VMODE_4K2K_SMPTE,
     VMODE_4K2K_FAKE_5G,   // timing same as 4k2k30hz, Vsync from 30hz to 50hz
     VMODE_4K2K_60HZ,	  // timing same as 4k2k30hz, Vsync from 30hz to 60hz
+    VMODE_4K2K_60HZ_Y420,
     VMODE_4K2K_5G,
     VMODE_VGA,
     VMODE_SVGA,
@@ -88,6 +89,61 @@ typedef enum {
     VMODE_MASK = 0xFF,
 } vmode_t;
 
+typedef enum {
+    TVMODE_480I  = 0,
+    TVMODE_480I_RPT  ,
+    TVMODE_480CVBS,
+    TVMODE_480P  ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_480P_59HZ , // for framerate automation 480p 59.94hz
+#endif
+    TVMODE_480P_RPT  ,
+    TVMODE_576I  ,
+    TVMODE_576I_RPT  ,
+    TVMODE_576CVBS,
+    TVMODE_576P  ,
+    TVMODE_576P_RPT  ,
+    TVMODE_720P  ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_720P_59HZ , // for framerate automation 720p 59.94hz
+#endif
+    TVMODE_1080I ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_1080I_59HZ , // for framerate automation 1080i 59.94hz
+#endif
+    TVMODE_1080P ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_1080P_59HZ , // for framerate automation 1080p 59.94hz
+#endif
+    TVMODE_720P_50HZ ,
+    TVMODE_1080I_50HZ ,
+    TVMODE_1080P_50HZ ,
+    TVMODE_1080P_24HZ ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_1080P_23HZ , // for framerate automation 1080p 23.97hz
+#endif
+    TVMODE_4K2K_30HZ ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_4K2K_29HZ , // for framerate automation 4k2k 29.97hz
+#endif
+    TVMODE_4K2K_25HZ ,
+    TVMODE_4K2K_24HZ ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	TVMODE_4K2K_23HZ , // for framerate automation 4k2k 23.97hz
+#endif
+    TVMODE_4K2K_SMPTE ,
+    TVMODE_4K2K_FAKE_5G ,
+    TVMODE_4K2K_60HZ ,
+    TVMODE_4K2K_60HZ_Y420,
+    TVMODE_VGA ,
+    TVMODE_SVGA,
+    TVMODE_XGA,
+    TVMODE_SXGA,
+    TVMODE_WSXGA,
+    TVMODE_FHDVGA,
+    TVMODE_MAX    
+} tvmode_t;
+
 typedef struct {
 	char  		*name;
 	vmode_t		mode;
@@ -103,4 +159,21 @@ typedef struct {
 	u32			video_clk;
 } vinfo_t;
 
-#endif /* TVMODE_H */
+typedef struct reg_s {
+    uint reg;
+    uint val;
+} reg_t;
+
+struct tvregs_set_t {
+    tvmode_t tvmode;
+    const reg_t *reg_setting;
+};
+
+typedef struct tvinfo_s {
+    tvmode_t tvmode;
+    uint xres;
+    uint yres;
+    const char *id;
+} tvinfo_t;
+
+#endif /* VINFO_H */

@@ -64,6 +64,7 @@
 static void hdmi_audio_init(unsigned char spdif_flag);
 static void hdmitx_dump_tvenc_reg(int cur_VIC, int printk_flag);
 
+static void mode420_half_horizontal_para(void);
 static void hdmi_phy_suspend(void);
 static void hdmi_phy_wakeup(hdmitx_dev_t* hdmitx_device);
 static void hdmitx_set_phy(hdmitx_dev_t* hdmitx_device);
@@ -1449,48 +1450,19 @@ static void enable_audio_i2s(void)
 
 static void hdmitx_dump_tvenc_reg(int cur_VIC, int printk_flag) 
 {
-    int i,j;
-    for(i=0;hdmi_tvenc_configs[i].vic!=HDMI_Unkown;i++){
-        if(cur_VIC==hdmi_tvenc_configs[i].vic){
-            reg_t* reg_set=hdmi_tvenc_configs[i].reg_set;
-            hdmi_print(printk_flag, "------dump tevenc reg for mode %d----\n", cur_VIC);
-            for(j=0;reg_set[j].reg;j++){
-                hdmi_print(printk_flag, "[%08x]=%08x\n",reg_set[j].reg,aml_read_reg32(CBUS_REG_ADDR(reg_set[j].reg)));
-            }
-            hdmi_print(printk_flag, "------------------\n");
-            break;
-        }
-    }
 }    
 
 static void hdmitx_config_tvenc_reg(int vic, unsigned reg, unsigned val)
 {
-    int i,j;
-    for(i=0;hdmi_tvenc_configs[i].vic!=HDMI_Unkown;i++){
-        if(vic==hdmi_tvenc_configs[i].vic){
-            reg_t* reg_set=hdmi_tvenc_configs[i].reg_set;
-            for(j=0;reg_set[j].reg;j++){
-                if(reg_set[j].reg==reg){
-                    reg_set[j].val = val;    
-                    hdmi_print(INF, SYS "set [%08x]=%08x\n",reg_set[j].reg, reg_set[j].val);
-                    break;
-                }
-            }
-            if(reg_set[j].reg == 0){
-                hdmi_print(INF, SYS "no [%08x] in config\n", reg);
-            }
-            break;
-        }
-    }
 }
 
-static void hdmitx_set_pll(Hdmi_tx_video_para_t *param)
+static void hdmitx_set_pll(hdmitx_dev_t *hdev)
 {
     hdmi_print(IMP, SYS "set pll\n");
-    hdmi_print(IMP, SYS "param->VIC:%d\n", param->VIC);
+    hdmi_print(IMP, SYS "param->VIC:%d\n", hdev->cur_VIC);
     
     cur_vout_index = get_cur_vout_index();
-    switch(param->VIC)
+    switch(hdev->cur_VIC)
     {
         case HDMI_480p60:
         case HDMI_480p60_16x9:
@@ -1543,7 +1515,11 @@ static void hdmitx_set_pll(Hdmi_tx_video_para_t *param)
             set_vmode_clk(VMODE_4K2K_24HZ);
             break;
         case HDMI_3840x2160p60_16x9:
-            set_vmode_clk(VMODE_4K2K_60HZ);
+            if(hdev->mode420 == 1) {
+                set_vmode_clk(VMODE_4K2K_60HZ_Y420);
+            } else {
+                set_vmode_clk(VMODE_4K2K_60HZ);
+            };
             break;
         case HDMI_3840x2160p50_16x9:
             set_vmode_clk(VMODE_4K2K_FAKE_5G);
@@ -1591,7 +1567,38 @@ static void hdmitx_set_phy(hdmitx_dev_t* hdmitx_device)
     hdmi_print(IMP, SYS "phy setting done\n");
 }
 
-static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t *param)
+static void set_tmds_clk_div40(unsigned int div40)
+{
+    if (div40 == 1) {
+        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_01, 0);          // [25:16] tmds_clk_pttn[19:10]  [ 9: 0] tmds_clk_pttn[ 9: 0]
+        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_23, 0x03ff03ff); // [25:16] tmds_clk_pttn[39:30]  [ 9: 0] tmds_clk_pttn[29:20]
+    }
+    else {
+        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_01, 0x001f001f);
+        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_23, 0x001f001f);
+    }
+
+    printk("%s[%d]0x%x\n", __func__, __LINE__, hdmitx_rd_reg(HDMITX_TOP_TMDS_CLK_PTTN_01));
+    printk("%s[%d]0x%x\n", __func__, __LINE__, hdmitx_rd_reg(HDMITX_TOP_TMDS_CLK_PTTN_23));
+
+    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 0x1);            // 0xc
+    msleep(10);
+    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 0x2);            // 0xc
+}
+
+static void hdmitx_rst_main_ctrl(unsigned int bit)
+{
+    // [  7] gpaswrst_req: 0=generate reset pulse; 1=no reset.
+    // [  6] cecswrst_req: 0=generate reset pulse; 1=no reset.
+    // [  4] spdifswrst_req: 0=generate reset pulse; 1=no reset.
+    // [  3] i2sswrst_req: 0=generate reset pulse; 1=no reset.
+    // [  2] prepswrst_req: 0=generate reset pulse; 1=no reset.
+    // [  1] tmdsswrst_req: 0=generate reset pulse; 1=no reset.
+    // [  0] pixelswrst_req: 0=generate reset pulse; 1=no reset.
+    hdmitx_wr_reg(HDMITX_DWC_MC_SWRSTZREQ, bit);
+}
+
+static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
 {
     if(param == NULL){ //disable HDMI
         return 0;
@@ -1614,8 +1621,8 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t
         param->color = color_space_f;
     }
     C_Entry(param->VIC);
-    hdmitx_set_pll(param);
-    hdmitx_set_phy(hdmitx_device);
+    hdmitx_set_pll(hdev);
+    hdmitx_set_phy(hdev);
     switch(param->VIC){
     case HDMI_480i60:
     case HDMI_480i60_16x9:
@@ -1665,17 +1672,28 @@ if(param->VIC == HDMI_1920x1080p60_16x9) {
         break;
     }
 
-    hdmi_hw_reset(hdmitx_device, param);    
+    hdmi_hw_reset(hdev, param);    
 	// move hdmitx_set_pll() to the end of this function.
     // hdmitx_set_pll(param);
-    hdmitx_device->cur_VIC = param->VIC;
-    hdmitx_set_phy(hdmitx_device);
+    hdev->cur_VIC = param->VIC;
+    hdmitx_set_phy(hdev);
 
-	hdmitx_set_pll(param);
+	hdmitx_set_pll(hdev);
 
+    if(hdev->mode420 == 1) {
+        hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x43);    // change AVI packet
+        mode420_half_horizontal_para();
+    }
+    if(((hdev->cur_VIC == HDMI_3840x2160p50_16x9) || (hdev->cur_VIC == HDMI_3840x2160p60_16x9))
+       && (hdev->mode420 != 1)){
+        set_tmds_clk_div40(1);
+    } else {
+        set_tmds_clk_div40(0);
+    }
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 0, 3, 1);
     msleep(1);
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 1, 3, 1);
+    hdmitx_rst_main_ctrl(~(0x7));
 
     return 0;
 }
@@ -2314,18 +2332,6 @@ static void hdmitx_4k2k60hz444_debug(void)
     hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, HDMI_3840x2160p60_16x9);
 }
 
-static void hdmitx_4k2k60hz420_debug(void)
-{
-    printk("4k2k60hzYCBCR420\n");
-    printk("set clk:data = 1 : 10 set double rate\n");
-    aml_write_reg32(P_HHI_VID_CLK_DIV, 0x101);
-    //hdmitx_wr_reg(HDMITX_DWC_MC_FLOWCTRL, 1);   //csc_en
-    //hdmitx_wr_reg(HDMITX_DWC_CSC_CFG, 2);
-    hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x43);
-    hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, HDMI_3840x2160p60_16x9);
-    mode420_half_horizontal_para();
-}
-
 static void hdmitx_4k2k5g_debug(void)
 {
     printk("4k2k5g\n");
@@ -2385,9 +2391,6 @@ static void hdmitx_debug(hdmitx_dev_t* hdev, const char* buf)
     else if(strncmp(tmpbuf, "testpll", 7) == 0) {
         set_vmode_clk((tmpbuf[7] == '0') ? VMODE_1080P : VMODE_4K2K_FAKE_5G);
         return;
-    }
-    else if(strncmp(tmpbuf, "4k2k60hz420", 11) == 0) {
-        hdmitx_4k2k60hz420_debug();
     }
     else if(strncmp(tmpbuf, "4k2k5g420", 9) == 0) {
         hdmitx_4k2k5g420_debug();
@@ -3506,42 +3509,6 @@ void config_hdmi20_tx ( HDMI_Video_Codes_t vic, struct hdmi_format_para *para,
     data32 |= (0    << 0);  // [ 4: 0] prbs_pttn
     hdmitx_wr_reg(HDMITX_TOP_BIST_CNTL, data32);                        // 0x6
 
-    printk("vic = %d, tmds_clk_div40 = %d\n", vic, para->tmds_clk_div40);
-    if (para->tmds_clk_div40) {
-        data32  = 0;
-        data32 |= (0    << 16); // [25:16] tmds_clk_pttn[19:10]
-        data32 |= (0    << 0);  // [ 9: 0] tmds_clk_pttn[ 9: 0]
-        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_01, data32);             // 0xa
-        
-        data32  = 0;
-        data32 |= (0x3ff<< 16); // [25:16] tmds_clk_pttn[39:30]
-        data32 |= (0x3ff<< 0);  // [ 9: 0] tmds_clk_pttn[29:20]
-        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_23, data32);             // 0xb
-    }
-    else {
-        data32  = 0;
-        data32 |= (0x1f    << 16); // [25:16] tmds_clk_pttn[19:10]
-        data32 |= (0x1f    << 0);  // [ 9: 0] tmds_clk_pttn[ 9: 0]
-        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_01, data32);             // 0xa
-        
-        data32  = 0;
-        data32 |= (0x1f<< 16); // [25:16] tmds_clk_pttn[39:30]
-        data32 |= (0x1f<< 0);  // [ 9: 0] tmds_clk_pttn[29:20]
-        hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_23, data32);             // 0xb
-    }
-
-
-    printk("%s[%d]0x%x\n", __func__, __LINE__, hdmitx_rd_reg(HDMITX_TOP_TMDS_CLK_PTTN_01));
-    printk("%s[%d]0x%x\n", __func__, __LINE__, hdmitx_rd_reg(HDMITX_TOP_TMDS_CLK_PTTN_23));
-
-    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 0x1);            // 0xc
-
-    msleep(10);
-
-    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 0x2);            // 0xc
-
-    printk("%s[%d]0x%x\n", __func__, __LINE__, hdmitx_rd_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL));
-
     //--------------------------------------------------------------------------
     // Configure video
     //--------------------------------------------------------------------------
@@ -3990,17 +3957,7 @@ void config_hdmi20_tx ( HDMI_Video_Codes_t vic, struct hdmi_format_para *para,
     //--------------------------------------------------------------------------
 
     hdmitx_rd_check_reg(HDMITX_DWC_MC_LOCKONCLOCK, 0xff, 0x9f);
-    
-    data32  = 0;
-    data32 |= (0    << 7);  // [  7] gpaswrst_req: 0=generate reset pulse; 1=no reset.
-    data32 |= (0    << 6);  // [  6] cecswrst_req: 0=generate reset pulse; 1=no reset.
-    data32 |= (0    << 4);  // [  4] spdifswrst_req: 0=generate reset pulse; 1=no reset.
-    data32 |= (0    << 3);  // [  3] i2sswrst_req: 0=generate reset pulse; 1=no reset.
-    data32 |= (0    << 2);  // [  2] prepswrst_req: 0=generate reset pulse; 1=no reset.
-    data32 |= (0    << 1);  // [  1] tmdsswrst_req: 0=generate reset pulse; 1=no reset.
-    data32 |= (0    << 0);  // [  0] pixelswrst_req: 0=generate reset pulse; 1=no reset.
-    hdmitx_wr_reg(HDMITX_DWC_MC_SWRSTZREQ, data32);
-
+    hdmitx_wr_reg(HDMITX_DWC_MC_SWRSTZREQ, 0);
 //TODO
     printk("TODO %s[%d]\n", __func__, __LINE__);
 } /* config_hdmi20_tx */

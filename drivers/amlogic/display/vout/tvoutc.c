@@ -240,7 +240,8 @@ int tvoutc_setclk(tvmode_t mode)
 			  }
 			  break;
 		default:
-			printk(KERN_ERR "unsupport tv mode,video clk is not set!!\n");
+			//printk(KERN_ERR "unsupport tv mode,video clk is not set!!\n");
+            break;
 	}
 
 	return 0 ;
@@ -408,9 +409,30 @@ static void cvbs_performance_enhancement(tvmode_t mode)
 
 static DEFINE_MUTEX(setmode_mutex);
 
+static const reg_t * tvregs_setting_mode(tvmode_t mode)
+{
+    int i = 0;
+    for(i = 0; i < ARRAY_SIZE(tvregsTab); i++) {
+        if(mode == tvregsTab[i].tvmode)
+            return tvregsTab[i].reg_setting;
+    }
+    return NULL;
+}
+
+const static tvinfo_t * tvinfo_mode(tvmode_t mode)
+{
+    int i = 0;
+    for(i = 0; i < ARRAY_SIZE(tvinfoTab); i++) {
+        if(mode == tvinfoTab[i].tvmode)
+            return &tvinfoTab[i];
+    }
+    return NULL;
+}
+
 int tvoutc_setmode(tvmode_t mode)
 {
-    const  reg_t *s;
+    const reg_t *s;
+    const tvinfo_t * tvinfo;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
     static int uboot_display_flag = 1;
 #else
@@ -425,7 +447,12 @@ int tvoutc_setmode(tvmode_t mode)
 //TODO
 //    switch_mod_gate_by_name("venc", 1);
 #endif
-    printk("TV mode %s selected.\n", tvinfoTab[mode].id);
+    tvinfo = tvinfo_mode(mode);
+    if(!tvinfo) {
+        printk(KERN_ERR "tvinfo %d not find\n", mode);
+        return 0;
+    }
+    printk("TV mode %s selected.\n", tvinfo->id);
 
 #ifdef CONFIG_ARCH_MESON8B
 	if( (mode!=TVMODE_480CVBS) && (mode!=TVMODE_576CVBS) )
@@ -441,8 +468,12 @@ int tvoutc_setmode(tvmode_t mode)
 		CLK_GATE_OFF(VCLK2_VENCI1);
 	}
 #endif
-
-    s = tvregsTab[mode];
+    s = tvregs_setting_mode(mode);
+    if(!s) {
+        printk("display mode %d regs setting failed\n", mode);
+        return 0;
+    }
+    //s = tvregsTab[mode];
 
     if(uboot_display_flag) {
         uboot_display_flag = 0;
@@ -563,7 +594,7 @@ printk("%s[%d] mode is %d\n", __func__, __LINE__, mode);
 	}
 #endif
 
-    aml_write_reg32(P_VPP_POSTBLEND_H_SIZE, tvinfoTab[mode].xres);
+    aml_write_reg32(P_VPP_POSTBLEND_H_SIZE, tvinfo->xres);
 
 #ifdef CONFIG_ARCH_MESON3
 printk(" clk_util_clk_msr 6 = %d\n", clk_util_clk_msr(6));
