@@ -4311,7 +4311,7 @@ static long amvideo_ioctl(struct file *file,
         break;
 
 	case AMSTREAM_IOC_GET_SYNC_ADISCON_DIFF:
-        put_user(tsync_get_sync_adiscont(),(int *)arg);
+        put_user(tsync_get_sync_adiscont_diff(),(int *)arg);
 		break;
 
 	case AMSTREAM_IOC_GET_SYNC_VDISCON_DIFF:
