@@ -291,9 +291,6 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 
 	if (of_device_is_compatible(np, "snps,dwmac-3.610") ||
 		of_device_is_compatible(np,"amlogic,meson6-dwmac")||
-		of_device_is_compatible(np,"amlogic,meson8b-rmii-dwmac")||
-		of_device_is_compatible(np,"amlogic,meson8-rmii-dwmac")||
-		of_device_is_compatible(np,"amlogic,meson8m2-rmii-dwmac")||
 		of_device_is_compatible(np, "snps,dwmac-3.710")) {
 		plat->enh_desc = 1;
 		plat->bugged_jumbo = 1;
