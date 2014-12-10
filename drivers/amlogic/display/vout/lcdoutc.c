@@ -1679,11 +1679,19 @@ static int _get_lcd_model_timing(Lcd_Config_t *pConf, struct platform_device *pd
                             if (val == 0xff)
                                 break;
                         }
+                        else if ((val & 0xf) == 0x0) {
+                            printk("get dsi_init_on wrong data_type: 0x%02x\n", val);
+                            break;
+                        }
                         else {
                             ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", (i+2), &val);
-                            i = i + 3 + val;
+                            if (val > 0xffff)
+                                break;
+                            else
+                                i = i + 3 + (val & 0xff);
                         }
                     }
+                    i = (i > DSI_INIT_ON_MAX) ? DSI_INIT_ON_MAX : i;
                     ret = of_property_read_u32_array(lcd_model_node,"dsi_init_on", &lcd_para[0], i);
                     if(ret){
                         printk("faild to get dsi_init_on\n");
@@ -1714,11 +1722,19 @@ static int _get_lcd_model_timing(Lcd_Config_t *pConf, struct platform_device *pd
                             if (val == 0xff)
                                 break;
                         }
+                        else if ((val & 0xf) == 0x0) {
+                            printk("get dsi_init_off wrong data_type: 0x%02x\n", val);
+                            break;
+                        }
                         else {
                             ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", (i+2), &val);
-                            i = i + 3 + val;
+                            if (val > 0xffff)
+                                break;
+                            else
+                                i = i + 3 + (val & 0xff);
                         }
                     }
+                    i = (i > DSI_INIT_OFF_MAX) ? DSI_INIT_OFF_MAX : i;
                     ret = of_property_read_u32_array(lcd_model_node,"dsi_init_off", &lcd_para[0], i);
                     if(ret){
                         printk("faild to get dsi_init_off\n");
