@@ -169,7 +169,7 @@ EXPORT_SYMBOL(read_hpd_gpio);
  * HDMITX DDC HW related operations
  */
 enum ddc_op {
-    DDC_INIT_DISABLE_PULLUP,
+    DDC_INIT_DISABLE_PULL_UP_DN,
     DDC_MUX_DDC,
     DDC_UNMUX_DDC,
 };
@@ -178,7 +178,8 @@ static int hdmitx_ddc_hw_op(enum ddc_op cmd)
 {
     int ret = 0;
     switch(cmd) {
-    case DDC_INIT_DISABLE_PULLUP:
+    case DDC_INIT_DISABLE_PULL_UP_DN:
+        aml_set_reg32_bits(P_PAD_PULL_UP_EN_REG1, 0, 19, 2);      // Disable GPIOH_3/4 pull-up/down
         aml_set_reg32_bits(P_PAD_PULL_UP_REG1, 0, 19, 2);
         break;
     case DDC_MUX_DDC:
@@ -370,7 +371,7 @@ static void hdmi_hwp_init(hdmitx_dev_t* hdev)
 
     hdmitx_hpd_hw_op(HPD_INIT_DISABLE_PULLUP);
     hdmitx_hpd_hw_op(HPD_INIT_SET_FILTER);
-    hdmitx_ddc_hw_op(DDC_INIT_DISABLE_PULLUP);
+    hdmitx_ddc_hw_op(DDC_INIT_DISABLE_PULL_UP_DN);
                                                                   //     1=Map data pins from Venc to Hdmi Tx as RGB mode.
     // --------------------------------------------------------
     // Configure HDMI TX analog, and use HDMI PLL to generate TMDS clock
@@ -2125,47 +2126,31 @@ static void hdmitx_print_info(hdmitx_dev_t* hdmitx_device, int printk_flag)
 
 typedef struct {
     unsigned int val : 20;
-    unsigned int stable: 1;
 }aud_cts_log_t;
 
 static inline unsigned int get_msr_cts(void)
 {
     unsigned int ret = 0;
 
-    // TODO
+    ret = hdmitx_rd_reg(HDMITX_DWC_AUD_CTS1);
+    ret += (hdmitx_rd_reg(HDMITX_DWC_AUD_CTS2) << 8);
+    ret += ((hdmitx_rd_reg(HDMITX_DWC_AUD_CTS3) & 0xf) << 16);
 
     return ret;
-}
-
-static inline unsigned int get_msr_cts_st(void)
-{
-    // TODO
-    return 0;
 }
 
 #define AUD_CTS_LOG_NUM     1000
 aud_cts_log_t cts_buf[AUD_CTS_LOG_NUM];
 static void cts_test(hdmitx_dev_t* hdmitx_device)
 {
-    int i, j;
+    int i;
     unsigned int min = 0, max = 0, total = 0;
 
     printk("\nhdmitx: audio: cts test\n");
     memset(cts_buf, 0, sizeof(cts_buf));
     for(i = 0; i < AUD_CTS_LOG_NUM; i++) {
         cts_buf[i].val = get_msr_cts();
-        cts_buf[i].stable = get_msr_cts_st();
         mdelay(1);
-    }
-
-    printk("cts unstable:\n");
-    for(i = 0, j = 0; i < AUD_CTS_LOG_NUM; i++) {
-        if(cts_buf[i].stable == 0) {
-            printk("%d  ", i);
-            j ++;
-            if(((j+1) & 0xf) == 0)
-                printk("\n");
-        }
     }
 
     printk("\ncts change:\n");
@@ -2212,7 +2197,7 @@ void hdmitx_dump_inter_timing(void)
     printk("Vfront = %d\n", tmp);
 
     tmp = hdmitx_rd_reg(HDMITX_DWC_FC_VSYNCINWIDTH);
-    printk("Vactive = %d\n", tmp);
+    printk("Vsync = %d\n", tmp);
 
     //HDMITX_DWC_FC_INFREQ0 ???
 }
@@ -2281,7 +2266,39 @@ static void hdmitx_dump_intr(void)
 
     DUMP_HDMITXREG_SECTION(HDMITX_DWC_IH_FC_STAT0, HDMITX_DWC_IH_MUTE);
 }
- 
+
+static void mode420_half_horizontal_para(void)
+{
+    unsigned int hactive = 0;
+    unsigned int hblank = 0;
+    unsigned int hfront = 0;
+    unsigned int hsync = 0;
+
+    printk("%s[%d]\n", __func__, __LINE__);
+    hactive  =  hdmitx_rd_reg(HDMITX_DWC_FC_INHACTV0);
+    hactive += (hdmitx_rd_reg(HDMITX_DWC_FC_INHACTV1) & 0x3f) << 8;
+    hblank  =  hdmitx_rd_reg(HDMITX_DWC_FC_INHBLANK0);
+    hblank += (hdmitx_rd_reg(HDMITX_DWC_FC_INHBLANK1) & 0x1f) << 8;
+    hfront  =  hdmitx_rd_reg(HDMITX_DWC_FC_HSYNCINDELAY0);
+    hfront += (hdmitx_rd_reg(HDMITX_DWC_FC_HSYNCINDELAY1) & 0x1f) << 8;
+    hsync  =  hdmitx_rd_reg(HDMITX_DWC_FC_HSYNCINWIDTH0);
+    hsync += (hdmitx_rd_reg(HDMITX_DWC_FC_HSYNCINWIDTH1) & 0x3) << 8;
+
+    hactive = hactive / 2;
+    hblank = hblank / 2;
+    hfront = hfront / 2;
+    hsync = hsync / 2;
+
+    hdmitx_wr_reg(HDMITX_DWC_FC_INHACTV0, (hactive & 0xff));
+    hdmitx_wr_reg(HDMITX_DWC_FC_INHACTV1, ((hactive >> 8) & 0x3f));
+    hdmitx_wr_reg(HDMITX_DWC_FC_INHBLANK0, (hblank  & 0xff));
+    hdmitx_wr_reg(HDMITX_DWC_FC_INHBLANK1, ((hblank >> 8) & 0x1f));
+    hdmitx_wr_reg(HDMITX_DWC_FC_HSYNCINDELAY0, (hfront & 0xff));
+    hdmitx_wr_reg(HDMITX_DWC_FC_HSYNCINDELAY1, ((hfront >> 8) & 0x1f));
+    hdmitx_wr_reg(HDMITX_DWC_FC_HSYNCINWIDTH0, (hsync & 0xff));
+    hdmitx_wr_reg(HDMITX_DWC_FC_HSYNCINWIDTH1, ((hsync >> 8) & 0x3));
+}
+
 static void hdmitx_4k2k60hz444_debug(void)
 {
     printk("4k2k60hzYCBCR444\n");
@@ -2295,6 +2312,18 @@ static void hdmitx_4k2k60hz444_debug(void)
     hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 1);
     hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 2);
     hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, HDMI_3840x2160p60_16x9);
+}
+
+static void hdmitx_4k2k60hz420_debug(void)
+{
+    printk("4k2k60hzYCBCR420\n");
+    printk("set clk:data = 1 : 10 set double rate\n");
+    aml_write_reg32(P_HHI_VID_CLK_DIV, 0x101);
+    //hdmitx_wr_reg(HDMITX_DWC_MC_FLOWCTRL, 1);   //csc_en
+    //hdmitx_wr_reg(HDMITX_DWC_CSC_CFG, 2);
+    hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x43);
+    hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, HDMI_3840x2160p60_16x9);
+    mode420_half_horizontal_para();
 }
 
 static void hdmitx_4k2k5g_debug(void)
@@ -2313,15 +2342,26 @@ static void hdmitx_4k2k5g_debug(void)
     aml_write_reg32(P_HHI_VID_CLK_DIV, 0x100);
 }
 
-static void hdmitx_4k2k60hz420_debug(void)
+static void hdmitx_4k2k5g420_debug(void)
 {
-    printk("4k2k60hzYCBCR420\n");
+    printk("4k2k5g420\n");
     printk("set clk:data = 1 : 10 set double rate\n");
-    aml_write_reg32(P_HHI_VID_CLK_DIV, 0x101);
-    //hdmitx_wr_reg(HDMITX_DWC_MC_FLOWCTRL, 1);   //csc_en
-    //hdmitx_wr_reg(HDMITX_DWC_CSC_CFG, 2);
+    hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, HDMI_3840x2160p50_16x9);
+    set_vmode_clk(VMODE_4K2K_5G);
+    aml_write_reg32(P_HHI_HDMI_PHY_CNTL3, 0x303e005b);
     hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x43);
-    hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, HDMI_3840x2160p60_16x9);
+    aml_write_reg32(P_HHI_HDMI_PLL_CNTL2, 0x404e00);
+    aml_write_reg32(P_HHI_VID_CLK_DIV, 0x100);
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 1, 16, 4);
+    aml_write_reg32(P_VPU_HDMI_SETTING, 0x10e);
+    aml_write_reg32(P_VPU_HDMI_FMT_CTRL, 0x1a);
+    hdmitx_wr_reg(HDMITX_DWC_FC_SCRAMBLER_CTRL, 0);
+    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_01, 0x001f001f);
+    printk("%s[%d]\n", __func__, __LINE__);
+    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_23, 0x001f001f);
+    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 1);
+    hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 2);
+    mode420_half_horizontal_para();
 }
 
 static void hdmitx_debug(hdmitx_dev_t* hdev, const char* buf)
@@ -2349,6 +2389,9 @@ static void hdmitx_debug(hdmitx_dev_t* hdev, const char* buf)
     else if(strncmp(tmpbuf, "4k2k60hz420", 11) == 0) {
         hdmitx_4k2k60hz420_debug();
     }
+    else if(strncmp(tmpbuf, "4k2k5g420", 9) == 0) {
+        hdmitx_4k2k5g420_debug();
+    }
     else if(strncmp(tmpbuf, "4k2k5g", 6) == 0) {
         hdmitx_4k2k5g_debug();
     }
@@ -2367,7 +2410,7 @@ dd();
     else if(strncmp(tmpbuf, "dumpintr", 8) == 0) {
         hdmitx_dump_intr();
     }
-    else if(strncmp(tmpbuf, "hdcptest", 8) == 0) {
+    else if(strncmp(tmpbuf, "testhdcp", 8) == 0) {
         hdmitx_hdcp_test();
     }
     else if(strncmp(tmpbuf, "dumpallregs", 11) == 0) {
@@ -2378,7 +2421,7 @@ dd();
         check_detail_fmt();
         return;
     }
-    else if(strncmp(tmpbuf, "ctstest", 7) == 0) {
+    else if(strncmp(tmpbuf, "testcts", 7) == 0) {
         cts_test(hdev);
         return;
     }

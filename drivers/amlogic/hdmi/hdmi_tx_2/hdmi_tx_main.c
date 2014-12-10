@@ -1144,6 +1144,7 @@ void hdmitx_hpd_plugin_handler(struct work_struct *work)
     hdev->HWOp.CntlDDC(hdev, DDC_EDID_GET_DATA, 0);
     hdev->HWOp.CntlDDC(hdev, DDC_EDID_READ_DATA, 0);      // start reading edid second time
     hdev->HWOp.CntlDDC(hdev, DDC_EDID_GET_DATA, 1);
+    hdev->HWOp.CntlDDC(hdev, DDC_PIN_MUX_OP, PIN_UNMUX);
     // compare EDID_buf & EDID_buf1
     hdmitx_edid_buf_compare_print(hdev);
     hdmitx_edid_clear(hdev);
