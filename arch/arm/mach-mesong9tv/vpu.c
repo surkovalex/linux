@@ -261,8 +261,8 @@ static int switch_gp1_pll(int flag)
 		/* GP1 DPLL 696MHz output*/
 		aml_write_reg32(P_HHI_GP1_PLL_CNTL, 0x6a01023a);
 		aml_write_reg32(P_HHI_GP1_PLL_CNTL2, 0x69c80000 );
-		aml_write_reg32(P_HHI_GP1_PLL_CNTL3, 0x0a674a21 );
-		aml_write_reg32(P_HHI_GP1_PLL_CNTL4, 0x0000000d );
+		aml_write_reg32(P_HHI_GP1_PLL_CNTL3, 0x0a5590c4 ); //0x0a674a21
+		aml_write_reg32(P_HHI_GP1_PLL_CNTL4, 0x0000500d ); //0x0000000d
 		aml_write_reg32(P_HHI_GP1_PLL_CNTL, 0x4a01023a);
 		do{
 			udelay(10);
