@@ -2890,6 +2890,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
         } else {
             timestamp_pcrscr_inc(vsync_pts_inc / vsync_slow_factor);
         }
+        timestamp_apts_inc(vsync_pts_inc / vsync_slow_factor);
     }
     if (omx_secret_mode == true) {
         u32 system_time = timestamp_pcrscr_get();
