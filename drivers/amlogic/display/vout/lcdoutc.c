@@ -53,7 +53,7 @@
 #endif
 
 #define PANEL_NAME		"panel"
-
+ 
 #ifdef LCD_DEBUG_INFO
 unsigned int lcd_print_flag = 1;
 #else
