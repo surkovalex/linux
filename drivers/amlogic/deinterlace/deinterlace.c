@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-12-2a";//remove pd patch coded by wf
+static char version_s[] = "2014-12-10a";//remove mtninfo,mtnc
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -836,9 +836,9 @@ typedef struct{
     uint* param;
     int (*proc_fun)(void);
 }di_param_t;
-
+#ifndef NEW_DI_V1
 unsigned long reg_mtn_info[7];
-
+#endif
 di_param_t di_params[]=
 {
     {"di_mtn_1_ctrl1", &di_mtn_1_ctrl1, NULL},
@@ -868,10 +868,12 @@ di_param_t di_params[]=
     {"blend_ctrl2",  &blend_ctrl2, NULL },
     {"blend_ctrl2_black_level", &blend_ctrl2_black_level, NULL},
     {"blend_ctrl2_mtn_no_mov", &blend_ctrl2_mtn_no_mov, NULL},
+#ifndef NEW_DI_V1
     {"mtn_thre_1_low",&mtn_thre_1_low,NULL},
     {"mtn_thre_1_high",&mtn_thre_1_high,NULL},
     {"mtn_thre_2_low",&mtn_thre_2_low,NULL},
     {"mtn_thre_2_high",&mtn_thre_2_high,NULL},
+
     {"mtn_info0",((uint*)&reg_mtn_info[0]) ,NULL},
     {"mtn_info1",((uint*)&reg_mtn_info[1]) ,NULL},
     {"mtn_info2",((uint*)&reg_mtn_info[2]) ,NULL},
@@ -879,7 +881,7 @@ di_param_t di_params[]=
     {"mtn_info4",((uint*)&reg_mtn_info[4]) ,NULL},
     {"mtn_info5",((uint*)&reg_mtn_info[5]) ,NULL},
  	{"mtn_info6",((uint*)&reg_mtn_info[6]) ,NULL},
-
+#endif
 
     {"post_ctrl__di_blend_en",  &post_ctrl__di_blend_en, NULL},
     {"post_ctrl__di_post_repeat",  &post_ctrl__di_post_repeat, NULL},
@@ -1695,7 +1697,9 @@ static void dump_di_pre_stru(void)
 typedef struct{
     DI_MIF_t di_buf0_mif;
     DI_MIF_t di_buf1_mif;
+    #ifndef NEW_DI_V2
     DI_SIM_MIF_t di_mtncrd_mif;
+    #endif
     DI_SIM_MIF_t di_mtnprd_mif;
     #ifdef NEW_DI_V3
     DI_MC_MIF_t di_mcvecrd_mif;
@@ -2469,7 +2473,7 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
     }
     memset(&di_pre_stru, 0, sizeof(di_pre_stru));
 #ifdef D2D3_SUPPORT
-    dp_buf_size = 256*canvas_height/2;
+    dp_buf_size = 256*canvas_height/2;//139264 bytes
 #endif
     if(prog_flag){
         di_pre_stru.prog_proc_type = 1;
@@ -2499,9 +2503,9 @@ static int di_init_buf(int width, int height, unsigned char prog_flag)
 	/*nr_size(bits)=w*active_h*8*2(yuv422) mtn(bits)=w*active_h*4 cont(bits)=w*active_h*4 mv(bits)=w*active_h/5*16 mcinfo(bits)=active_h*16*/
 	di_buf_size = width*canvas_height*6/4 + width*canvas_height/5 + canvas_height;//3552320 bytes
 #elif defined NEW_DI_V1
-        di_buf_size = width*canvas_height*6/4;
+        di_buf_size = width*canvas_height*6/4;//3133440 bytes
 #else
-        di_buf_size = width*canvas_height*5/4;
+        di_buf_size = width*canvas_height*5/4;//2611200 bytes
 #endif
 #ifdef D2D3_SUPPORT
         if(d2d3_enable){
@@ -3560,8 +3564,9 @@ static void pre_de_done_buf_config(void)
         read_pulldown_info(&(di_pre_stru.di_wr_buf->field_pd_info),
                             &(di_pre_stru.di_wr_buf->win_pd_info[0])
                             );
+        #ifndef NEW_DI_V1
         read_mtn_info(di_pre_stru.di_wr_buf->mtn_info,reg_mtn_info);
-
+        #endif
         if(di_pre_stru.cur_prog_flag){
             if(di_pre_stru.prog_proc_type == 0){
                 if((di_pre_stru.process_count>0)
@@ -4815,10 +4820,12 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	     di_post_stru.di_buf1_mif.luma_x_end0 	= di_end_x;
 	     di_post_stru.di_buf1_mif.luma_y_start0 	= di_start_y>>1;
 	     di_post_stru.di_buf1_mif.luma_y_end0 	= di_end_y >>1;
+	     #ifndef NEW_DI_V2
 	     di_post_stru.di_mtncrd_mif.start_x 	= di_start_x;
 	     di_post_stru.di_mtncrd_mif.end_x 	        = di_end_x;
 	     di_post_stru.di_mtncrd_mif.start_y 	= di_start_y>>1;
 	     di_post_stru.di_mtncrd_mif.end_y 	        = di_end_y >>1;
+	     #endif
 	     di_post_stru.di_mtnprd_mif.start_x 	= di_start_x;
 	     di_post_stru.di_mtnprd_mif.end_x 	        = di_end_x;
 	     di_post_stru.di_mtnprd_mif.start_y 	= di_start_y>>1;
@@ -4849,7 +4856,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
 		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[0], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
+		#ifndef NEW_DI_V2
 		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);//remove from m8
+		#endif
 		#ifdef NEW_DI_V3
 		config_mcvec_canvas_idx(di_buf->di_buf_dup_p[2], di_post_mcvecrd_canvas_idx[di_post_stru.canvas_id]);
 		#endif
@@ -4858,7 +4867,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
 		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[2], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
+		#ifndef NEW_DI_V2
 		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
+		#endif
 		#ifdef NEW_DI_V3
 		config_mcvec_canvas_idx(di_buf->di_buf_dup_p[2], di_post_mcvecrd_canvas_idx[di_post_stru.canvas_id]);
 		#endif
@@ -4867,13 +4878,17 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
 		config_canvas_idx(di_buf->di_buf_dup_p[2], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[0], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
+		#ifndef NEW_DI_V2
 		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
+		#endif
 		break;
 	    case PULL_DOWN_BUF1://wave with buf1
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
 		config_canvas_idx(di_buf->di_buf_dup_p[1], -1, di_post_mtnprd_canvas_idx[di_post_stru.canvas_id]);
 		config_canvas_idx(di_buf->di_buf_dup_p[0], di_post_buf1_canvas_idx[di_post_stru.canvas_id], -1);
+		#ifndef NEW_DI_V2
 		config_canvas_idx(di_buf->di_buf_dup_p[0], -1, di_post_mtncrd_canvas_idx[di_post_stru.canvas_id]);
+		#endif
 		break;
 	    case PULL_DOWN_EI:
 		config_canvas_idx(di_buf->di_buf_dup_p[1], di_post_buf0_canvas_idx[di_post_stru.canvas_id], -1);
@@ -4888,7 +4903,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    case PULL_DOWN_NORMAL:
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
+		#ifndef NEW_DI_V2
 		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
+		#endif
 		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
 		#ifdef NEW_DI_V3
 		di_post_stru.di_mcvecrd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mcvec_canvas_idx;
@@ -4902,7 +4919,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[2]->nr_canvas_idx;
 		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+		#ifndef NEW_DI_V2
 		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
+		#endif
 		#ifdef NEW_DI_V3
 		di_post_stru.di_mcvecrd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mcvec_canvas_idx;
 		#endif
@@ -4915,7 +4934,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
 		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[2]->mtn_canvas_idx;
+		#ifndef NEW_DI_V2
 		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
+		#endif
 		post_blend_mode = 0;
 		blend_mtn_en = 1;
 		ei_en = 1;
@@ -4925,7 +4946,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 		di_post_stru.di_buf0_mif.canvas0_addr0 = di_buf->di_buf_dup_p[1]->nr_canvas_idx;
 		di_post_stru.di_mtnprd_mif.canvas_num = di_buf->di_buf_dup_p[1]->mtn_canvas_idx;
 		di_post_stru.di_buf1_mif.canvas0_addr0 = di_buf->di_buf_dup_p[0]->nr_canvas_idx;
+		#ifndef NEW_DI_V2
 		di_post_stru.di_mtncrd_mif.canvas_num = di_buf->di_buf_dup_p[0]->mtn_canvas_idx;
+		#endif
 		post_blend_mode = 1;
 		blend_mtn_en = 1;//must enable
 		ei_en = 1;//must enable
@@ -4959,7 +4982,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    		&di_post_stru.di_buf0_mif,
 	    		&di_post_stru.di_buf1_mif,
 	    		NULL,
+	    		#ifndef NEW_DI_V2
 	    		&di_post_stru.di_mtncrd_mif,
+	    		#endif
 	    		&di_post_stru.di_mtnprd_mif,
 	    		ei_en, 																// ei enable
 	    		post_blend_en,													// blend enable
@@ -4969,8 +4994,10 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    		0,                 												// di_ddr_en.
 	    		(di_buf->di_buf_dup_p[1]->vframe->type & VIDTYPE_TYPEMASK)==VIDTYPE_INTERLACE_TOP ? 0 : 1,		// 1 bottom generate top
 	    		hold_line,
-	    		post_urgent,
-	    		reg_mtn_info
+	    		post_urgent
+                        #ifndef NEW_DI_V1
+	    		, reg_mtn_info
+                        #endif
 	    	);
     	#ifdef NEW_DI_V3
 	enable_mc_di_post(&di_post_stru.di_mcvecrd_mif);
@@ -4981,7 +5008,9 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    		&di_post_stru.di_buf0_mif,
 	    		&di_post_stru.di_buf1_mif,
 	    		NULL,
+	    		#ifndef NEW_DI_V2
 	    		&di_post_stru.di_mtncrd_mif,
+	    		#endif
 	    		&di_post_stru.di_mtnprd_mif,
 	    		#ifdef NEW_DI_V3
 	    		&di_post_stru.di_mcvecrd_mif,
@@ -4994,8 +5023,10 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
 	    		0,                 												// di_ddr_en.
 	    		(di_buf->di_buf_dup_p[1]->vframe->type & VIDTYPE_TYPEMASK)==VIDTYPE_INTERLACE_TOP ? 0 : 1,		// 1 bottom generate top
 	    		hold_line,
-	    		post_urgent,
-	    		reg_mtn_info
+	    		post_urgent
+                        #ifndef NEW_DI_V1
+	    		, reg_mtn_info
+                        #endif
 	    	);
 
 #ifdef NEW_DI_V1

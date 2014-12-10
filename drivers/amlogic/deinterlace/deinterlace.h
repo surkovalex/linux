@@ -200,8 +200,9 @@ typedef struct di_buf_s{
     /* pull down information */
     pulldown_detect_info_t field_pd_info;
     pulldown_detect_info_t win_pd_info[MAX_WIN_NUM];
-
+#ifndef NEW_DI_V1
     unsigned long mtn_info[5];
+#endif
     pulldown_mode_t pulldown_mode;
     int win_pd_mode[5];
     process_fun_index_t process_fun_index;
@@ -223,6 +224,7 @@ extern uint ei_ctrl3;
 #ifdef DET3D
 extern bool det3d_en;
 #endif
+
 extern uint mtn_ctrl;
 extern uint mtn_ctrl_char_diff_cnt;
 extern uint mtn_ctrl_low_level;
@@ -235,6 +237,7 @@ extern uint blend_ctrl;
 extern uint kdeint0;
 extern uint kdeint1;
 extern uint kdeint2;
+#ifndef NEW_DI_V1
 extern uint reg_mtn_info0;
 extern uint reg_mtn_info1;
 extern uint reg_mtn_info2;
@@ -244,6 +247,7 @@ extern uint mtn_thre_1_low;
 extern uint mtn_thre_1_high;
 extern uint mtn_thre_2_low;
 extern uint mtn_thre_2_high;
+#endif
 
 extern uint blend_ctrl1;
 extern uint blend_ctrl1_char_level;
@@ -256,8 +260,6 @@ extern uint blend_ctrl2_mtn_no_mov;
 extern uint post_ctrl__di_blend_en;
 extern uint post_ctrl__di_post_repeat;
 extern uint di_pre_ctrl__di_pre_repeat;
-
-extern uint noise_reduction_level;
 
 extern uint field_32lvl;
 extern uint field_22lvl;
@@ -386,25 +388,35 @@ void enable_di_post_2 (
    DI_MIF_t        *di_buf0_mif,
    DI_MIF_t        *di_buf1_mif,
    DI_SIM_MIF_t    *di_diwr_mif,
+   #ifndef NEW_DI_V2
    DI_SIM_MIF_t    *di_mtncrd_mif,
+   #endif
    DI_SIM_MIF_t    *di_mtnprd_mif,
    int ei_en, int blend_en, int blend_mtn_en, int blend_mode, int di_vpp_en, int di_ddr_en,
-   int post_field_num, int hold_line , int urgent,
-   unsigned long * reg_mtn_info);
+   int post_field_num, int hold_line , int urgent
+   #ifndef NEW_DI_V1
+   , unsigned long * reg_mtn_info
+   #endif
+);
 
 void di_post_switch_buffer (
    DI_MIF_t        *di_buf0_mif,
    DI_MIF_t        *di_buf1_mif,
    DI_SIM_MIF_t    *di_diwr_mif,
+   #ifndef NEW_DI_V2
    DI_SIM_MIF_t    *di_mtncrd_mif,
+   #endif
    DI_SIM_MIF_t    *di_mtnprd_mif,
    #ifdef NEW_DI_V3
    DI_MC_MIF_t     *di_mcvecrd_mif,
    #endif
    int ei_en, int blend_en, int blend_mtn_en, int blend_mode, int di_vpp_en, int di_ddr_en,
-   int post_field_num, int hold_line, int urgent,
-   unsigned long * reg_mtn_info );
-
+   int post_field_num, int hold_line, int urgent
+   #ifndef NEW_DI_V1
+   , unsigned long * reg_mtn_info 
+   #endif
+);
+#if 0
 void enable_di_post_pd(
     DI_MIF_t        *di_buf0_mif,
     DI_MIF_t        *di_buf1_mif,
@@ -422,12 +434,12 @@ void di_post_switch_buffer_pd(
     DI_SIM_MIF_t    *di_mtnprd_mif,
     int ei_en, int blend_en, int blend_mtn_en, int blend_mode, int di_vpp_en, int di_ddr_en,
     int post_field_num, int hold_line, int urgent);
-
+#endif
 void read_pulldown_info(pulldown_detect_info_t* field_pd_info,
                         pulldown_detect_info_t* win_pd_info);
-
+#ifndef NEW_DI_V1
 void read_mtn_info(unsigned long* mtn_info, unsigned long* );
-
+#endif
 void reset_pulldown_state(void);
 
 void cal_pd_parameters(pulldown_detect_info_t* cur_info, pulldown_detect_info_t* pre_info, pulldown_detect_info_t* next_info, pd_detect_threshold_t* pd_th);
