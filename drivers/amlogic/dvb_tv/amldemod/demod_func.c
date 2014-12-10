@@ -1116,9 +1116,7 @@ extern int memstart;
 
 void dtmb_initial(struct aml_demod_sta *demod_sta)
 {
-
-	pr_dbg("[dtmb]mem_buf is 0x%x\n",memstart);
-	dtmb_write_reg(0x049, memstart);		//only for init
+//	dtmb_write_reg(0x049, memstart);		//only for init
 	dtmb_write_reg(0x010, 0x52);
 	dtmb_write_reg(0x047, 0x33202);  //20 bits, 1 - fpga. 0 - m6tvd
 	dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
@@ -1533,6 +1531,12 @@ int demod_set_sys(struct aml_demod_sta *demod_sta,
 	}
 	#endif
     demod_set_adc_core_clk(clk_adc, clk_dem,dvb_mode);
+	//init for dtmb
+	if(dvb_mode==M6_Dtmb){
+		dtmb_write_reg(0x049, memstart);	
+		pr_dbg("[dtmb]mem_buf is 0x%x\n",memstart);
+	}
+	//
 	demod_sta->adc_freq=clk_adc;
 	demod_sta->clk_freq=clk_dem;
 	adc_clk=clk_measure(17);

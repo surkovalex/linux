@@ -60,7 +60,7 @@ static struct aml_demod_sta demod_status;
 static fe_modulation_t atsc_mode=VSB_8;
 
 long *mem_buf;
-int memstart=0xfa00000;
+int memstart=0x1ef00000;
 
 MODULE_PARM_DESC(frontend_mode, "\n\t\t Frontend mode 0-DVBC, 1-DVBT");
 static int frontend_mode = -1;
@@ -1026,9 +1026,9 @@ static int m6_demod_dtmb_set_frontend(struct dvb_frontend *fe)
 	last_lock = -1;
 
 //	aml_dmx_before_retune(AM_TS_SRC_TS2, fe);
+  dtmb_set_ch(&demod_status, &demod_i2c, &param);
 	aml_fe_analog_set_frontend(fe);
-	dtmb_set_ch(&demod_status, &demod_i2c, &param);
-
+	
 	/*{
 		int ret;
 		ret = wait_event_interruptible_timeout(dev->lock_wq, amdemod_atsc_stat_islock(dev), 4*HZ);
@@ -1221,6 +1221,7 @@ static int m6_demod_fe_resume(struct aml_fe_dev *dev)
 {
 	pr_dbg("m6_demod_fe_resume\n");
 	demod_power_switch(PWR_ON);
+	M6_Demod_Dtmb_Init(dev);
 	return 0;
 
 }
