@@ -1042,7 +1042,7 @@
 	aml_g9tv_sound_card {
 		compatible = "sound_card, aml_snd_g9tv";
 		aml,sound_card = "AML-G9TVAUDIO";
-		aml,codec_dai = "AML-G9TV","pmu4-audio-hifi","dummy-codec";
+		aml,codec_dai = "AML-G9TV","pmu4-audio-hifi","dummy_codec";
 
 		aml,audio-routing-dummy=
 			"LINEOUT","LOUTL",
