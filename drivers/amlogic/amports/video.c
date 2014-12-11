@@ -1145,26 +1145,53 @@ static void ge2d_keeplastframe_block(int cur_index, int format)
 {
     //u32 cur_index;
     u32 y_index, u_index, v_index;
+#ifdef CONFIG_VSYNC_RDMA
+    u32 y_index2, u_index2, v_index2;
+#endif
+
     mutex_lock(&video_module_mutex);
+
+#ifdef CONFIG_VSYNC_RDMA
+    y_index = disp_canvas_index[0][0];
+    y_index2 = disp_canvas_index[1][0];
+    u_index = disp_canvas_index[0][1];
+    u_index2 = disp_canvas_index[1][1];
+    v_index = disp_canvas_index[2][0];
+    v_index2 = disp_canvas_index[2][1];
+#else
     //cur_index = READ_VCBUS_REG(VD1_IF0_CANVAS0 + cur_dev->viu_off);
     y_index = cur_index & 0xff;
     u_index = (cur_index >> 8) & 0xff;
     v_index = (cur_index >> 16) & 0xff;
+#endif
+
     switch (format) {
         case GE2D_FORMAT_M24_YUV444:
             ge2d_store_frame_YUV444(cur_index);
             canvas_update_addr(y_index, keep_phy_addr(keep_y_addr));
+#ifdef CONFIG_VSYNC_RDMA
+            canvas_update_addr(y_index2, keep_phy_addr(keep_y_addr));
+#endif
             break;
         case GE2D_FORMAT_M24_NV21:
             ge2d_store_frame_NV21(cur_index);
             canvas_update_addr(y_index, keep_phy_addr(keep_y_addr));
             canvas_update_addr(u_index, keep_phy_addr(keep_u_addr));
+#ifdef CONFIG_VSYNC_RDMA
+            canvas_update_addr(y_index2, keep_phy_addr(keep_y_addr));
+            canvas_update_addr(u_index2, keep_phy_addr(keep_u_addr));
+#endif
             break;
         case GE2D_FORMAT_M24_YUV420:
             ge2d_store_frame_YUV420(cur_index);
             canvas_update_addr(y_index, keep_phy_addr(keep_y_addr));
             canvas_update_addr(u_index, keep_phy_addr(keep_u_addr));
             canvas_update_addr(v_index, keep_phy_addr(keep_v_addr));
+#ifdef CONFIG_VSYNC_RDMA
+            canvas_update_addr(y_index2, keep_phy_addr(keep_y_addr));
+            canvas_update_addr(u_index2, keep_phy_addr(keep_u_addr));
+            canvas_update_addr(v_index2, keep_phy_addr(keep_v_addr));
+#endif
             break;
         default:
             break;
