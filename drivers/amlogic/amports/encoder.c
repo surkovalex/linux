@@ -74,6 +74,7 @@ static int clock_level = 1;
 static int enable_dblk = 1;  // 0 disable, 1 vdec 2 hdec
 
 static u32 encode_print_level = LOG_LEVEL_DEBUG;
+static u32 no_timeout = 0;
 
 static int me_mv_merge_ctl =
               ( 0x1 << 31)  |  // [31] me_merge_mv_en_16
@@ -298,7 +299,7 @@ static const u32 *select_ucode(u32 ucode_index)
     switch(ucode_index){
         case UCODE_MODE_FULL:
             if(enable_dblk)
-                p = mix_dump_mc_dblk;
+                p = mix_dump_mc_m2_dblk;
             else
                 p = mix_dump_mc;
             break;
@@ -346,10 +347,17 @@ static const u32 *select_ucode(u32 ucode_index)
     const u32 * p = mix_dump_mc;
     switch(ucode_index){
         case UCODE_MODE_FULL:
-            if(enable_dblk)
-                p = mix_dump_mc_dblk;
-            else
-                p = mix_dump_mc;
+            if(IS_MESON_M8M2_CPU){
+                if(enable_dblk)
+                    p = mix_dump_mc_m2_dblk;
+                else
+                    p = mix_dump_mc;
+            }else{
+                if(enable_dblk)
+                    p = mix_dump_mc_dblk;
+                else
+                    p = mix_dump_mc;
+            }
             break;
         case UCODE_MODE_SW_MIX:
             if(IS_MESON_M8M2_CPU){
@@ -2177,12 +2185,21 @@ Again:
         WRITE_HREG(QDCT_MB_WR_PTR, (wq->mem.dct_buff_start_addr+ wq->control.dct_buffer_write_ptr));
         wq->control.dct_flush_start = wq->control.dct_buffer_write_ptr;
     }
-    wait_event_interruptible_timeout(manager->event.hw_complete, 
-		((manager->encode_hw_status == ENCODER_IDR_DONE)
-		||(manager->encode_hw_status == ENCODER_NON_IDR_DONE)
-		||(manager->encode_hw_status == ENCODER_SEQUENCE_DONE)
-		||(manager->encode_hw_status == ENCODER_PICTURE_DONE)),
-		timeout);
+
+    if(no_timeout){
+        wait_event_interruptible(manager->event.hw_complete, 
+          ((manager->encode_hw_status == ENCODER_IDR_DONE)
+          ||(manager->encode_hw_status == ENCODER_NON_IDR_DONE)
+          ||(manager->encode_hw_status == ENCODER_SEQUENCE_DONE)
+          ||(manager->encode_hw_status == ENCODER_PICTURE_DONE)));
+    }else{
+        wait_event_interruptible_timeout(manager->event.hw_complete, 
+          ((manager->encode_hw_status == ENCODER_IDR_DONE)
+          ||(manager->encode_hw_status == ENCODER_NON_IDR_DONE)
+          ||(manager->encode_hw_status == ENCODER_SEQUENCE_DONE)
+          ||(manager->encode_hw_status == ENCODER_PICTURE_DONE)),
+          timeout);
+    }
 
     if((request->cmd == ENCODER_SEQUENCE)&&(manager->encode_hw_status == ENCODER_SEQUENCE_DONE)){
         wq->sps_size = READ_HREG(VLC_TOTAL_BYTES);
@@ -2908,6 +2925,9 @@ MODULE_PARM_DESC(clock_level, "\n clock_level \n");
 
 module_param(encode_print_level, uint, 0664);
 MODULE_PARM_DESC(encode_print_level, "\n encode_print_level \n");
+
+module_param(no_timeout, uint, 0664);
+MODULE_PARM_DESC(no_timeout, "\n no_timeout flag for process request \n");
 
 module_init(amvenc_avc_driver_init_module);
 module_exit(amvenc_avc_driver_remove_module);
