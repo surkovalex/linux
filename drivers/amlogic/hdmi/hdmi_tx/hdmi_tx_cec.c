@@ -1719,7 +1719,7 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
     if(!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) || !hdmitx_device->hpd_state ) {
         return ;
     }
-    if((0 == value & 0x1) && (1 == (param[0] & 1))){
+    if((0 == (value & 0x1)) && (1 == (param[0] & 1))){
         hdmitx_device->cec_init_ready = 1;
         hdmitx_device->hpd_state = 1;
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
