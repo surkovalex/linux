@@ -2968,11 +2968,13 @@ static tvin_scan_mode_t vmode2scan_mode(vmode_t	mode)
 		case VMODE_LVDS_1080P_50HZ:
 		case VMODE_LVDS_768P:
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 		case VMODE_480P_59HZ:
 		case VMODE_720P_59HZ:
 		case VMODE_1080P_59HZ:
 		case VMODE_4K2K_29HZ:
 		case VMODE_1080I_59HZ:
+#endif
 #endif
 			scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;
 			break;
