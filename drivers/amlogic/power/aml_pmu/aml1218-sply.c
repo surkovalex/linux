@@ -426,7 +426,7 @@ int aml1218_set_trickle_time(int minutes)
 {
     int bits;
 
-    if (minutes < 30 && minutes > 80) {
+    if ( (minutes < 30) || (minutes > 80) ) {
         AML1218_ERR("%s, invalid trickle time:%d\n", __func__, minutes);
         return -EINVAL;
     }
@@ -445,7 +445,7 @@ int aml1218_set_rapid_time(int minutes)
 {
     int bits;
 
-    if (minutes > 360 || minutes < 720) {
+    if ( (minutes < 360) || (minutes > 720) ) {
         AML1218_ERR("%s, invalid rapid time:%d\n", __func__, minutes);
         return -EINVAL;
     }
@@ -1417,6 +1417,8 @@ static void aml1218_charging_monitor(struct work_struct *work)
         api->pmu_update_battery_capacity(charger, aml1218_battery); 
     } else {
         aml1218_update_state(charger);
+        schedule_delayed_work(&supply->work, supply->interval);
+        return;
     }
 
     /*
