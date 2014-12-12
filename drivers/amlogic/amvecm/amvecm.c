@@ -146,7 +146,9 @@ static void amvecm_size_patch(void)
 	if(cm_en)
 #endif
 	cm2_frame_size_patch(he-hs+1,ve-vs+1);
-#if (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESON6TVD)
+#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)
+	ve_frame_size_patch(he-hs+1,ve-vs+2);//hardware issue
+#elif (MESON_CPU_TYPE>=MESON_CPU_TYPE_MESON6TVD)
 	ve_frame_size_patch(he-hs+1,ve-vs+1);
 #endif
 
