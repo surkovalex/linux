@@ -34,6 +34,7 @@
 #include <linux/amlogic/amports/vframe_provider.h>
 #include <linux/amlogic/amports/vframe_receiver.h>
 #include <linux/amlogic/amports/vformat.h>
+#include <linux/amlogic/amports/tsync.h>
 #include <linux/workqueue.h>
 #include <linux/dma-mapping.h>
 #include <asm/atomic.h>
@@ -267,6 +268,7 @@ extern u32 get_blackout_policy(void);
 
 #ifdef CONFIG_GE2D_KEEP_FRAME
 static ge2d_context_t *ge2d_videoh264_context = NULL;
+static bool pts_discontinue = false;
 
 static int ge2d_videoh264task_init(void)
 {
@@ -1161,12 +1163,17 @@ static void vh264_isr(void)
                 }
             }
 
-            // if use_idr_framerate or fixed frame rate, only use PTS for IDR frames
+            if (pts_valid && !pts_discontinue){
+                pts_discontinue = (abs(last_pts-pts) >= tsync_vpts_discontinuity_margin());
+            }
+
+            // if use_idr_framerate or fixed frame rate, only use PTS for IDR frames except for pts discontinue
             if (timing_info_present_flag &&
                 frame_dur && 
                 (use_idr_framerate || (fixed_frame_rate_flag != 0)) &&
                 pts_valid &&
-                h264_first_valid_pts_ready) {
+                h264_first_valid_pts_ready && 
+                (!pts_discontinue)) {
                 pts_valid = (idr_flag) ? 1 : 0;
             }
 
@@ -1179,6 +1186,7 @@ static void vh264_isr(void)
             // calculate PTS of next frame and smooth PTS for fixed rate source
             if (pts_valid) {
                 if ((fixed_frame_rate_flag) &&
+                    (!pts_discontinue) &&
                     (abs(pts_inc_by_duration(NULL, NULL) - pts)  < DUR2PTS(frame_dur))) {
                     pts = pts_inc_by_duration(&pts, &last_pts_remainder);
                 } else {
@@ -1207,7 +1215,10 @@ static void vh264_isr(void)
              * force no VPTS discontinue reporting if we saw errors earlier but only once.
              */
             if ((pts_valid) && (check_pts_discontinue) && (!error)) {
-                if ((pts - last_pts) < 90000) {
+                if(pts_discontinue){
+                    vf->flag = 0;
+                    check_pts_discontinue = false;
+                }else if((pts - last_pts) < 90000) {
                     vf->flag = VFRAME_FLAG_NO_DISCONTINUE;
                     check_pts_discontinue = false;
                 }
@@ -1249,7 +1260,7 @@ static void vh264_isr(void)
                     kfifo_put(&recycle_q, (const vframe_t **)&vf);
                 } else {
                     p_last_vf = vf;
-
+                    pts_discontinue=false;
                     kfifo_put(&display_q, (const vframe_t **)&vf);
 
                     vf_notify_receiver(PROVIDER_NAME,VFRAME_EVENT_PROVIDER_VFRAME_READY,NULL);
@@ -1281,6 +1292,7 @@ static void vh264_isr(void)
                     kfifo_put(&recycle_q, (const vframe_t **)&vf);
                     continue;
                 } else {
+                    pts_discontinue=false;
                     kfifo_put(&display_q, (const vframe_t **)&vf);
                 }
 
@@ -1684,7 +1696,7 @@ static void vh264_local_init(void)
     pts_missed = 0;
     pts_hit = 0;
 #endif
-
+    pts_discontinue = false;
     return;
 }
 
