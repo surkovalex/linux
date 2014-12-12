@@ -885,6 +885,11 @@ void osddev_update_disp_axis_hw(
 	dispdata_t   disp_data;
 	pandata_t    pan_data;
 
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+	if (index == OSD2)
+		return;
+#endif
+
 	if(NULL==osd_hw.color_info[index]) return;
 
 	disp_data.x_start=display_h_start;
