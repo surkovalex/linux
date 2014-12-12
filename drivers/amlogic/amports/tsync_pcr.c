@@ -218,13 +218,24 @@ void tsync_pcr_avevent_locked(avevent_t event, u32 param)
                 }
 
                 if (wait_pcr_count >= 20){
-                    timestamp_pcrscr_set(first_vpts -tsync_pcr_ref_latency*10);                    
-                    tsync_pcr_usepcr=0;
-                    tsync_pcr_inited_flag|=TSYNC_PCR_INITCHECK_VPTS;
-                    if (!tsync_pcr_vpause_flag) {
-                        timestamp_pcrscr_enable(1);
+                    if (cur_pcr){
+                        timestamp_pcrscr_set(cur_pcr-tsync_pcr_ref_latency);    
+                        tsync_pcr_usepcr=1;
+                        tsync_pcr_inited_flag|=TSYNC_PCR_INITCHECK_PCR;
+                        if (!tsync_pcr_vpause_flag) {
+                            timestamp_pcrscr_enable(1);
+                        }
+                        printk("use cur_pcr wait_pcr_count time out!\n");
                     }
-                    printk("use first_vpts !\n");
+                    else {
+                        timestamp_pcrscr_set(first_vpts -tsync_pcr_ref_latency*10);                    
+                        tsync_pcr_usepcr=0;
+                        tsync_pcr_inited_flag|=TSYNC_PCR_INITCHECK_VPTS;
+                        if (!tsync_pcr_vpause_flag) {
+                            timestamp_pcrscr_enable(1);
+                        }
+                        printk("use first_vpts !\n");
+                    }
                 }else{
                     printk("wait_pcr_count = %d \n", wait_pcr_count);
 

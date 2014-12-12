@@ -1557,6 +1557,16 @@ static ssize_t store_firstapts(struct class *class,
 
     return size;
 }
+
+
+
+static ssize_t show_checkin_firstvpts(struct class *class,
+                         struct class_attribute *attr,
+                         char *buf)
+{
+    return sprintf(buf, "0x%x\n", timestamp_checkin_firstvpts_get());
+}
+
 static ssize_t show_vpause_flag(struct class *class,
                          struct class_attribute *attr,
                          char *buf)
@@ -1648,6 +1658,7 @@ static struct class_attribute tsync_class_attrs[] = {
     __ATTR(slowsync_enable, S_IRUGO | S_IWUSR, show_slowsync_enable, store_slowsync_enable),
     __ATTR(startsync_mode, S_IRUGO | S_IWUSR, show_startsync_mode, store_startsync_mode),
 	__ATTR(firstapts,  S_IRUGO | S_IWUSR | S_IWGRP, show_firstapts,    store_firstapts),
+    __ATTR(checkin_firstvpts, S_IRUGO | S_IWUSR, show_checkin_firstvpts, NULL),
     __ATTR_NULL
 };
 

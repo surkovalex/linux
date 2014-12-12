@@ -239,6 +239,10 @@ static struct dec_sysinfo vh264_amstream_dec_info;
 extern u32 trickmode_i;
 static dma_addr_t mc_dma_handle;
 static void *mc_cpu_addr;
+static u32 first_offset;
+static u32 first_pts;
+static u64 first_pts64;
+static bool first_pts_cached;
 
 #define MC_OFFSET_HEADER    0x0000
 #define MC_OFFSET_DATA      0x1000
@@ -1041,7 +1045,16 @@ static void vh264_isr(void)
             }
 
             // add 64bit pts us ;
-            if (pts_lookup_offset_us64(PTS_TYPE_VIDEO, b_offset, &pts, 0,&pts_us64) == 0){
+            if (unlikely((b_offset == first_offset) && (first_pts_cached))) {
+                pts = first_pts;
+                pts_us64 = first_pts64;
+                first_pts_cached = false;
+                pts_valid = 1;
+#ifdef DEBUG_PTS
+                pts_hit++;
+#endif
+            }
+            else if (pts_lookup_offset_us64(PTS_TYPE_VIDEO, b_offset, &pts, 0,&pts_us64) == 0){
                 pts_valid = 1;
 #ifdef DEBUG_PTS
                 pts_hit++;
@@ -1335,6 +1348,12 @@ static void vh264_isr(void)
         frame_height = (READ_VREG(AV_SCRATCH_1) + 1) * 16;
         printk("Over decoder supported size, height = %d\n", frame_height);
         fatal_error_flag = DECODER_FATAL_ERROR_SIZE_OVERFLOW;
+    } else if ((cpu_cmd & 0xff) == 9) {
+        first_offset = READ_VREG(AV_SCRATCH_1);
+        if (pts_lookup_offset_us64(PTS_TYPE_VIDEO, first_offset, &first_pts, 0,&first_pts64) == 0) {
+            first_pts_cached = true;
+        }
+        WRITE_VREG(AV_SCRATCH_0, 0);        
     }
 
 #ifdef HANDLE_H264_IRQ
@@ -1671,6 +1690,10 @@ static s32 vh264_init(void)
     vh264_running = 0;    //init here to reset last_mb_width&last_mb_height
     vh264_eos = 0;
     duration_on_correcting=0;
+    first_pts = 0;
+    first_pts64 = 0;
+    first_offset = 0;
+    first_pts_cached = false;
     vh264_local_init();
 
     query_video_status(0, &trickmode_fffb);
