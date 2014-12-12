@@ -146,6 +146,8 @@ static u32 next_peek_underflow;
 
 static DEFINE_SPINLOCK(video_onoff_lock);
 static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
+static DEFINE_SPINLOCK(video2_onoff_lock);
+static int video2_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
 #ifdef FIQ_VSYNC
 #define BRIDGE_IRQ INT_TIMER_C
@@ -236,6 +238,25 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
         video_onoff_state = VIDEO_ENABLE_STATE_OFF_REQ; \
         spin_unlock_irqrestore(&video_onoff_lock, flags); \
     } while (0)
+    
+#define VIDEO_LAYER2_ON() \
+    do { \
+        unsigned long flags; \
+        spin_lock_irqsave(&video2_onoff_lock, flags); \
+        video2_onoff_state = VIDEO_ENABLE_STATE_ON_REQ; \
+        spin_unlock_irqrestore(&video2_onoff_lock, flags); \
+    } while (0)
+
+#define VIDEO_LAYER2_OFF() \
+    do { \
+        unsigned long flags; \
+        spin_lock_irqsave(&video2_onoff_lock, flags); \
+        video2_onoff_state = VIDEO_ENABLE_STATE_OFF_REQ; \
+        spin_unlock_irqrestore(&video2_onoff_lock, flags); \
+    } while (0)    
+    
+    
+    
 #if HAS_VPU_PROT
 #define EnableVideoLayer()  \
     do { \
@@ -268,8 +289,7 @@ static int video_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 #define EnableVideoLayer2()  \
     do { \
          VD2_MEM_POWER_ON(); \
-         SET_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, \
-           VPP_VD2_PREBLEND | (0x1ff << VPP_VD2_ALPHA_BIT)); \
+        VIDEO_LAYER2_ON(); \
     } while (0)
 #endif
 #define VSYNC_EnableVideoLayer2()  \
@@ -1342,8 +1362,8 @@ static void vpp_settings_h(vpp_frame_par_t *framePtr)
                    ((framePtr->VPP_hsc_endp   & VPP_VD_SIZE_MASK) << VPP_VD1_END_BIT));
 
     VSYNC_WR_MPEG_REG(VPP_BLEND_VD2_H_START_END + cur_dev->vpp_off,
-                   ((framePtr->VPP_hsc_startp & VPP_VD_SIZE_MASK) << VPP_VD1_START_BIT) |
-                   ((framePtr->VPP_hsc_endp   & VPP_VD_SIZE_MASK) << VPP_VD1_END_BIT));
+                   ((framePtr->VPP_hd_start_lines_ & VPP_VD_SIZE_MASK) << VPP_VD1_START_BIT) |
+                   ((framePtr->VPP_hd_end_lines_   & VPP_VD_SIZE_MASK) << VPP_VD1_END_BIT));
     }
     VSYNC_WR_MPEG_REG(VPP_HSC_REGION12_STARTP + cur_dev->vpp_off,
                    (0 << VPP_REGION1_BIT) |
@@ -1408,8 +1428,8 @@ static void vpp_settings_v(vpp_frame_par_t *framePtr)
                    (((VPP_PREBLEND_VD_V_END_LIMIT-1) & VPP_VD_SIZE_MASK) << VPP_VD1_END_BIT));
     }
     VSYNC_WR_MPEG_REG(VPP_BLEND_VD2_V_START_END + cur_dev->vpp_off,
-                   (((framePtr->VPP_vsc_endp / 2) & VPP_VD_SIZE_MASK) << VPP_VD1_START_BIT) |
-                   (((framePtr->VPP_vsc_endp) & VPP_VD_SIZE_MASK) << VPP_VD1_END_BIT));
+                   (((framePtr->VPP_vd_end_lines_ / 2) & VPP_VD_SIZE_MASK) << VPP_VD1_START_BIT) |
+                   (((framePtr->VPP_vd_end_lines_) & VPP_VD_SIZE_MASK) << VPP_VD1_END_BIT));
     }
     VSYNC_WR_MPEG_REG(VPP_VSC_REGION12_STARTP + cur_dev->vpp_off, 0);
     VSYNC_WR_MPEG_REG(VPP_VSC_REGION34_STARTP + cur_dev->vpp_off,
@@ -2324,8 +2344,8 @@ static void viu_set_dcu(vpp_frame_par_t *frame_par, vframe_t *vf)
   	} else {
         VSYNC_WR_MPEG_REG(VD1_IF0_LUMA_PSEL + cur_dev->viu_off, 0);
         VSYNC_WR_MPEG_REG(VD1_IF0_CHROMA_PSEL + cur_dev->viu_off, 0);
-	VSYNC_WR_MPEG_REG(VD2_IF0_LUMA_PSEL + cur_dev->viu_off,   0x4000000);
-	VSYNC_WR_MPEG_REG(VD2_IF0_CHROMA_PSEL + cur_dev->viu_off, 0x4000000);
+        VSYNC_WR_MPEG_REG(VD2_IF0_LUMA_PSEL, 0);
+        VSYNC_WR_MPEG_REG(VD2_IF0_CHROMA_PSEL, 0);
   	}
     }
 #endif
@@ -3036,6 +3056,32 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 
             vf = video_vf_get();
             if (!vf) break;
+			if(vf->frame_dirty){
+				if (cur_dispbuf != vf) {
+					if(vf->source_type != VFRAME_SOURCE_TYPE_OSD){
+						 if (vf->pts != 0) {
+							 amlog_mask(LOG_MASK_TIMESTAMP,
+							 "vpts to vf->pts: 0x%x, scr: 0x%x, abs_scr: 0x%x\n",
+							 vf->pts, timestamp_pcrscr_get(), READ_MPEG_REG(SCR_HIU));
+							 timestamp_vpts_set(vf->pts);
+						} else if (cur_dispbuf) {
+							 amlog_mask(LOG_MASK_TIMESTAMP,
+							 "vpts inc: 0x%x, scr: 0x%x, abs_scr: 0x%x\n",
+							 timestamp_vpts_get() + DUR2PTS(cur_dispbuf->duration),
+							 timestamp_pcrscr_get(), READ_MPEG_REG(SCR_HIU));
+							 timestamp_vpts_inc(DUR2PTS(cur_dispbuf->duration));
+						
+							vpts_remainder += DUR2PTS_RM(cur_dispbuf->duration);
+							if (vpts_remainder >= 0xf) {
+								vpts_remainder -= 0xf;
+								timestamp_vpts_inc(-1);
+							}
+						}
+					}
+				}
+				video_vf_put(vf);
+				break;
+			}            
             force_blackout = 0;
 #ifdef TV_3D_FUNCTION_OPEN
 
@@ -3426,6 +3472,39 @@ exit:
         spin_unlock_irqrestore(&video_onoff_lock, flags);
     }
 
+    if (likely(video2_onoff_state != VIDEO_ENABLE_STATE_IDLE)) {
+        /* state change for video layer2 enable/disable */
+
+        spin_lock_irqsave(&video2_onoff_lock, flags);
+
+        if (video2_onoff_state == VIDEO_ENABLE_STATE_ON_REQ) {
+            /* the video layer 2 is enabled one vsync later, assumming
+             * all registers are ready from RDMA.
+             */
+            video2_onoff_state = VIDEO_ENABLE_STATE_ON_PENDING;
+        } else if (video2_onoff_state == VIDEO_ENABLE_STATE_ON_PENDING) {
+            SET_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, VPP_PREBLEND_EN|VPP_VD2_PREBLEND|(0x1ff << VPP_VD2_ALPHA_BIT));
+
+            video2_onoff_state = VIDEO_ENABLE_STATE_IDLE;
+
+            if(debug_flag& DEBUG_FLAG_BLACKOUT){
+                printk("VsyncEnableVideoLayer\n");
+            }
+        } else if (video2_onoff_state == VIDEO_ENABLE_STATE_OFF_REQ) {
+        #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+            CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, VPP_VD2_PREBLEND|VPP_VD2_POSTBLEND);
+        #else
+            CLEAR_VCBUS_REG_MASK(VPP_MISC + cur_dev->vpp_off, VPP_VD2_PREBLEND|VPP_VD2_POSTBLEND);
+        #endif
+            video2_onoff_state = VIDEO_ENABLE_STATE_IDLE;
+
+            if(debug_flag& DEBUG_FLAG_BLACKOUT){
+                printk("VsyncDisableVideoLayer2\n");
+            }
+        }
+
+        spin_unlock_irqrestore(&video2_onoff_lock, flags);
+    }
 #ifdef CONFIG_VSYNC_RDMA
     cur_rdma_buf = cur_dispbuf;
     //vsync_rdma_config();
@@ -5899,6 +5978,7 @@ static int __init video_early_init(void)
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_VCBUS_REG(VPP_PREBLEND_VD1_H_START_END, 4096);
+    WRITE_VCBUS_REG(VPP_BLEND_VD2_H_START_END, 4096);
 #endif
 
     if(NULL==init_logo_obj || !init_logo_obj->para.loaded)
