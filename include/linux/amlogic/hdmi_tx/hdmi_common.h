@@ -216,6 +216,32 @@ struct hdmi_format_para {
 #define AVI_INFOFRAMES_VERSION    0x02
 #define AVI_INFOFRAMES_LENGTH     0x0D
 
+enum hdmi_color_depth {
+    HDMI_COLOR_DEPTH_24B = 4,
+    HDMI_COLOR_DEPTH_30B = 5,
+    HDMI_COLOR_DEPTH_36B = 6,
+    HDMI_COLOR_DEPTH_48B = 7,
+};
+
+enum hdmi_color_format {
+    HDMI_COLOR_FORMAT_RGB,
+    HDMI_COLOR_FORMAT_444,
+    HDMI_COLOR_FORMAT_422,
+    HDMI_COLOR_FORMAT_420,
+};
+
+enum hdmi_color_range {
+    HDMI_COLOR_RANGE_LIM,
+    HDMI_COLOR_RANGE_FUL,
+};
+
+enum hdmi_audio_packet {
+    HDMI_AUDIO_PACKET_SMP = 0x02,
+    HDMI_AUDIO_PACKET_1BT = 0x07,
+    HDMI_AUDIO_PACKET_DST = 0x08,
+    HDMI_AUDIO_PACKET_HBR = 0x09,
+};
+
 typedef enum
 {
     COLOR_SPACE_RGB444 = 0,

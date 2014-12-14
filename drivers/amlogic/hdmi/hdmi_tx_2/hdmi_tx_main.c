@@ -372,7 +372,6 @@ static int set_disp_mode_auto(void)
     else {
         //nothing
     }
-
     if((vic_ready != HDMI_Unkown) && (vic_ready == vic)) {
         hdmi_print(IMP, SYS "[%s] ALREADY init VIC = %d\n", __func__, vic);
 #ifdef CONFIG_AML_HDMI_TX_CTS_DVI
@@ -1171,6 +1170,7 @@ void hdmitx_hpd_plugout_handler(struct work_struct *work)
         return;
     mutex_lock(&setclk_mutex);
     hdev->hpd_state = 0;
+    hdev->HWOp.CntlConfig(hdev, CONF_CLR_AVI_PACKET, 0);
     printk("TODO plugout\n");
     hdev->hdmitx_event &= ~HDMI_TX_HPD_PLUGOUT;
     mutex_unlock(&setclk_mutex);
@@ -1203,8 +1203,6 @@ static int hdmi_task_handle(void *data)
     INIT_WORK(&hdmitx_device->work_internal_intr, hdmitx_internal_intr_handler);
 
     hdmitx_device->tx_aud_cfg = 1; // default audio configure is on
-
-    hdmitx_device->HWOp.SetupIRQ(hdmitx_device);
     if(init_flag&INIT_FLAG_POWERDOWN){
         hdmitx_device->HWOp.SetDispMode(hdmitx_device, NULL); //power down
         hdmitx_device->unplug_powerdown=1;
@@ -1215,6 +1213,8 @@ static int hdmi_task_handle(void *data)
     }
     hdmitx_device->HWOp.Cntl(hdmitx_device, HDMITX_IP_INTR_MASN_RST, 0);
     hdmitx_device->HWOp.Cntl(hdmitx_device, HDMITX_HWCMD_MUX_HPD_IF_PIN_HIGH, 0);
+
+    hdmitx_device->HWOp.SetupIRQ(hdmitx_device);
     return 0;
 }
 

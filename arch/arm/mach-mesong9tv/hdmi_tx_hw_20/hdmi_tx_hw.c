@@ -80,6 +80,11 @@ extern void clocks_set_vid_clk_div(int div_sel);
 #define TX_INPUT_COLOR_FORMAT   1                   // Pixel format: 0=RGB444; 1=YCbCr444; 2=Rsrv; 3=YCbCr422.
 #define TX_INPUT_COLOR_RANGE    0                   // Pixel range: 0=16-235/240; 1=16-240; 2=1-254; 3=0-255.
 
+#define TX_COLOR_DEPTH          HDMI_COLOR_DEPTH_24B    // Pixel bit width: 4=24-bit; 5=30-bit; 6=36-bit; 7=48-bit.
+//#define TX_INPUT_COLOR_FORMAT   HDMI_COLOR_FORMAT_444   // Pixel format: 0=RGB444; 1=YCbCr422; 2=YCbCr444; 3=YCbCr420.
+#define TX_OUTPUT_COLOR_FORMAT  HDMI_COLOR_FORMAT_444   // Pixel format: 0=RGB444; 1=YCbCr422; 2=YCbCr444; 3=YCbCr420.
+//#define TX_INPUT_COLOR_RANGE    HDMI_COLOR_RANGE_LIM    // Pixel range: 0=limited; 1=full.
+//#define TX_OUTPUT_COLOR_RANGE   HDMI_COLOR_RANGE_LIM    // Pixel range: 0=limited; 1=full.
 
 #define TX_OUTPUT_COLOR_RANGE   0                   // Pixel range: 0=16-235/240; 1=16-240; 2=1-254; 3=0-255.
 
@@ -367,8 +372,43 @@ static void hdmitx_hdcp_test(void)
 
 }
 
+static int hdmitx_uboot_already_display(void)
+{
+    if((aml_read_reg32(P_HHI_HDMI_CLK_CNTL) & (1 << 8))
+       && (aml_read_reg32(P_HHI_HDMI_PLL_CNTL) & (1 << 31))
+       && (hdmitx_rd_reg(HDMITX_DWC_FC_AVIVID))) {
+        printk("hdmitx: alread display in uboot\n");
+        return 1;
+    }
+    else
+        return 0;
+}
+
 static void hdmi_hwp_init(hdmitx_dev_t* hdev)
 {
+
+    //--------------------------------------------------------------------------
+    // Enable clocks and bring out of reset
+    //--------------------------------------------------------------------------
+    
+    // Enable hdmitx_sys_clk
+    //         .clk0               ( cts_oscin_clk         ),
+    //         .clk1               ( fclk_div4             ),
+    //         .clk2               ( fclk_div3             ),
+    //         .clk3               ( fclk_div5             ),
+    aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 0x100, 0, 16);   // [10: 9] clk_sel. select cts_oscin_clk=24MHz
+                                                                // [    8] clk_en. Enable gated clock
+                                                                // [ 6: 0] clk_div. Divide by 1. = 24/1 = 24 MHz
+    
+    aml_set_reg32_bits(P_HHI_GCLK_MPEG2, 1, 4, 1);       // Enable clk81_hdmitx_pclk
+    // wire            wr_enable           = control[3];
+    // wire            fifo_enable         = control[2];    
+    // assign          phy_clk_en          = control[1];
+    aml_set_reg32_bits(P_HHI_MEM_PD_REG0, 0, 8, 8);      // Bring HDMITX MEM output of power down
+
+    // Enable APB3 fail on error
+    aml_set_reg32_bits(P_HDMITX_CTRL_PORT, 1, 15, 1);
+    aml_set_reg32_bits((P_HDMITX_CTRL_PORT + 0x10), 1, 15, 1);
 
     hdmitx_hpd_hw_op(HPD_INIT_DISABLE_PULLUP);
     hdmitx_hpd_hw_op(HPD_INIT_SET_FILTER);
@@ -380,6 +420,8 @@ static void hdmi_hwp_init(hdmitx_dev_t* hdev)
     // Enable APB3 fail on error
 //    WRITE_APB_REG(HDMI_CNTL_PORT, READ_APB_REG(HDMI_CNTL_PORT)|(1<<15)); //APB3 err_en
 //\\ TODO
+    if(hdmitx_uboot_already_display())
+        return ;
     tmp_generate_vid_hpll();
     set_vmode_clk(VMODE_1080P);
     C_Entry(HDMI_1920x1080p60_16x9);
@@ -390,7 +432,7 @@ static void hdmi_hwp_init(hdmitx_dev_t* hdev)
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 0, 3, 1);
     msleep(1);
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 1, 3, 1);
-
+    hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, 0);
     //TODO
 
     // clock gate on
@@ -497,7 +539,6 @@ static irqreturn_t intr_handler(int irq, void *dev)
         PREPARE_DELAYED_WORK(&hdev->work_hpd_plugout, hdmitx_hpd_plugout_handler);
         queue_delayed_work(hdev->hdmi_wq, &hdev->work_hpd_plugout, HZ / 3);
     }
-    // HPD falling
     hdmitx_wr_reg(HDMITX_TOP_INTR_STAT_CLR, data32 | 0x6);
     return IRQ_HANDLED;
 }
@@ -1586,18 +1627,6 @@ static void set_tmds_clk_div40(unsigned int div40)
     hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_CNTL, 0x2);            // 0xc
 }
 
-static void hdmitx_rst_main_ctrl(unsigned int bit)
-{
-    // [  7] gpaswrst_req: 0=generate reset pulse; 1=no reset.
-    // [  6] cecswrst_req: 0=generate reset pulse; 1=no reset.
-    // [  4] spdifswrst_req: 0=generate reset pulse; 1=no reset.
-    // [  3] i2sswrst_req: 0=generate reset pulse; 1=no reset.
-    // [  2] prepswrst_req: 0=generate reset pulse; 1=no reset.
-    // [  1] tmdsswrst_req: 0=generate reset pulse; 1=no reset.
-    // [  0] pixelswrst_req: 0=generate reset pulse; 1=no reset.
-    hdmitx_wr_reg(HDMITX_DWC_MC_SWRSTZREQ, bit);
-}
-
 static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
 {
     if(param == NULL){ //disable HDMI
@@ -1620,9 +1649,9 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
     if(color_space_f != 0){
         param->color = color_space_f;
     }
-    C_Entry(param->VIC);
     hdmitx_set_pll(hdev);
     hdmitx_set_phy(hdev);
+    C_Entry(param->VIC);
     switch(param->VIC){
     case HDMI_480i60:
     case HDMI_480i60_16x9:
@@ -1648,15 +1677,36 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
         hdmi_tvenc_set(param);
     }
 
+    aml_write_reg32(P_VPU_HDMI_FMT_CTRL,(((TX_INPUT_COLOR_FORMAT==HDMI_COLOR_FORMAT_420)?2:0)  << 0) | // [ 1: 0] hdmi_vid_fmt. 0=444; 1=convert to 422; 2=convert to 420.
+                         (2                                                     << 2) | // [ 3: 2] chroma_dnsmp. 0=use pixel 0; 1=use pixel 1; 2=use average.
+                         (((TX_COLOR_DEPTH==HDMI_COLOR_DEPTH_24B)? 1:0)         << 4) | // [    4] dith_en. 1=enable dithering before HDMI TX input.
+                         (0                                                     << 5) | // [    5] hdmi_dith_md: random noise selector.
+                         (0                                                     << 6)); // [ 9: 6] hdmi_dith10_cntl.
+
 printk("1c37 0x%x\n", aml_read_reg32(P_ENCP_DVI_VSO_BEGIN_ODD));
 printk("1c39 0x%x\n", aml_read_reg32(P_ENCP_DVI_VSO_END_ODD));
 printk("1c3d 0x%x\n", aml_read_reg32(P_ENCP_DE_V_END_EVEN));
 printk("1c3f 0x%x\n", aml_read_reg32(P_ENCP_DE_V_END_ODD));
 if(param->VIC == HDMI_1920x1080p60_16x9) {
-    aml_write_reg32(P_ENCP_DVI_VSO_BEGIN_ODD, 0x111);
-    aml_write_reg32(P_ENCP_DVI_VSO_END_ODD, 0x111);
-    aml_write_reg32(P_ENCP_DE_V_END_EVEN, 0x0);
-    aml_write_reg32(P_ENCP_DE_V_END_ODD, 0x2a);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c30), 0x0000086e);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c31), 0x00000002);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c32), 0x00000003);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c33), 0x00000028);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c34), 0x00000008);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c35), 0x0000002a);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c36), 0x0000086e);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c37), 0x00000111);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c38), 0x0000086e);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c39), 0x00000111);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c3a), 0x00000096);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c3b), 0x00000816);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c3c), 0x0000002d);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c3d), 0x00000000);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c3e), 0x0000002a);
+    aml_write_reg32(VCBUS_REG_ADDR(0x1c3f), 0x0000002a);
+    aml_write_reg32(VCBUS_REG_ADDR(0x271b), 0x8e);
+    aml_write_reg32(VCBUS_REG_ADDR(0x2743), 0x18);
+printk("TODO %s[%d]\n", __func__, __LINE__);     //??????
 }
     switch(param->VIC) {
     case HDMI_480i60:
@@ -1678,22 +1728,24 @@ if(param->VIC == HDMI_1920x1080p60_16x9) {
     hdev->cur_VIC = param->VIC;
     hdmitx_set_phy(hdev);
 
-	hdmitx_set_pll(hdev);
-
     if(hdev->mode420 == 1) {
         hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x43);    // change AVI packet
         mode420_half_horizontal_para();
     }
+    else {
+        hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x42);    // change AVI packet
+    }
     if(((hdev->cur_VIC == HDMI_3840x2160p50_16x9) || (hdev->cur_VIC == HDMI_3840x2160p60_16x9))
        && (hdev->mode420 != 1)){
+printk("%s[%d]\n", __func__, __LINE__);     //??????
         set_tmds_clk_div40(1);
     } else {
+printk("%s[%d]\n", __func__, __LINE__);     //?????
         set_tmds_clk_div40(0);
     }
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 0, 3, 1);
     msleep(1);
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 1, 3, 1);
-    hdmitx_rst_main_ctrl(~(0x7));
 
     return 0;
 }
@@ -2028,8 +2080,9 @@ static int hdmitx_set_audmode(struct hdmi_tx_dev_s* hdev, Hdmi_tx_audio_para_t* 
 
 static void hdmitx_setupirq(hdmitx_dev_t* hdmitx_device)
 {
-   int r;
-   r = request_irq(INT_HDMI_TX, &intr_handler,
+    int r;
+    hdmitx_wr_reg(HDMITX_TOP_INTR_STAT_CLR, 0x7);
+    r = request_irq(INT_HDMI_TX, &intr_handler,
                     IRQF_SHARED, "hdmitx",
                     (void *)hdmitx_device);
 }    
@@ -2824,6 +2877,7 @@ static int hdmitx_cntl_config(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigne
         }
         break;
     case CONF_CLR_AVI_PACKET:
+        hdmitx_wr_reg(HDMITX_DWC_FC_AVIVID, 0);
         break;
     case CONF_CLR_VSDB_PACKET:
         break;
@@ -2908,6 +2962,7 @@ static int hdmitx_get_state(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned 
 
     switch(cmd) {
     case STAT_VIDEO_VIC:
+        return hdmitx_rd_reg(HDMITX_DWC_FC_AVIVID);         //TODO HDMIVIC
         break;
     case STAT_VIDEO_CLK:
         break;
@@ -2944,38 +2999,6 @@ static void hdmi_phy_wakeup(hdmitx_dev_t* hdmitx_device)
 }
 
 
-
-enum hdmi_color_depth {
-    HDMI_COLOR_DEPTH_24B = 4,
-    HDMI_COLOR_DEPTH_30B = 5,
-    HDMI_COLOR_DEPTH_36B = 6,
-    HDMI_COLOR_DEPTH_48B = 7,
-};
-
-enum hdmi_color_format {
-    HDMI_COLOR_FORMAT_RGB,
-    HDMI_COLOR_FORMAT_444,
-    HDMI_COLOR_FORMAT_422,
-    HDMI_COLOR_FORMAT_420,
-};
-
-enum hdmi_color_range {
-    HDMI_COLOR_RANGE_LIM,
-    HDMI_COLOR_RANGE_FUL,
-};
-
-enum hdmi_audio_packet {
-    HDMI_AUDIO_PACKET_SMP = 0x02,
-    HDMI_AUDIO_PACKET_1BT = 0x07,
-    HDMI_AUDIO_PACKET_DST = 0x08,
-    HDMI_AUDIO_PACKET_HBR = 0x09,
-};
-
-#define TX_COLOR_DEPTH          HDMI_COLOR_DEPTH_24B    // Pixel bit width: 4=24-bit; 5=30-bit; 6=36-bit; 7=48-bit.
-//#define TX_INPUT_COLOR_FORMAT   HDMI_COLOR_FORMAT_444   // Pixel format: 0=RGB444; 1=YCbCr422; 2=YCbCr444; 3=YCbCr420.
-#define TX_OUTPUT_COLOR_FORMAT  HDMI_COLOR_FORMAT_444   // Pixel format: 0=RGB444; 1=YCbCr422; 2=YCbCr444; 3=YCbCr420.
-//#define TX_INPUT_COLOR_RANGE    HDMI_COLOR_RANGE_LIM    // Pixel range: 0=limited; 1=full.
-//#define TX_OUTPUT_COLOR_RANGE   HDMI_COLOR_RANGE_LIM    // Pixel range: 0=limited; 1=full.
 
 static struct hdmi_format_para hdmi_1080p50hz_fmt_para = {
     .vic = HDMI_1080p50,
@@ -4105,7 +4128,7 @@ static void C_Entry(HDMI_Video_Codes_t vic)
             printk("Error: Unkown HDMI Video Identification Code (VIC)!\n");
             break;
     }
-    aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, 2, 0, 2); // [1:0] cntl_viu1_sel_venc: 0=ENCL, 1=ENCI, 2=ENCP, 3=ENCT.
+//    aml_set_reg32_bits(P_VPU_VIU_VENC_MUX_CTRL, 2, 0, 2); // [1:0] cntl_viu1_sel_venc: 0=ENCL, 1=ENCI, 2=ENCP, 3=ENCT.
 
     // --------------------------------------------------------
     // Configure video format timing for HDMI:
@@ -4113,33 +4136,6 @@ static void C_Entry(HDMI_Video_Codes_t vic)
     // the register values to meet the timing requirements defined in CEA-861-D
     // --------------------------------------------------------
     printk("Configure HDMI video format timing\n");
-
-    aml_write_reg32(P_VPU_HDMI_FMT_CTRL,(((TX_INPUT_COLOR_FORMAT==HDMI_COLOR_FORMAT_420)?2:0)  << 0) | // [ 1: 0] hdmi_vid_fmt. 0=444; 1=convert to 422; 2=convert to 420.
-                         (2                                                     << 2) | // [ 3: 2] chroma_dnsmp. 0=use pixel 0; 1=use pixel 1; 2=use average.
-                         (((TX_COLOR_DEPTH==HDMI_COLOR_DEPTH_24B)? 1:0)         << 4) | // [    4] dith_en. 1=enable dithering before HDMI TX input.
-                         (0                                                     << 5) | // [    5] hdmi_dith_md: random noise selector.
-                         (0                                                     << 6)); // [ 9: 6] hdmi_dith10_cntl.
-
-    aml_write_reg32(P_VPU_HDMI_SETTING, (0                                 << 0) | // [    0] src_sel_enci
-                         (0                                 << 1) | // [    1] src_sel_encp
-                         (GET_TIMING(hsync_polarity)        << 2) | // [    2] inv_hsync. 1=Invert Hsync polarity.
-                         (GET_TIMING(vsync_polarity)        << 3) | // [    3] inv_vsync. 1=Invert Vsync polarity.
-                         (0                                 << 4) | // [    4] inv_dvi_clk. 1=Invert clock to external DVI, (clock invertion exists at internal HDMI).
-                         (((TX_INPUT_COLOR_FORMAT==HDMI_COLOR_FORMAT_RGB)? 1 :  // RGB. Output RGB to HDMITX20 IP.
-                           (TX_INPUT_COLOR_FORMAT==HDMI_COLOR_FORMAT_420)? 0 :  // YUV420. vpu_hdmi_vfmt.v already mapped the components for 420 mode, do not change.
-                                                                           4)   // YUV444 or YUV422. Output CbYCr to HDMITX20 IP.
-                                                            << 5) | // [ 7: 5] data_comp_map. Input data is CrYCb(BRG), map the output data to desired format:
-                                                                    //                          0=output CrYCb(BRG);
-                                                                    //                          1=output YCbCr(RGB);
-                                                                    //                          2=output YCrCb(RBG);
-                                                                    //                          3=output CbCrY(GBR);
-                                                                    //                          4=output CbYCr(GRB);
-                                                                    //                          5=output CrCbY(BGR);
-                                                                    //                          6,7=Rsrv.
-                         (0                                 << 8) | // [11: 8] wr_rate. 0=A write every clk1; 1=A write every 2 clk1; ...; 15=A write every 16 clk1.
-                         (0                                 <<12)   // [15:12] rd_rate. 0=A read every clk2; 1=A read every 2 clk2; ...; 15=A read every 16 clk2.
-    );
-    aml_set_reg32_bits(P_VPU_HDMI_SETTING, 1, 1, 1);  // [    1] src_sel_encp: Enable ENCP output to HDMI
 
     // --------------------------------------------------------
     // Set up HDMI

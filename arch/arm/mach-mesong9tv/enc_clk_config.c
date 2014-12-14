@@ -615,12 +615,6 @@ void set_vmode_clk(vmode_t mode)
     int j = 0;
     hw_enc_clk_val_t *p_enc =NULL;
 
-    if(IS_MESON_MG9TV_CPU_REVA) {
-        printk("set_vmode_clk for revA\n");
-        set_vmode_clk_va(mode);
-        return;
-    }
-    printk("set_vmode_clk for revB\n");
     hpll_load_initial();
 printk("set_vmode_clk mode is %d\n", mode);
 
