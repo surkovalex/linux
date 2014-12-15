@@ -139,6 +139,7 @@ static int force_vout_index = 0;
 #endif
 static int hdmi_prbs_mode = 0xffff; /* 0xffff=disable; 0=PRBS 11; 1=PRBS 15; 2=PRBS 7; 3=PRBS 31*/
 static int hdmi_480p_force_clk = 0; /* 200, 225, 250, 270 */
+static int hdmi_detect_when_booting = 1;
 
 static int debug_level = INF;     // 1: error  2: important  3: normal  4: detailed
 
@@ -1301,6 +1302,12 @@ edid_op:
             hdmitx_set_audio(hdmitx_device, &(hdmitx_device->cur_audio_param), hdmi_ch);
             switch_set_state(&sdev, 1);
             cec_node_init(hdmitx_device);
+            #ifdef CONFIG_AM_HDMI_ONLY
+            if(hdmi_detect_when_booting) {
+                extern int set_mode_and_show_logo(int hpd_state);
+                hdmi_detect_when_booting = set_mode_and_show_logo(hdmitx_device->hpd_state);
+            }
+            #endif
         }
         if(hdmitx_device->hpd_event == 2)
         {
@@ -1330,6 +1337,12 @@ edid_op:
             hdmitx_device->tv_cec_support = 0;
             switch_set_state(&sdev, 0);
             hdmitx_device->vic_count = 0;
+            #ifdef CONFIG_AM_HDMI_ONLY
+            if(hdmi_detect_when_booting) {
+                extern int set_mode_and_show_logo(int hpd_state);    
+                hdmi_detect_when_booting = set_mode_and_show_logo(hdmitx_device->hpd_state);
+            }
+            #endif
         }
         msleep_interruptible(100);
     }
@@ -1942,6 +1955,10 @@ __setup("hdmitx=",hdmitx_boot_para_setup);
 MODULE_PARM_DESC(force_vout_index, "\n force_vout_index\n");
 module_param(force_vout_index, uint, 0664);
 #endif
+
+MODULE_PARM_DESC(hdmi_detect_when_booting, "\n hdmi_detect_when_booting \n");
+module_param(hdmi_detect_when_booting, int, 0664);
+
 
 MODULE_PARM_DESC(hdmi_480p_force_clk, "\n hdmi_480p_force_clk \n");
 module_param(hdmi_480p_force_clk, int, 0664);

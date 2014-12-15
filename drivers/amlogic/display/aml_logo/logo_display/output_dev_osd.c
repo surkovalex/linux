@@ -204,6 +204,43 @@ void set_osd_freescaler(int index, logo_object_t *plogo, vmode_t new_mode) {
    osd_free_scale_enable_hw(index, 0x10001);
    osd_enable_hw(1, index);
 }
+
+#ifdef CONFIG_AM_HDMI_ONLY
+vmode_t tvmode;
+
+// change tv mode and show logo immediatly when hdmi pluged
+int set_mode_and_show_logo(int hpd_state) {
+    int value;
+    logo_object_t* plogo = get_current_logo_obj();
+
+    if((plogo->para.vout_mode & VMODE_MODE_BIT_MASK) > VMODE_4K2K_SMPTE) {
+        return 0;    //  MID
+    }
+
+    printk("hdmi detect: %s.\n", (hpd_state==1)?"plug":"unplug");
+    // osd2 freescale enable,   the logo is shown on osd2, reset freescale.
+    value = aml_read_reg32(P_VPP_OSD_SC_CTRL0) & 0xb;
+    if(value == 0x9) {
+        vmode_t cur_mode;
+        if (hpd_state == 0){
+            cur_mode = cvbsmode_hdmionly;
+        }
+        else{
+            cur_mode = hdmimode_hdmionly;
+        }
+        if(tvmode != cur_mode) {
+            tvmode = cur_mode;
+            osd_enable_hw(0, plogo->para.output_dev_type);
+            set_current_vmode(cur_mode);
+            vout_notifier_call_chain(VOUT_EVENT_MODE_CHANGE,&cur_mode) ;
+            set_osd_freescaler(plogo->para.output_dev_type, plogo, cur_mode); 
+        }
+    }
+    return 1;
+}
+EXPORT_SYMBOL(set_mode_and_show_logo);
+
+#endif
 #endif
 
 static int osd0_init(logo_object_t *plogo)
@@ -264,8 +301,7 @@ static int osd0_init(logo_object_t *plogo)
 		if((cur_mode != (plogo->para.vout_mode & VMODE_MODE_BIT_MASK)) && (cur_mode <= VMODE_4K2K_SMPTE)) {
 		    set_osd_freescaler(LOGO_DEV_OSD0, plogo, cur_mode);
 		}
-
-		#else // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
+#else // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 		if((cur_mode != (plogo->para.vout_mode&VMODE_MODE_BIT_MASK)) && (cur_mode < VMODE_VGA)) {
 
 							plogo->para.loaded = 0;
@@ -334,6 +370,10 @@ static int osd1_init(logo_object_t *plogo)
 		if((cur_mode != (plogo->para.vout_mode & VMODE_MODE_BIT_MASK)) && (cur_mode <= VMODE_4K2K_SMPTE)) {
 		    set_osd_freescaler(LOGO_DEV_OSD1, plogo, cur_mode);
 		}
+#ifdef CONFIG_AM_HDMI_ONLY
+        tvmode = cur_mode;
+#endif
+        
 #else // MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 		if((cur_mode != (plogo->para.vout_mode&VMODE_MODE_BIT_MASK)) && (cur_mode < VMODE_VGA)) {
 
