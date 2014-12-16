@@ -351,7 +351,7 @@ static int cec_task(void *data)
 
     hdmi_print(INF, CEC "CEC task process\n");
     if(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)){
-        msleep_interruptible(10000);
+        msleep_interruptible(15000);
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
         cec_gpi_init();
 #endif
