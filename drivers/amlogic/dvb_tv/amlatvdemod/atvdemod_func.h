@@ -180,8 +180,8 @@ freq_hz_cvrt=hs_freq/0.23841858
 vs_freq==50,freq_hz=15625;freq_hz_cvrt=0xffff
 vs_freq==60,freq_hz=15734,freq_hz_cvrt=0x101c9
 **/
-#define AML_ATV_DEMOD_FREQ_50HZ_VERT	0xffff
-#define AML_ATV_DEMOD_FREQ_60HZ_VERT	0x101c9
+#define AML_ATV_DEMOD_FREQ_50HZ_VERT	0xffff//65535
+#define AML_ATV_DEMOD_FREQ_60HZ_VERT	0x101c9//65993
 
 
 typedef struct amlatvdemod_device_s{
