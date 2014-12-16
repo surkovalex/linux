@@ -535,7 +535,7 @@ static void vh264_ppmgr_reset(void)
 }
 #endif
 
-static void vh264_set_params(void)
+static int vh264_set_params(void)
 {
     int aspect_ratio_info_present_flag, aspect_ratio_idc;
     int max_dpb_size, actual_dpb_size, max_reference_size;
@@ -607,6 +607,11 @@ static void vh264_set_params(void)
     mb_width = (mb_width + 3) & 0xfffffffc;
     mb_height = (mb_height + 3) & 0xfffffffc;
     mb_total = mb_width * mb_height;
+
+    if(mb_total > 8160){//resolution exceed 1920x1088,
+        printk("mb_total %d, mb_width %d, mb_height %d\n",  mb_total, mb_width, mb_height);
+        return -1;  
+    }
 
     max_dpb_size = (frame_buffer_size - mb_total * 384 * 4 - mb_total * mb_mv_byte) / (mb_total * 384 + mb_total * mb_mv_byte);
     if (max_reference_size <= max_dpb_size) {
@@ -897,6 +902,7 @@ static void vh264_set_params(void)
     addr += mb_total * mb_mv_byte * max_reference_size;
     WRITE_VREG(AV_SCRATCH_4, addr);
     WRITE_VREG(AV_SCRATCH_0, (max_reference_size << 24) | (actual_dpb_size << 16) | (max_dpb_size << 8));
+    return 0;
 }
 
 static unsigned pts_inc_by_duration(unsigned *new_pts, unsigned *new_pts_rem)
@@ -963,7 +969,12 @@ static void vh264_isr(void)
             return IRQ_HANDLED;
         }
 
-        vh264_set_params();
+        if(vh264_set_params() < 0){
+            vh264_running = 0;
+            fatal_error_flag = DECODER_FATAL_ERROR_UNKNOW;
+            if(!fatal_error_reset)
+                schedule_work(&error_wd_work);            
+        }
 
     } else if ((cpu_cmd & 0xff) == 2) {
         int frame_mb_only, pic_struct_present, pic_struct, prog_frame, poc_sel, idr_flag, eos, error;
@@ -1914,7 +1925,12 @@ static void stream_switching_done(void)
     WRITE_VREG(AV_SCRATCH_9, 0);
 
     if (state == SWITCHING_STATE_ON_CMD1) {
-        vh264_set_params();
+        if(vh264_set_params() < 0){
+            vh264_running = 0;
+            fatal_error_flag = DECODER_FATAL_ERROR_UNKNOW;
+            if(!fatal_error_reset)
+                schedule_work(&error_wd_work);
+        }
     }
 
     vh264_stream_switching_state = SWITCHING_STATE_OFF;
@@ -1977,6 +1993,10 @@ static void stream_switching_do(struct work_struct *work)
         mb_total_num = mb_total;
         mb_width_num = mb_width;
         mb_height_num = mb_height;
+        
+        if(buffer_index > VF_BUF_NUM-1){
+            do_copy = false;
+        }
 
         /* construct a clone of the frame from last frame */
         if (do_copy) {
