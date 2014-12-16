@@ -2877,7 +2877,7 @@ static int hdmitx_cntl(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned argv)
     }
     else if(cmd == HDMITX_EARLY_SUSPEND_RESUME_CNTL) {
         if(argv == HDMITX_EARLY_SUSPEND) {
-            aml_set_reg32_bits(P_HHI_VID_PLL_CNTL, 0, 30, 1);
+            //aml_set_reg32_bits(P_HHI_VID_PLL_CNTL, 0, 30, 1);
             hdmi_wr_reg(TX_AUDIO_CONTROL_MORE, 0);
             hdmi_phy_suspend();
         }
