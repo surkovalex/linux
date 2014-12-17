@@ -22,9 +22,9 @@ typedef struct{
 	dma_addr_t paddr;
 	char* addr;
 	unsigned size;
-	signed int wr;
-	signed int rd;
-	signed int level;
+	unsigned wr;
+	unsigned rd;
+	unsigned level;
 	spinlock_t lock;
 }BUF;
 

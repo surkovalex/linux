@@ -109,7 +109,7 @@ static irqreturn_t i2s_out_callback(int irq, void* data);
 static unsigned get_i2s_out_size(void);
 static unsigned get_i2s_out_ptr(void);
 
-#define SOFT_BUFFER_SIZE (PAGE_SIZE*4)
+#define SOFT_BUFFER_SIZE (PAGE_SIZE*16)
 #define MAX_LATENCY (64*32*3)
 #define MIN_LATENCY (64*32)
 static unsigned latency = MIN_LATENCY*2; //20ms
@@ -365,38 +365,39 @@ static void i2s_copy(amaudio_t* amaudio)
 	BUF* hw = &amaudio->hw;
 	BUF* sw = &amaudio->sw;
 	BUF* sw_read = &amaudio->sw_read;
-	unsigned valid_data;
 	unsigned long swirqflags, hwirqflags, sw_readirqflags;
 	unsigned i2s_out_ptr = get_i2s_out_ptr();
 	unsigned alsa_delay = (aml_i2s_alsa_write_addr + hw->size - i2s_out_ptr)%hw->size;
 	unsigned amaudio_delay = (hw->wr + hw->size - i2s_out_ptr)%hw->size;
 	
 	spin_lock_irqsave(&hw->lock,hwirqflags);
-	hw->rd = (int)i2s_out_ptr;
-	hw->level -= INT_BLOCK;
-	if(hw->level <= INT_BLOCK){
-		hw->wr = ((hw->rd+latency)%hw->size);
+
+	hw->rd = i2s_out_ptr;
+	hw->level = amaudio_delay;
+	if(hw->level <= INT_BLOCK || alsa_delay < amaudio_delay){
+		hw->wr = (hw->rd+latency)%hw->size;
 		hw->wr /= INT_BLOCK;
 		hw->wr *= INT_BLOCK;
 		hw->level = latency;
-		goto EXIT;
-	}
-
-	if((alsa_delay - amaudio_delay) <= INT_BLOCK){
-		printk(KERN_DEBUG "alsa_delay:%x, amaudio_delay:%x, latency = %x, hw->size = %x\n",
-			alsa_delay,amaudio_delay,latency,hw->size);
+		printk(KERN_DEBUG "hw reset: hw->wr = %x,hw->rd = %x,alsa_delay:%x,amaudio_delay = %x,hw->level = %x,sw->level = %x\n",
+			hw->wr,hw->rd,alsa_delay,amaudio_delay,hw->level,sw->level);
 		goto EXIT;
 	}
 	
-	valid_data = sw->level&~0x3f;
-	if(valid_data < INT_BLOCK) {
-		printk(KERN_DEBUG "i2s copy: system locked! sw->level = %d\n",valid_data);
+	if(sw->level < INT_BLOCK) {
+		printk(KERN_DEBUG "i2s copy: sw->wr = %x, sw->rd = %x, sw->level = %x\n",
+			sw->wr,sw->rd,sw->level);
+		goto EXIT;
+	}
+	
+	if((alsa_delay - amaudio_delay) < INT_BLOCK){
+		printk(KERN_DEBUG "alsa_delay:%x, amaudio_delay:%x, sw->level = %x\n",
+			alsa_delay,amaudio_delay,sw->level);
 		goto EXIT;
 	}
 	
 	if(audio_out_read_enable == 1){
-		valid_data = sw_read->level&~0x3f;
-		if(valid_data < INT_BLOCK) {
+		if(sw_read->level < INT_BLOCK) {
 			goto EXIT;
 		}
 	}
@@ -416,16 +417,12 @@ static void i2s_copy(amaudio_t* amaudio)
 		interleave_memcpy(sw_read,sw_read->wr,hw,hw->wr,INT_BLOCK);
 		spin_lock_irqsave(&sw_read->lock,sw_readirqflags);
 		sw_read->wr = (sw_read->wr + INT_BLOCK)%sw_read->size;
-		if(sw_read->rd == sw_read->wr){
-			sw_read->level = sw_read->size;
-		}else{
-			sw_read->level = (sw_read->size + sw_read->rd - sw_read->wr)%sw_read->size;
-		}
+		sw_read->level = sw_read->size - (sw_read->size + sw_read->wr - sw_read->rd)%sw_read->size;
 		spin_unlock_irqrestore(&sw_read->lock,sw_readirqflags);
 	}
 	
 	hw->wr = (hw->wr + INT_BLOCK)%hw->size;
-	hw->level += INT_BLOCK;
+	hw->level = (hw->wr + hw->size - i2s_out_ptr)%hw->size;;
 	
 	spin_lock_irqsave(&sw->lock,swirqflags);
 	sw->rd = (sw->rd + INT_BLOCK)%sw->size;
@@ -495,9 +492,11 @@ static long amaudio_ioctl(struct file *file,unsigned int cmd, unsigned long arg)
 			if(latency%64)  latency = (latency >> 6) << 6;
 			*/
 			
-			amaudio->hw.rd = -1;
-			amaudio->hw.wr = -1;
-			amaudio->hw.level = 0;
+			amaudio->hw.rd = get_i2s_out_ptr();
+			amaudio->hw.wr = (amaudio->hw.rd+latency)%amaudio->hw.size;
+			amaudio->hw.wr /= INT_BLOCK;
+			amaudio->hw.wr *= INT_BLOCK;
+			amaudio->hw.level = latency;
 			spin_unlock_irqrestore(&amaudio->hw.lock, hwirqflags);
 			// empty the buffer
 			spin_lock_irqsave(&amaudio->sw.lock, swirqflags);
@@ -509,10 +508,10 @@ static long amaudio_ioctl(struct file *file,unsigned int cmd, unsigned long arg)
 			spin_lock_irqsave(&amaudio->sw_read.lock, sw_readirqflags);
 			amaudio->sw_read.wr = 0;
 			amaudio->sw_read.rd = 0;
-			amaudio->sw_read.level = 0;
+			amaudio->sw_read.level = amaudio->sw_read.size;
 			spin_unlock_irqrestore(&amaudio->sw_read.lock, sw_readirqflags);
 			
-			printk(KERN_INFO "Reset amaudio2: latency=%d bytes\n", latency);
+			printk(KERN_DEBUG "Reset amaudio2: latency=%d bytes\n", latency);
 			break;
 		case AMAUDIO_IOC_AUDIO_OUT_MODE:
 			// audio_out_mode = 0, covered alsa audio mode; 
@@ -554,12 +553,8 @@ static long amaudio_ioctl(struct file *file,unsigned int cmd, unsigned long arg)
 			{
 				spin_lock_irqsave(&amaudio->sw_read.lock, sw_readirqflags);
 				amaudio->sw_read.rd = arg;
-				if(amaudio->sw_read.rd == amaudio->sw_read.wr){
-					amaudio->sw_read.level = amaudio->sw_read.size;
-				}else{
-					amaudio->sw_read.level = (amaudio->sw_read.size + amaudio->sw_read.rd - amaudio->sw_read.wr)
-															%amaudio->sw_read.size;
-				}
+				amaudio->sw_read.level = amaudio->sw_read.size - 
+					(amaudio->sw_read.size + amaudio->sw_read.wr - amaudio->sw_read.rd)%amaudio->sw_read.size;
 				spin_unlock_irqrestore(&amaudio->sw_read.lock, sw_readirqflags);
 				if(amaudio->sw_read.rd % 64){
 					printk(KERN_WARNING "rd:%x, not 64 Bytes align\n", amaudio->sw_read.rd);
