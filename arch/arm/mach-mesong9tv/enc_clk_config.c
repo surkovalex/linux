@@ -247,11 +247,11 @@ void clocks_set_vid_clk_div(int div_sel)
     case CLK_UTIL_VID_PLL_DIV_6p25:   shift_val = 0x0000; shift_sel = 3; break;
     case CLK_UTIL_VID_PLL_DIV_7:      shift_val = 0x3c78; shift_sel = 1; break;
     case CLK_UTIL_VID_PLL_DIV_7p5:    shift_val = 0x78f0; shift_sel = 2; break;
-    case CLK_UTIL_VID_PLL_DIV_12:     shift_val = 0x0fc0; shift_sel = 0; break; 
+    case CLK_UTIL_VID_PLL_DIV_12:     shift_val = 0x0fc0; shift_sel = 0; break;
     case CLK_UTIL_VID_PLL_DIV_14:     shift_val = 0x3f80; shift_sel = 1; break;
     case CLK_UTIL_VID_PLL_DIV_15:     shift_val = 0x7f80; shift_sel = 2; break;
     case CLK_UTIL_VID_PLL_DIV_2p5:    shift_val = 0x5294; shift_sel = 2; break;
-    default: 
+    default:
         printk("Error: clocks_set_vid_clk_div:  Invalid parameter\n");
         break;
     }
@@ -262,7 +262,7 @@ void clocks_set_vid_clk_div(int div_sel)
         aml_set_reg32_bits(P_HHI_VID_PLL_CLK_DIV, 0, 16, 2);
         aml_set_reg32_bits(P_HHI_VID_PLL_CLK_DIV, 0, 15, 1);
         aml_set_reg32_bits(P_HHI_VID_PLL_CLK_DIV, 0, 0, 14);
-        
+
         aml_set_reg32_bits(P_HHI_VID_PLL_CLK_DIV, shift_sel, 16, 2);
         aml_set_reg32_bits(P_HHI_VID_PLL_CLK_DIV, 1, 15, 1);
         aml_set_reg32_bits(P_HHI_VID_PLL_CLK_DIV, shift_val, 0, 14);
@@ -469,7 +469,8 @@ static int sHDMI_DPLL_DATA[][3] = {
 	//frequency(M)    HHI_HDMI_PLL_CNTL   HHI_HDMI_PLL_CNTL2: (bit18: OD1 is 1)
 	{   399.840,         0x60000663,         0x00520f5b},
 	{   378.000,         0x6000023e,         0x00920fff},
-	{  2079.000,         0x60000681,         0x00110eff},
+//	{  2079.000,         0x60000681,         0x00110eff},
+	{  2079.000,         0x500404ad,         0x00414400},
 	{   810.000,         0x60000886,         0x00120fff},
 	{  1080.000,         0x6000022c,         0x00120fff},
 	{  2227.500,         0x6000068b,         0x00110380},
@@ -506,7 +507,8 @@ int set_hdmi_dpll(int freq, int od1)
 	else {
 		aml_write_reg32(P_HHI_HDMI_PLL_CNTL, sHDMI_DPLL_DATA[i][1]);
 		aml_write_reg32(P_HHI_HDMI_PLL_CNTL2,sHDMI_DPLL_DATA[i][2]);
-		aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2,od1,18,2);
+//		aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2,od1,18,2);
+		aml_write_reg32(P_HHI_HDMI_PLL_CNTL, sHDMI_DPLL_DATA[i][1] & (~(1<<28)));
 	}
 
 	printk("Wait 10us for phy_clk stable!\n");

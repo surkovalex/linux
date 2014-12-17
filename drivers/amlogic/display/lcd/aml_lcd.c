@@ -173,17 +173,40 @@ static void set_tcon_lvds(Lcd_Config_t *pConf)
 	aml_write_reg32(P_VPP_MISC, aml_read_reg32(P_VPP_MISC) & ~(VPP_OUT_SATURATE));
 }
 
+
+
+//new lvd_vx1_phy config
+void lvds_phy_config(int lvds_vx1_sel)
+{
+	//debug
+	aml_write_reg32(P_VPU_VLOCK_GCLK_EN, 7);
+	aml_write_reg32(P_VPU_VLOCK_ADJ_EN_SYNC_CTRL, 0x108010ff);
+	aml_write_reg32(P_VPU_VLOCK_CTRL, 0xe0f50f1b);
+	//debug
+
+	if(lvds_vx1_sel == 0){ //lvds
+		aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL1, 0x6c6cca80);
+		aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL2, 0x0000006c);
+		aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL3, 0x0fff0800);
+		//od   clk 1039.5 / 2 = 519.75 = 74.25*7
+		aml_write_reg32(P_HHI_LVDS_TX_PHY_CNTL0, 0x0fff0040);
+	}else{
+
+	}
+
+}
+
 void vclk_set_encl_lvds(vmode_t vmode, int lvds_ports)
 {
 	int hdmi_clk_out;
-	int hdmi_vx1_clk_od1;
+	//int hdmi_vx1_clk_od1;
 	int vx1_phy_div;
-	int encl_div; 
+	int encl_div;
 	unsigned int xd;
+	//no used, od2 must >= od3.
+	//hdmi_vx1_clk_od1 = 1; //OD1 always 1
 
-	hdmi_vx1_clk_od1 = 1; //OD1 always 1
-
-	if(lvds_ports<2){  
+	if(lvds_ports<2){
 		//pll_video.pl 3500 pll_out
 		switch(vmode) {
 			case VMODE_LVDS_768P : //total: 1560x806 pixel clk = 75.5MHz, phy_clk(s)=(pclk*7)= 528.5 = 1057/2
@@ -200,8 +223,8 @@ void vclk_set_encl_lvds(vmode_t vmode, int lvds_ports)
 				pr_err("Error video format!\n");
 				return;
 		}
-
-		if(set_hdmi_dpll(hdmi_clk_out,hdmi_vx1_clk_od1)) {
+		//if(set_hdmi_dpll(hdmi_clk_out,hdmi_vx1_clk_od1)) {
+		if(set_hdmi_dpll(hdmi_clk_out,0)) {
 			pr_err("Unsupported HDMI_DPLL out frequency!\n");
 			return;
 		}
@@ -210,11 +233,11 @@ void vclk_set_encl_lvds(vmode_t vmode, int lvds_ports)
 			vx1_phy_div = vx1_phy_div*2;
 	}else if(lvds_ports>=2) {
 		pr_err("Quad-LVDS is not supported!\n");
-		return; 
+		return;
 	}
 
-	//configure vid_clk_div_top  
-	if((encl_div%14)==0){//7*even	
+	//configure vid_clk_div_top
+	if((encl_div%14)==0){//7*even
 		clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_14);
 		xd = encl_div/14;
 	}else if((encl_div%7)==0){ //7*odd
@@ -224,9 +247,11 @@ void vclk_set_encl_lvds(vmode_t vmode, int lvds_ports)
 		clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_3p5);
 		xd = encl_div/3.5;
 	}
-	//for lvds phy clock and enable decoupling FIFO 
+	//for lvds phy clock and enable decoupling FIFO
 	aml_write_reg32(P_HHI_LVDS_TX_PHY_CNTL1,((3<<6)|((vx1_phy_div-1)<<1)|1)<<24);
 
+	//config lvds phy
+	lvds_phy_config(0);
 	//configure crt_video
 	set_crt_video_enc(0,0,xd);  //configure crt_video V1: inSel=vid_pll_clk(0),DivN=xd)
 	enable_crt_video_encl(1,0); //select and enable the output
