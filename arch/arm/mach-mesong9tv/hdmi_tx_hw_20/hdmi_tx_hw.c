@@ -183,6 +183,7 @@ enum ddc_op {
 static int hdmitx_ddc_hw_op(enum ddc_op cmd)
 {
     int ret = 0;
+    return 0;   //tmp directly return
     switch(cmd) {
     case DDC_INIT_DISABLE_PULL_UP_DN:
         aml_set_reg32_bits(P_PAD_PULL_UP_EN_REG1, 0, 19, 2);      // Disable GPIOH_3/4 pull-up/down
@@ -425,7 +426,6 @@ static void hdmi_hwp_init(hdmitx_dev_t* hdev)
     tmp_generate_vid_hpll();
     set_vmode_clk(VMODE_1080P);
     C_Entry(HDMI_1920x1080p60_16x9);
-    set_vmode_clk(VMODE_1080P);
     hdmitx_set_phy(hdev);
     aml_write_reg32(P_ENCP_VIDEO_EN, 1);
     set_hdmi_audio_source(2);
@@ -1651,7 +1651,6 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
     }
     hdmitx_set_pll(hdev);
     hdmitx_set_phy(hdev);
-    C_Entry(param->VIC);
     switch(param->VIC){
     case HDMI_480i60:
     case HDMI_480i60_16x9:
@@ -1721,6 +1720,7 @@ printk("TODO %s[%d]\n", __func__, __LINE__);     //??????
         enc_vpu_bridge_reset(1);
         break;
     }
+    C_Entry(param->VIC);
 
     hdmi_hw_reset(hdev, param);    
 	// move hdmitx_set_pll() to the end of this function.
@@ -2763,7 +2763,7 @@ static int hdmitx_cntl_ddc(hdmitx_dev_t* hdev, unsigned cmd, unsigned argv)
 {
     int i = 0;
     unsigned char *tmp_char = NULL;
-    
+    return 0;    //tmp direct return
     if(!(cmd & CMD_DDC_OFFSET))
         hdmi_print(ERR, "ddc: " "w: invalid cmd 0x%x\n", cmd);
     else

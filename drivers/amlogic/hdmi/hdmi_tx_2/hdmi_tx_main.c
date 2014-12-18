@@ -344,7 +344,7 @@ static int set_disp_mode_auto(void)
     else {
         memcpy(mode, info->name, strlen(info->name));
     }
-
+    hdmitx_device.mode420 = 0;      // default NOT mode420
     //msleep(500);
     vic = hdmitx_edid_get_VIC(&hdmitx_device, mode, 1);
     if(strncmp(info->name, "4k2k30hz", strlen("4k2k30hz")) == 0) {
@@ -366,8 +366,6 @@ static int set_disp_mode_auto(void)
         vic = HDMI_3840x2160p60_16x9;
         if(strncmp(mode+8, "420", 3) == 0)
             hdmitx_device.mode420 = 1;
-        else
-            hdmitx_device.mode420 = 0;
     }
     else {
         //nothing
@@ -1140,6 +1138,7 @@ void hdmitx_hpd_plugin_handler(struct work_struct *work)
     mutex_lock(&setclk_mutex);
     // start reading E-EDID
     hdev->hpd_state = 1;
+    goto tmp_no_edid_handler;
     hdmitx_edid_ram_buffer_clear(hdev);
     hdev->HWOp.CntlDDC(hdev, DDC_RESET_EDID, 0);
     hdev->HWOp.CntlDDC(hdev, DDC_PIN_MUX_OP, PIN_MUX);
@@ -1152,7 +1151,7 @@ void hdmitx_hpd_plugin_handler(struct work_struct *work)
     hdmitx_edid_buf_compare_print(hdev);
     hdmitx_edid_clear(hdev);
     hdmitx_edid_parse(hdev);
-
+tmp_no_edid_handler:
     set_disp_mode_auto();
     hdmitx_set_audio(hdev, &(hdev->cur_audio_param), hdmi_ch);
 //    switch_set_state(&sdev, 1);
@@ -1170,7 +1169,7 @@ void hdmitx_hpd_plugout_handler(struct work_struct *work)
         return;
     mutex_lock(&setclk_mutex);
     hdev->hpd_state = 0;
-    hdev->HWOp.CntlConfig(hdev, CONF_CLR_AVI_PACKET, 0);
+    //hdev->HWOp.CntlConfig(hdev, CONF_CLR_AVI_PACKET, 0);
     printk("TODO plugout\n");
     hdev->hdmitx_event &= ~HDMI_TX_HPD_PLUGOUT;
     mutex_unlock(&setclk_mutex);
