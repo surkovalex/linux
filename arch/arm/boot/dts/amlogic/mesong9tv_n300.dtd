@@ -1116,12 +1116,10 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR 4 = "amlogic,pins"
 		b_uart_pins:b_uart {
-			amlogic,setmask = <4 0x03c0>;
+			amlogic,setmask = <4 0x0300>;
 			amlogic,clrmask = <3 0x04000000
-					   4 0x000c
-					   1 0x078c0000
-					   7 0x30180000>;
-			amlogic,pins = "GPIOH_1", "GPIOH_2", "GPIOH_5", "GPIOH_6";
+					   7 0x30080000>;
+			amlogic,pins = "GPIOH_1", "GPIOH_2";
 		};
 
 		//$$ MATCH "Card_pin_0_match" = "&sdhc_b_pins"
