@@ -2867,6 +2867,7 @@ static int hdmitx_cntl_config(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigne
         }
         break;
     case CONF_VIDEO_BLANK_OP:
+        return 1;   //TODO
         if(argv == VIDEO_BLANK) {
             aml_write_reg32(P_VPU_HDMI_DATA_OVR, (0x200 << 20) | (0x0 << 10) | (0x200 << 0));   // set blank CrYCb as 0x200 0x0 0x200
             aml_set_reg32_bits(P_VPU_HDMI_SETTING, 0, 5, 3);        // Output data map: CrYCb
