@@ -2946,6 +2946,9 @@ static tvin_scan_mode_t vmode2scan_mode(vmode_t	mode)
 		case VMODE_576CVBS:
 		case VMODE_1080I:
 		case VMODE_1080I_50HZ:
+		#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    		case VMODE_1080I_59HZ:
+		#endif
 			scan_mode = TVIN_SCAN_MODE_INTERLACED;
 			break;
 		case VMODE_480P:
@@ -2967,15 +2970,16 @@ static tvin_scan_mode_t vmode2scan_mode(vmode_t	mode)
 		case VMODE_LVDS_1080P:
 		case VMODE_LVDS_1080P_50HZ:
 		case VMODE_LVDS_768P:
-#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-		case VMODE_480P_59HZ:
+	#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+	#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    case VMODE_480P_59HZ:
 		case VMODE_720P_59HZ:
 		case VMODE_1080P_59HZ:
+		case VMODE_1080P_23HZ:
 		case VMODE_4K2K_29HZ:
-		case VMODE_1080I_59HZ:
-#endif
-#endif
+		case VMODE_4K2K_23HZ:
+	#endif
+	#endif
 			scan_mode = TVIN_SCAN_MODE_PROGRESSIVE;
 			break;
 		default:
@@ -3054,8 +3058,8 @@ static int vidioc_streamon(struct file *file, void *priv, enum v4l2_buf_type i)
 		para.dest_vactive = para.dest_vactive/2;
 	}
 	printk("amlvideo2--vidioc_streamon: para.h_active: %d, para.v_active: %d"
-		"para.dest_hactive: %d, para.dest_vactive: %d, fh->width: %d, fh->height: %d \n",
-		para.h_active,para.v_active, para.dest_hactive, para.dest_vactive,fh->width,fh->height);
+		"para.dest_hactive: %d, para.dest_vactive: %d, fh->width: %d, fh->height: %d, vinfo->mode: %d,para.scan_mode: %d\n",
+		para.h_active,para.v_active, para.dest_hactive, para.dest_vactive,fh->width,fh->height,vinfo->mode,para.scan_mode);
 
 	vops->start_tvin_service(node->vdin_device_num,&para);
 
