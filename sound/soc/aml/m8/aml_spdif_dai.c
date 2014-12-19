@@ -42,11 +42,11 @@ static unsigned last_iec_clock =  -1;
 extern int aout_notifier_call_chain(unsigned long val, void *v);
 //static  unsigned  playback_substream_handle = 0 ;
 extern unsigned int IEC958_mode_codec;
-//static int iec958buf[32+16];
+static int iec958buf[32+16];
 void  aml_spdif_play(void)
 {
-    return;
-#if 0
+//    return;
+#if 1
    	 _aiu_958_raw_setting_t set;
    	 _aiu_958_channel_status_t chstat;	 
 	struct snd_pcm_substream substream;

@@ -1131,7 +1131,7 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
     audio_fs_t n_rate = aud_samp_rate_map(substream->runtime->rate);
     audio_sample_size_t n_size = aud_size_map(substream->runtime->sample_bits);
 
-    hdmitx_device.audio_param_update_flag = 1;
+    hdmitx_device.audio_param_update_flag = 0;
     hdmitx_device.audio_notify_flag = 0;
 
     if(audio_param->sample_rate != n_rate) {
