@@ -26,7 +26,7 @@
 #define TVREGS_H
 
 #include "am_regs.h"
-#define MREG_END_MARKER 0xffff
+#include <linux/amlogic/vout/vinfo.h>
 
 #define CONFIG_CVBS_PERFORMANCE_COMPATIBLITY_SUPPORT	1
 

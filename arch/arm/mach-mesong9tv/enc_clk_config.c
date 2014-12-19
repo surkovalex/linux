@@ -584,6 +584,8 @@ static hw_enc_clk_val_t setting_enc_clk_val[] = {
     {VMODE_4K2K_SMPTE,     1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_4K2K_60HZ_Y420, 1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
     {VMODE_4K2K_60HZ,      1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_4K2K_50HZ_Y420, 1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_4K2K_50HZ,      1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_4K2K_FAKE_5G,   1, VIU_ENCP, 2448, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_4K2K_5G,        1, VIU_ENCP, 2448, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
 #if 0

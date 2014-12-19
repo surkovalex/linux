@@ -364,11 +364,15 @@ static int set_disp_mode_auto(void)
     }
     else if(strncmp(mode, "4k2k60hz", strlen("4k2k60hz")) == 0) {
         vic = HDMI_3840x2160p60_16x9;
-        if(strncmp(mode+8, "420", 3) == 0)
-            hdmitx_device.mode420 = 1;
+    }
+    else if(strncmp(mode, "4k2k50hz", strlen("4k2k50hz")) == 0) {
+        vic = HDMI_3840x2160p50_16x9;
     }
     else {
         //nothing
+    }
+    if(strstr(mode, "hz420") != NULL) {
+        hdmitx_device.mode420 = 1;
     }
     if((vic_ready != HDMI_Unkown) && (vic_ready == vic)) {
         hdmi_print(IMP, SYS "[%s] ALREADY init VIC = %d\n", __func__, vic);

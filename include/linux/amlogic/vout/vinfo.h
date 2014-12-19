@@ -24,9 +24,13 @@
 
 #ifndef VINFO_H
 #define VINFO_H
+#include "../hdmi_tx/hdmi_common.h"
 //the MSB is represent vmode set by logo
 #define	VMODE_LOGO_BIT_MASK	0x8000
 #define	VMODE_MODE_BIT_MASK	0xff
+
+#define MREG_END_MARKER 0xffff
+
 typedef enum {
     VMODE_480I  = 0,
     VMODE_480I_RPT  ,
@@ -73,6 +77,8 @@ typedef enum {
     VMODE_4K2K_FAKE_5G,   // timing same as 4k2k30hz, Vsync from 30hz to 50hz
     VMODE_4K2K_60HZ,	  // timing same as 4k2k30hz, Vsync from 30hz to 60hz
     VMODE_4K2K_60HZ_Y420,
+    VMODE_4K2K_50HZ,	  // timing same as 4k2k25hz, Vsync from 25hz to 50hz
+    VMODE_4K2K_50HZ_Y420,
     VMODE_4K2K_5G,
     VMODE_VGA,
     VMODE_SVGA,
@@ -135,6 +141,8 @@ typedef enum {
     TVMODE_4K2K_FAKE_5G ,
     TVMODE_4K2K_60HZ ,
     TVMODE_4K2K_60HZ_Y420,
+    TVMODE_4K2K_50HZ ,
+    TVMODE_4K2K_50HZ_Y420,
     TVMODE_VGA ,
     TVMODE_SVGA,
     TVMODE_XGA,
@@ -160,12 +168,17 @@ typedef struct {
 } vinfo_t;
 
 typedef struct reg_s {
-    uint reg;
-    uint val;
+    unsigned int reg;
+    unsigned int val;
 } reg_t;
 
 struct tvregs_set_t {
     tvmode_t tvmode;
+    const reg_t *reg_setting;
+};
+
+struct tv_hdmi_set_t {
+    HDMI_Video_Codes_t vic;
     const reg_t *reg_setting;
 };
 

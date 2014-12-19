@@ -25,8 +25,7 @@
 #ifndef TVREGS_H
 #define TVREGS_H
 #include <mach/register.h>
-#define MREG_END_MARKER 0xffff
-
+#include <linux/amlogic/vout/vinfo.h>
 
 	#define VIDEO_CLOCK_HD_25	0x00101529
 	#define VIDEO_CLOCK_SD_25	0x00500a6c

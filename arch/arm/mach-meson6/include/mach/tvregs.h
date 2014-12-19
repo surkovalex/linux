@@ -28,9 +28,6 @@
 #include "am_regs.h"
 #include <linux/amlogic/vout/vinfo.h>
 
-#define MREG_END_MARKER 0xffff
-
-
 	#define VIDEO_CLOCK_HD_25	0x00101529
 	#define VIDEO_CLOCK_SD_25	0x00500a6c
 	#define VIDEO_CLOCK_HD_24	0x00140863
