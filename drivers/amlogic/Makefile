@@ -75,6 +75,10 @@ ifneq ($(wildcard $(srctree)/../hardware/amlogic/pmu),)
     obj-$(CONFIG_AML_PMU_ALGORITHM_SUPPORT) += ../../../hardware/amlogic/pmu/
 endif
 
+ifneq ($(wildcard $(srctree)/../hardware/amlogic/thermal),)
+    obj-$(CONFIG_AMLOGIC_THERMAL) += ../../../hardware/amlogic/thermal/
+endif
+
 obj-y += tvin_v4l2/
 ifneq ($(wildcard $(srctree)/../hardware/tvin),)
 	obj-$(CONFIG_TVIN) += ../../../hardware/tvin/
@@ -82,7 +86,6 @@ endif
 
 obj-$(CONFIG_AML_EXT_HDMIIN) += ext_hdmiin/
 
-obj-y += thermal/
 
 
 #####Sound system is later init in kernel default..######################
