@@ -182,19 +182,23 @@ static int amlogic_usb3_init(struct usb_phy *x)
 	u32 data = 0;
 
 	amlogic_usbphy_reset();
-	
+
 	for(i=0;i<phy->portnum;i++)
 	{
 		usb_aml_regs = (usb_aml_regs_t *)((unsigned int)phy->regs+i*PHY_REGISTER_SIZE);
 
 		usb_aml_regs->usb_r3 = (1<<13) | (0x68<<24);
+
+		udelay(2);
+
 		r0.d32 = usb_aml_regs->usb_r0;
 		r0.b.p30_phy_reset = 1;
 		usb_aml_regs->usb_r0 = r0.d32;
-    		udelay(2);
+
+		udelay(2);
+
 		r0.b.p30_phy_reset = 0;
 		usb_aml_regs->usb_r0 = r0.d32;
-	
 
 		/*
 	 	* WORKAROUND: There is SSPHY suspend bug due to which USB enumerates
@@ -209,7 +213,6 @@ static int amlogic_usb3_init(struct usb_phy *x)
 		data &= ~0xff0;
 		data |= 0x20;
 		cr_bus_write(0x1010, data);
-
 		/*
 	 	* Fix RX Equalization setting as follows
 	 	* LANE0.RX_OVRD_IN_HI. RX_EQ_EN set to 0
@@ -239,12 +242,21 @@ static int amlogic_usb3_init(struct usb_phy *x)
 		cr_bus_write(0x1002, data);
 
 		/*
+		* MPLL_LOOP_CTL.PROP_CNTRL
+		*/
+		data = cr_bus_read(0x30);
+		data |= (1 << 4);
+		data &= ~(0x7 << 5);
+		cr_bus_write(0x30, data);
+
+		/*
 	 	* TX_FULL_SWING  to 127
 	 	*/
 		r1.d32 = usb_aml_regs->usb_r1;
 		r1.b.p30_pcs_tx_swing_full = 127;
 		r1.b.u3h_fladj_30mhz_reg = 0x20;
 		usb_aml_regs->usb_r1 = r1.d32;
+		udelay(2);
 
 		/*
 	  	* TX_DEEMPH_3_5DB  to 22
@@ -253,6 +265,8 @@ static int amlogic_usb3_init(struct usb_phy *x)
 		r2.b.p30_pcs_tx_deemph_3p5db = 22;
 		usb_aml_regs->usb_r2 = r2.d32;
 
+		udelay(2);
+
 		/*
 	  	* LOS_BIAS  to 0x5
 	  	* LOS_LEVEL to 0x9
@@ -260,6 +274,8 @@ static int amlogic_usb3_init(struct usb_phy *x)
 		r3.d32 = usb_aml_regs->usb_r3;
 		r3.b.p30_los_bias = 0x5;
 		r3.b.p30_los_level = 0x9;
+		r3.b.p30_ssc_en = 1;
+		r3.b.p30_ssc_range = 2;
 		usb_aml_regs->usb_r3 = r3.d32;
 
 	}
