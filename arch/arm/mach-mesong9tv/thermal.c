@@ -59,8 +59,6 @@ int thermal_firmware_init(void)
 		return -1;
 	
 }
-EXPORT_SYMBOL(thermal_firmware_init);
-
 int get_cpu_temp(void)
 {
 	int ret=-1,tempa;
@@ -73,4 +71,4 @@ int get_cpu_temp(void)
 	}
 	return ret;
 }
-EXPROT_SYMBOL(get_cpu_temp);
+
