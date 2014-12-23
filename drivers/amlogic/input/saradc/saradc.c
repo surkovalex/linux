@@ -163,7 +163,7 @@ static int saradc_get_cal_value(struct saradc *saradc, int val)
 }
 #endif
 
-#ifdef CONFIG_AMLOGIC_THERMAL
+#ifdef CONFIG_AML_PLATFORM_THERMAL
 void temp_sensor_adc_init(int triming)
 {
 	select_temp();
