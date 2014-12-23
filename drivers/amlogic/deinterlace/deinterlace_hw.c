@@ -2093,6 +2093,7 @@ void di_post_read_reverse(bool reverse)
         /* motion vector read reverse*/
         Wr_reg_bits(MCDI_MCVECRD_X, 1, 30, 1);
         Wr_reg_bits(MCDI_MCVECRD_Y, 1, 30, 1);
+        Wr_reg_bits(MCDI_MC_CRTL, 0, 8, 1);          
         #endif
     } else {
         Wr_reg_bits(DI_IF1_GEN_REG2,  0, 2, 2);
@@ -2101,23 +2102,35 @@ void di_post_read_reverse(bool reverse)
 	#ifdef NEW_DI_V3
 	Wr_reg_bits(MCDI_MCVECRD_X, 0, 30, 1);
         Wr_reg_bits(MCDI_MCVECRD_Y, 0, 30, 1);
+        Wr_reg_bits(MCDI_MC_CRTL, 1, 8, 1); 
         #endif
     }
 #endif    
 }
 void di_post_read_reverse_irq(bool reverse)
 {
-#if ((MESON_CPU_TYPE ==  MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6TVD	))
+#ifdef NEW_DI_TV
     if(reverse) {
         VSYNC_WR_MPEG_REG_BITS(DI_IF1_GEN_REG2,    3, 2, 2);
         VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2, 0xf, 2, 4);
         VSYNC_WR_MPEG_REG_BITS(VD2_IF0_GEN_REG2, 0xf, 2, 4);
 	VSYNC_WR_MPEG_REG_BITS(DI_MTNRD_CTRL, 0xf, 17,4);
+        #ifdef NEW_DI_V3
+        /* motion vector read reverse*/
+        VSYNC_WR_MPEG_REG_BITS(MCDI_MCVECRD_X, 1, 30, 1);
+        VSYNC_WR_MPEG_REG_BITS(MCDI_MCVECRD_Y, 1, 30, 1);
+        VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL, 0, 8, 1); 
+        #endif
     } else {
         VSYNC_WR_MPEG_REG_BITS(DI_IF1_GEN_REG2,  0, 2, 2);
 	VSYNC_WR_MPEG_REG_BITS(VD1_IF0_GEN_REG2, 0, 2, 4);
 	VSYNC_WR_MPEG_REG_BITS(VD2_IF0_GEN_REG2, 0, 2, 4);
 	VSYNC_WR_MPEG_REG_BITS(DI_MTNRD_CTRL, 0, 17,4);
+	#ifdef NEW_DI_V3
+	VSYNC_WR_MPEG_REG_BITS(MCDI_MCVECRD_X, 0, 30, 1);
+        VSYNC_WR_MPEG_REG_BITS(MCDI_MCVECRD_Y, 0, 30, 1);
+        VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL, 1, 8, 1);
+        #endif
     }
 #endif    
 }

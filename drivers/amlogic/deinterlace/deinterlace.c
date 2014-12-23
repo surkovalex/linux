@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-12-16a";//modify for vskip
+static char version_s[] = "2014-12-23a";//modify for mcdi reverse
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -2229,6 +2229,7 @@ static unsigned char is_source_change(vframe_t* vframe)
     	((di_pre_stru.cur_inp_type&VIDTYPE_VIU_FIELD)!=(vframe->type&VIDTYPE_VIU_FIELD))
     	){
     	/* just scan mode changed */
+    	pr_info("DI I<->P.\n");
     	return 2;
     }
     return 0;
@@ -3304,7 +3305,7 @@ static void pre_de_process(void)
   int cont_rd = 1;
 #endif
 #ifdef NEW_DI_V3
-    int blkhsize = 0;
+    unsigned int blkhsize = 0;
 #endif
 #ifdef DI_DEBUG
     di_print("%s: start\n", __func__);
@@ -3362,7 +3363,7 @@ static void pre_de_process(void)
 #ifdef NEW_DI_V3
     blkhsize = (di_pre_stru.di_nrwr_mif.end_x+4)/5;
     Wr(MCDI_HV_SIZEIN, (di_pre_stru.di_nrwr_mif.end_y+1)|((di_pre_stru.di_nrwr_mif.end_x+1) << 16));
-    Wr(MCDI_HV_BLKSIZEIN,(blkhsize << 16)|(di_pre_stru.di_nrwr_mif.end_y+1));
+    Wr(MCDI_HV_BLKSIZEIN,(overturn?3:0) << 30|blkhsize << 16 |(di_pre_stru.di_nrwr_mif.end_y+1));
     Wr(MCDI_BLKTOTAL,blkhsize*(di_pre_stru.di_nrwr_mif.end_y+1));		
 #endif
     // set interrupt mask for pre module.
@@ -5031,7 +5032,8 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
     if(di_post_stru.update_post_reg_flag){
         di_apply_reg_cfg(1);
     }
-
+#endif
+#ifdef NEW_DI_TV
     di_post_read_reverse_irq(overturn);
 #endif
 #ifdef NEW_DI_V3
