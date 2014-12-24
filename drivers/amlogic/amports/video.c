@@ -2882,7 +2882,9 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
     if(vdin_ops){
 	arg.cmd = VDIN_CMD_ISR;
 	vdin_ops->tvin_vdin_func(1,&arg);
+#ifdef CONFIG_AM_VIDEO2
 	vdin_ops->tvin_vdin_func(0,&arg);
+#endif
     }
 #endif
     vout_type = detect_vout_type();

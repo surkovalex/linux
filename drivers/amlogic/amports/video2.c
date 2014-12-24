@@ -2509,7 +2509,7 @@ static tvin_scan_mode_t vmode2scan_mode(vmode_t mode)
 static int tvin_started = 0;
 static void stop_clone(void)
 {
-#ifdef CONFIG_TVIN_VIUIN
+#ifdef CONFIG_TVIN_VDIN
     if(tvin_started){
         vdin_v4l2_ops_t * vops = get_vdin_v4l2_ops();
         vops->stop_tvin_service(0);
@@ -2521,7 +2521,7 @@ static void stop_clone(void)
 static int start_clone(void)
 {
     int ret = -1;
-#ifdef CONFIG_TVIN_VIUIN
+#ifdef CONFIG_TVIN_VDIN
     vdin_parm_t para;
     const vinfo_t *info = get_current_vinfo();
     vdin_v4l2_ops_t * vops = get_vdin_v4l2_ops();
@@ -2964,7 +2964,8 @@ static int __init video2_early_init(void)
 
     return 0;
 }
-static int __init video2_init(void)
+
+static int video2_drv_probe(struct platform_device *pdev)
 {
     int r = 0;
     ulong clk = clk_get_rate(clk_get_sys("clk_misc_pll", NULL));
@@ -3071,7 +3072,7 @@ err0:
     return r;
 }
 
-static void __exit video2_exit(void)
+static int video2_drv_remove(struct platform_device *pdev)
 {
     vf_unreg_receiver(&video_vf_recv);
 
@@ -3090,6 +3091,42 @@ static void __exit video2_exit(void)
 #endif
 
     class_unregister(&amvideo_class);
+    return 0;
+}
+
+static const struct of_device_id video2_dt_match[]={
+    {    .compatible     = "amlogic,amvideo2",
+    },
+    {},
+};
+
+static struct platform_driver
+video2_driver = {
+    .probe      = video2_drv_probe,
+    .remove     = video2_drv_remove,
+    .driver     = {
+        .name   = "amvideo2",
+        .of_match_table=video2_dt_match,
+    }
+};
+
+static int __init video2_init(void)
+{
+    int ret =0;
+    printk("%s enter\n", __func__);
+    if (platform_driver_register(&video2_driver))
+    {
+        printk("%s fail\n", __func__);
+        amlog_level(LOG_LEVEL_HIGH,"failed to register video2 driver\n");
+        ret= -ENODEV;
+    }
+    return ret;
+}
+
+static void __exit video2_exit(void)
+{
+    amlog_level(LOG_LEVEL_HIGH,"video2_exit.\n");
+    platform_driver_unregister(&video2_driver);
 }
 
 void set_clone_frame_rate(unsigned int frame_rate, unsigned int delay)

@@ -70,8 +70,35 @@ SET_TV2_CLASS_ATTR(vdac_setting,parse_vdac_setting)
 
 static const tvmode_t vmode_tvmode_tab[] =
 {
-    TVMODE_480I, TVMODE_480I_RPT, TVMODE_480CVBS, TVMODE_480P, TVMODE_480P_RPT, TVMODE_576I, TVMODE_576I_RPT, TVMODE_576CVBS, TVMODE_576P, TVMODE_576P_RPT, TVMODE_720P, TVMODE_1080I, TVMODE_1080P,
-    TVMODE_720P_50HZ, TVMODE_1080I_50HZ, TVMODE_1080P_50HZ,TVMODE_1080P_24HZ, TVMODE_4K2K_30HZ, TVMODE_4K2K_25HZ, TVMODE_4K2K_24HZ, TVMODE_4K2K_SMPTE, 
+    TVMODE_480I, TVMODE_480I_RPT, TVMODE_480CVBS, TVMODE_480P,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_480P_59HZ,
+#endif
+    TVMODE_480P_RPT, TVMODE_576I, TVMODE_576I_RPT, TVMODE_576CVBS, TVMODE_576P, TVMODE_576P_RPT, TVMODE_720P,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_720P_59HZ , // for 720p 59.94hz
+#endif
+    TVMODE_1080I,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_1080I_59HZ,
+#endif
+    TVMODE_1080P,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_1080P_59HZ , // for 1080p 59.94hz
+#endif
+    TVMODE_720P_50HZ, TVMODE_1080I_50HZ, TVMODE_1080P_50HZ,TVMODE_1080P_24HZ, 
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_1080P_23HZ , // for 1080p 23.97hz
+#endif
+    TVMODE_4K2K_30HZ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_4K2K_29HZ , // for 4k2k 29.97hz
+#endif
+    TVMODE_4K2K_25HZ, TVMODE_4K2K_24HZ,
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    TVMODE_4K2K_23HZ , // for 4k2k 23.97hz
+#endif
+    TVMODE_4K2K_SMPTE,
     TVMODE_VGA, TVMODE_SVGA, TVMODE_XGA, TVMODE_SXGA
 };
 
@@ -90,6 +117,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 27000000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_480P_59HZ */
+        .name              = "480p59hz",
+        .mode              = VMODE_480P_59HZ,
+        .width             = 720,
+        .height            = 480,
+        .field_height      = 480,
+        .aspect_ratio_num  = 4,
+        .aspect_ratio_den  = 3,
+        .sync_duration_num = 60000,
+        .sync_duration_den = 1001,
+        .video_clk         = 27000000,
+    },
+#endif
     { /* VMODE_480I_RPT */
         .name              = "480i_rpt",
         .mode              = VMODE_480I_RPT,
@@ -210,6 +251,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 74250000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_720P_59HZ */
+        .name              = "720p59hz",
+        .mode              = VMODE_720P_59HZ,
+        .width             = 1280,
+        .height            = 720,
+        .field_height      = 720,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 60000,
+        .sync_duration_den = 1001,
+        .video_clk         = 74250000,
+    },
+#endif
     { /* VMODE_1080I */
         .name              = "1080i",
         .mode              = VMODE_1080I,
@@ -222,6 +277,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 74250000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_1080I_59HZ */
+        .name              = "1080i59hz",
+        .mode              = VMODE_1080I_59HZ,
+        .width             = 1920,
+        .height            = 1080,
+        .field_height      = 540,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 60000,
+        .sync_duration_den = 1001,
+        .video_clk         = 74250000,
+    },
+#endif
     { /* VMODE_1080P */
         .name              = "1080p",
         .mode              = VMODE_1080P,
@@ -234,6 +303,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 148500000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_1080P_59HZ */
+        .name              = "1080p59hz",
+        .mode              = VMODE_1080P_59HZ,
+        .width             = 1920,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 60000,
+        .sync_duration_den = 1001,
+        .video_clk         = 148500000,
+    },
+#endif
     { /* VMODE_720P_50hz */
         .name              = "720p50hz",
         .mode              = VMODE_720P_50HZ,
@@ -282,6 +365,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 74250000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_1080P_23HZ */
+        .name              = "1080p23hz",
+        .mode              = VMODE_1080P_23HZ,
+        .width             = 1920,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 2397,
+        .sync_duration_den = 100,
+        .video_clk         = 74250000,
+    },
+#endif
     { /* VMODE_4K2K_30HZ */
         .name              = "4k2k30hz",
         .mode              = TVMODE_4K2K_30HZ,
@@ -294,6 +391,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 297000000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_4K2K_29HZ */
+        .name              = "4k2k29hz",
+        .mode              = TVMODE_4K2K_29HZ,
+        .width             = 3840,
+        .height            = 2160,
+        .field_height      = 2160,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 2997,
+        .sync_duration_den = 100,
+        .video_clk         = 297000000,
+    },
+#endif
     { /* VMODE_4K2K_25HZ */
         .name              = "4k2k25hz",
         .mode              = TVMODE_4K2K_25HZ,
@@ -318,6 +429,20 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 297000000,
     },
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    { /* VMODE_4K2K_23HZ */
+        .name              = "4k2k23hz",
+        .mode              = TVMODE_4K2K_23HZ,
+        .width             = 3840,
+        .height            = 2160,
+        .field_height      = 2160,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 2397,
+        .sync_duration_den = 100,
+        .video_clk         = 297000000,
+    },
+#endif
     { /* VMODE_4K2K_SMPTE */
         .name              = "4k2ksmpte",
         .mode              = TVMODE_4K2K_SMPTE,

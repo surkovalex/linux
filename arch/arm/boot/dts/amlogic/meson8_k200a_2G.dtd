@@ -266,6 +266,16 @@ void root_func(){
         reserve-iomap = "true";
     };
 
+///	-	DISP&MM-AMVIDEO2
+//$$ MODULE = "DISP&MM-AMVIDEO2"
+//$$ DEVICE="amvideo2"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 2 ="reg"
+    amvideo2{
+        compatible = "amlogic,amvideo2";
+        dev_name = "amvideo2";
+        status = "okay";
+    };
 /// ***************************************************************************************
 ///	-	ION
 //$$ MODULE="ION"

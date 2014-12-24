@@ -281,8 +281,13 @@ int tvoutc_setmode2(tvmode_t mode)
 	switch(mode)
 	{
 		case TVMODE_480I:
+		case TVMODE_480I_RPT:
 		case TVMODE_480CVBS:
 		case TVMODE_480P:
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+		case TVMODE_480P_59HZ:
+#endif
+		case TVMODE_480P_RPT:
 		case TVMODE_576I:
 		case TVMODE_576CVBS:
 		case TVMODE_576P:
@@ -316,12 +321,21 @@ int tvoutc_setmode2(tvmode_t mode)
 			  #endif
 			  break;
 		case TVMODE_720P:
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+		case TVMODE_720P_59HZ:
+#endif
 		case TVMODE_720P_50HZ:
 		case TVMODE_1080I:
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+		case TVMODE_1080I_59HZ:
+#endif
 		case TVMODE_1080I_50HZ:
         //WRITE_MPEG_REG(HHI_VIID_CLK_DIV, (READ_MPEG_REG(HHI_VIID_CLK_DIV)&(~(0xff)))|0x0); // reg 0x104a
         break;		    
 		case TVMODE_1080P:
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+		case TVMODE_1080P_59HZ:
+#endif
 		case TVMODE_1080P_50HZ:
         //WRITE_MPEG_REG(HHI_VIID_CLK_DIV, (READ_MPEG_REG(HHI_VIID_CLK_DIV)&(~(0xff)))|0x1); // reg 0x104a
         break;		    
