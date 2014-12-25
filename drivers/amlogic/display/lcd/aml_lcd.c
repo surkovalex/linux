@@ -126,19 +126,21 @@ void vpp_set_matrix_ycbcr2rgb (int vd1_or_vd2_or_post, int mode)
 	}
 
 	if (mode == 0){ //ycbcr not full range, 601 conversion
-		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET0_1, 0x7c00600);
-		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET2, 0x0600);
+		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET0_1, 0x0064C8FF);
+		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET2, 0x006400C8);
 
 		//1.164     0       1.596
 		//1.164   -0.392    -0.813
 		//1.164   2.017     0
-		aml_write_reg32(P_VPP_MATRIX_COEF00_01, (0x4a8 << 16) |0);
-		aml_write_reg32(P_VPP_MATRIX_COEF02_10, (0x662 << 16) |0x4a8);
-		aml_write_reg32(P_VPP_MATRIX_COEF11_12, (0x1e6f << 16) |0x1cbf);
-		aml_write_reg32(P_VPP_MATRIX_COEF20_21, (0x4a8 << 16) |0x811);
-		aml_write_reg32(P_VPP_MATRIX_COEF22, 0x0);
-		aml_write_reg32(P_VPP_MATRIX_OFFSET0_1, 0x0);
-		aml_write_reg32(P_VPP_MATRIX_OFFSET2, 0x0);
+		aml_write_reg32(P_VPP_MATRIX_COEF00_01, 0x04000000);
+		aml_write_reg32(P_VPP_MATRIX_COEF02_10, 0x059C0400);
+		aml_write_reg32(P_VPP_MATRIX_COEF11_12, 0x1EA01D24);
+		aml_write_reg32(P_VPP_MATRIX_COEF20_21, 0x04000718);
+		aml_write_reg32(P_VPP_MATRIX_COEF22, 0x00000000);
+		aml_write_reg32(P_VPP_MATRIX_OFFSET0_1, 0x00000000);
+		aml_write_reg32(P_VPP_MATRIX_OFFSET2, 0x00000000);
+		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET0_1, 0x00000E00);
+		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET2, 0x00000E00);
 	}else if (mode == 1) {//ycbcr full range, 601 conversion
 		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET0_1, 0x0000600);
 		aml_write_reg32(P_VPP_MATRIX_PRE_OFFSET2, 0x0600);
