@@ -277,7 +277,7 @@ void root_func(){
         status = "ok";
         share-memory-name = "ppmgr0";
         share-memory-offset = <0>;
-        share-memory-size = <0x01000000>; //16M
+        share-memory-size = <0x02000000>; //32M
     };
 /// ***************************************************************************************
 ///	-	DISP&MM-Vout
