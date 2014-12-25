@@ -281,7 +281,7 @@ void root_func(){
         compatible = "amlogic,ion_dev";
         dev_name = "ion_dev";
         status = "ok";
-	reserve-memory = <0x02000000>; 32M
+	reserve-memory = <0x02000000>; //32M
 	reserve-iomap = "true";
     };
 /// ***************************************************************************************
