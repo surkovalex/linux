@@ -157,6 +157,12 @@ static vpu_mod_t get_vpu_mod(unsigned int vmod)
 			case VMODE_SVGA:
 			case VMODE_XGA:
 			case VMODE_SXGA:
+            case VMODE_4K2K_FAKE_5G:
+            case VMODE_4K2K_60HZ:
+            case VMODE_4K2K_60HZ_Y420:
+            case VMODE_4K2K_50HZ:
+            case VMODE_4K2K_50HZ_Y420:
+            case VMODE_4K2K_5G:
 				vpu_mod = VPU_VENCP;
 				break;
 			case VMODE_480I:

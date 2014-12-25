@@ -3081,15 +3081,6 @@ static int hdmitx_cntl_misc(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned 
         return !!(aml_read_reg32(P_HHI_VID2_PLL_CNTL) & (1 << 30));     // bit30: enable
         break;
     case MISC_CONF_MODE420:
-#define CLK_UTIL_VID_PLL_DIV_2p5    14
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 16, 2);
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 18, 2);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 0, 0, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 1, 1, 1);
-        aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 1, 16, 4);
-        aml_write_reg32(P_HHI_HDMI_PHY_CNTL3, 0x303e005b);
-        hdmitx_wr_reg(HDMITX_DWC_FC_AVICONF0, 0x43);
-        hdmitx_wr_reg(HDMITX_DWC_FC_SCRAMBLER_CTRL, 0);
         aml_write_reg32(P_VPU_HDMI_FMT_CTRL, 0x1a);
         aml_write_reg32(P_VPU_HDMI_SETTING, 0x10e);
         break;

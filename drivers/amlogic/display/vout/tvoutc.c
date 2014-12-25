@@ -450,6 +450,7 @@ int tvoutc_setmode(tvmode_t mode)
     tvinfo = tvinfo_mode(mode);
     if(!tvinfo) {
         printk(KERN_ERR "tvinfo %d not find\n", mode);
+        mutex_unlock(&setmode_mutex);
         return 0;
     }
     printk("TV mode %s selected.\n", tvinfo->id);
@@ -471,6 +472,7 @@ int tvoutc_setmode(tvmode_t mode)
     s = tvregs_setting_mode(mode);
     if(!s) {
         printk("display mode %d regs setting failed\n", mode);
+        mutex_lock(&setmode_mutex);
         return 0;
     }
     //s = tvregsTab[mode];

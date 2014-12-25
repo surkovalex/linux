@@ -412,11 +412,14 @@ static int set_disp_mode_auto(void)
         }
     }
     if(hdmitx_device.mode420) {
-        if(hdmitx_device.cur_VIC == HDMI_3840x2160p60_16x9) {
+        switch(hdmitx_device.cur_VIC) {
+        // Currently, only below formats support 420 mode
+        case HDMI_3840x2160p60_16x9:
+        case HDMI_3840x2160p50_16x9:
             printk("configure mode420, VIC = %d\n", hdmitx_device.cur_VIC);
             hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_CONF_MODE420, hdmitx_device.mode420);
-        }
-        else {
+            break;
+        default:
             hdmitx_device.mode420 = 0;
             printk("mode420 only at VIC: %d\n", HDMI_3840x2160p60_16x9);
         }

@@ -1205,6 +1205,7 @@ static struct tvregs_set_t tvregsTab[] = {
     {TVMODE_4K2K_FAKE_5G, tvregs_4k2k_30hz,   },      // FAKE 4k2k5g
     {TVMODE_4K2K_60HZ, tvregs_4k2k_30hz,   },      // 4k2k60hz
     {TVMODE_4K2K_60HZ_Y420, tvregs_4k2k_30hz,   },      // 4k2k60hz YCbCr420 mode
+    {TVMODE_4K2K_50HZ_Y420, tvregs_4k2k_25hz, },
     {TVMODE_VGA, tvregs_vga_640x480, },
     {TVMODE_SVGA, tvregs_svga_800x600,},
     {TVMODE_XGA, tvregs_xga_1024x768,},
@@ -1234,6 +1235,7 @@ static const tvinfo_t tvinfoTab[] = {
     {.tvmode = TVMODE_4K2K_SMPTE, .xres = 4096, .yres = 2160, .id = "4k2ksmpte"},
     {.tvmode = TVMODE_4K2K_FAKE_5G, .xres = 4096, .yres = 2160, .id = "4k2k5g"},
     {.tvmode = TVMODE_4K2K_60HZ_Y420, .xres = 3840, .yres = 2160, .id = "4k2k60hz420"},
+    {.tvmode = TVMODE_4K2K_50HZ_Y420, .xres = 3840, .yres = 2160, .id = "4k2k50hz420"},
     {.tvmode = TVMODE_4K2K_60HZ, .xres = 3840, .yres = 2160, .id = "4k2k60hz"},
     {.tvmode = TVMODE_VGA, .xres = 640, .yres = 480, .id = "vga"},
     {.tvmode = TVMODE_SVGA, .xres = 800, .yres = 600, .id = "svga"},
