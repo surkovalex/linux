@@ -53,7 +53,140 @@ static struct class *aml_lcd_clsp;
 #define V_PERIOD			1125
 #define VIDEO_ON_PIXEL	148
 #define VIDEO_ON_LINE	41
+#define CLK_UTIL_VID_PLL_DIV_1      0
+#define CLK_UTIL_VID_PLL_DIV_2      1
+#define CLK_UTIL_VID_PLL_DIV_3      2
+#define CLK_UTIL_VID_PLL_DIV_3p5    3
+#define CLK_UTIL_VID_PLL_DIV_3p75   4
+#define CLK_UTIL_VID_PLL_DIV_4      5
+#define CLK_UTIL_VID_PLL_DIV_5      6
+#define CLK_UTIL_VID_PLL_DIV_6      7
+#define CLK_UTIL_VID_PLL_DIV_6p25   8
+#define CLK_UTIL_VID_PLL_DIV_7      9
+#define CLK_UTIL_VID_PLL_DIV_7p5    10
+#define CLK_UTIL_VID_PLL_DIV_12     11
+#define CLK_UTIL_VID_PLL_DIV_14     12
+#define CLK_UTIL_VID_PLL_DIV_15     13
 
+/* defines for bits&width */
+#define VBO_VIN_YUV_GBR 0
+#define VBO_VIN_YVU_GRB 1
+#define VBO_VIN_UYV_BGR 2
+#define VBO_VIN_UVY_BRG 3
+#define VBO_VIN_VYU_RGB 4
+#define VBO_VIN_VUY_RBG 5
+
+#define VBO_VIN_30BPP	0
+#define VBO_VIN_24BPP   1
+#define VBO_VIN_18BPP   2
+
+//VBYONE_CTRL_L
+//`define VBO_CTRL_L             8'h60
+    #define VBO_ENABLE_BIT  0
+    #define VBO_EBABLE_WID  1
+
+    #define VBO_ALN_SHIFT_BIT     1
+    #define VBO_ALN_SHIFT_WID     1
+
+    #define VBO_LFSR_BYPASS_BIT   2
+    #define VBO_LFSR_BYPASS_WID   1
+
+    #define VBO_VDE_EXTEND_BIT    3
+    #define VBO_VDE_EXTEND_WID    1
+
+    #define VBO_HSYNC_SYNC_MODE_BIT   4
+    #define VBO_HSYNC_SYNC_MODE_WID   2
+
+    #define VBO_VSYNC_SYNC_MODE_BIT   6
+    #define VBO_VSYNC_SYNC_MODE_WID   2
+
+    #define VBO_FSM_CTRL_BIT      8
+    #define VBO_FSM_CTRL_WID      3
+
+    #define VBO_CTL_MODE_BIT      11
+    #define VBO_CTL_MODE_WID      5
+
+//`define VBO_CTRL_H             8'h61
+    #define VBO_CTL_MODE2_BIT     0
+    #define VBO_CTL_MODE2_WID     4
+
+    #define VBO_B8B10_CTRL_BIT    4
+    #define VBO_B8B10_CTRL_WID    3
+
+    #define VBO_VIN2ENC_TMSYNC_MODE_BIT 8
+    #define VBO_VIN2ENC_TMSYNC_MODE_WID 1
+
+    #define VBO_VIN2ENC_HVSYNC_DLY_BIT  9
+    #define VBO_VIN2ENC_HVSYNC_DLY_WID  1
+
+    #define VBO_POWER_ON_BIT  12
+    #define VBO_POWER_ON_WID  1
+
+    #define VBO_PLL_LOCK_BIT  13
+    #define VBO_PLL_LOCK_WID  1
+
+//`define VBO_SOFT_RST           8'h62
+   #define  VBO_SOFT_RST_BIT      0
+   #define  VBO_SOFT_RST_WID      9
+
+//`define VBO_LANES              8'h63
+   #define  VBO_LANE_NUM_BIT      0
+   #define  VBO_LANE_NUM_WID      3
+
+   #define  VBO_LANE_REGION_BIT   4
+   #define  VBO_LANE_REGION_WID   2
+
+   #define  VBO_SUBLANE_NUM_BIT   8
+   #define  VBO_SUBLANE_NUM_WID   3
+
+   #define  VBO_BYTE_MODE_BIT     11
+   #define  VBO_BYTE_MODE_WID     2
+
+//`define VBO_VIN_CTRL           8'h64
+   #define  VBO_VIN_SYNC_CTRL_BIT 0
+   #define  VBO_VIN_SYNC_CTRL_WID 2
+
+   #define  VBO_VIN_HSYNC_POL_BIT 4
+   #define  VBO_VIN_HSYNC_POL_WID 1
+
+   #define  VBO_VIN_VSYNC_POL_BIT 5
+   #define  VBO_VIN_VSYNC_POL_WID 1
+
+   #define  VBO_VOUT_HSYNC_POL_BIT 6
+   #define  VBO_VOUT_HSYNC_POL_WID 1
+
+   #define  VBO_VOUT_VSYNC_POL_BIT 7
+   #define  VBO_VOUT_VSYNC_POL_WID 1
+
+   #define  VBO_VIN_PACK_BIT      8
+   #define  VBO_VIN_PACK_WID      3
+
+   #define  VBO_VIN_BPP_BIT      11
+   #define  VBO_VIN_BPP_WID       2
+
+//`define VBO_ACT_VSIZE          8'h65
+//`define VBO_REGION_00          8'h66
+//`define VBO_REGION_01          8'h67
+//`define VBO_REGION_02          8'h68
+//`define VBO_REGION_03          8'h69
+//`define VBO_VBK_CTRL_0         8'h6a
+//`define VBO_VBK_CTRL_1         8'h6b
+//`define VBO_HBK_CTRL           8'h6c
+//`define VBO_PXL_CTRL           8'h6d
+    #define  VBO_PXL_CTR0_BIT     0
+    #define  VBO_PXL_CTR0_WID     4
+    #define  VBO_PXL_CTR1_BIT     4
+    #define  VBO_PXL_CTR1_WID     4
+
+//`define VBO_LANE_SKEW_L        8'h6e
+//`define VBO_LANE_SKEW_H        8'h6f
+//`define VBO_GCLK_LANE_CTRL_L   8'h70
+//`define VBO_GCLK_LANE_CTRL_H   8'h71
+//`define VBO_GCLK_MAIN_CTRL     8'h72
+//`define VBO_STATUS_L           8'h73
+//`define VBO_STATUS_H           8'h74
+
+//`define LCD_PORT_SWAP          8'h75
 typedef struct {
 	Lcd_Config_t conf;
 	vinfo_t lcd_info;
@@ -106,6 +239,12 @@ int flagd = 0;
 MODULE_PARM_DESC(flagd, "\n flagd \n");
 module_param(flagd, int, 0664);
 EXPORT_SYMBOL(flagd);
+
+int vx1_debug = 1;
+MODULE_PARM_DESC(vx1_debug, "\n vx1_debug \n");
+module_param(vx1_debug, int, 0664);
+EXPORT_SYMBOL(vx1_debug);
+
 
 void vpp_set_matrix_ycbcr2rgb (int vd1_or_vd2_or_post, int mode)
 {
@@ -302,6 +441,44 @@ static void venc_set_lvds(Lcd_Config_t *pConf)
 	aml_write_reg32(P_ENCL_VIDEO_VSO_END,	pConf->lcd_timing.stv1_he_addr);//20);
 	aml_write_reg32(P_ENCL_VIDEO_VSO_BLINE,	pConf->lcd_timing.stv1_vs_addr);//2);
 	aml_write_reg32(P_ENCL_VIDEO_VSO_ELINE,	pConf->lcd_timing.stv1_ve_addr);//4);
+		aml_write_reg32(P_ENCL_VIDEO_RGBIN_CTRL, 0);
+
+		// enable encl
+		aml_write_reg32(P_ENCL_VIDEO_EN, 1);
+	}
+
+
+static void venc_set_vx1(Lcd_Config_t *pConf)
+{
+	pr_info("%s\n", __FUNCTION__);
+
+	aml_write_reg32(P_ENCL_VIDEO_EN, 0);
+	//int havon_begin = 80;
+	aml_write_reg32(P_VPU_VIU_VENC_MUX_CTRL, (0<<0) |    // viu1 select encl
+											(3<<2) );     // viu2 select encl
+	aml_write_reg32(P_ENCL_VIDEO_MODE, 40);//0); // Enable Hsync and equalization pulse switch in center; bit[14] cfg_de_v = 1
+	aml_write_reg32(P_ENCL_VIDEO_MODE_ADV,     0x18);//0x0418); // Sampling rate: 1
+
+	// bypass filter
+	aml_write_reg32(P_ENCL_VIDEO_FILT_CTRL, 0x1000); //??
+
+	aml_write_reg32(P_ENCL_VIDEO_MAX_PXCNT, 3840+560-1);//pConf->lcd_basic.h_period - 1);
+	//if(cur_lvds_index)
+		//aml_write_reg32(P_ENCL_VIDEO_MAX_LNCNT, 1350 - 1);
+	//else
+		aml_write_reg32(P_ENCL_VIDEO_MAX_LNCNT, 2160+90-1);//pConf->lcd_basic.v_period - 1);
+
+	aml_write_reg32(P_ENCL_VIDEO_HAVON_BEGIN, 560-3);//pConf->lcd_timing.video_on_pixel);
+	aml_write_reg32(P_ENCL_VIDEO_HAVON_END, 3839+560-3);//pConf->lcd_basic.h_active - 1 + pConf->lcd_timing.video_on_pixel);
+	aml_write_reg32(P_ENCL_VIDEO_VAVON_BLINE,	90);//pConf->lcd_timing.video_on_line);
+	aml_write_reg32(P_ENCL_VIDEO_VAVON_ELINE,	2159+90);//pConf->lcd_basic.v_active - 1  + pConf->lcd_timing.video_on_line);
+
+	aml_write_reg32(P_ENCL_VIDEO_HSO_BEGIN,48-1);//	pConf->lcd_timing.sth1_hs_addr);//10);
+	aml_write_reg32(P_ENCL_VIDEO_HSO_END,	48-1+32);//pConf->lcd_timing.sth1_he_addr);//20);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_BEGIN,	48-1);//pConf->lcd_timing.stv1_hs_addr);//10);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_END,	48-1);//pConf->lcd_timing.stv1_he_addr);//20);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_BLINE,	3);//pConf->lcd_timing.stv1_vs_addr);//2);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_ELINE,	9);//pConf->lcd_timing.stv1_ve_addr);//4);
 
 	aml_write_reg32(P_ENCL_VIDEO_RGBIN_CTRL, 0);
 
@@ -347,18 +524,339 @@ static void set_control_lvds(Lcd_Config_t *pConf)
 
 static void init_lvds_phy(Lcd_Config_t *pConf)
 {
-	pr_info("%s\n", __FUNCTION__);
-	aml_write_reg32( P_LVDS_SER_EN, 0xfff );
-	aml_write_reg32( P_LVDS_PHY_CNTL0, 0x0002 );
-	aml_write_reg32( P_LVDS_PHY_CNTL1, 0xff00 );
-	aml_write_reg32( P_LVDS_PHY_CNTL3, 0x0ee1 );
-	aml_write_reg32( P_LVDS_PHY_CNTL4, 0x3fff );
-	aml_write_reg32( P_LVDS_PHY_CNTL5, 0xac24 );
+	//debug
+	aml_write_reg32(P_VPU_VLOCK_GCLK_EN, 7);
+	aml_write_reg32(P_VPU_VLOCK_ADJ_EN_SYNC_CTRL, 0x108010ff);
+	aml_write_reg32(P_VPU_VLOCK_CTRL, 0xe0f50f1b);
+	//debug
+	aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL1, 0x6c6cca80);
+	aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL2, 0x0000006c);
+	aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL3, 0x0fff0800);
+	//od   clk 1039.5 / 2 = 519.75 = 74.25*7
+	aml_write_reg32(P_HHI_LVDS_TX_PHY_CNTL0, 0x0fff0040);
+}
+
+int config_vbyone(int lane, int byte, int region, int hsize, int vsize)
+{
+   int sublane_num;
+   int region_size[4];
+   int tmp;
+
+   if((lane == 0) || (lane == 3) || (lane == 5) || (lane == 6) || (lane == 7) || (lane>8))
+      return 1;
+   if((region ==0) || (region==3) || (region>4))
+      return 1;
+   if(lane%region)
+      return 1;
+   if((byte<3) || (byte>4))
+      return 1;
+
+   sublane_num = lane/region;
+   aml_set_reg32_bits(P_VBO_LANES,lane-1,  VBO_LANE_NUM_BIT,    VBO_LANE_NUM_WID);
+   aml_set_reg32_bits(P_VBO_LANES,region-1,VBO_LANE_REGION_BIT, VBO_LANE_REGION_WID);
+   aml_set_reg32_bits(P_VBO_LANES,sublane_num-1,VBO_SUBLANE_NUM_BIT, VBO_SUBLANE_NUM_WID);
+   aml_set_reg32_bits(P_VBO_LANES,byte-1,VBO_BYTE_MODE_BIT, VBO_BYTE_MODE_WID);
+
+   if(region>1)
+   {
+       region_size[3] = (hsize/lane)*sublane_num;
+       tmp = (hsize%lane);
+       region_size[0] = region_size[3] + (((tmp/sublane_num)>0) ? sublane_num : (tmp%sublane_num));
+       region_size[1] = region_size[3] + (((tmp/sublane_num)>1) ? sublane_num : (tmp%sublane_num));
+       region_size[2] = region_size[3] + (((tmp/sublane_num)>2) ? sublane_num : (tmp%sublane_num));
+       aml_write_reg32(P_VBO_REGION_00,region_size[0]);
+       aml_write_reg32(P_VBO_REGION_01,region_size[1]);
+       aml_write_reg32(P_VBO_REGION_02,region_size[2]);
+       aml_write_reg32(P_VBO_REGION_03,region_size[3]);
+   }
+   aml_write_reg32(P_VBO_ACT_VSIZE,vsize);
+   //aml_set_reg32_bits(P_VBO_CTRL_H,0x80,VBO_CTL_MODE_BIT,VBO_CTL_MODE_WID);  // different from FBC code!!!
+   aml_set_reg32_bits(P_VBO_CTRL_H,0x0,VBO_CTL_MODE2_BIT,VBO_CTL_MODE2_WID); // different from simulation code!!!
+   aml_set_reg32_bits(P_VBO_CTRL_H,0x1,VBO_VIN2ENC_HVSYNC_DLY_BIT,VBO_VIN2ENC_HVSYNC_DLY_WID);
+   //aml_set_reg32_bits(P_VBO_CTRL_L,enable,VBO_ENABLE_BIT,VBO_EBABLE_WID);
+
+   return 0;
+}
+
+void set_vbyone_ctlbits(int p3d_en, int p3d_lr, int mode)
+{
+	if(mode==0)  //insert at the first pixel
+		aml_set_reg32_bits(P_VBO_PXL_CTRL,(1<<p3d_en)|(p3d_lr&0x1),VBO_PXL_CTR0_BIT,VBO_PXL_CTR0_WID);
+	else
+		aml_set_reg32_bits(P_VBO_VBK_CTRL_0,(1<<p3d_en)|(p3d_lr&0x1),0,2);
+}
+
+void set_vbyone_sync_pol(int hsync_pol, int vsync_pol)
+{
+    aml_set_reg32_bits(P_VBO_VIN_CTRL,hsync_pol,VBO_VIN_HSYNC_POL_BIT,VBO_VIN_HSYNC_POL_WID);
+    aml_set_reg32_bits(P_VBO_VIN_CTRL,vsync_pol,VBO_VIN_VSYNC_POL_BIT,VBO_VIN_VSYNC_POL_WID);
+
+    aml_set_reg32_bits(P_VBO_VIN_CTRL,hsync_pol,VBO_VOUT_HSYNC_POL_BIT,VBO_VOUT_HSYNC_POL_WID);
+    aml_set_reg32_bits(P_VBO_VIN_CTRL,vsync_pol,VBO_VOUT_VSYNC_POL_BIT,VBO_VOUT_VSYNC_POL_WID);
+}
+
+static void set_control_vbyone(Lcd_Config_t *pConf)
+{
+    int lane, byte, region,  hsize, vsize;//color_fmt,
+    int vin_color, vin_bpp;
+
+    hsize = 3840;//pConf->lcd_basic.h_active;
+	vsize = 2160;//pConf->lcd_basic.v_active;
+    lane = 8;//byte_num;
+	byte = 4;//byte_num;
+	region = 2;//region_num;
+	vin_color = 4;
+	vin_bpp   = 0;
+    //switch (color_fmt) {
+    //    case 0:   //SDVT_VBYONE_18BPP_RGB
+    //              vin_color = 4;
+    //              vin_bpp   = 2;
+    //              break;
+    //    case 1:   //SDVT_VBYONE_18BPP_YCBCR444
+    //              vin_color = 0;
+    //              vin_bpp   = 2;
+    //              break;
+    //    case 2:   //SDVT_VBYONE_24BPP_RGB
+    //              vin_color = 4;
+    //              vin_bpp   = 1;
+    //              break;
+    //    case 3:   //SDVT_VBYONE_24BPP_YCBCR444
+    //              vin_color = 0;
+    //              vin_bpp   = 1;
+    //              break;
+    //    case 4:   //SDVT_VBYONE_30BPP_RGB
+                  //vin_color = 4;
+                  //vin_bpp   = 0;
+    //              break;
+    //    case 5:   //SDVT_VBYONE_30BPP_YCBCR444
+    //              vin_color = 0;
+    //              vin_bpp   = 0;
+    //              break;
+    //    default:
+    //        printk( "Error VBYONE_COLOR_FORMAT!\n");
+    //              return;
+    //}
+    // clock seting for VX1
+    //vclk_set_encl_vx1(vfromat, lane, byte);
+
+    // set encl format
+    //set_tv_encl (TV_ENC_LCD3840x2160p_vic03,1,0,0);
+
+    // vpu clock setting
+    //aml_set_reg32(P_HHI_VPU_CLK_CNTL,   (0 << 9)    |   // vpu   clk_sel
+    //                        (0 << 0) );     // vpu   clk_div
+    //aml_set_reg32(P_HHI_VPU_CLK_CNTL, (Rd(HHI_VPU_CLK_CNTL) | (1 << 8)) );
+
+    //PIN_MUX for VX1 need to add this to dtd
+    printk("Set VbyOne PIN MUX ......\n");
+    aml_set_reg32_bits(P_PERIPHS_PIN_MUX_3,3,8,2);
+
+    // set Vbyone
+    printk("VbyOne Configuration ......\n");
+    //set_vbyone_vfmt(vin_color,vin_bpp);
+    aml_set_reg32_bits(P_VBO_VIN_CTRL, vin_color, VBO_VIN_PACK_BIT,VBO_VIN_PACK_WID);
+    aml_set_reg32_bits(P_VBO_VIN_CTRL,vin_bpp,  VBO_VIN_BPP_BIT,VBO_VIN_BPP_WID);
+    config_vbyone(lane, byte, region, hsize, vsize);
+    set_vbyone_sync_pol(0, 0); //set hsync/vsync polarity to let the polarity is low active inside the VbyOne
+
+    // below line copy from simulation
+    aml_set_reg32_bits(P_VBO_VIN_CTRL, 1, 0, 2); //gate the input when vsync asserted
+    ///aml_set_reg32(P_VBO_VBK_CTRL_0,0x13);
+    //aml_set_reg32(P_VBO_VBK_CTRL_1,0x56);
+    //aml_set_reg32(P_VBO_HBK_CTRL,0x3478);
+    //aml_set_reg32_bits(P_VBO_PXL_CTRL,0x2,VBO_PXL_CTR0_BIT,VBO_PXL_CTR0_WID);
+    //aml_set_reg32_bits(P_VBO_PXL_CTRL,0x3,VBO_PXL_CTR1_BIT,VBO_PXL_CTR1_WID);
+    //set_vbyone_ctlbits(1,0,0);
+    //set fifo_clk_sel: 3 for 10-bits
+    aml_set_reg32_bits(P_HHI_LVDS_TX_PHY_CNTL0,3,6,2);
+
+    //PAD select:
+	if((lane == 1) || (lane == 2)) {
+		aml_set_reg32_bits(P_LCD_PORT_SWAP,1,9,2);
+    } else if(lane == 4) {
+    	aml_set_reg32_bits(P_LCD_PORT_SWAP,2,9,2);
+    } else {
+    	aml_set_reg32_bits(P_LCD_PORT_SWAP,0,9,2);
+    }
+    //aml_set_reg32_bits(P_LCD_PORT_SWAP, 1, 8, 1);//reverse lane output order
+
+    // Mux pads in combo-phy: 0 for dsi; 1 for lvds or vbyone; 2 for edp
+    aml_write_reg32(P_HHI_DSI_LVDS_EDP_CNTL0, 0x1); // Select vbyone in combo-phy
+    aml_set_reg32_bits(P_VBO_CTRL_L, 1, VBO_ENABLE_BIT, VBO_EBABLE_WID);
+
+    //force vencl clk enable, otherwise, it might auto turn off by mipi DSI
+    //WRITE_VCBUS_REG_BITS(VPU_MISC_CTRL, 1, 0, 1);
+
+    printk("VbyOne is In Normal Status ......\n");
+}
+static void init_vbyone_phy(Lcd_Config_t *pConf)
+{
+    printk("%s\n", __FUNCTION__);
+	//debug
+	aml_write_reg32(P_VPU_VLOCK_GCLK_EN, 7);
+	aml_write_reg32(P_VPU_VLOCK_ADJ_EN_SYNC_CTRL, 0x108010ff);
+	aml_write_reg32(P_VPU_VLOCK_CTRL, 0xe0f50f1b);
+	//debug
+	aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL1, 0x6e0ec918);
+	aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL2, 0x00000a7c);
+	aml_write_reg32(P_HHI_DIF_CSI_PHY_CNTL3, 0x00ff0800);
+	//od   clk 2970 / 5 = 594
+	aml_write_reg32(P_HHI_LVDS_TX_PHY_CNTL0, 0xfff00c0);
+	//clear lvds fifo od (/2)
+	aml_write_reg32(P_HHI_LVDS_TX_PHY_CNTL1, 0xc1000000);
+
+}
+static void set_tcon_vbyone(Lcd_Config_t *pConf)
+{
+    //Lcd_Timing_t *tcon_adr = &(pConf->lcd_timing);
+
+    vpp_set_matrix_ycbcr2rgb(2, 0);
+    aml_write_reg32(P_ENCL_VIDEO_RGBIN_CTRL, 3);
+    aml_write_reg32(P_L_RGB_BASE_ADDR, 0);
+    aml_write_reg32(P_L_RGB_COEFF_ADDR, 0x400);
+    //aml_write_reg32(P_L_POL_CNTL_ADDR,  3);
+    //aml_write_reg32(P_L_DUAL_PORT_CNTL_ADDR, (0x1 << LCD_TTL_SEL));
+//	if(pConf->lcd_basic.lcd_bits == 8)
+//		aml_write_reg32(P_L_DITH_CNTL_ADDR,  0x400);
+//	else if(pConf->lcd_basic.lcd_bits == 6)
+//		aml_write_reg32(P_L_DITH_CNTL_ADDR,  0x600);
+//	else
+//		aml_write_reg32(P_L_DITH_CNTL_ADDR,  0);
+    //PRINT_INFO("final LVDS_FIFO_CLK = %d\n", clk_util_clk_msr(24));
+	//PRINT_INFO("final cts_encl_clk = %d\n", clk_util_clk_msr(9));
+    aml_write_reg32(P_VPP_MISC, aml_read_reg32(P_VPP_MISC) & ~(VPP_OUT_SATURATE));
+}
+
+//clock seting for VX1
+static void set_pll_vbyone(Lcd_Config_t *pConf)
+{
+    int  lane, byte;//vfromat,
+	//int hdmi_clk_out;
+	int hdmi_vx1_clk_od1;
+	int pclk_div;
+	int phy_div;
+	int xd;
+	int minlane;
+
+    lane = 8;//lane_num;
+    byte = 4;//byte_num;
+	//phy_clk = pixel_clk*10*byte_num/lane_num;
+	//                                   lane_num      byte_num      phy_clk
+	//TV_ENC_LCD720x480:(pclk=27M) 858x525  8            3            101.25      (pclk*3.75)
+	//                                      4            3            202.5       (pclk*7.5)
+	//                                      2            3            405         (pclk*15)
+	//                                      1            3            810         (pclk*30)
+	//                                      8            4            135         (pclk*5)
+	//                                      4            4            270         (pclk*10)
+	//                                      2            4            540         (pclk*20)
+	//                                      1            4            1080        (pclk*40)
+	//                                   lane_num      byte_num      phy_clk
+	//TV_ENC_LCD1920x1080:(pclk=148.5M)     8            3            556.875     (pclk*3.75)
+	//                      2200x1125       4            3            1113.75     (pclk*7.5)
+	//                                      2            3            2227.5      (pclk*15)
+	//                                      1            3            4455        (pclk*30)
+	//                                      8            4            742.5       (pclk*5)
+	//                                      4            4            1485        (pclk*10)
+	//                                      2            4            2970        (pclk*20)
+	//                                      1            4            5940        (pclk*40)
+	//                                   lane_num      byte_num      phy_clk
+	//TV_ENC_LCD3840x2160p:(pclk=594M)      8            3            2227.5      (pclk*3.75)
+	//                      4400x2250       4            3            4455        (pclk*7.5)
+	//                                      2            3            8910        (pclk*15)
+	//                                      1            3           17820        (pclk*30)
+	//                                      8            4            2970        (pclk*5)
+	//                                      4            4            5940        (pclk*10)
+	//                                      2            4           11880        (pclk*20)
+	//                                      1            4           23760        (pclk*40)
+    //if (byte_num == 3)
+    //	hdmi_clk_out = 2227.5*2;  //OD1 = 1
+    //else //4
+    //	hdmi_clk_out = 2970*2;    //OD1 = 1
+    minlane = 8;
+    //hdmi_vx1_clk_od1 = 1;
+
+	if (lane < minlane) {
+		printk("VX1 cannot support this configuration!\n");
+		return;
+	}
+
+	phy_div = lane/minlane; //1,2,4,8
+	if (phy_div == 8) {
+    	phy_div = phy_div/2;
+    	if(hdmi_vx1_clk_od1 != 0) {
+    		printk("VX1 cannot support this configuration!\n");
+    		return;
+    	}
+    //	hdmi_vx1_clk_od1=1;
+	}
+	//need check whether we need to set this dpll !!!!!!!
+	//if (set_hdmi_dpll(hdmi_clk_out,hdmi_vx1_clk_od1)){
+    //   printk("Unsupported HDMI_DPLL out frequency!\n");
+    //    return;
+    //}
+
+   pclk_div = (((byte==3) ? 30:40)*100)/minlane;
+   printk("vbyone byte:%d, lane:%d, pclk:%d, phy_div:%d \n", byte, lane, pclk_div, phy_div);
+   //configure vid_clk_div_top
+   if (byte == 3) {
+	   if (pclk_div == 375) {
+		   clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_3p75);
+		   xd = 1;
+	   } else if (pclk_div == 750) {
+		   clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_7p5);
+		   xd = 1;
+	   } else {
+		   clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_15);
+		   xd = pclk_div/100/15;
+	   }
+	} else if (byte == 4) {
+		clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_5);
+		xd = pclk_div/100/5;
+	}
+
+	//for lvds phy clock and enable decoupling FIFO
+	aml_write_reg32(P_HHI_LVDS_TX_PHY_CNTL1,((3<<6)|((phy_div-1)<<1)|1)<<24);
+
+	//configure crt_video
+	//set_crt_video_enc(0, 0, xd);  //configure crt_video V1: inSel=vid_pll_clk(0),DivN=xd)
+	//if (vidx == 0)
+	{ //V1
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 0, 19, 1); //[19] -disable clk_div0
+		udelay(2);  //delay 2uS
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 0,   16, 3); // [18:16] - cntl_clk_in_sel
+		aml_set_reg32_bits(P_HHI_VID_CLK_DIV, (xd-1), 0, 8); // [7:0]   - cntl_xd0
+		udelay(5);  // delay 5uS
+		aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 1, 19, 1); //[19] -enable clk_div0
+	}
+    //else { //V2
+	//	aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL, 0, 19, 1); //[19] -disable clk_div0
+	//	udelay(2);  //delay 2uS
+	//	aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL, insel,  16, 3); // [18:16] - cntl_clk_in_sel
+	//	aml_set_reg32_bits(P_HHI_VIID_CLK_DIV, (divn-1),0, 8); // [7:0]   - cntl_xd0
+	//	udelay(5);  // delay 5uS
+	//	aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL, 1, 19, 1); //[19] -enable clk_div0
+	//}
+	udelay(5);  // delay 5uS
+	//enable_crt_video_encl(1, 0); //select and enable the output
+	aml_set_reg32_bits(P_HHI_VIID_CLK_DIV, 0,  12, 4); //encl_clk_sel:hi_viid_clk_div[15:12]
+	//if(inSel<=4) //V1
+	aml_set_reg32_bits(P_HHI_VID_CLK_CNTL,1, 0, 1);
+	//else
+	//	aml_set_reg32_bits(P_HHI_VIID_CLK_CNTL,1, (inSel-5),1);
+
+	aml_set_reg32_bits(P_HHI_VID_CLK_CNTL2, 1, 3, 1); //gclk_encl_clk:hi_vid_clk_cntl2[3]
+}
+
+void set_vx1_pinmux(void)
+{
+	//VX1_LOCKN && VX1_HTPDN
+	aml_set_reg32_bits(P_PERIPHS_PIN_MUX_7, 3, 18, 2);
 }
 
 static inline void _init_display_driver(Lcd_Config_t *pConf)
 {
 	int lcd_type;
+
 	const char* lcd_type_table[]={
 		"NULL",
 		"TTL",
@@ -366,9 +864,11 @@ static inline void _init_display_driver(Lcd_Config_t *pConf)
 		"invalid",
 	};
 
-	lcd_type = pDev->conf.lcd_basic.lcd_type;
-	printk("\nInit LCD type: %s.\n", lcd_type_table[lcd_type]);
 
+	lcd_type = pDev->conf.lcd_basic.lcd_type;
+	//printk("\nInit LCD type: %s.\n", lcd_type_table[lcd_type]);
+	if(vx1_debug == 1)
+		lcd_type = LCD_DIGITAL_VBYONE;
 	switch(lcd_type){
 		case LCD_DIGITAL_LVDS:
 			set_pll_lvds(pConf);
@@ -377,7 +877,15 @@ static inline void _init_display_driver(Lcd_Config_t *pConf)
 			init_lvds_phy(pConf);
 			set_tcon_lvds(pConf);
 		break;
-
+        case LCD_DIGITAL_VBYONE:
+			set_pll_vbyone(pConf);
+			venc_set_vx1(pConf);
+			//set_pll_vbyone(pConf);
+			//venc_set_vbyone(pConf);
+			set_control_vbyone(pConf);
+			init_vbyone_phy(pConf);
+			set_tcon_vbyone(pConf);
+			set_vx1_pinmux();
 		default:
 			pr_err("Invalid LCD type.\n");
 		break;
@@ -454,6 +962,7 @@ static int lcd_set_current_vmode(vmode_t mode)
 		cur_lvds_index = 0;
 
 	aml_write_reg32(P_VPP_POSTBLEND_H_SIZE, pDev->lcd_info.width);
+	//aml_write_reg32(P_VPP_POSTBLEND_H_SIZE, 0xf00);
 	_lcd_module_enable();
 
 	if (VMODE_INIT_NULL == pDev->lcd_info.mode)
@@ -464,10 +973,15 @@ static int lcd_set_current_vmode(vmode_t mode)
 
 static vmode_t lcd_validate_vmode(char *mode)
 {
+	if(vx1_debug == 1)
+		return VMODE_4K2K_60HZ;
+
 	if ((strncmp(mode, "lvds1080p50hz", strlen("lvds1080p50hz"))) == 0)
 		return VMODE_LVDS_1080P_50HZ;
 	else if ((strncmp(mode, "lvds1080p", strlen("lvds1080p"))) == 0)
 		return VMODE_LVDS_1080P;
+	else if ((strncmp(mode, "4k2k60hz", strlen("4k2k60hz"))) == 0)
+		return VMODE_4K2K_60HZ;
 
 	return VMODE_MAX;
 }
