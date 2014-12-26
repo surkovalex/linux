@@ -1244,6 +1244,8 @@ static void vh264_isr(void)
                     }
                 }
 
+                last_pts = last_pts + DUR2PTS(vf->duration - frame_dur);
+
                 vf->index = buffer_index;
 #ifdef NV21
                 vf->type = VIDTYPE_PROGRESSIVE | VIDTYPE_VIU_FIELD | VIDTYPE_VIU_NV21;
