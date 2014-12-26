@@ -189,7 +189,7 @@ void root_func(){
 		compatible = "amlogic,ppmgr";
 		dev_name = "ppmgr";
 		status = "okay";
-		reserve-memory = <0x01000000>; // 16M
+		reserve-memory = <0x02000000>; // 32M
 	};
 
 /// ***************************************************************************************
