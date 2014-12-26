@@ -37,7 +37,9 @@
 #include <linux/amlogic/vout/enc_clk_config.h>
 #include "hw_enc_clk_config.h"
 
+static void hpll_load_initial(void);
 static DEFINE_MUTEX(enc_clock_lock);
+static unsigned int hpll_vco_clk = 0xffff;      // not initial value
 
 #define check_clk_config(para)\
     if (para == -1)\
@@ -117,6 +119,8 @@ static void set_hdmitx_sys_clk(void)
 
 static void set_hpll_clk_out(unsigned clk)
 {
+    hpll_load_initial();
+
     check_clk_config(clk);
     printk("config HPLL\n");
     switch(clk){
@@ -353,226 +357,6 @@ static void hpll_load_en(void)
     aml_set_reg32_bits(P_HHI_VID_CLK_CNTL, 0, 16, 3);  // use vid_pll
 }
 
-#define MAX_CLK_INDEX   4
-#define MAX_SAME_CONF   (4 + 1)
-struct cts_mode_clk {
-    vmode_t mode[MAX_SAME_CONF];
-    struct {
-        unsigned int cts_idx;
-        unsigned char *name;
-        unsigned int target_clk;
-    }idx_clk[MAX_CLK_INDEX];
-};
-
-struct cts_mode_clk hdmitx_clk[] = {
-    {
-        .mode = {VMODE_1080P, VMODE_1080P_50HZ, VMODE_MAX},
-        .idx_clk[0] = {
-            .cts_idx = 55,
-            .name = "VID_PLL_DIV_CLK_OUT",
-            .target_clk = -1,//148000000,
-        },
-    },
-    {
-        .mode = {VMODE_4K2K_30HZ, VMODE_4K2K_25HZ, VMODE_4K2K_24HZ, VMODE_4K2K_SMPTE, VMODE_MAX},
-        .idx_clk[0] = {
-            .cts_idx = 55,
-            .name = "VID_PLL_DIV_CLK_OUT",
-            .target_clk = -1,//297000000 * 2,
-        },
-    },
-    {
-        .mode = {VMODE_4K2K_FAKE_5G, VMODE_4K2K_60HZ, VMODE_MAX},
-        .idx_clk[0] = {
-            .cts_idx = 55,
-            .name = "VID_PLL_DIV_CLK_OUT",
-            .target_clk = -1,//494000000,
-        },
-    },
-};
-/*
- * Please refer to clock tree document to check related clocks
- * 
- */
-static unsigned int cts_clk_match(vmode_t mode)
-{
-    unsigned int i = 0, j = 0;
-    unsigned int clk_msr = 0;
-return 1;
-    for(i = 0; i < ARRAY_SIZE(hdmitx_clk); i ++) {
-        for(j = 0; j < MAX_SAME_CONF; j ++) {
-            if((mode == hdmitx_clk[i].mode[j]) && (hdmitx_clk[i].mode[j] != VMODE_MAX)) {
-                clk_msr = clk_measure(hdmitx_clk[i].idx_clk[0].cts_idx);
-                if(hdmitx_clk[i].idx_clk[0].target_clk == -1)
-                    return 1;   // not check
-                if(clk_msr == hdmitx_clk[i].idx_clk[0].target_clk) {
-                    return 1;
-                }
-                else {
-                    printk("mode: %d  %s(%d)  TargetClk: %d  !=  MsrClk: %d\n", mode, hdmitx_clk[i].idx_clk[0].name,
-                           hdmitx_clk[i].idx_clk[0].cts_idx, hdmitx_clk[i].idx_clk[0].target_clk, clk_msr);
-                    return 0;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
-#define MAX_CHK_TIMES   10
-static void cts_clk_check(vmode_t mode)
-{
-    unsigned int chk_times = 0;
-
-    while(chk_times < MAX_CHK_TIMES) {
-        msleep_interruptible(100);
-        if(cts_clk_match(mode))
-            return;
-        else {
-            chk_times ++;
-            WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-        }
-    }
-    if(chk_times == MAX_CHK_TIMES) {
-        printk("**************************************************\n");
-        printk("HDMI TX clock ABNORMAL STATE\n");
-        printk("**************************************************\n");
-    }
-}
-
-static int vmode_clk_match(vmode_t mode)
-{
-    unsigned int clk_msr = 0;
-
-    if(!(aml_read_reg32(P_HHI_HDMI_PLL_CNTL) & (1 << 31)))
-        return 0;
-    if((aml_read_reg32(P_HHI_HDMI_PLL_CNTL) & 0xfff) != 0x23d)
-        return 0;
-    if((mode == VMODE_4K2K_FAKE_5G) || (mode == VMODE_4K2K_5G))
-        return 0;
-
-    clk_msr = clk_measure(55);
-    printk("%s[%d], mode = %d, clkmsr = %d\n", __func__, __LINE__, mode, clk_msr);
-    switch(mode) {
-    case VMODE_720P:
-    case VMODE_1080I:
-    case VMODE_1080P:
-    case VMODE_720P_50HZ:
-    case VMODE_1080I_50HZ:
-    case VMODE_1080P_50HZ:
-    case VMODE_1080P_24HZ:
-    case VMODE_4K2K_30HZ:
-    case VMODE_4K2K_25HZ:
-    case VMODE_4K2K_24HZ:
-    case VMODE_4K2K_SMPTE:
-    case VMODE_4K2K_60HZ:
-        if(  (clk_msr == 148000000) || (clk_msr == 149000000)
-          || (clk_msr == 593000000) || (clk_msr == 594000000) || (clk_msr == 595000000)
-          || (clk_msr == 74000000) || (clk_msr == 73000000) || (clk_msr == 75000000))
-            return 1;
-        break;
-    case VMODE_4K2K_FAKE_5G:
-    case VMODE_4K2K_5G:
-        if((clk_msr == 493000000) || (clk_msr == 494000000) || (clk_msr == 493000000) || (clk_msr == 247000000))
-            return 1;
-        break;
-    default:
-        break;
-    }
-    return 0;
-}
-
-void set_vmode_clk_va(vmode_t mode)
-{
-    hpll_load_initial();
-printk("set_vmode_clk mode is %d\n", mode);
-
-	if( (VMODE_576CVBS==mode) || (VMODE_480CVBS==mode) )
-	{
-		printk("g9tv: cvbs clk!\n");
-		aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x5000022d);
-	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL2, 0x00890000);
-	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL3, 0x135c5091);
-	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL4, 0x801da72c);
-		// P_HHI_HDMI_PLL_CNTL5
-		// 0x71c86900 for div2 disable inside PLL2 of HPLL
-		// 0x71486900 for div2 enable inside PLL2 of HPLL
-	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL5, 0x71c86900);
-	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL6, 0x00000e55);
-	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x4000022d);
-
-	    WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-
-	    clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_5);
-
-		// select vid_pll_clk for muxing
-		aml_write_reg32(P_HHI_VID_CLK_CNTL, (aml_read_reg32(P_HHI_VID_CLK_CNTL)&(~(0x7<<16))) );
-		// disable divider for clk_rst_tst()
-		aml_write_reg32(P_HHI_VID_CLK_DIV, (aml_read_reg32(P_HHI_VID_CLK_DIV)&(~0xff)) );
-		// select clk_div1 for enci clk muxing
-		aml_write_reg32(P_HHI_VID_CLK_DIV, (aml_read_reg32(P_HHI_VID_CLK_DIV)&(~(0xf<<28))) );
-		// select clk_div1 for vdac clk muxing
-		aml_write_reg32(P_HHI_VIID_CLK_DIV, (aml_read_reg32(P_HHI_VIID_CLK_DIV)&(~(0x1<<19))) );
-		aml_write_reg32(P_HHI_VIID_CLK_DIV, (aml_read_reg32(P_HHI_VIID_CLK_DIV)&(~(0xf<<28))) );
-		// clk gate for enci(bit0) and vdac(bit4)
-		aml_write_reg32(P_HHI_VID_CLK_CNTL2, (aml_read_reg32(P_HHI_VID_CLK_CNTL2)|0x1|(0x1<<4)) );
-
-		return;
-	}
-    aml_write_reg32(P_HHI_HDMI_PLL_CNTL2, 0x00444e00);
-    aml_write_reg32(P_HHI_HDMI_PLL_CNTL3, 0x135c5091);
-    aml_write_reg32(P_HHI_HDMI_PLL_CNTL4, 0x801da72c);
-    aml_write_reg32(P_HHI_HDMI_PLL_CNTL5, 0x71486900);    //5940 0x71c86900      // 0x71486900 2970
-    aml_write_reg32(P_HHI_HDMI_PLL_CNTL6, 0x00000e55);
-    if(!vmode_clk_match(mode)) {
-        printk("%s[%d] reset hdmi hpll\n", __func__, __LINE__);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x0000023d);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x5000023d);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x4000023d);
-
-        WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-    }
-    aml_write_reg32(P_HHI_HDMI_CLK_CNTL, 0x100);
-
-    switch(mode) {
-    case VMODE_1080P:
-    case VMODE_1080P_50HZ:
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x44, 16, 8);
-        break;
-    case VMODE_4K2K_30HZ:
-    case VMODE_4K2K_25HZ:
-    case VMODE_4K2K_24HZ:
-    case VMODE_4K2K_SMPTE:
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 1, 0, 8);
-        break;
-    case VMODE_4K2K_60HZ:
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 0, 0, 8);
-        break;
-    case VMODE_4K2K_FAKE_5G:
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x50000266);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x40000266);
-        WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x40, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 0, 0, 8);
-        break;
-    case VMODE_4K2K_5G:
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x50000266);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x40000266);
-        WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x44, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 1, 0, 8);
-        break;
-    default:
-        break;
-    }
-    clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_5);
-    cts_clk_check(mode);
-return;
-}
-
 // mode viu_path viu_type hpll_clk_out od1 od2 od3
 // vid_pll_div vid_clk_div hdmi_tx_pixel_div encp_div enci_div enct_div encl_div vdac0_div
 static hw_enc_clk_val_t setting_enc_clk_val[] = {
@@ -592,15 +376,37 @@ static hw_enc_clk_val_t setting_enc_clk_val[] = {
 
 void set_vmode_clk(vmode_t mode)
 {
+    unsigned int val = 0;
     int i = 0;
     int j = 0;
     hw_enc_clk_val_t *p_enc =NULL;
 
-    hpll_load_initial();
-printk("set_vmode_clk mode is %d\n", mode);
+    printk("set_vmode_clk mode is %d\n", mode);
+
+    val = aml_read_reg32(P_HHI_HDMI_PLL_CNTL);
+    if((val >> 30) == 0x3) {
+        switch(val & 0xffff) {
+        case 0x23d:
+            hpll_vco_clk = 2970;
+            break;
+        case 0x266:
+            hpll_vco_clk = 2448;
+            break;
+        default:
+            hpll_vco_clk = 0xffff;
+        }
+    } else {
+        hpll_vco_clk = 0xffff;
+    }
+    if(hpll_vco_clk != 0xffff) {
+        printk("hpll already clk: %d\n", hpll_vco_clk);
+    } else {
+        printk("hpll already clk: -1\n");
+    }
 
 	if( (VMODE_576CVBS==mode) || (VMODE_480CVBS==mode) )
 	{
+        hpll_load_initial();
 		printk("g9tv: cvbs clk!\n");
 		aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x5000022d);
 	    aml_write_reg32(P_HHI_HDMI_PLL_CNTL2, 0x00890000);
@@ -631,20 +437,21 @@ printk("set_vmode_clk mode is %d\n", mode);
 
 		return;
 	}
-    if(!vmode_clk_match(mode)) {
-    }
-
     p_enc=&setting_enc_clk_val[0];
     i = sizeof(setting_enc_clk_val) / sizeof(enc_clk_val_t);
 
-    printk("mode is: %d\n", mode);
     for (j = 0; j < i; j++){
         if(mode == p_enc[j].mode)
             break;
     }
+    if(j == i) {
+        printk("set_vmode_clk: not valid mode %d\n", mode);
+        return;
+    }
     set_viu_path(p_enc[j].viu_path, p_enc[j].viu_type);
     set_hdmitx_sys_clk();
-    set_hpll_clk_out(p_enc[j].hpll_clk_out);
+    if(hpll_vco_clk != p_enc[j].hpll_clk_out)
+        set_hpll_clk_out(p_enc[j].hpll_clk_out);
     set_hpll_od1(p_enc[j].od1);
     set_hpll_od2(p_enc[j].od2);
     set_hpll_od3(p_enc[j].od3);
@@ -655,46 +462,5 @@ printk("set_vmode_clk mode is %d\n", mode);
     set_enci_div(p_enc[j].enci_div);
     set_encl_div(p_enc[j].encl_div);
     set_vdac0_div(p_enc[j].vdac0_div);
-return;
-    
-
-    switch(mode) {
-    case VMODE_1080P:
-    case VMODE_1080P_50HZ:
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x44, 16, 8);
-        break;
-    case VMODE_4K2K_30HZ:
-    case VMODE_4K2K_25HZ:
-    case VMODE_4K2K_24HZ:
-    case VMODE_4K2K_SMPTE:
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 1, 0, 8);
-        break;
-    case VMODE_4K2K_60HZ:
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 0, 0, 8);
-        break;
-    case VMODE_4K2K_60HZ_Y420:
-        printk("%s[%d]TODO\n", __func__, __LINE__);
-        break;
-    case VMODE_4K2K_FAKE_5G:
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x50000266);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x40000266);
-        WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x40, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 0, 0, 8);
-        break;
-    case VMODE_4K2K_5G:
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x50000266);
-        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x40000266);
-        WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
-        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x44, 16, 8);
-        aml_set_reg32_bits(P_HHI_VID_CLK_DIV, 1, 0, 8);
-        break;
-    default:
-        break;
-    }
-    clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_5);
-    cts_clk_check(mode);
 }
  

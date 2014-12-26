@@ -289,7 +289,7 @@ static void hdmitx_pre_display_init(void)
     hdmitx_device.HWOp.CntlConfig(&hdmitx_device, CONF_AUDIO_MUTE_OP, AUDIO_MUTE);
     hdmitx_device.HWOp.CntlDDC(&hdmitx_device, DDC_HDCP_OP, HDCP_OFF);
     //msleep(10);
-    hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
+//    hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_TMDS_PHY_OP, TMDS_PHY_DISABLE);
 //    hdmitx_device.HWOp.Cntl(&hdmitx_device, HDMITX_INTR_MASKN_CNTL, INTR_MASKN_ENABLE);
 //    hdmitx_device.HWOp.Cntl(&hdmitx_device, HDMITX_CBUS_RST, 0);
 //    hdmitx_device.HWOp.Cntl(&hdmitx_device, HDMITX_IP_SW_RST, TX_SYS_SW_RST);

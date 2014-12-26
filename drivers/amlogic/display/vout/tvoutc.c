@@ -497,7 +497,11 @@ int tvoutc_setmode(tvmode_t mode)
 		(mode==TVMODE_4K2K_25HZ) || (mode==TVMODE_4K2K_30HZ) || (mode==TVMODE_4K2K_FAKE_5G) ||
 		(mode==TVMODE_4K2K_SMPTE) || (mode==TVMODE_4K2K_60HZ) )
 	{
+#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV
+    // NOTE: for G9TV, DO NOT TURN OFF HPLL
+#else
 		WRITE_CBUS_REG_BITS(HHI_VID_PLL_CNTL, 0x0, 30, 1);
+#endif
 	}
 
     cvbs_cntl_output(0);

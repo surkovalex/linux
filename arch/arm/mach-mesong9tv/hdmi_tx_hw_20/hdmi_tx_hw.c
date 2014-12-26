@@ -1764,6 +1764,7 @@ static void hdmitx_set_phy(hdmitx_dev_t* hdmitx_device)
         aml_write_reg32(P_HHI_HDMI_PHY_CNTL3, 0x303e005b);
         break;
     }
+#if 0   // tmp mark
 // P_HHI_HDMI_PHY_CNTL1     bit[1]: enable clock    bit[0]: soft reset
 #define RESET_HDMI_PHY()                        \
     aml_write_reg32(P_HHI_HDMI_PHY_CNTL1, 0xf);   \
@@ -1776,6 +1777,7 @@ static void hdmitx_set_phy(hdmitx_dev_t* hdmitx_device)
     RESET_HDMI_PHY();
     RESET_HDMI_PHY();
 #undef RESET_HDMI_PHY
+#endif
     hdmi_print(IMP, SYS "phy setting done\n");
 }
 
@@ -1820,6 +1822,9 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
     if(color_space_f != 0){
         param->color = color_space_f;
     }
+    hdmitx_set_reg_bits(HDMITX_DWC_FC_GCP, 1, 1, 1);    // set_AVMUTE to 1
+    hdmitx_set_reg_bits(HDMITX_DWC_FC_GCP, 0, 0, 1);    // clear_AVMUTE to 0
+    msleep(50);
     hdmitx_set_pll(hdev);
     hdmitx_set_phy(hdev);
     switch(param->VIC){
@@ -1896,6 +1901,9 @@ printk("%s[%d]\n", __func__, __LINE__);     //?????
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 0, 3, 1);
     msleep(1);
     hdmitx_set_reg_bits(HDMITX_DWC_FC_INVIDCONF, 1, 3, 1);
+
+    hdmitx_set_reg_bits(HDMITX_DWC_FC_GCP, 0, 1, 1);    // set_AVMUTE to 0
+    hdmitx_set_reg_bits(HDMITX_DWC_FC_GCP, 1, 0, 1);    // clear_AVMUTE to 1
 
     return 0;
 }
@@ -3629,9 +3637,6 @@ void config_hdmi20_tx ( HDMI_Video_Codes_t vic, struct hdmi_format_para *para,
     // wire            wr_enable           = control[3];
     // wire            fifo_enable         = control[2];    
     // assign          phy_clk_en          = control[1];
-    aml_set_reg32_bits(P_HHI_HDMI_PHY_CNTL1, 1, 1, 1);   // Enable tmds_clk
-    aml_set_reg32_bits(P_HHI_HDMI_PHY_CNTL1, 1, 2, 1);   // Enable the decoupling FIFO
-    aml_set_reg32_bits(P_HHI_HDMI_PHY_CNTL1, 1, 3, 1);   // Enable enable the write/read decoupling state machine 
     aml_set_reg32_bits(P_HHI_MEM_PD_REG0, 0, 8, 8);      // Bring HDMITX MEM output of power down
 
     // Enable APB3 fail on error
