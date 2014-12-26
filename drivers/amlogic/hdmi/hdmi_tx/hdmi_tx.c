@@ -529,7 +529,7 @@ static ssize_t store_cec(struct device * dev, struct device_attribute *attr, con
 static ssize_t show_cec_config(struct device * dev, struct device_attribute *attr, char * buf)
 {
     int pos=0;
-    pos+=snprintf(buf+pos, PAGE_SIZE, "P_AO_DEBUG_REG0:0x%x\n", aml_read_reg32(P_AO_DEBUG_REG0));
+    pos+=snprintf(buf+pos, PAGE_SIZE, "0x%x\n", aml_read_reg32(P_AO_DEBUG_REG0));
     return pos;
 }
 
@@ -1431,6 +1431,17 @@ static int get_dt_vend_init_data(struct device_node *np, struct vendor_info_data
     ret = of_property_read_string(np, "cec_osd_string", (const char **)&(vend->cec_osd_string));
     if(ret) {
         hdmi_print(INF, SYS "not find cec osd string\n");
+        return 1;
+    }
+    
+    ret = of_property_read_u32(np, "cec_config", &(vend->cec_config));
+    if(ret) {
+        hdmi_print(INF, SYS "not find cec config\n");
+        return 1;
+    }
+    ret = of_property_read_u32(np, "ao_cec", &(vend->ao_cec));
+    if(ret) {
+        hdmi_print(INF, SYS "not find ao cec\n");
         return 1;
     }
     return 0;

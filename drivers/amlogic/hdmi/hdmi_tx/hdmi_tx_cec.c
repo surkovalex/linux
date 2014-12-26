@@ -94,7 +94,7 @@ unsigned int menu_lang_array[] = {(((unsigned int)'c')<<16)|(((unsigned int)'h')
                                  };
 
 // CEC default setting
-static unsigned char * osd_name = "Amlogic MBox";
+static unsigned char * osd_name = "MBox";
 static unsigned int vendor_id = 0x00;
 
 static irqreturn_t cec_isr_handler(int irq, void *dev_instance);
@@ -181,7 +181,8 @@ static int detect_tv_support_cec(unsigned addr)
 void cec_node_init(hdmitx_dev_t* hdmitx_device)
 {
     struct vendor_info_data *vend_data = NULL;
-
+    unsigned int  cec_config;       // 4 bytes: use to control cec switch on/off
+    
     int i, bool = 0;
     const enum _cec_log_dev_addr_e player_dev[3] = {CEC_PLAYBACK_DEVICE_1_ADDR,
                                                     CEC_PLAYBACK_DEVICE_2_ADDR,
@@ -198,22 +199,37 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
         hdmi_print(INF, CEC "CEC node init\n");
     }
 
-    if(!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)))
-        return ;
-
-#if 1       //todo
     if(hdmitx_device->config_data.vend_data)
         vend_data = hdmitx_device->config_data.vend_data;
+
+    if((vend_data) && (vend_data->cec_config))
+    {
+        cec_config = vend_data->cec_config;
+    }
+    else
+    {
+        cec_config = 0x0;
+    }
+    hdmi_print(INF, CEC "cec_config: 0x%x; ao_cec:0x%x\n", vend_data->cec_config, vend_data->ao_cec);
+    
+    //enable cec features by default.
+    hdmitx_device->cec_func_config = cec_config;
+    aml_write_reg32(P_AO_DEBUG_REG0, cec_config);
+    
     if((vend_data) && (vend_data->cec_osd_string)) {
         i = strlen(vend_data->cec_osd_string);
         if(i > 14) 
             vend_data->cec_osd_string[14] = '\0';   // OSD string length must be less than 14 bytes
         osd_name = vend_data->cec_osd_string;
     }
+    
     if((vend_data) && (vend_data->vendor_id)) {
         vendor_id = (vend_data->vendor_id ) & 0xffffff;
     }
-#endif
+
+    if(!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)))
+        return ;
+
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
     aml_set_reg32_bits(P_PERIPHS_PIN_MUX_1, 1, 25, 1);
     // Clear CEC Int. state and set CEC Int. mask
