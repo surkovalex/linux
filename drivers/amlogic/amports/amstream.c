@@ -1944,8 +1944,10 @@ static ssize_t videobufused_show(struct class *class, struct class_attribute *at
 {
     char *pbuf = buf;
     stream_buf_t *p = NULL;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8        
     stream_buf_t *p_hevc = NULL;
-    
+#endif
+
     p = &bufs[0];
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8    
     if (HAS_HEVC_VDEC)
