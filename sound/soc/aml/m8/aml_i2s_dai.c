@@ -38,7 +38,6 @@ static int i2s_pos_sync = 0;
 #define ALSA_TRACE()   
 #endif
 
-extern int amaudio2_enable;
 static int i2sbuf[32+16];
 static void  aml_i2s_play(void)
 {
@@ -112,7 +111,6 @@ static void aml_dai_i2s_shutdown(struct snd_pcm_substream *substream,
 }
 #define AOUT_EVENT_IEC_60958_PCM 0x1
 extern int aout_notifier_call_chain(unsigned long val,void * v);
-extern void aml_hw_iec958_init(struct snd_pcm_substream *substream);
 
 static int aml_dai_i2s_prepare(struct snd_pcm_substream *substream,
 					struct snd_soc_dai *dai)
@@ -191,9 +189,6 @@ static int aml_dai_i2s_prepare(struct snd_pcm_substream *substream,
     else{       
         s->device_type = AML_AUDIO_I2SOUT;
         aml_hw_i2s_init(runtime);
-        if(amaudio2_enable == 1){
-            aml_hw_iec958_init(substream);
-        }
     }
     if(runtime->channels == 8){
         printk("[%s,%d]8ch PCM output->notify HDMI\n",__FUNCTION__,__LINE__);
@@ -215,9 +210,6 @@ static int aml_dai_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 			if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 				printk("aiu i2s playback enable\n\n");
 				audio_out_i2s_enable(1);
-				if(amaudio2_enable == 1){
-					audio_hw_958_enable(1);
-				}
 			}else{
 				audio_in_i2s_enable(1);
 				ppp = (int*)(rtd->dma_area+rtd->dma_bytes*2-8);
@@ -231,9 +223,6 @@ static int aml_dai_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 			if(substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 				printk("aiu i2s playback disable\n\n");
 				audio_out_i2s_enable(0);
-				if(amaudio2_enable == 1){
-					audio_hw_958_enable(0);
-				}
 			}else{
 				audio_in_i2s_enable(0);
 			}

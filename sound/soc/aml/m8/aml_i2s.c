@@ -43,10 +43,16 @@
 #define ALSA_TRACE()
 #endif
 
+
 unsigned int aml_i2s_playback_start_addr = 0;
-unsigned int aml_i2s_playback_phy_start_addr = 0;
 unsigned int aml_i2s_capture_start_addr  = 0;
+unsigned int aml_i2s_playback_end_addr = 0;
+unsigned int aml_i2s_capture_end_addr = 0;
+
+unsigned int aml_i2s_playback_phy_start_addr = 0;
 unsigned int aml_i2s_capture_phy_start_addr  = 0;
+unsigned int aml_i2s_playback_phy_end_addr = 0;
+unsigned int aml_i2s_capture_phy_end_addr = 0;
 
 unsigned int aml_i2s_capture_buf_size = 0;
 unsigned int aml_i2s_playback_enable = 1;
@@ -482,18 +488,25 @@ static int aml_i2s_open(struct snd_pcm_substream *substream)
 	struct snd_dma_buffer *buf = &substream->dma_buffer;
 	audio_stream_t *s= &prtd->s;
 	int ret = 0;
+	unsigned int size = 0;
 	ALSA_TRACE();
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK){
 		snd_soc_set_runtime_hwparams(substream, &aml_i2s_hardware);
 		if(s->device_type == AML_AUDIO_I2SOUT){
+			size = aml_i2s_hardware.buffer_bytes_max;
 			aml_i2s_playback_start_addr = (unsigned int)buf->area;
+			aml_i2s_playback_end_addr = (unsigned int)buf->area + size;
 			aml_i2s_playback_phy_start_addr = buf->addr;
+			aml_i2s_playback_phy_end_addr = buf->addr+size;
 		}
 	}else{
 		snd_soc_set_runtime_hwparams(substream, &aml_i2s_capture);
 		if(s->device_type == AML_AUDIO_I2SIN){
+			size = aml_i2s_capture.buffer_bytes_max;
 			aml_i2s_capture_start_addr = (unsigned int)buf->area;
+			aml_i2s_capture_end_addr = (unsigned int)buf->area + size;
 			aml_i2s_capture_phy_start_addr = buf->addr;
+			aml_i2s_capture_phy_end_addr = buf->addr+size;
 		}
 	}
 

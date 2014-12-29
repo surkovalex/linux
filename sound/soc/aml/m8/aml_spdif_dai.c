@@ -143,7 +143,7 @@ special call by the audiodsp,add these code,as there are three cases for 958 s/p
 2)PCM  output for  all audio, when pcm mode is selected by user .
 3)PCM  output for audios except ac3/dts,when raw output mode is selected by user
 */
-void aml_hw_iec958_init(struct snd_pcm_substream *substream)
+static void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 {
     _aiu_958_raw_setting_t set;
     _aiu_958_channel_status_t chstat;
@@ -312,31 +312,31 @@ void aml_hw_iec958_init(struct snd_pcm_substream *substream)
 	if(IEC958_mode_codec == 4 || IEC958_mode_codec == 5 || IEC958_mode_codec == 7 ||IEC958_mode_codec == 8){  //dd+
 		WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 0, 4, 2); // 4x than i2s
         	printk("IEC958_mode_codec/%d  4x than i2s\n",IEC958_mode_codec);
-	}else{
+	}else
 #if OVERCLOCK == 1 || IEC958_OVERCLOCK == 1	
 		WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 3, 4, 2);//512fs divide 4 == 128fs
 #else
 		WRITE_MPEG_REG_BITS(AIU_CLK_CTRL, 1, 4, 2); //256fs divide 2 == 128fs
 #endif
-	}
-    if(IEC958_mode_codec == 2){
-        aout_notifier_call_chain(AOUT_EVENT_RAWDATA_AC_3,substream);
-    }else if(IEC958_mode_codec == 3){
-        aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS,substream);
-    }else if(IEC958_mode_codec == 4){
-        aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DOBLY_DIGITAL_PLUS,substream);
-    }else if(IEC958_mode_codec == 5){
-        aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS_HD,substream);
-    }else if(IEC958_mode_codec == 7 || IEC958_mode_codec == 8){
-		WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1902);
-		WRITE_MPEG_REG(AIU_958_CHSTAT_L1, 0x900);
-		WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1902);
-		WRITE_MPEG_REG(AIU_958_CHSTAT_R1, 0x900);    
-        aout_notifier_call_chain(AOUT_EVENT_RAWDATA_MAT_MLP,substream);
-    }else{
-	    aout_notifier_call_chain(AOUT_EVENT_IEC_60958_PCM,substream);
-    }
-    ALSA_PRINT("spdif dma %x,phy addr %x\n",(unsigned)runtime->dma_area,(unsigned)runtime->dma_addr);
+        if(IEC958_mode_codec == 2){
+                aout_notifier_call_chain(AOUT_EVENT_RAWDATA_AC_3,substream);
+        }
+        else if(IEC958_mode_codec == 3){
+                aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS,substream);
+        }
+        else if(IEC958_mode_codec == 4){
+                aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DOBLY_DIGITAL_PLUS,substream);
+        }else if(IEC958_mode_codec == 5){
+                aout_notifier_call_chain(AOUT_EVENT_RAWDATA_DTS_HD,substream);
+        }else if(IEC958_mode_codec == 7 || IEC958_mode_codec == 8){
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_L0, 0x1902);
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_L1, 0x900);
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_R0, 0x1902);
+		    WRITE_MPEG_REG(AIU_958_CHSTAT_R1, 0x900);    
+        	aout_notifier_call_chain(AOUT_EVENT_RAWDATA_MAT_MLP,substream);
+        }else{
+	        aout_notifier_call_chain(AOUT_EVENT_IEC_60958_PCM,substream);
+        }
 }
 /*
 special call by the audiodsp,add these code,as there are three cases for 958 s/pdif output

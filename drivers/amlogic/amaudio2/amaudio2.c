@@ -104,7 +104,6 @@ static int direct_right_gain = 128;
 static int music_gain = 128;
 static int audio_out_mode = 0;
 static int audio_out_read_enable = 0;
-int amaudio2_enable = 0;
 
 static irqreturn_t i2s_out_callback(int irq, void* data);
 static unsigned get_i2s_out_size(void);
@@ -717,34 +716,12 @@ static ssize_t store_audio_read_enable(struct class* class, struct class_attribu
   	return count;
 }
 
-static ssize_t show_aml_amaudio2_enable(struct class* class, struct class_attribute* attr,
-    char* buf)
-{
-	return sprintf(buf, "%d\n", amaudio2_enable);
-}
-
-static ssize_t store_aml_amaudio2_enable(struct class* class, struct class_attribute* attr,
-   const char* buf, size_t count )
-{
-	if(buf[0] == '0'){
-		printk(KERN_INFO "amaudio2 is disable!\n");
-		amaudio2_enable = 0;
-	}else if(buf[0] == '1'){
-		printk(KERN_INFO "amaudio2 is enable!\n");
-		amaudio2_enable = 1;
-	}else{
-		printk(KERN_INFO "Invalid argument!\n");
-	}
-  	return count;
-}
-
 static struct class_attribute amaudio_attrs[]={
 	__ATTR(aml_audio_out_mode,  S_IRUGO | S_IWUSR, show_audio_out_mode, store_audio_out_mode),
 	__ATTR(aml_direct_left_gain,  S_IRUGO | S_IWUSR, show_direct_left_gain, store_direct_left_gain),
 	__ATTR(aml_direct_right_gain,  S_IRUGO | S_IWUSR, show_direct_right_gain, store_direct_right_gain),
 	__ATTR(aml_music_gain,  S_IRUGO | S_IWUSR, show_music_gain, store_music_gain),
 	__ATTR(aml_audio_read_enable,  S_IRUGO | S_IWUSR, show_audio_read_enable, store_audio_read_enable),
-	__ATTR(aml_amaudio2_enable,  S_IRUGO | S_IWUSR | S_IWGRP, show_aml_amaudio2_enable, store_aml_amaudio2_enable),
 	__ATTR_RO(status),
 	__ATTR_NULL
 };
