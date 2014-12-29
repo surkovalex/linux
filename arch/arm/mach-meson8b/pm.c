@@ -307,7 +307,7 @@ int stop_ao_cpu(void)
 	if(cec_config & 0x1)// 4 bytes: use to control cec switch on/off,distinguish between Mbox and Tablet. bit[0]:1:Mbox; 0:Tablet
     {
     	aml_write_reg32(P_AO_RTI_STATUS_REG1, 0xddddeeee); //ask ao to halt.
-    	udelay(15);
+		udelay(40);
     	if(aml_read_reg32(P_AO_RTI_STATUS_REG1) == 0x0){
     		printk("AO cpu stop ok.\n");
     		return 0;
