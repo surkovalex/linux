@@ -1119,12 +1119,13 @@ static void vh264_isr(void)
                                          close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD))
                                          || (close_to(pts_duration, RATE_25_FPS, RATE_CORRECTION_THRESHOLD) &&
                                              close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD))) {
-                                        printk("H.264: Correct frame duration from %d to duration based on PTS %d\n",
+                                        printk("----H.264: Correct frame duration from %d to duration based on PTS %d ---\n",
                                                 frame_dur, pts_duration);
                                         frame_dur = pts_duration;
                                         duration_from_pts_done = 1;
                                         //printk("used calculate frame rate,on frame_dur problem=%d\n",frame_dur);
-                                    } else if (((frame_dur<96000/240) && (pts_duration>96000/240)) || !duration_on_correcting){//>if frameRate>240fps,I think have error,use calculate rate.
+                                    } else if (((frame_dur<96000/240) && (pts_duration>96000/240)) || 
+                                        (!duration_on_correcting && (!close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD)) && (!close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD)))){//fft: if the frame rate is not regular, use the calculate rate insteadof.
                                         printk("H.264: Correct frame duration from %d to duration based on PTS %d\n",
                                                 frame_dur, pts_duration);
                                         frame_dur = pts_duration;
