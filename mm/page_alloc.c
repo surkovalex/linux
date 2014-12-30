@@ -1613,7 +1613,9 @@ again:
 		__mod_zone_freepage_state(zone, -(1 << order),
 					  get_pageblock_migratetype(page));
 	}
+#ifdef CONFIG_CMA
 alloc_sucess:
+#endif
 	__count_zone_vm_events(PGALLOC, zone, 1 << order);
 	zone_statistics(preferred_zone, zone, gfp_flags);
 	local_irq_restore(flags);
