@@ -1133,14 +1133,14 @@ sdio{
 		dsi_bit_rate_max=<550>;/** mipi-dsi data lane bit rate limit(unit: MHz) */
 		pclk_lanebyteclk_factor =<0>;/** special adjust, default is 0 */
 		dsi_transfer_ctrl=<0 0>;/** clk_lane auto stop in LP mode: (0=disable, 1=enable), transfer switch between LP and HS: (0=auto, 1=standard, 2=slow). default is <0 0> */
-		dsi_init_on=<0x05 0x11 0 //sleep out
+		dsi_init_on=<0x05 1 0x11 //sleep out
 					0xff 20      //delay 20ms
-					0x05 0x29 0  //display on
+					0x05 1 0x29  //display on
 					0xff 20      //delay 20ms
 					0xff 0xff>;/** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
-		dsi_init_off=<0x05 0x28 0 //display off
+		dsi_init_off=<0x05 1 0x28 //display off
 					0xff 10       //delay 10ms
-					0x05 0x10 0   //sleep in
+					0x05 1 0x10   //sleep in
 					0xff 10       //delay 10ms
 					0xff 0xff>;/** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
 		lcd_extern_init=<0>;/** lcd extern init command control(0=disable, 1=enable) */
@@ -1186,23 +1186,23 @@ sdio{
 //		dsi_bit_rate_max=<500>; /** mipi-dsi data lane bit rate limit(unit: MHz) */
 //		pclk_lanebyteclk_factor =<0>;   /** special adjust, default is 0 */
 //		dsi_transfer_ctrl=<0 0>;  /** clk_lane auto stop in LP mode: (0=disable, 1=enable), transfer switch between LP and HS: (0=auto, 1=standard, 2=slow). default is <0 0> */
-//		dsi_init_on=<0x15 0x01 1 0x0 
+//		dsi_init_on=<0x15 2 0x01 0x0 
 //				0xff 20     //delay 20ms
-//				0x15 0xAE 1 0x0B 
-//				0x15 0xEE 1 0xEA 
-//				0x15 0xEF 1 0x5F 
-//				0x15 0xF2 1 0x68 
-//				0x15 0xEE 1 0x0 
-//				0x15 0xEF 1 0x0 
+//				0x15 2 0xAE 0x0B 
+//				0x15 2 0xEE 0xEA 
+//				0x15 2 0xEF 0x5F 
+//				0x15 2 0xF2 0x68 
+//				0x15 2 0xEE 0x0 
+//				0x15 2 0xEF 0x0 
 //
-//				0x05 0x11 0  //sleep out
+//				0x05 1 0x11  //sleep out
 //				0xff 200     //delay 200ms
-//				0x05 0x29 0  //display on
+//				0x05 1 0x29  //display on
 //				0xff 100     //delay 100ms
 //				0xff 0xff>;  /** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
-//		dsi_init_off=<0x05 0x28 0 //display off
+//		dsi_init_off=<0x05 1 0x28 //display off
 //				0xff 10       //delay 10ms
-//				0x05 0x10 0   //sleep in
+//				0x05 1 0x10   //sleep in
 //				0xff 10       //delay 10ms
 //				0xff 0xff>;   /** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
 //		lcd_extern_init=<0>;  /** lcd extern init command control(0=disable, 1=enable) */
@@ -1324,14 +1324,14 @@ sdio{
 //		dsi_bit_rate_max=<1000>; /** mipi-dsi data lane bit rate limit(unit: MHz) */
 //		pclk_lanebyteclk_factor =<15>;   /** special adjust, default is 0 */
 //		dsi_transfer_ctrl=<1 0>; /** clk_lane auto stop in LP mode: (0=disable, 1=enable), transfer switch between LP and HS: (0=auto, 1=standard, 2=slow). default is <0 0> */
-//		dsi_init_on=<0x05 0x11 0 //sleep out
+//		dsi_init_on=<0x05 1 0x11 //sleep out
 //				0xff 100     //delay 100ms
-//				0x05 0x29 0  //display on
+//				0x05 1 0x29  //display on
 //				0xff 100     //delay 100ms
 //				0xff 0xff>;  /** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
-//		dsi_init_off=<0x05 0x28 0 //display off
+//		dsi_init_off=<0x05 1 0x28 //display off
 //				0xff 10       //delay 10ms
-//				0x05 0x10 0   //sleep in
+//				0x05 1 0x10   //sleep in
 //				0xff 10       //delay 10ms
 //				0xff 0xff>;   /** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
 //		lcd_extern_init=<0>;    /** lcd extern init command control(0=disable, 1=enable) */

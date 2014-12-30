@@ -44,6 +44,18 @@
 
 		type = <2>;	/** lcd_extern_driver type: 0=i2c, 1=spi, 2=mipi */
 	};
+	
+//$$ DEVICE = "lcd_extern_mipi_KD080D13"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "type"
+	lcd_extern_mipi_KD080D13{
+		compatible = "amlogic,lcd_mipi_KD080D13";
+		dev_name ="lcd_mipi_KD080D13";
+		status = "disabled";
+
+		type = <2>;	/** lcd_extern_driver type: 0=i2c, 1=spi, 2=mipi */
+	};
+	
 //$$ DEVICE = "lcd_extern_edp_ANX6345"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "type"

@@ -53,22 +53,11 @@
 #endif
 
 #define PANEL_NAME		"panel"
- 
-#ifdef LCD_DEBUG_INFO
-unsigned int lcd_print_flag = 1;
-#else
-unsigned int lcd_print_flag = 0;
-#endif
-void lcd_print(const char *fmt, ...)
-{
-	va_list args;
 
-	if (lcd_print_flag == 0)
-		return;
-	va_start(args, fmt);
-	vprintk(fmt, args);
-	va_end(args);
-}
+typedef struct {
+	Lcd_Config_t *pConf;
+	vinfo_t lcd_info;
+} lcd_dev_t;
 
 static const char* lcd_power_type_table[]={
 	"cpu",
@@ -87,14 +76,28 @@ static const char* lcd_power_pmu_gpio_table[]={
 	"null",
 }; 
 
-typedef struct {
-	Lcd_Config_t *pConf;
-	vinfo_t lcd_info;
-} lcd_dev_t;
+#ifdef LCD_DEBUG_INFO
+unsigned int lcd_print_flag = 1;
+#else
+unsigned int lcd_print_flag = 0;
+#endif
 
 static lcd_dev_t *pDev = NULL;
+#ifdef CONFIG_AML_GAMMA_DEBUG
 static struct class *gamma_debug_class = NULL;
+#endif
 static Bool_t data_status = ON;
+
+void lcd_print(const char *fmt, ...)
+{
+	va_list args;
+
+	if (lcd_print_flag == 0)
+		return;
+	va_start(args, fmt);
+	vprintk(fmt, args);
+	va_end(args);
+}
 
 static inline void lcd_mdelay(int n)
 {
@@ -368,6 +371,9 @@ static int lcd_set_current_vmode2(vmode_t mode)
 
 static vmode_t lcd_validate_vmode(char *mode)
 {
+    if (mode == NULL)
+        return VMODE_MAX;
+
     if ((strncmp(mode, PANEL_NAME, strlen(PANEL_NAME))) == 0)
         return VMODE_LCD;
     
@@ -1684,11 +1690,11 @@ static int _get_lcd_model_timing(Lcd_Config_t *pConf, struct platform_device *pd
                             break;
                         }
                         else {
-                            ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", (i+2), &val);
+                            ret = of_property_read_u32_index(lcd_model_node,"dsi_init_on", (i+DSI_CMD_CNT_INDEX), &val);
                             if (val > 0xffff)
                                 break;
                             else
-                                i = i + 3 + (val & 0xff);
+                                i = i + (DSI_CMD_CNT_INDEX + 1) + (val & 0xff);
                         }
                     }
                     i = (i > DSI_INIT_ON_MAX) ? DSI_INIT_ON_MAX : i;
@@ -1727,11 +1733,11 @@ static int _get_lcd_model_timing(Lcd_Config_t *pConf, struct platform_device *pd
                             break;
                         }
                         else {
-                            ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", (i+2), &val);
+                            ret = of_property_read_u32_index(lcd_model_node,"dsi_init_off", (i+DSI_CMD_CNT_INDEX), &val);
                             if (val > 0xffff)
                                 break;
                             else
-                                i = i + 3 + (val & 0xff);
+                                i = i + (DSI_CMD_CNT_INDEX + 1) + (val & 0xff);
                         }
                     }
                     i = (i > DSI_INIT_OFF_MAX) ? DSI_INIT_OFF_MAX : i;
