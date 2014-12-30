@@ -153,7 +153,7 @@ static int remote_mouse_event(struct input_dev *dev, unsigned int scancode, unsi
 	__u16 mouse_code = REL_X;
 	__s32 mouse_value = 0;
 	static unsigned int repeat_count = 0;
-	__s32 move_accelerate[] = {0, 2, 2, 4, 4, 6, 8, 10, 12, 14, 16, 18};
+	__s32 move_accelerate[] = {0, 6, 12, 20, 28, 36, 46, 58, 72, 88, 106, 126};
 	unsigned int i;
 
 	if(flag)
