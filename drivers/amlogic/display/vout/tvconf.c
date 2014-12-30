@@ -63,6 +63,8 @@ SET_TV_CLASS_ATTR(vdac_setting,parse_vdac_setting)
 #define DEFAULT_POLICY_FR_AUTO	1
 
 static int fr_auto_policy = DEFAULT_POLICY_FR_AUTO;
+int fps_playing_flag=0 ;//1:  23.976/29.97/59.94 fps stream is playing
+vmode_t fps_target_mode=VMODE_INIT_NULL;
 static void policy_framerate_automation_store(char* para);
 
 SET_TV_CLASS_ATTR(policy_fr_auto, policy_framerate_automation_store)
@@ -121,7 +123,7 @@ static struct vmode_tvmode_tab_t mode_tab[] = {
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
     {TVMODE_480P_59HZ, VMODE_480P_59HZ},
     {TVMODE_720P_59HZ, VMODE_720P_59HZ}, // for 720p 59.94hz
-    {TVMODE_1080I_59HZ, VMODE_1080P_59HZ},
+    {TVMODE_1080I_59HZ, VMODE_1080I_59HZ},
     {TVMODE_1080P_59HZ, VMODE_1080P_59HZ}, // for 1080p 59.94hz
     {TVMODE_1080P_23HZ, VMODE_1080P_23HZ}, // for 1080p 23.97hz
     {TVMODE_4K2K_29HZ, VMODE_4K2K_29HZ}, // for 4k2k 29.97hz
@@ -684,6 +686,7 @@ static int tv_set_current_vmode(vmode_t mod)
         return 1;
     }
 //	info->vinfo = &tv_info[mod & VMODE_MODE_BIT_MASK];
+	printk("mode is %d,sync_duration_den=%d,sync_duration_num=%d\n", mod,info->vinfo->sync_duration_den,info->vinfo->sync_duration_num);
 	if(mod&VMODE_LOGO_BIT_MASK)  return 0;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	switch_vpu_mem_pd_vmod(info->vinfo->mode, VPU_MEM_POWER_ON);
@@ -728,8 +731,7 @@ static int tv_module_disable(vmode_t cur_vmod)
 }
 
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-
-static char* get_name_from_vmode(vmode_t mode)
+char* get_name_from_vmode(vmode_t mode)
 {
 	int i = 0, count = 0;
 	
@@ -885,6 +887,7 @@ static int get_target_vmode(int framerate_target)
 			break;
 	}
 */
+	fps_target_mode=mode_target;
 	return mode_target;
 }
 
@@ -937,7 +940,10 @@ static int clock_fine_tune(void)
 		case VMODE_1080P_59HZ:
 		case VMODE_4K2K_29HZ:
 		case VMODE_4K2K_23HZ:
-			aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84d04);
+			if( MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B )
+				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84cf8);
+			else
+				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84d04);
 			break;
 		case VMODE_720P:
 		case VMODE_1080I:
@@ -1036,11 +1042,21 @@ static int framerate_automation_process(int duration)
 
 	fr_vsource = get_vsource_frame_rate(duration);
 	fr_target = get_target_frame_rate(fr_vsource, policy);
-
+	
 	pvinfo = tv_get_current_info();
 	if( (pvinfo->sync_duration_num==fr_target) || (pvinfo->sync_duration_num==(fr_target/100)) )
 		return 0;
-
+	switch(fr_vsource){
+	case 5994:
+	case 2997:
+	case 2397:
+    	fps_playing_flag=1;
+		break;
+	default:
+		fps_playing_flag=0;
+		break;
+	}
+	printk("%s[%d] fps_playing_flag = %d\n", __FUNCTION__,__LINE__, fps_playing_flag);
 	mode_target = get_target_vmode(fr_target);
 	
 	framerate_automation_set_mode(mode_target);
@@ -1073,6 +1089,7 @@ static int tv_set_vframe_rate_end_hint(void)
 	printk("vout [%s] return mode = %d, policy = %d!\n", __FUNCTION__, mode_by_user, fr_auto_policy);
 	if( fr_auto_policy != 0 )
 	{
+		fps_playing_flag=0;
 		framerate_automation_set_mode(mode_by_user);
 	}
 

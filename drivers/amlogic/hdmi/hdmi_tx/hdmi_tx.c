@@ -63,6 +63,9 @@ static int set_disp_mode_auto(void);
 const vinfo_t * hdmi_get_current_vinfo(void);
 
 struct hdmi_config_platform_data *hdmi_pdata;
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+static int suspend_flag=0;
+#endif
 
 static hdmitx_dev_t hdmitx_device;
 static struct switch_dev sdev = {      // android ics switch device
@@ -76,6 +79,9 @@ static void hdmitx_early_suspend(struct early_suspend *h)
     hdmitx_dev_t * phdmi = (hdmitx_dev_t *)h->param;
     if (info && (strncmp(info->name, "panel", 5) == 0 || strncmp(info->name, "null", 4) == 0))
         return;
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	suspend_flag=1;
+#endif
     phdmi->hpd_lock = 1;
     phdmi->HWOp.Cntl((hdmitx_dev_t *)h->param, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_EARLY_SUSPEND);
     phdmi->cur_VIC = HDMI_Unkown;
@@ -102,6 +108,9 @@ static void hdmitx_late_resume(struct early_suspend *h)
     hdmitx_device.HWOp.CntlDDC(&hdmitx_device, DDC_HDCP_OP, HDCP_OFF);
     hdmitx_device.internal_mode_change = 0;
     set_disp_mode_auto();
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+	suspend_flag=0;
+#endif
     pr_info("amhdmitx: late resume module %d\n", __LINE__);
     phdmi->HWOp.Cntl((hdmitx_dev_t *)h->param, HDMITX_EARLY_SUSPEND_RESUME_CNTL, HDMITX_LATE_RESUME);
     hdmi_print(INF, SYS "late resume\n");
@@ -312,6 +321,7 @@ static void hdmitx_pre_display_init(void)
 // "vic_old==HDMI_720P60" means old vic is HDMI_1080p60, but vmode maybe VMODE_1080P or VMODE_1080P_59HZ 
 static int is_similar_hdmi_vic(HDMI_Video_Codes_t vic_old, vmode_t mode_new)
 {
+	printk("%s[%d] vic_old=%d,mode_new=%d\n", __FUNCTION__, __LINE__,vic_old,mode_new);
 	if( (vic_old==HDMI_480p60_16x9) && (mode_new==VMODE_480P_59HZ) )
 		return 1;	
 	if( (vic_old==HDMI_720p60) && (mode_new==VMODE_720P_59HZ) )
@@ -417,8 +427,12 @@ static int set_disp_mode_auto(void)
     }
 
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	if( is_similar_hdmi_vic(vic_ready, info->mode) )
+	if(suspend_flag==1)
+ 		vic_ready = HDMI_Unkown;
+	else if( is_similar_hdmi_vic(vic_ready, info->mode) ){
 		vic_ready = HDMI_Unkown;
+		printk("%s[%d] is similiar vic\n", __FUNCTION__, __LINE__);
+	}
 #endif
 
     if((vic_ready != HDMI_Unkown) && (vic_ready == vic)) {
@@ -950,7 +964,9 @@ static int hdmitx_notify_callback_v(struct notifier_block *block, unsigned long 
         return 0;
 	
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION	
-    // vic_ready got from IP
+	if(suspend_flag==1)
+ 		return 0;
+	// vic_ready got from IP
     vic_ready = hdmitx_device.HWOp.GetState(&hdmitx_device, STAT_VIDEO_VIC, 0);
 	// get current vinfo
     info = hdmi_get_current_vinfo();
