@@ -181,7 +181,6 @@ static int detect_tv_support_cec(unsigned addr)
 void cec_node_init(hdmitx_dev_t* hdmitx_device)
 {
     struct vendor_info_data *vend_data = NULL;
-    unsigned int  cec_config;       // 4 bytes: use to control cec switch on/off
     
     int i, bool = 0;
     const enum _cec_log_dev_addr_e player_dev[3] = {CEC_PLAYBACK_DEVICE_1_ADDR,
@@ -204,18 +203,12 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
 
     if((vend_data) && (vend_data->cec_config))
     {
-        cec_config = vend_data->cec_config;
+        hdmitx_device->cec_func_config = vend_data->cec_config;
+        aml_write_reg32(P_AO_DEBUG_REG0, vend_data->cec_config);
     }
-    else
-    {
-        cec_config = 0x0;
-    }
+    
     hdmi_print(INF, CEC "cec_config: 0x%x; ao_cec:0x%x\n", vend_data->cec_config, vend_data->ao_cec);
-    
-    //enable cec features by default.
-    hdmitx_device->cec_func_config = cec_config;
-    aml_write_reg32(P_AO_DEBUG_REG0, cec_config);
-    
+
     if((vend_data) && (vend_data->cec_osd_string)) {
         i = strlen(vend_data->cec_osd_string);
         if(i > 14) 
