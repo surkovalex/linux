@@ -1469,7 +1469,7 @@ static int amhdmitx_probe(struct platform_device *pdev)
 #ifdef CONFIG_AM_TV_OUTPUT2
     vout2_register_client(&hdmitx_notifier_nb_v2);
 #endif
-//    aout_register_client(&hdmitx_notifier_nb_a);
+    aout_register_client(&hdmitx_notifier_nb_a);
 
 #ifdef CONFIG_USE_OF
     if(pdev->dev.of_node){
@@ -1571,7 +1571,7 @@ static int amhdmitx_remove(struct platform_device *pdev)
 #ifdef CONFIG_AM_TV_OUTPUT2
     vout2_unregister_client(&hdmitx_notifier_nb_v2);
 #endif
-//    aout_unregister_client(&hdmitx_notifier_nb_a);
+    aout_unregister_client(&hdmitx_notifier_nb_a);
 
     /* Remove the cdev */
     device_remove_file(hdmitx_dev, &dev_attr_disp_mode);

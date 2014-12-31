@@ -134,7 +134,18 @@ static void set_hpll_clk_out(unsigned clk)
         aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x0000023d);
         aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0x5, 28, 3);  //reset hpll
         aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0x4, 28, 3);
-        printk("waiting HPLL lock\n");
+        WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
+        break;
+    case 4320:
+        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0, 14, 1); // div mode
+        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL2, 0x000, 0, 12); // div_frac
+        aml_write_reg32(P_HHI_HDMI_PLL_CNTL3, 0x135c5091);
+        aml_write_reg32(P_HHI_HDMI_PLL_CNTL4, 0x801da72c);
+        aml_write_reg32(P_HHI_HDMI_PLL_CNTL5, 0x71c86900);    //5940 0x71c86900      // 0x71486900 2970
+        aml_write_reg32(P_HHI_HDMI_PLL_CNTL6, 0x00000e55);
+        aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x0000022d);
+        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0x5, 28, 3);  //reset hpll
+        aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0x4, 28, 3);
         WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
         break;
     case 2448:
@@ -147,7 +158,6 @@ static void set_hpll_clk_out(unsigned clk)
         aml_write_reg32(P_HHI_HDMI_PLL_CNTL, 0x00000266);
         aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0x5, 28, 3);  //reset hpll
         aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0x4, 28, 3);
-        printk("waiting HPLL lock\n");
         WAIT_FOR_PLL_LOCKED(P_HHI_HDMI_PLL_CNTL);
         break;
     default:
@@ -357,10 +367,19 @@ static void hpll_load_en(void)
 }
 
 // mode viu_path viu_type hpll_clk_out od1 od2 od3
-// vid_pll_div vid_clk_div hdmi_tx_pixel_div encp_div enci_div enct_div encl_div vdac0_div
+// vid_pll_div vid_clk_div hdmi_tx_pixel_div encp_div enci_div encl_div vdac0_div
 static hw_enc_clk_val_t setting_enc_clk_val[] = {
+    {VMODE_480I,           1, VIU_ENCI, 4320, 4, 4, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, -1, 2, -1, -1},
+    {VMODE_576I,           1, VIU_ENCI, 4320, 4, 4, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, -1, 2, -1, -1},
+    {VMODE_576P,           1, VIU_ENCP, 4320, 4, 4, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_480P,           1, VIU_ENCP, 4320, 4, 4, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_720P_50HZ,      1, VIU_ENCP, 2970, 4, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_720P,           1, VIU_ENCP, 2970, 4, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_1080I,          1, VIU_ENCP, 2970, 4, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_1080I_50HZ,     1, VIU_ENCP, 2970, 4, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
     {VMODE_1080P,          1, VIU_ENCP, 2970, 1, 2, 2, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_1080P_50HZ,     1, VIU_ENCP, 2970, 1, 2, 2, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_1080P_24HZ,     1, VIU_ENCP, 2970, 2, 2, 2, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_4K2K_30HZ,      1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 2, 1, 1, -1, -1, -1},
     {VMODE_4K2K_25HZ,      1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 2, 1, 1, -1, -1, -1},
     {VMODE_4K2K_24HZ,      1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 2, 1, 1, -1, -1, -1},
@@ -390,6 +409,9 @@ void set_vmode_clk(vmode_t mode)
             break;
         case 0x266:
             hpll_vco_clk = 2448;
+            break;
+        case 0x22d:
+            hpll_vco_clk = 4320;
             break;
         default:
             hpll_vco_clk = 0xffff;
