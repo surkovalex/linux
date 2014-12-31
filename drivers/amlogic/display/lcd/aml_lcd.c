@@ -866,7 +866,7 @@ static inline void _init_display_driver(Lcd_Config_t *pConf)
 
 
 	lcd_type = pDev->conf.lcd_basic.lcd_type;
-	//printk("\nInit LCD type: %s.\n", lcd_type_table[lcd_type]);
+	printk("\nInit LCD type: %s.\n", lcd_type_table[lcd_type]);
 	if(vx1_debug == 1)
 		lcd_type = LCD_DIGITAL_VBYONE;
 	switch(lcd_type){
