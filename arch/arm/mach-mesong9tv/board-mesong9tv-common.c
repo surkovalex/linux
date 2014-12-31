@@ -135,12 +135,14 @@ static void __init meson_init_irq(void)
 	meson_init_gic_irq();
 	//backup_cpu_entry_code();
 }
+
 static const char *meson_dt_compat[] __initdata = {
 	"AMLOGIC,T866_G9TV",
+	"AMLOGIC,T868_G9TV",
 	NULL,
 };
 
-DT_MACHINE_START(T866_G9TV, "Amlogic T866 G9TV platform")
+DT_MACHINE_START(AML_G9TV, "Amlogic G9TV Platform")
 	.reserve	= meson_reserve,
 #ifdef CONFIG_SMP
 	.smp		= smp_ops(meson_smp_ops),
