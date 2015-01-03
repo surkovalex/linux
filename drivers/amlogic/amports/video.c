@@ -1176,8 +1176,8 @@ static void ge2d_keeplastframe_block(int cur_index, int format)
     y_index2 = disp_canvas_index[1][0];
     u_index = disp_canvas_index[0][1];
     u_index2 = disp_canvas_index[1][1];
-    v_index = disp_canvas_index[2][0];
-    v_index2 = disp_canvas_index[2][1];
+    v_index = disp_canvas_index[0][2];
+    v_index2 = disp_canvas_index[1][2];
 #else
     //cur_index = READ_VCBUS_REG(VD1_IF0_CANVAS0 + cur_dev->viu_off);
     y_index = cur_index & 0xff;
