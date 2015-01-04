@@ -1862,6 +1862,14 @@ sdio{
 			amlogic,pins = "GPIOY_6";
 		};
 
+		smc_pins:smc_pins {
+		amlogic,setmask = <4 0xC0000>;
+		amlogic,clrmask = <4 0x3F0
+								3 0x1000>;
+		amlogic,pins= "GPIOX_18","GPIOX_19";
+		
+		};
+
 	};
 /// ***************************************************************************************
 ///	-	Ethernet
@@ -1922,6 +1930,24 @@ sdio{
 		fe0_dev = <0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&dvb_fe_pins>;
+	};
+
+	smartcard {
+		compatible = "amlogic,smartcard";
+		smc0_irq = <69>;
+		//smc0_enable_pin = "GPIOX_16";
+		//smc0_enable_level = <1>;
+		smc0_reset_pin = "GPIOX_17";
+		smc0_reset_level = <0>;
+		smc0_clk_pinmux_reg = <0x2030>;
+		smc0_clk_pinmux_bit = <0x80000>;
+		smc0_clk_oen_reg = <0x200C>;
+		smc0_clk_out_reg = <0x200D>;
+		//smc0_clk_pin = "GPIOX_18";
+		smc0_clk_bit = <0x40000>;
+		smc0_det_pin = "GPIOX_16";
+		pinctrl-names = "default";
+		pinctrl-0 = <&smc_pins>;
 	};
 
 /// ***************************************************************************************
