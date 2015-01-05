@@ -551,8 +551,8 @@
 		period=<1344 635>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 		clock_hz_pol=<42700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 160>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<10 150>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<5 18>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 	
@@ -566,8 +566,8 @@
 		period=<1056 525>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 		clock_hz_pol=<33300000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 46>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<10 36>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<5 18>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 	
@@ -581,8 +581,8 @@
 		period=<2084 810>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 		clock_hz_pol=<85700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 70>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<3 30>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<10 60>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<3 27>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 		

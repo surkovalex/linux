@@ -1004,7 +1004,7 @@ void root_func(){
 //$$ L2 PROP_U32 2= "bl_level_max_min"
 //$$ L2 PROP_U32 = "bl_power_on_delay"
 //$$ L2 PROP_U32 = "bl_ctrl_method"
-//$$ L2 PROP_STR = "bl_gpio_port"
+//$$ L2 PROP_STR = "bl_gpio_port_on_off"
 //$$ L2 PROP_U32 2 = "bl_gpio_dim_max_min"
 //$$ L2 PROP_STR 2 = "bl_pwm_port_gpio_used"
 //$$ L2 PROP_U32 = "bl_pwm_freq"
@@ -1050,7 +1050,7 @@ void root_func(){
 //******************************************************************************
 //$$ DEVICE = "bl_extern_pmu_aml1218"
 //$$ L2 PROP_STR = "status"
-//$$ L2 PROP_STR 2 = "gpio_enable"
+//$$ L2 PROP_STR 2 = "gpio_enable_on_off"
 //$$ L2 PROP_U32 = "type"
 //$$ L2 PROP_U32 2 = "dim_max_min"
 	bl_extern_pmu_aml1218{
@@ -1058,7 +1058,7 @@ void root_func(){
 		dev_name ="bl_pmu_aml1218";
 		status = "okay"; /** "disabled" or "okay" */
 
-		gpio_enable_on_off = "GPIODV_28","1","0"; /** gpio ="n"for none, (on/off:1=output high, 0=output low, 2=input)*/
+		gpio_enable_on_off = "GPIODV_28","1","0"; /** gpio("n"for none), on/off(1=output high, 0=output low, 2=input)*/
 		type = <2>;	/** bl_extern_driver type: 0=i2c, 1=spi, 2=other */
 		dim_max_min = <0x1 0x1b>;
 	};
@@ -1146,8 +1146,8 @@ void root_func(){
 		period=<1344 635>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 		clock_hz_pol=<42700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 170>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<10 160>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<5 18>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 

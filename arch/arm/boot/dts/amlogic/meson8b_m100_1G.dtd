@@ -1033,7 +1033,7 @@ void root_func(){
 //$$ L2 PROP_U32 2= "bl_level_max_min"
 //$$ L2 PROP_U32 = "bl_power_on_delay"
 //$$ L2 PROP_U32 = "bl_ctrl_method"
-//$$ L2 PROP_STR = "bl_gpio_port"
+//$$ L2 PROP_STR = "bl_gpio_port_on_off"
 //$$ L2 PROP_U32 2 = "bl_gpio_dim_max_min"
 //$$ L2 PROP_STR 2 = "bl_pwm_port_gpio_used"
 //$$ L2 PROP_U32 = "bl_pwm_freq"
@@ -1059,7 +1059,7 @@ void root_func(){
 		bl_power_on_delay=<110>; /** delay time before backlight power on(unit: ms) */
 		bl_ctrl_method=<4>;	/** backlight control method(0=gpio, 1=pwm_negative, 2=pwm_positive, 3=pwm_combo. 4=extern. decided by hardware design) */
 		
-		bl_gpio_port="GPIODV_28";	/** backlight control gpio port */
+		bl_gpio_port_on_off="GPIODV_28","1","0";	/** backlight control gpio port, (on/off:1=output high, 0=output low, 2=input) */
 		bl_gpio_dim_max_min=<0x0 0xf>;	/** brightness diming level_max, level_min : (0x0~0xf, negative logic, only for gpio control method) */
 		bl_pwm_port_gpio_used="PWM_C","1";	/** pwm_port_name(for pwm control method), pwm_gpio_used(0=use pwm_port only, 1=use bl_gpio_port to control on/off) */
 		bl_pwm_freq=<300000>;	/** backlight control pwm frequency(unit: Hz, only for pwm control method) */
@@ -1079,7 +1079,7 @@ void root_func(){
 //******************************************************************************
 //$$ DEVICE = "bl_extern_pmu_aml1218"
 //$$ L2 PROP_STR = "status"
-//$$ L2 PROP_STR 2 = "gpio_enable"
+//$$ L2 PROP_STR 2 = "gpio_enable_on_off"
 //$$ L2 PROP_U32 = "type"
 //$$ L2 PROP_U32 2 = "dim_max_min"
 	bl_extern_pmu_aml1218{
@@ -1087,7 +1087,7 @@ void root_func(){
 		dev_name ="bl_pmu_aml1218";
 		status = "okay"; /** "disabled" or "okay" */
 
-		gpio_enable = "GPIODV_28"; /** "n" for none */
+		gpio_enable_on_off = "GPIODV_28","1","0"; /** gpio("n"for none), on/off(1=output high, 0=output low, 2=input)*/
 		type = <2>;	/** bl_extern_driver type: 0=i2c, 1=spi, 2=other */
 		dim_max_min = <0x1 0x1b>;
 	};
@@ -1175,8 +1175,8 @@ void root_func(){
 		period=<928 1065>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 		clock_hz_pol=<59300000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<10 80>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<2 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<10 70>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<2 21>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 	};
 
@@ -1210,8 +1210,8 @@ void root_func(){
 		period=<948 1140>;		/** horizontal period(htotal), vertical period(vtotal) */
 
 		clock_hz_pol=<64843200 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<64 120>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<50 80>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<64 56>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<50 30>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
 		dsi_lane_num=<4>;/** mipi dsi data lane number */
@@ -1219,14 +1219,14 @@ void root_func(){
 		dsi_bit_rate_max=<550>;/** mipi-dsi data lane bit rate limit(unit: MHz) */
 		pclk_lanebyteclk_factor =<0>;/** special adjust, default is 0 */
 		dsi_transfer_ctrl=<0 0>;/** clk_lane auto stop in LP mode: (0=disable, 1=enable), transfer switch between LP and HS: (0=auto, 1=standard, 2=slow). default is <0 0> */
-		dsi_init_on=<0x05 0x11 0 //sleep out
+		dsi_init_on=<0x05 1 0x11 //sleep out
 					0xff 20      //delay 20ms
-					0x05 0x29 0  //display on
+					0x05 1 0x29  //display on
 					0xff 20      //delay 20ms
 					0xff 0xff>;/** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
-		dsi_init_off=<0x05 0x28 0 //display off
+		dsi_init_off=<0x05 1 0x28 //display off
 					0xff 10       //delay 10ms
-					0x05 0x10 0   //sleep in
+					0x05 1 0x10   //sleep in
 					0xff 10       //delay 10ms
 					0xff 0xff>;/** mipi command(data_type, command, para_num, parameters). 0xff,0xff is ending flag. 0xff,n(n<0xff) means delay n(unit: ms) */
 		lcd_extern_init=<0>;/** lcd extern init command control(0=disable, 1=enable) */

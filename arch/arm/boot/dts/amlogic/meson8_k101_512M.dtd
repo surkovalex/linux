@@ -832,7 +832,7 @@ sdio{
 //$$ L2 PROP_U32 2= "bl_level_max_min"
 //$$ L2 PROP_U32 = "bl_power_on_delay"
 //$$ L2 PROP_U32 = "bl_ctrl_method"
-//$$ L2 PROP_STR = "bl_gpio_port"
+//$$ L2 PROP_STR = "bl_gpio_port_on_off"
 //$$ L2 PROP_U32 2 = "bl_gpio_dim_max_min"
 //$$ L2 PROP_STR 2 = "bl_pwm_port_gpio_used"
 //$$ L2 PROP_U32 = "bl_pwm_freq"
@@ -878,7 +878,7 @@ sdio{
 //******************************************************************************
 //$$ DEVICE = "bl_extern_pmu_aml1218"
 //$$ L2 PROP_STR = "status"
-//$$ L2 PROP_STR 2 = "gpio_enable"
+//$$ L2 PROP_STR 2 = "gpio_enable_on_off"
 //$$ L2 PROP_U32 = "type"
 //$$ L2 PROP_U32 2 = "dim_max_min"
 	bl_extern_pmu_aml1218{
@@ -886,14 +886,14 @@ sdio{
 		dev_name ="bl_pmu_aml1218";
 		status = "disabled"; /** "disabled" or "okay" */
 
-		gpio_enable = "GPIODV_28"; /** "n" for none */
+		gpio_enable_on_off = "GPIODV_28","1","0"; /** gpio("n"for none), on/off(1=output high, 0=output low, 2=input)*/
 		type = <2>;	/** bl_extern_driver type: 0=i2c, 1=spi, 2=other */
 		dim_max_min = <0x1 0x1b>;
 	};
 
 //$$ DEVICE = "bl_extern_i2c_lp8556"
 //$$ L2 PROP_STR = "status"
-//$$ L2 PROP_STR 2 = "gpio_enable"
+//$$ L2 PROP_STR 2 = "gpio_enable_on_off"
 //$$ L2 PROP_U32 = "type"
 //$$ L2 PROP_STR = "i2c_bus"
 //$$ L2 PROP_U32 2 = "dim_max_min"
@@ -902,7 +902,7 @@ sdio{
 		dev_name ="bl_i2c_lp8556";
 		status = "disabled"; /** "disabled" or "okay" */
 
-		gpio_enable = "GPIODV_28"; /** "n" for none */
+		gpio_enable_on_off = "GPIODV_28","1","0"; /** gpio("n"for none), on/off(1=output high, 0=output low, 2=input)*/
 		type = <0>;	/** bl_extern_driver type: 0=i2c, 1=spi, 2=other */
 		i2c_address = <0x2c>; /** 7bit i2c address */
 		i2c_bus = "i2c_bus_b";
@@ -1089,8 +1089,8 @@ sdio{
 //		period=<2219 1560>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 //		clock_hz_pol=<207700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-//		hsync_width_backporch=<5 120>;	/** hsync_width, hsync_backporch(include hsync_width) */
-//		vsync_width_backporch=<1 22>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		hsync_width_backporch=<5 115>;	/** hsync_width, hsync_backporch(without hsync_width) */
+//		vsync_width_backporch=<1 21>;	/** vsync_width, vsync_backporch(without vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 		
 //		max_lane_count=<4>; /** max lane count supported */
@@ -1121,8 +1121,8 @@ sdio{
 		period=<948 1140>;		/** horizontal period(htotal), vertical period(vtotal) */
 
 		clock_hz_pol=<64843200 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-		hsync_width_backporch=<64 120>;	/** hsync_width, hsync_backporch(include hsync_width) */
-		vsync_width_backporch=<50 80>;	/** vsync_width, vsync_backporch(include vsync_width) */
+		hsync_width_backporch=<64 56>;	/** hsync_width, hsync_backporch(without hsync_width) */
+		vsync_width_backporch=<50 30>;	/** vsync_width, vsync_backporch(without vsync_width) */
 		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
 		dsi_lane_num=<4>;/** mipi dsi data lane number */
@@ -1160,8 +1160,8 @@ sdio{
 //		period=<1344 635>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 //		clock_hz_pol=<42700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-//		hsync_width_backporch=<10 160>;	/** hsync_width, hsync_backporch(include hsync_width) */
-//		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		hsync_width_backporch=<10 150>;	/** hsync_width, hsync_backporch(without hsync_width) */
+//		vsync_width_backporch=<5 18>;	/** vsync_width, vsync_backporch(without vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 //	};
 
@@ -1186,8 +1186,8 @@ sdio{
 //		period=<1056 525>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 //		clock_hz_pol=<33300000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-//		hsync_width_backporch=<10 46>;	/** hsync_width, hsync_backporch(include hsync_width) */
-//		vsync_width_backporch=<5 23>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		hsync_width_backporch=<10 36>;	/** hsync_width, hsync_backporch(without hsync_width) */
+//		vsync_width_backporch=<5 18>;	/** vsync_width, vsync_backporch(without vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 //	};
 
@@ -1212,8 +1212,8 @@ sdio{
 //		period=<2084 810>;		/** horizontal period(htotal), vertical period(vtotal) */
 		
 //		clock_hz_pol=<85700000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-//		hsync_width_backporch=<10 70>;	/** hsync_width, hsync_backporch(include hsync_width) */
-//		vsync_width_backporch=<3 30>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		hsync_width_backporch=<10 60>;	/** hsync_width, hsync_backporch(without hsync_width) */
+//		vsync_width_backporch=<3 27>;	/** vsync_width, vsync_backporch(without vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 //	};
 
@@ -1244,8 +1244,8 @@ sdio{
 //		period=<2080 1235>;		/** horizontal period(htotal), vertical period(vtotal) */
 
 //		clock_hz_pol=<154128000 0>;	/** clock_hz(unit in Hz, both support clk and frame_rate, >200 regard as clk, <200 regard as frame_rate), clk_pol(only valid for TTL) */
-//		hsync_width_backporch=<32 112>;	/** hsync_width, hsync_backporch(include hsync_width) */
-//		vsync_width_backporch=<6 26>;	/** vsync_width, vsync_backporch(include vsync_width) */
+//		hsync_width_backporch=<32 80>;	/** hsync_width, hsync_backporch(without hsync_width) */
+//		vsync_width_backporch=<6 20>;	/** vsync_width, vsync_backporch(without vsync_width) */
 //		pol_hsync_vsync=<0 0>;	/** hsync_polarity, vsync_polarity : (0=negative, 1=positive) */
 
 //		dsi_lane_num=<4>;/** mipi dsi data lane number */
