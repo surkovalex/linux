@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2014-12-23a";//modify for mcdi reverse
+static char version_s[] = "2015-1-5a";//add vf states 
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -408,6 +408,7 @@ static vframe_t *di_vf_peek(void* arg);
 static vframe_t *di_vf_get(void* arg);
 static void di_vf_put(vframe_t *vf, void* arg);
 static int di_event_cb(int type, void *data, void *private_data);
+static int di_vf_states(vframe_states_t *states, void* arg);
 static void di_process(void);
 static void di_reg_process(void);
 static void di_unreg_process(void);
@@ -421,6 +422,7 @@ static const struct vframe_operations_s deinterlace_vf_provider =
     .get  = di_vf_get,
     .put  = di_vf_put,
     .event_cb = di_event_cb,
+    .vf_states = di_vf_states,
 };
 
 static struct vframe_provider_s di_vf_prov;
@@ -7031,6 +7033,17 @@ static int di_event_cb(int type, void *data, void *private_data)
             msleep(1);
         }
     }
+    return 0;
+}
+
+static int di_vf_states(vframe_states_t *states, void* arg)
+{
+    if(!states)
+	return -1;
+    states->vf_pool_size = local_buf_num;
+    states->buf_free_num = list_count(QUEUE_LOCAL_FREE);
+    states->buf_avail_num = list_count(QUEUE_POST_READY);
+    states->buf_recycle_num = list_count(QUEUE_RECYCLE);
     return 0;
 }
 
