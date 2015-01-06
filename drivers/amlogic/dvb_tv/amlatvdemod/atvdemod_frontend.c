@@ -226,8 +226,28 @@ static void aml_atvdemod_get_pll_status(struct dvb_frontend *fe, void *stat)
 
 static int aml_atvdemod_get_atv_status(struct dvb_frontend *fe, atv_status_t *atv_status)
 {
+	int afc = 0;
+	fe_status_t tuner_state = FE_TIMEDOUT;
+
+	if (fe && atv_status)
+	{
+		if(fe->ops.tuner_ops.get_afc){
+			fe->ops.tuner_ops.get_afc(fe, &afc);
+			atv_status->afc =afc;
+		}
+
+		if(fe->ops.tuner_ops.get_status){
+			//fe->ops.tuner_ops.get_status(fe, &tuner_state);
+			fe->ops.tuner_ops.get_pll_status(fe, &tuner_state);
+			if (tuner_state == FE_HAS_LOCK)
+				atv_status->atv_lock = 1;
+			else
+				atv_status->atv_lock = 0;
+		}
+	}
 	return 0;
 }
+
 
 void aml_atvdemod_set_params(struct dvb_frontend *fe,struct analog_parameters *p)
 {
