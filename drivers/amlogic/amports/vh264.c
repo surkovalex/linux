@@ -1994,9 +1994,15 @@ static void stream_switching_do(struct work_struct *work)
 
         get_video_keep_buffer(videoKeepBuf, videoKeepBufPhys);
 #ifdef NV21
+#ifdef CONFIG_GE2D_KEEP_FRAME
+        if (!videoKeepBufPhys[0] || !videoKeepBufPhys[1]) {
+            do_copy = false;
+        }
+#else
         if (!videoKeepBuf[0] || !videoKeepBuf[1]) {
             do_copy = false;
         }
+#endif    
 #else
         if (!videoKeepBuf[0] || !videoKeepBuf[1] || !videoKeepBuf[2]) {
             do_copy = false;
