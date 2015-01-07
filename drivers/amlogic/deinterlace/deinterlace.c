@@ -186,7 +186,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2015-1-5a";//add vf states 
+static char version_s[] = "2015-1-7a";//disable di post for keep frame by video
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -6585,9 +6585,9 @@ static int di_receiver_event_fun(int type, void* data, void* arg)
 #ifdef DI_DEBUG
         di_print("%s , is_bypass() %d trick_mode %d bypass_all %d\n", __func__, is_bypass(), trick_mode, bypass_all);
 #endif
-        if((Rd(DI_IF1_GEN_REG)&0x1)==0){
-            //post di is disabled, so can call vf_keep_current() to keep displayed vframe
-            //vf_keep_current();
+        if((Rd(DI_IF1_GEN_REG)&0x1)==0 && new_keep_last_frame_enable==0){
+            //disable post di, so can call vf_keep_current() to keep displayed vframe
+            Wr(DI_IF1_GEN_REG, 0x3 << 30);
         }
 #ifdef DI_DEBUG
         di_print("%s: vf_notify_receiver unreg\n", __func__);
