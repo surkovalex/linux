@@ -222,15 +222,39 @@ int g9tv_pin_to_pullup(unsigned int pin , unsigned int *reg, unsigned int *bit,
 	unsigned int *en)
 {
 	/*
-	PAD_PULL_UP_REG0 0x203a
+	PAD_PULL_UP_REG4 0x203e
 
-	31~21	R/W	0		Unused
-	20~0	R/W	0x2223F 	gpioW[20:0] 1 = pull up.  0 = pull down
+	31~28	R/W	0		Unused
+	27~0	R/W	0x3000000	gpioX[27:0] 1 = pull up.  0 = pull down
 	*/
-	if(pin <= GPIOW_20)
+	/*
+	PULL_UP_EN_REG4 0x204c
+
+	31~28	R/W	0		Unused
+	27~0	R/W	0xF000FFF	gpioX[27:0]
+	*/
+	if (pin <= GPIOX_27)
 	{
-		*reg = 0;
-		*bit = pin - GPIOW_0;
+		*reg = 4;
+		*bit = pin - GPIOX_0;
+		*en  = *bit;
+	}
+	/*
+	PAD_PULL_UP_REG2 0x203c
+
+	19	R/W	1		Reserved
+	18~0	R/W	0x77FFF 	boot[18:0] 1 = pull up.  0 = pull down
+	*/
+	/*
+	PULL_UP_EN_REG2	0x204a
+
+	19	R/W	1		Reserved
+	18~0	R/W	0x7FFFF 	boot[18:0]
+	*/
+	else if (pin <= BOOT_18)
+	{
+		*reg = 2;
+		*bit = pin - BOOT_0;
 		*en  = *bit;
 	}
 	/*
@@ -238,39 +262,17 @@ int g9tv_pin_to_pullup(unsigned int pin , unsigned int *reg, unsigned int *bit,
 
 	31~27	R/W	0		Unused
 	26~16	R/W	0x1FC		gpioH[10:0]
-	15~14	R/W	0		Reserved
-	13~0	R/W	0x09FB		gpioY[13:0]
+	*/
+	/*
+	PULL_UP_EN_REG1	0x2049
+
+	31~27	R/W	0		Unused
+	26~16	R/W	0x67D		gpioH[10:0]
 	*/
 	else if(pin <= GPIOH_10)
 	{
 		*reg = 1;
 		*bit = pin - GPIOH_0 + 16;
-		*en  = *bit;
-	}
-	else if (pin <= GPIOY_13)
-	{
-		*reg = 1;
-		*bit = pin - GPIOY_0;
-		*en  = *bit;
-	}
-	/*
-	PAD_PULL_UP_REG2 0x203c
-
-	31~20	R/W	0		Reserved
-	28~20	R/W	0x1FF		card[8:0] 1 = pull up.	0 = pull down
-	19	R/W	1		Reserved
-	18~0	R/W	0x77FFF 	boot[18:0] 1 = pull up.  0 = pull down
-	*/
-	else if (pin <= CARD_8)
-	{
-		*reg = 2;
-		*bit = pin - CARD_0 + 20;
-		*en  = *bit;
-	}
-	else if (pin <= BOOT_18)
-	{
-		*reg = 2;
-		*bit = pin - BOOT_0;
 		*en  = *bit;
 	}
 	/*
@@ -279,92 +281,6 @@ int g9tv_pin_to_pullup(unsigned int pin , unsigned int *reg, unsigned int *bit,
 	31~21	R/W	0		Reserved
 	20~0	R/W	0x1FA040	gpioZ[20:0] 1 = pull up.  0 = pull down
 	*/
-	else if (pin <= GPIOZ_20)
-	{
-		*reg = 3;
-		*bit = pin - GPIOZ_0;
-		*en  = *bit;
-	}
-	/*
-	PAD_PULL_UP_REG4 0x203e
-
-	31~28	R/W	0		Unused
-	27~0	R/W	0x3000000	gpioX[27:0] 1 = pull up.  0 = pull down
-	*/
-	else if (pin <= GPIOX_27)
-	{
-		*reg = 4;
-		*bit = pin - GPIOX_0;
-		*en  = *bit;
-	}
-	/*
-	AO_RTI_PULL_UP_REG	0xc810002c
-
-	31	R	0	Reserved
-	30	R/W	0	TEST_N pull-up/down direction.
-	29-16	R/W	0	gpioAO[13:0] pull-up/down direction.
-	*/
-	else if (pin <= GPIOAO_13)
-	{
-		*reg = 5;
-		*bit = pin - GPIOAO_0 + 16;
-		*en  = *bit;
-	}
-	else
-		return -1;
-	return 0;
-
-}
-
-int g9tv_pin_map_to_direction(unsigned int pin,unsigned int *reg,unsigned int *bit)
-{
-	/*
-	PULL_UP_EN_REG0	0x2048
-
-	31~21	R/W	0		Unused
-	20~0	R/W	0x2223F		gpioW[20:0]
-	*/
-	if (pin <= GPIOW_20)
-	{
-		*reg = 0;
-		*bit = pin - GPIOW_0;
-	}
-	/*
-	PULL_UP_EN_REG1	0x2049
-
-	31~27	R/W	0		Unused
-	26~16	R/W	0x67D		gpioH[10:0]
-	15~14	R/W	0		Reserved
-	13~0	R/W	0x3FFF		gpioY[13:0]
-	*/
-	else if (pin <= GPIOH_10)
-	{
-		*reg = 1;
-		*bit = pin - GPIOH_0 + 16;
-	}
-	else if (pin <= GPIOY_13)
-	{
-		*reg = 1;
-		*bit = pin - GPIOY_0;
-	}
-	/*
-	PULL_UP_EN_REG2	0x204a
-
-	31~20	R/W	0		Reserved
-	28~20	R/W	0x1FF		card[8:0]
-	19	R/W	1		Reserved
-	18~0	R/W	0x7FFFF 	boot[18:0]
-	*/
-	else if (pin <= CARD_8)
-	{
-		*reg = 2;
-		*bit = pin - CARD_0 + 20;
-	}
-	else if (pin <= BOOT_18)
-	{
-		*reg = 2;
-		*bit = pin - BOOT_0;
-	}
 	/*
 	PULL_UP_EN_REG3	0x204b
 
@@ -375,29 +291,157 @@ int g9tv_pin_map_to_direction(unsigned int pin,unsigned int *reg,unsigned int *b
 	{
 		*reg = 3;
 		*bit = pin - GPIOZ_0;
+		*en  = *bit;
 	}
 	/*
-	PULL_UP_EN_REG4 0x204c
+	PAD_PULL_UP_REG0 0x203a
 
-	31~28	R/W	0		Unused
-	27~0	R/W	0xF000FFF	gpioX[27:0]
+	31~21	R/W	0		Unused
+	20~0	R/W	0x2223F 	gpioW[20:0] 1 = pull up.  0 = pull down
 	*/
-	else if (pin <= GPIOX_27)
+	/*
+	PULL_UP_EN_REG0	0x2048
+
+	31~21	R/W	0		Unused
+	20~0	R/W	0x2223F		gpioW[20:0]
+	*/
+	if(pin <= GPIOW_20)
+	{
+		*reg = 0;
+		*bit = pin - GPIOW_0;
+		*en  = *bit;
+	}
+	/*
+	AO_RTI_PULL_UP_REG		0xc810002c
+
+	31	R	0		Reserved
+	30	R/W	0		TEST_N pull-up/down direction.
+	29-16	R/W	0		gpioAO[13:0] pull-up/down direction.
+	15	R	0		Reserved
+	14	R/W	0		TEST_N pull-up enable.
+	13-0	R/W	0		gpioAO[13:0] pull-up enable
+	*/
+	else if (pin <= GPIOAO_13)
+	{
+		*reg = 5;
+		*bit = pin - GPIOAO_0 + 16;
+		*en  = pin - GPIOAO_0;
+	}
+	/*
+	PAD_PULL_UP_REG2 0x203c
+
+	31~20	R/W	0		Reserved
+	28~20	R/W	0x1FF		card[8:0] 1 = pull up.	0 = pull down
+	*/
+	/*
+	PULL_UP_EN_REG2 0x204a
+
+	31~20	R/W	0		Reserved
+	28~20	R/W	0x1FF		card[8:0]
+	*/
+	else if (pin <= CARD_8)
+	{
+		*reg = 2;
+		*bit = pin - CARD_0 + 20;
+		*en  = *bit;
+	}
+	/*
+	PAD_PULL_UP_REG1 0x203b
+
+	15~14	R/W	0		Reserved
+	13~0	R/W	0x09FB		gpioY[13:0]
+	*/
+	/*
+	PULL_UP_EN_REG1	0x2049
+
+	15~14	R/W	0		Reserved
+	13~0	R/W	0x3FFF		gpioY[13:0]
+	*/
+
+	else if (pin <= GPIOY_13)
+	{
+		*reg = 1;
+		*bit = pin - GPIOY_0;
+		*en  = *bit;
+	}
+	else
+		return -1;
+	return 0;
+}
+
+int g9tv_pin_map_to_direction(unsigned int pin,unsigned int *reg,unsigned int *bit)
+{
+	/*
+	PREG_PAD_GPIO4_EN_N	0x2018
+	27~0			GPIOX[27:0]
+	*/
+	if (pin <= GPIOX_27)
 	{
 		*reg = 4;
 		*bit = pin - GPIOX_0;
 	}
 	/*
-	AO_RTI_PULL_UP_REG	0xc810002c
-
-	15	R	0	Reserved
-	14	R/W	0	TEST_N pull-up enable.
-	13-0	R/W	0	gpioAO[13:0] pull-up enable
+	PREG_PAD_GPIO2_EN_N	0x2012
+	18~0			BOOT[18:0]
+	*/
+	else if (pin <= BOOT_18)
+	{
+		*reg = 2;
+		*bit = pin - BOOT_0;
+	}
+	/*
+	PREG_PAD_GPIO1_EN_N	0x200f
+	26~16			GPIOH[10:0]
+	*/
+	else if (pin <= GPIOH_10)
+	{
+		*reg = 1;
+		*bit = pin - GPIOH_0 + 16;
+	}
+	/*
+	PREG_PAD_GPIO3_EN_N	0x2015
+	20~0			GPIOZ[20:0]
+	*/
+	else if (pin <= GPIOZ_20)
+	{
+		*reg = 3;
+		*bit = pin - GPIOZ_0;
+	}
+	/*
+	PREG_PAD_GPIO0_EN_N	0x200c
+	20~0			GPIOW[20:0]
+	*/
+	if (pin <= GPIOW_20)
+	{
+		*reg = 0;
+		*bit = pin - GPIOW_0;
+	}
+	/*
+	P_AO_GPIO_O_EN_N	0xc8100024
+	13-0			GPIOAO[13:0]
 	*/
 	else if (pin < GPIOAO_13)
 	{
-		*reg = 5;
+		*reg = 6;
 		*bit = pin - GPIOAO_0;
+	}
+	/*
+	PREG_PAD_GPIO2_EN_N	0x2012
+	28~20			CARD[8:0]
+	*/
+	else if (pin <= CARD_8)
+	{
+		*reg = 2;
+		*bit = pin - CARD_0 + 20;
+	}
+	/*
+	PREG_PAD_GPIO1_EN_N	0x200f
+	13~0			GPIOY[13:0]
+	*/
+	else if (pin <= GPIOY_13)
+	{
+		*reg = 1;
+		*bit = pin - GPIOY_0;
 	}
 	else
 		return -1;
