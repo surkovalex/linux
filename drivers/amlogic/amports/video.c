@@ -238,7 +238,7 @@ static int video2_onoff_state = VIDEO_ENABLE_STATE_IDLE;
         video_onoff_state = VIDEO_ENABLE_STATE_OFF_REQ; \
         spin_unlock_irqrestore(&video_onoff_lock, flags); \
     } while (0)
-    
+
 #define VIDEO_LAYER2_ON() \
     do { \
         unsigned long flags; \
@@ -253,10 +253,10 @@ static int video2_onoff_state = VIDEO_ENABLE_STATE_IDLE;
         spin_lock_irqsave(&video2_onoff_lock, flags); \
         video2_onoff_state = VIDEO_ENABLE_STATE_OFF_REQ; \
         spin_unlock_irqrestore(&video2_onoff_lock, flags); \
-    } while (0)    
-    
-    
-    
+    } while (0)
+
+
+
 #if HAS_VPU_PROT
 #define EnableVideoLayer()  \
     do { \
@@ -416,11 +416,7 @@ typedef enum {
 
 static unsigned int video_3d_format = 0;
 static unsigned int mvc_flag =0;
-#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)
-static unsigned int force_3d_scaler = 0;
-#else
 static unsigned int force_3d_scaler = 3;
-#endif
 static int mode_3d_changed = 0;
 static int last_mode_3d = 0;
 #endif
@@ -3070,7 +3066,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 							 timestamp_vpts_get() + DUR2PTS(cur_dispbuf->duration),
 							 timestamp_pcrscr_get(), READ_MPEG_REG(SCR_HIU));
 							 timestamp_vpts_inc(DUR2PTS(cur_dispbuf->duration));
-						
+
 							vpts_remainder += DUR2PTS_RM(cur_dispbuf->duration);
 							if (vpts_remainder >= 0xf) {
 								vpts_remainder -= 0xf;
@@ -3081,7 +3077,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 				}
 				video_vf_put(vf);
 				break;
-			}            
+			}
             force_blackout = 0;
 #ifdef TV_3D_FUNCTION_OPEN
 
