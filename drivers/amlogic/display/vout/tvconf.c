@@ -645,7 +645,7 @@ static const vinfo_t *get_valid_vinfo(char  *mode)
 	
 	for(i=0;i<count;i++)
 	{
-		if(strncmp(tv_info[i].name,mode,strlen(tv_info[i].name))==0)
+		if(strncmp(tv_info[i].name,mode,strlen(mode))==0)
 		{
 			if((vinfo==NULL)||(strlen(tv_info[i].name)>mode_name_len)){
 			    vinfo = &tv_info[i];

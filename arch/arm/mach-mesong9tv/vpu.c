@@ -176,6 +176,7 @@ static vpu_mod_t get_vpu_mod(unsigned int vmod)
 			case VMODE_LCD:
 			case VMODE_LVDS_1080P:
 			case VMODE_LVDS_1080P_50HZ:
+			case VMODE_VX1_4K2K_60HZ:
 				vpu_mod = VPU_VENCL;
 				break;
 			default:
