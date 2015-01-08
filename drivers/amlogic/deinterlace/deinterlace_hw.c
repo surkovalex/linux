@@ -71,7 +71,7 @@ uint post_ctrl__di_blend_en;
 uint post_ctrl__di_post_repeat;
 uint di_pre_ctrl__di_pre_repeat;
 
-static bool cue_enable = 1;
+static bool cue_enable = 0;
 
 uint field_32lvl;
 uint field_22lvl;
