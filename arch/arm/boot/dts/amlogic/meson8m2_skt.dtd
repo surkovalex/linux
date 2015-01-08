@@ -1417,7 +1417,7 @@ void root_func(){
 //$$ L2 PROP_STR 9 = "amlogic,pins"
 //$$ L2 PROP_U32 = "amlogic,pullup"
 		conf_nand_state: conf_nand{
-			amlogic,pins = "BOOT_0","BOOT_1","BOOT_2","BOOT_3","BOOT_4",
+			amlogic,pins = "BOOT_1","BOOT_2","BOOT_3","BOOT_4",
 						"BOOT_5","BOOT_6","BOOT_7","BOOT_15";
 			amlogic,pullup=<0>;
 	    		amlogic,pullupen=<1>;
