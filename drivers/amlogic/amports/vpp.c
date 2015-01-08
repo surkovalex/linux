@@ -402,7 +402,7 @@ vpp_process_speed_check(s32 width_in,
     if ((height_out+1) > height_in) {
         return SPEED_CHECK_DONE;
     }
-#else   
+#else
     if (video_speed_check_width * video_speed_check_height * height_out > height_screen * width_in * height_in) {
         return SPEED_CHECK_DONE;
     }
@@ -1285,7 +1285,7 @@ vpp_get_video_source_size(u32 *src_width,u32 *src_height,u32 process_3d_type,
 	}
     } else if(process_3d_type & MODE_3D_LA) {
     	next_frame_par->vpp_3d_mode = VPP_3D_MODE_LA;
-	*src_height = vf->height ;
+	*src_height = vf->height - 1;
 	*src_width  = vf->width;
 	next_frame_par->vpp_2pic_mode = 0;
         next_frame_par->vpp_3d_scale = 1;
@@ -1323,7 +1323,8 @@ vpp_get_video_source_size(u32 *src_width,u32 *src_height,u32 process_3d_type,
 	next_frame_par->vpp_3d_scale = 0;
     }
 	/*process 3d->2d or l/r switch case*/
-    if(VPP_3D_MODE_NULL != next_frame_par->vpp_3d_mode)
+    if((VPP_3D_MODE_NULL != next_frame_par->vpp_3d_mode)&&
+    	(VPP_3D_MODE_LA != next_frame_par->vpp_3d_mode))
     {
 	if(process_3d_type & MODE_3D_TO_2D_R)
        	    next_frame_par->vpp_2pic_mode = VPP_SELECT_PIC1;
