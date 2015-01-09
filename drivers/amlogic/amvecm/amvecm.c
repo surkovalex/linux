@@ -274,6 +274,23 @@ static void amvecm_3d_sync_process(void)
 		vecm_latch_flag &= ~FLAG_3D_SYNC_DIS;
 	}
 	if(vecm_latch_flag & FLAG_3D_SYNC_EN){
+		/*select vpu pwm source clock*/
+		switch(READ_VPP_REG_BITS(VPU_VIU_VENC_MUX_CTRL,0,2)){
+			case 0://ENCL
+				WRITE_VPP_REG_BITS(VPU_VPU_PWM_V0,0,29,2);
+				break;
+			case 1://ENCI
+				WRITE_VPP_REG_BITS(VPU_VPU_PWM_V0,1,29,2);
+				break;
+			case 2://ENCP
+				WRITE_VPP_REG_BITS(VPU_VPU_PWM_V0,2,29,2);
+				break;
+			case 3://ENCT
+				WRITE_VPP_REG_BITS(VPU_VPU_PWM_V0,3,29,2);
+				break;
+			default:
+				break;
+		}
 		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_start,0,13);
 		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_end,16,13);
 		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_start,0,13);
@@ -284,6 +301,82 @@ static void amvecm_3d_sync_process(void)
 		vecm_latch_flag &= ~FLAG_3D_SYNC_EN;
 	}
 }
+static void parse_param_amvecm(char *buf_orig,char **parm)
+{
+	char *ps, *token;
+	unsigned int n=0;
+	ps = buf_orig;
+        while(1) {
+                token = strsep(&ps, " \n");
+                if (token == NULL)
+                        break;
+                if (*token == '\0')
+                        continue;
+                parm[n++] = token;
+        }
+}
+static ssize_t amvecm_3d_sync_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+	ssize_t len = 0;
+	unsigned int sync_h_start,sync_h_end,sync_v_start,sync_v_end,sync_polarity,sync_out_inv,sync_en;
+	sync_h_start = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC2,0,13);
+	sync_h_end = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC2,16,13);
+	sync_v_start = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC1,0,13);
+	sync_v_end = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC1,16,13);
+	sync_polarity = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC1,29,1);
+	sync_out_inv = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC1,15,1);
+	sync_en = READ_VPP_REG_BITS(VPU_VPU_3D_SYNC1,31,1);
+	len += sprintf(buf+len, "\n current 3d sync state:\n");
+	len += sprintf(buf+len, "sync_h_start:%d\n", sync_h_start);
+	len += sprintf(buf+len, "sync_h_end:%d\n", sync_h_end);
+	len += sprintf(buf+len, "sync_v_start:%d\n", sync_v_start);
+	len += sprintf(buf+len, "sync_v_end:%d\n", sync_v_end);
+	len += sprintf(buf+len, "sync_polarity:%d\n", sync_polarity);
+	len += sprintf(buf+len, "sync_out_inv:%d\n", sync_out_inv);
+	len += sprintf(buf+len, "sync_en:%d\n", sync_en);
+	len += sprintf(buf+len, "echo hstart val(D) > /sys/class/amvecm/sync_3d\n");
+	len += sprintf(buf+len, "echo hend val(D) > /sys/class/amvecm/sync_3d\n");
+	len += sprintf(buf+len, "echo vstart val(D) > /sys/class/amvecm/sync_3d\n");
+	len += sprintf(buf+len, "echo vend val(D) > /sys/class/amvecm/sync_3d\n");
+	len += sprintf(buf+len, "echo pola val(D) > /sys/class/amvecm/sync_3d\n");
+	len += sprintf(buf+len, "echo inv val(D) > /sys/class/amvecm/sync_3d\n");
+	return len;
+}
+static ssize_t amvecm_3d_sync_store(struct class *cla, struct class_attribute *attr, const char *buf,size_t count)
+{
+	char *buf_orig,*parm[8] = {NULL};
+	if(!buf)
+		return count;
+	buf_orig = kstrdup(buf, GFP_KERNEL);
+	parse_param_amvecm(buf_orig,(char **)&parm);
+	if(!strncmp(parm[0], "hstart", 6)){
+		sync_3d_h_start = (simple_strtol(parm[1],NULL,10))&0x1fff;
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_start,0,13);
+	}
+	else if(!strncmp(parm[0], "hend", 4)){
+		sync_3d_h_end = (simple_strtol(parm[1],NULL,10))&0x1fff;
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC2,sync_3d_h_end,16,13);
+	}
+	else if(!strncmp(parm[0], "vstart", 6)){
+		sync_3d_v_start = (simple_strtol(parm[1],NULL,10))&0x1fff;
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_start,0,13);
+	}
+	else if(!strncmp(parm[0], "vend", 4)){
+		sync_3d_v_end = (simple_strtol(parm[1],NULL,10))&0x1fff;
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_v_end,16,13);
+	}
+	else if(!strncmp(parm[0], "pola", 4)){
+		sync_3d_polarity = (simple_strtol(parm[1],NULL,10))&0x1;
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_polarity,29,1);
+	}
+	else if(!strncmp(parm[0], "inv", 3)){
+		sync_3d_out_inv = (simple_strtol(parm[1],NULL,10))&0x1;
+		WRITE_VPP_REG_BITS(VPU_VPU_3D_SYNC1,sync_3d_out_inv,15,1);
+	}
+	kfree(buf_orig);
+	return count;
+}
+
 #endif
 void amvecm_video_latch(void)
 {
@@ -901,6 +994,11 @@ static struct class_attribute amvecm_class_attrs[] = {
 	__ATTR(gamma,S_IRUGO | S_IWUSR,
 		amvecm_gamma_show,
 		amvecm_gamma_store),
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
+	__ATTR(sync_3d,S_IRUGO | S_IWUSR,
+		amvecm_3d_sync_show,
+		amvecm_3d_sync_store),
+#endif
 	__ATTR_NULL
 };
 
