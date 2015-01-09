@@ -568,6 +568,69 @@ static struct snd_soc_jack_pin jack_pins[] = {
     }
 };
 
+/* HDMI in audio format detect: LPCM or NONE-LPCM */           
+static const char *hdmi_audio_type_texts[] = {
+    "LPCM","NONE-LPCM","UN-KNOWN"
+};          
+static const struct soc_enum hdmi_audio_type_enum =
+    SOC_ENUM_SINGLE(SND_SOC_NOPM, 0,
+            ARRAY_SIZE(hdmi_audio_type_texts),
+            hdmi_audio_type_texts);
+
+static int aml_hdmi_audio_type_get_enum(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    int ch_status = 0;
+    if ((READ_MPEG_REG(AUDIN_DECODE_CONTROL_STATUS)>>24)&0x1){
+        ch_status = READ_MPEG_REG(AUDIN_DECODE_CHANNEL_STATUS_A_0);
+        if (ch_status&2) //NONE-LPCM
+            ucontrol->value.enumerated.item[0] = 1;
+        else //LPCM
+            ucontrol->value.enumerated.item[0] = 0;     
+    }
+    else
+        ucontrol->value.enumerated.item[0] = 2; //un-stable. un-known       
+    
+    return 0;
+}
+
+static int aml_hdmi_audio_type_set_enum(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    return 0;
+}
+
+/* spdif in audio format detect: LPCM or NONE-LPCM */
+static const char *spdif_audio_type_texts[] = {
+    "LPCM","NONE-LPCM","UN-KNOWN"
+};          
+static const struct soc_enum spdif_audio_type_enum =
+    SOC_ENUM_SINGLE(SND_SOC_NOPM, 0,
+            ARRAY_SIZE(spdif_audio_type_texts),
+            spdif_audio_type_texts);
+
+static int aml_spdif_audio_type_get_enum(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+	int ch_status = 0;
+    //if ((READ_MPEG_REG(AUDIN_SPDIF_MISC)>>0x7)&0x1){
+        ch_status = READ_MPEG_REG(AUDIN_SPDIF_CHNL_STS_A)&0x3;
+        if (ch_status&2) //NONE-LPCM
+            ucontrol->value.enumerated.item[0] = 1;
+        else //LPCM
+            ucontrol->value.enumerated.item[0] = 0;     
+    //}
+    //else
+    //    ucontrol->value.enumerated.item[0] = 2; //un-stable. un-known       
+    return 0;
+}
+
+static int aml_spdif_audio_type_set_enum(struct snd_kcontrol *kcontrol,
+    struct snd_ctl_elem_value *ucontrol)
+{
+    return 0;
+}
+
 static const struct snd_kcontrol_new aml_m8_controls[] = {
 	//SOC_DAPM_PIN_SWITCH("Ext Spk"),
 
@@ -582,7 +645,15 @@ static const struct snd_kcontrol_new aml_m8_controls[] = {
 	SOC_SINGLE_BOOL_EXT("Ext Spk Switch", 0,
 		aml_m8_get_spk,
 		aml_m8_set_spk),
-       
+
+	SOC_ENUM_EXT("HDMI Audio Type", hdmi_audio_type_enum,
+        aml_hdmi_audio_type_get_enum,
+        aml_hdmi_audio_type_set_enum),
+
+	SOC_ENUM_EXT("SPDIFIN Audio Type", spdif_audio_type_enum,
+        aml_spdif_audio_type_get_enum,
+        aml_spdif_audio_type_set_enum),
+    
    /*
     SOC_SINGLE_BOOL_EXT("Audio MPLL9 Switch", 0,
     aml_m8_get_MPLL9,
