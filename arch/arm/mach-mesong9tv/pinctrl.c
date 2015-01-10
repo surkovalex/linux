@@ -54,10 +54,10 @@ unsigned int p_pin_mux_reg_addr[] = {
 	P_PERIPHS_PIN_MUX_7,
 	P_PERIPHS_PIN_MUX_8,
 	P_PERIPHS_PIN_MUX_9,
-	P_AO_RTI_PIN_MUX_REG,
 	P_PERIPHS_PIN_MUX_10,
 	P_PERIPHS_PIN_MUX_11,
 	P_PERIPHS_PIN_MUX_12,
+	P_AO_RTI_PIN_MUX_REG,
 };
 
 unsigned p_pull_upen_addr[] = {

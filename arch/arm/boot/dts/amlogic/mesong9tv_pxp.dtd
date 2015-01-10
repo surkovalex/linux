@@ -831,7 +831,7 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR 2 = "amlogic,pins"
 		ao_uart_pins:ao_uart {
-			amlogic,setmask = <10 0x1800>;
+			amlogic,setmask = <13 0x1800>;
 			amlogic,pins = "GPIOAO_0", "GPIOAO_1";
 		};
 
@@ -1071,8 +1071,8 @@
 		//$$ L2 PROP_U32 2 = "amlogic,clrmask"
 		//$$ L2 PROP_STR 2 = "amlogic,pins"
 		ao_i2c_master:ao_i2c{
-			amlogic,setmask=<10 0x60>;
-			amlogic,clrmask=<10 0x1800006>;
+			amlogic,setmask=<13 0x60>;
+			amlogic,clrmask=<13 0x1800006>;
 			amlogic,pins="GPIOAO_4","GPIOAO_5";
 		};
 
@@ -1145,7 +1145,7 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR = "amlogic,pins"
 		remote_pins:remote_pin {
-			amlogic,setmask = <10 0x1>;
+			amlogic,setmask = <13 0x1>;
 			amlogic,pins = "GPIOAO_7";
 		};
 

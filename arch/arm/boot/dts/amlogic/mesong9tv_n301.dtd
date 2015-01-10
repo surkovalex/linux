@@ -1111,7 +1111,7 @@
 			amlogic,clrmask = <3 0x10
 					   5 0x2000000
 					   9 0x1
-					   10 0x100000>;
+					   10 0x140000>;
 			amlogic,pins = "GPIOY_8";
 		};
 
@@ -1119,7 +1119,8 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR 2 = "amlogic,pins"
 		ao_uart_pins:ao_uart {
-			amlogic,setmask = <10 0x1800>;
+			amlogic,setmask = <13 0x1800>;
+			amlogic,clrmask = <13 0x06000000>;
 			amlogic,pins = "GPIOAO_0", "GPIOAO_1";
 		};
 
@@ -1127,8 +1128,11 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR 4 = "amlogic,pins"
 		a_uart_pins:a_uart {
-			amlogic,setmask=<4 0x3c00>;
-			amlogic,pins="GPIOX_12", "GPIOX_13", "GPIOX_14", "GPIOX_15";
+			amlogic,setmask = <4 0x3c00>;
+			amlogic,clrmask = <0 0x44
+					   3 0x880
+					   7 0xf000>;
+			amlogic,pins = "GPIOX_12", "GPIOX_13", "GPIOX_14", "GPIOX_15";
 		};
 
 		//$$ MATCH "Card_pin_0_match" = "&sdhc_b_pins"
@@ -1358,7 +1362,7 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR 2 = "amlogic,pins"
 		b_i2c_master:b_i2c {
-			amlogic,setmask = <11 0x30000>;		/* bit 16, 17 */
+			amlogic,setmask = <10 0x30000>;		/* bit 16, 17 */
 			amlogic,clrmask = <9 0x301		/* bit 0, 8, 9 */
 					   3 0x20>;		/* bit 5 */
 			amlogic,pins = "GPIOY_10","GPIOY_11";
@@ -1368,7 +1372,7 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR = "amlogic,pins"
 		remote_pins:remote_pin {
-			amlogic,setmask = <10 0x1>;
+			amlogic,setmask = <13 0x1>;
 			amlogic,pins = "GPIOAO_7";
 		};
 
