@@ -95,7 +95,7 @@ config AM_VDEC_H264
 
 config AM_VDEC_H264MVC
 	tristate "Amlogic H264MVC Video Decoder"
-	default n
+	default y
 	
 	select AM_PTSSERVER
 	help

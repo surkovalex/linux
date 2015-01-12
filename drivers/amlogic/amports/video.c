@@ -2096,7 +2096,7 @@ amlog_mask(LOG_MASK_FRAMEINFO,
             EnableVideoLayer();
 
             if (vf->type & VIDTYPE_MVC)
-                VSYNC_EnableVideoLayer2();
+                EnableVideoLayer2();
         }
     }
 
@@ -3488,7 +3488,7 @@ exit:
             video2_onoff_state = VIDEO_ENABLE_STATE_IDLE;
 
             if(debug_flag& DEBUG_FLAG_BLACKOUT){
-                printk("VsyncEnableVideoLayer\n");
+                printk("VsyncEnableVideoLayer2\n");
             }
         } else if (video2_onoff_state == VIDEO_ENABLE_STATE_OFF_REQ) {
         #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8

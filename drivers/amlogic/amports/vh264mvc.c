@@ -1316,24 +1316,36 @@ static void error_do_work(struct work_struct *work)
 
 static int amvdec_h264mvc_probe(struct platform_device *pdev)
 {
-    struct resource *mem;
+    struct resource mem;
     int buf_size;
 
+	struct vdec_dev_reg_s *pdata = (struct vdec_dev_reg_s *)pdev->dev.platform_data;
     printk("amvdec_h264mvc probe start.\n");
 
+#if 0
     if (!(mem = platform_get_resource(pdev, IORESOURCE_MEM, 0))) {
         printk("\namvdec_h264mvc memory resource undefined.\n");
         return -EFAULT;
     }
+#endif
 
-    buf_size = mem->end - mem->start + 1;
+    if (pdata == NULL) {
+        printk("\namvdec_h264mvc memory resource undefined.\n");
+        return -EFAULT;
+    }  
+    mem.start = pdata->mem_start ;
+    mem.end =  pdata->mem_end ;
+       
+    buf_size = mem.end - mem.start + 1;
     //buf_offset = mem->start - DEF_BUF_START_ADDR;
-    work_space_adr = mem->start;
+    work_space_adr = mem.start;
     DECODE_BUFFER_START = work_space_adr + work_space_size;
-    DECODE_BUFFER_END = mem->start + buf_size;
+    DECODE_BUFFER_END = mem.start + buf_size;
 
     printk("work_space_adr %x, DECODE_BUFFER_START %x, DECODE_BUFFER_END %x\n", work_space_adr, DECODE_BUFFER_START, DECODE_BUFFER_END);
-    memcpy(&vh264mvc_amstream_dec_info, (void *)mem[1].start, sizeof(vh264mvc_amstream_dec_info));
+    if (pdata->sys_info) {
+        vh264mvc_amstream_dec_info = *pdata->sys_info;
+    }
 
 	vdec_power_mode(1);
     if (vh264mvc_init() < 0) {
