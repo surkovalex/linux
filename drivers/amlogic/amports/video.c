@@ -732,6 +732,7 @@ static int vpu_mem_power_off_count;
 static u32 vpts_ref = 0;
 static u32 video_frame_repeat_count = 0;
 static u32 smooth_sync_enable = 0;
+static u32 hdmi_in_onvideo = 0;
 #ifdef CONFIG_AM_VIDEO2
 static int video_play_clone_rate = 60;
 static int android_clone_rate = 30;
@@ -2492,7 +2493,7 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
         return true;
     }
 
-    if (FREERUN_NODUR == freerun_mode) {
+    if (FREERUN_NODUR == freerun_mode || hdmi_in_onvideo) {
         return true;
     }
 
@@ -2994,7 +2995,8 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
         vf = video_vf_peek();
 
         if (vf) {
-            tsync_avevent_locked(VIDEO_START,
+            if (hdmi_in_onvideo == 0)
+                tsync_avevent_locked(VIDEO_START,
                           (vf->pts) ? vf->pts : timestamp_vpts_get());
 
 	     if(show_first_frame_nosync)
@@ -3799,14 +3801,18 @@ static void video_vf_unreg_provider(void)
         vf_keep_current();
         switch_mod_gate_by_name("ge2d", 0);
     }
-    tsync_avevent(VIDEO_STOP, 0);
+    if(hdmi_in_onvideo == 0){
+        tsync_avevent(VIDEO_STOP, 0);
+    }
 #else
     //if (!trickmode_fffb)
     if (cur_dispbuf)
     {
         vf_keep_current();
     }
-    tsync_avevent(VIDEO_STOP, 0);
+    if(hdmi_in_onvideo == 0){
+        tsync_avevent(VIDEO_STOP, 0);
+    }
  #endif
     atomic_set(&video_unreg_flag, 0);
     enable_video_discontinue_report = 1;
@@ -6374,6 +6380,9 @@ module_exit(video_exit);
 
 MODULE_PARM_DESC(smooth_sync_enable, "\n smooth_sync_enable\n");
 module_param(smooth_sync_enable, uint, 0664);
+
+MODULE_PARM_DESC(hdmi_in_onvideo, "\n hdmi_in_onvideo\n");
+module_param(hdmi_in_onvideo, uint, 0664);
 
 #ifdef CONFIG_AM_VIDEO2
 MODULE_PARM_DESC(video_play_clone_rate, "\n video_play_clone_rate\n");
