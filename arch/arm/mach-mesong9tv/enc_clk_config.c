@@ -390,6 +390,14 @@ static hw_enc_clk_val_t setting_enc_clk_val[] = {
     {VMODE_4K2K_50HZ,      1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_4K2K_FAKE_5G,   1, VIU_ENCP, 2448, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
     {VMODE_4K2K_5G,        1, VIU_ENCP, 2448, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_4K1K_100HZ,     1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_4K1K_100HZ_Y420,1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_4K1K_120HZ,     1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_4K1K_120HZ_Y420,1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_4K05K_200HZ,    1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_4K05K_200HZ_Y420,1,VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
+    {VMODE_4K05K_240HZ,    1, VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 1, 1, -1, -1, -1},
+    {VMODE_4K05K_240HZ_Y420,1,VIU_ENCP, 2970, 1, 1, 1, CLK_UTIL_VID_PLL_DIV_5, 1, 2, 1, -1, -1, -1},
 };
 
 void set_vmode_clk(vmode_t mode)
@@ -459,8 +467,7 @@ void set_vmode_clk(vmode_t mode)
 		return;
 	}
     p_enc=&setting_enc_clk_val[0];
-    i = sizeof(setting_enc_clk_val) / sizeof(enc_clk_val_t);
-
+    i = ARRAY_SIZE(setting_enc_clk_val);
     for (j = 0; j < i; j++){
         if(mode == p_enc[j].mode)
             break;

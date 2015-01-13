@@ -269,7 +269,7 @@ int tvoutc_setmode2(tvmode_t mode)
 
     s = tvregs_setting_mode(mode);
     if(!s) {
-        printk("display mode %d regs setting failed\n", mode);
+        printk("display2 mode %d regs setting failed\n", mode);
         return 0;
     }
     //s = tvregsTab[mode];

@@ -114,6 +114,10 @@ typedef enum HDMI_Video_Type_ {
     HDMI_3840x2160p50_64x27 = 106,
     HDMI_3840x2160p60_64x27 = 107,
     HDMI_RESERVED = 108,
+    HDMI_3840x1080p120hz = 109,
+    HDMI_3840x1080p100hz,
+    HDMI_3840x540p240hz,
+    HDMI_3840x540p200hz,
 } HDMI_Video_Codes_t;
 
 // Compliance with old definitions

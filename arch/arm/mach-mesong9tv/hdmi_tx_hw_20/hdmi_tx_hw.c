@@ -1121,6 +1121,70 @@ static void hdmi_tvenc_set(Hdmi_tx_video_para_t *param)
     unsigned long vso_begin_evn = 0, vso_begin_odd = 0;
 
     switch(param->VIC) {
+    case HDMI_3840x1080p120hz:
+        INTERLACE_MODE     = 0;
+        PIXEL_REPEAT_VENC  = 0;
+        PIXEL_REPEAT_HDMI  = 0;
+        ACTIVE_PIXELS      = 3840;
+        ACTIVE_LINES       = 1080;
+        LINES_F0           = 1125;
+        LINES_F1           = 1125;
+        FRONT_PORCH        = 176;
+        HSYNC_PIXELS       = 88;
+        BACK_PORCH         = 296;
+        EOF_LINES          = 4;
+        VSYNC_LINES        = 5;
+        SOF_LINES          = 36;
+        TOTAL_FRAMES       = 0;
+        break;
+    case HDMI_3840x1080p100hz:
+        INTERLACE_MODE     = 0;
+        PIXEL_REPEAT_VENC  = 0;
+        PIXEL_REPEAT_HDMI  = 0;
+        ACTIVE_PIXELS      = 3840;
+        ACTIVE_LINES       = 1080;
+        LINES_F0           = 1125;
+        LINES_F1           = 1125;
+        FRONT_PORCH        = 1056;
+        HSYNC_PIXELS       = 88;
+        BACK_PORCH         = 296;
+        EOF_LINES          = 4;
+        VSYNC_LINES        = 5;
+        SOF_LINES          = 36;
+        TOTAL_FRAMES       = 0;
+        break;
+    case HDMI_3840x540p240hz:
+        INTERLACE_MODE     = 0;
+        PIXEL_REPEAT_VENC  = 0;
+        PIXEL_REPEAT_HDMI  = 0;
+        ACTIVE_PIXELS      = 3840;
+        ACTIVE_LINES       = 1080;
+        LINES_F0           = 562;
+        LINES_F1           = 562;
+        FRONT_PORCH        = 176;
+        HSYNC_PIXELS       = 88;
+        BACK_PORCH         = 296;
+        EOF_LINES          = 2;
+        VSYNC_LINES        = 2;
+        SOF_LINES          = 18;
+        TOTAL_FRAMES       = 0;
+        break;
+    case HDMI_3840x540p200hz:
+        INTERLACE_MODE     = 0;
+        PIXEL_REPEAT_VENC  = 0;
+        PIXEL_REPEAT_HDMI  = 0;
+        ACTIVE_PIXELS      = 3840;
+        ACTIVE_LINES       = 1080;
+        LINES_F0           = 562;
+        LINES_F1           = 562;
+        FRONT_PORCH        = 1056;
+        HSYNC_PIXELS       = 88;
+        BACK_PORCH         = 296;
+        EOF_LINES          = 2;
+        VSYNC_LINES        = 2;
+        SOF_LINES          = 18;
+        TOTAL_FRAMES       = 0;
+        break;
     case HDMI_480p60:
     case HDMI_480p60_16x9:
     case HDMI_480p60_16x9_rpt:
@@ -1305,9 +1369,17 @@ static void hdmi_tvenc_set(Hdmi_tx_video_para_t *param)
         aml_write_reg32(P_ENCP_DVI_VSO_BEGIN_ODD, vso_begin_odd);
         aml_write_reg32(P_ENCP_DVI_VSO_END_ODD,   vso_begin_odd);
     }
+    if((param->VIC == HDMI_3840x540p240hz) || (param->VIC == HDMI_3840x540p200hz))
+        aml_write_reg32(P_ENCP_DE_V_END_EVEN, 0x230);
     // Annie 01Sep2011: Remove the following line as register VENC_DVI_SETTING_MORE is no long valid, use VPU_HDMI_SETTING instead.
     //Wr(VENC_DVI_SETTING_MORE, (TX_INPUT_COLOR_FORMAT==0)? 1 : 0); // [0] 0=Map data pins from Venc to Hdmi Tx as CrYCb mode;
     switch(param->VIC) {
+    case HDMI_3840x1080p120hz:
+    case HDMI_3840x1080p100hz:
+    case HDMI_3840x540p240hz:
+    case HDMI_3840x540p200hz:
+        aml_write_reg32(P_VPU_HDMI_SETTING, 0x8e);
+        break;
     case HDMI_480i60:
     case HDMI_480i60_16x9:
     case HDMI_576i50:
@@ -1644,6 +1716,22 @@ static void hdmitx_set_pll(hdmitx_dev_t *hdev)
                 set_vmode_clk(VMODE_4K2K_50HZ);
             };
             break;
+        case HDMI_3840x1080p100hz:
+        case HDMI_3840x1080p120hz:
+            if (hdev->mode420 == 1) {
+                set_vmode_clk(VMODE_4K1K_100HZ_Y420);
+            } else {
+                set_vmode_clk(VMODE_4K1K_100HZ);
+            }
+            break;
+        case HDMI_3840x540p200hz:
+        case HDMI_3840x540p240hz:
+            if (hdev->mode420 == 1) {
+                set_vmode_clk(VMODE_4K05K_200HZ_Y420);
+            } else {
+                set_vmode_clk(VMODE_4K05K_200HZ);
+            }
+            break;
         default:
             break;
     }
@@ -1659,6 +1747,10 @@ static void hdmitx_set_phy(hdmitx_dev_t* hdmitx_device)
     case HDMI_3840x2160p60_16x9:
     case HDMI_4096x2160p50_256x135:
     case HDMI_4096x2160p60_256x135:
+    case HDMI_3840x1080p100hz:
+    case HDMI_3840x1080p120hz:
+    case HDMI_3840x540p200hz:
+    case HDMI_3840x540p240hz:
         aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x33b544ab);
         aml_write_reg32(P_HHI_HDMI_PHY_CNTL3, 0x303e0003);
         if(hdmitx_device->mode420 == 1){

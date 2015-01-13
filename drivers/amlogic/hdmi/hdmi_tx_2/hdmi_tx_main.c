@@ -416,6 +416,10 @@ static int set_disp_mode_auto(void)
         // Currently, only below formats support 420 mode
         case HDMI_3840x2160p60_16x9:
         case HDMI_3840x2160p50_16x9:
+        case HDMI_3840x1080p100hz:
+        case HDMI_3840x1080p120hz:
+        case HDMI_3840x540p200hz:
+        case HDMI_3840x540p240hz:
             printk("configure mode420, VIC = %d\n", hdmitx_device.cur_VIC);
             hdmitx_device.HWOp.CntlMisc(&hdmitx_device, MISC_CONF_MODE420, hdmitx_device.mode420);
             break;
@@ -722,6 +726,10 @@ const char* disp_mode_t[]={
     "4k2k25hz",
     "4k2k24hz",
     "4k2ksmpte",
+    "4k1k120hz",
+    "4k1k100hz",
+    "4k05k240hz",
+    "4k05k200hz",
     NULL
 };
 

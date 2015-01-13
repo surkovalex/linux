@@ -1311,6 +1311,14 @@ static dispmode_vic_t dispmode_VIC_tab[]=
     {"4k2k5g",    HDMI_3840x2160p50_16x9},
     {"4k2k60hz420", HDMI_3840x2160p60_16x9},
     {"4k2k60hz",  HDMI_3840x2160p60_16x9},
+    {"4k1k100hz", HDMI_3840x1080p100hz},
+    {"4k1k100hz420", HDMI_3840x1080p100hz},
+    {"4k1k120hz", HDMI_3840x1080p120hz},
+    {"4k1k120hz420", HDMI_3840x1080p120hz},
+    {"4k05k200hz", HDMI_3840x540p200hz},
+    {"4k05k200hz420", HDMI_3840x540p200hz},
+    {"4k05k240hz", HDMI_3840x540p240hz},
+    {"4k05k240hz420", HDMI_3840x540p240hz},
 };
 
 int hdmitx_edid_VIC_support(HDMI_Video_Codes_t vic)

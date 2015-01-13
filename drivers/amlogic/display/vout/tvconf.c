@@ -129,6 +129,14 @@ static struct vmode_tvmode_tab_t mode_tab[] = {
     {TVMODE_4K2K_29HZ, VMODE_4K2K_29HZ}, // for 4k2k 29.97hz
     {TVMODE_4K2K_23HZ, VMODE_4K2K_23HZ}, // for 4k2k 23.97hz
 #endif
+    {TVMODE_4K1K_100HZ, VMODE_4K1K_100HZ},
+    {TVMODE_4K1K_100HZ_Y420, VMODE_4K1K_100HZ_Y420},
+    {TVMODE_4K1K_120HZ, VMODE_4K1K_120HZ},
+    {TVMODE_4K1K_120HZ_Y420, VMODE_4K1K_120HZ_Y420},
+    {TVMODE_4K05K_200HZ, VMODE_4K05K_200HZ},
+    {TVMODE_4K05K_200HZ_Y420, VMODE_4K05K_200HZ_Y420},
+    {TVMODE_4K05K_240HZ, VMODE_4K05K_240HZ},
+    {TVMODE_4K05K_240HZ_Y420, VMODE_4K05K_240HZ_Y420},
 };
 
 static const tvmode_t vmode_tvmode_map(vmode_t mode)
@@ -420,7 +428,7 @@ static const vinfo_t tv_info[] =
 #endif
     { /* VMODE_4K2K_30HZ */
         .name              = "4k2k30hz",
-        .mode              = TVMODE_4K2K_30HZ,
+        .mode              = VMODE_4K2K_30HZ,
         .width             = 3840,
         .height            = 2160,
         .field_height      = 2160,
@@ -433,7 +441,7 @@ static const vinfo_t tv_info[] =
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 	{ /* VMODE_4K2K_29HZ */
 		.name			   = "4k2k29hz",
-		.mode			   = TVMODE_4K2K_29HZ,
+		.mode			   = VMODE_4K2K_29HZ,
 		.width			   = 3840,
 		.height 		   = 2160,
 		.field_height	   = 2160,
@@ -446,7 +454,7 @@ static const vinfo_t tv_info[] =
 #endif
     { /* VMODE_4K2K_25HZ */
         .name              = "4k2k25hz",
-        .mode              = TVMODE_4K2K_25HZ,
+        .mode              = VMODE_4K2K_25HZ,
         .width             = 3840,
         .height            = 2160,
         .field_height      = 2160,
@@ -458,7 +466,7 @@ static const vinfo_t tv_info[] =
     },
     { /* VMODE_4K2K_24HZ */
         .name              = "4k2k24hz",
-        .mode              = TVMODE_4K2K_24HZ,
+        .mode              = VMODE_4K2K_24HZ,
         .width             = 3840,
         .height            = 2160,
         .field_height      = 2160,
@@ -471,7 +479,7 @@ static const vinfo_t tv_info[] =
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 	{ /* VMODE_4K2K_23HZ */
 		.name			   = "4k2k23hz",
-		.mode			   = TVMODE_4K2K_23HZ,
+		.mode			   = VMODE_4K2K_23HZ,
 		.width			   = 3840,
 		.height 		   = 2160,
 		.field_height	   = 2160,
@@ -484,7 +492,7 @@ static const vinfo_t tv_info[] =
 #endif
     { /* VMODE_4K2K_SMPTE */
         .name              = "4k2ksmpte",
-        .mode              = TVMODE_4K2K_SMPTE,
+        .mode              = VMODE_4K2K_SMPTE,
         .width             = 4096,
         .height            = 2160,
         .field_height      = 2160,
@@ -496,7 +504,7 @@ static const vinfo_t tv_info[] =
     },
     { /* VMODE_4K2K_FAKE_5G */
         .name              = "4k2k5g",
-        .mode              = TVMODE_4K2K_FAKE_5G,
+        .mode              = VMODE_4K2K_FAKE_5G,
         .width             = 3840,
         .height            = 2160,
         .field_height      = 2160,
@@ -508,7 +516,7 @@ static const vinfo_t tv_info[] =
     },
     { /* VMODE_4K2K_60HZ_Y420 */
         .name              = "4k2k60hz420",
-        .mode              = TVMODE_4K2K_60HZ_Y420,
+        .mode              = VMODE_4K2K_60HZ_Y420,
         .width             = 3840,
         .height            = 2160,
         .field_height      = 2160,
@@ -520,7 +528,7 @@ static const vinfo_t tv_info[] =
     },
     { /* VMODE_4K2K_60HZ */
         .name              = "4k2k60hz",
-        .mode              = TVMODE_4K2K_60HZ,
+        .mode              = VMODE_4K2K_60HZ,
         .width             = 3840,
         .height            = 2160,
         .field_height      = 2160,
@@ -530,15 +538,99 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 594000000,
     },
-    { /* VMODE_4K2K_50HZ_Y420 */
-        .name              = "4k2k50hz420",
-        .mode              = TVMODE_4K2K_50HZ_Y420,
+    { /* VMODE_4K1K_100HZ_Y420 */
+        .name              = "4k1k100hz420",
+        .mode              = VMODE_4K1K_100HZ_Y420,
         .width             = 3840,
-        .height            = 2160,
-        .field_height      = 2160,
-        .aspect_ratio_num  = 16,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 32,
         .aspect_ratio_den  = 9,
-        .sync_duration_num = 50,
+        .sync_duration_num = 100,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K1K_100HZ */
+        .name              = "4k1k100hz",
+        .mode              = VMODE_4K1K_100HZ,
+        .width             = 3840,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 32,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 100,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K1K_120HZ_Y420 */
+        .name              = "4k1k120hz420",
+        .mode              = VMODE_4K1K_120HZ_Y420,
+        .width             = 3840,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 32,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 120,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K1K_120HZ */
+        .name              = "4k1k120hz",
+        .mode              = VMODE_4K1K_120HZ,
+        .width             = 3840,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 32,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 120,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K05K_200HZ_Y420 */
+        .name              = "4k05k200hz420",
+        .mode              = VMODE_4K05K_200HZ_Y420,
+        .width             = 3840,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 64,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 200,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K05K_200HZ */
+        .name              = "4k05k200hz",
+        .mode              = VMODE_4K05K_200HZ,
+        .width             = 3840,
+        .height            = 540,
+        .field_height      = 540,
+        .aspect_ratio_num  = 64,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 200,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K05K_240HZ_Y420 */
+        .name              = "4k05k240hz420",
+        .mode              = VMODE_4K05K_240HZ_Y420,
+        .width             = 3840,
+        .height            = 540,
+        .field_height      = 540,
+        .aspect_ratio_num  = 64,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 240,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
+    { /* VMODE_4K05K_240HZ */
+        .name              = "4k05k240hz",
+        .mode              = VMODE_4K05K_240HZ,
+        .width             = 3840,
+        .height            = 1080,
+        .field_height      = 1080,
+        .aspect_ratio_num  = 64,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 240,
         .sync_duration_den = 1,
         .video_clk         = 594000000,
     },

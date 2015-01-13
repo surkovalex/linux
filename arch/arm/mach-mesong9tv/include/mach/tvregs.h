@@ -1179,6 +1179,110 @@ static const reg_t tvregs_xga_1024x768[] = {
 
 };
 
+static const reg_t tvregs_3840x1080p120hz[] = {
+    {P_VENC_VDAC_SETTING,          0xff,  },
+
+    {P_ENCP_VIDEO_EN,              0,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+
+    {P_ENCP_VIDEO_MODE, 0x4040,},
+    {P_ENCP_VIDEO_MODE_ADV, 0x18,},
+    {P_ENCP_VIDEO_MAX_PXCNT, 0x112F,},
+    {P_ENCP_VIDEO_MAX_LNCNT, 0x464,},
+    {P_ENCP_VIDEO_HAVON_BEGIN, 0x180,},
+    {P_ENCP_VIDEO_HAVON_END, 0x107F,},
+    {P_ENCP_VIDEO_VAVON_BLINE, 0x29,},
+    {P_ENCP_VIDEO_VAVON_ELINE, 0x460,},
+    {P_ENCP_VIDEO_HSO_BEGIN, 0x0,},
+    {P_ENCP_VIDEO_HSO_END, 0x58,},
+    {P_ENCP_VIDEO_VSO_BEGIN, 0x1E,},
+    {P_ENCP_VIDEO_VSO_END, 0x32,},
+    {P_ENCP_VIDEO_VSO_BLINE, 0x0,},
+    {P_ENCP_VIDEO_VSO_ELINE, 0x5,},
+
+    {P_ENCP_VIDEO_EN,              1,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+    {MREG_END_MARKER,            0      }
+};
+
+static const reg_t tvregs_3840x1080p100hz[] = {
+    {P_VENC_VDAC_SETTING,          0xff,  },
+
+    {P_ENCP_VIDEO_EN,              0,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+
+    {P_ENCP_VIDEO_MODE, 0x4040,},
+    {P_ENCP_VIDEO_MODE_ADV, 0x18,},
+    {P_ENCP_VIDEO_MAX_PXCNT, 0x149F,},
+    {P_ENCP_VIDEO_MAX_LNCNT, 0x464,},
+    {P_ENCP_VIDEO_HAVON_BEGIN, 0x180,},
+    {P_ENCP_VIDEO_HAVON_END, 0x107F,},
+    {P_ENCP_VIDEO_VAVON_BLINE, 0x29,},
+    {P_ENCP_VIDEO_VAVON_ELINE, 0x460,},
+    {P_ENCP_VIDEO_HSO_BEGIN, 0x0,},
+    {P_ENCP_VIDEO_HSO_END, 0x58,},
+    {P_ENCP_VIDEO_VSO_BEGIN, 0x1E,},
+    {P_ENCP_VIDEO_VSO_END, 0x32,},
+    {P_ENCP_VIDEO_VSO_BLINE, 0x0,},
+    {P_ENCP_VIDEO_VSO_ELINE, 0x5,},
+
+    {P_ENCP_VIDEO_EN,              1,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+    {MREG_END_MARKER,            0      }
+};
+
+static const reg_t tvregs_3840x540p240hz[] = {
+    {P_VENC_VDAC_SETTING,          0xff,  },
+
+    {P_ENCP_VIDEO_EN,              0,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+
+    {P_ENCP_VIDEO_MODE, 0x4040,},
+    {P_ENCP_VIDEO_MODE_ADV, 0x18,},
+    {P_ENCP_VIDEO_MAX_PXCNT, 0x112F,},
+    {P_ENCP_VIDEO_MAX_LNCNT, 0x231,},
+    {P_ENCP_VIDEO_HAVON_BEGIN, 0x180,},
+    {P_ENCP_VIDEO_HAVON_END, 0x107F,},
+    {P_ENCP_VIDEO_VAVON_BLINE, 0x14,},
+    {P_ENCP_VIDEO_VAVON_ELINE, 0x22F,},
+    {P_ENCP_VIDEO_HSO_BEGIN, 0x0,},
+    {P_ENCP_VIDEO_HSO_END, 0x58,},
+    {P_ENCP_VIDEO_VSO_BEGIN, 0x1E,},
+    {P_ENCP_VIDEO_VSO_END, 0x32,},
+    {P_ENCP_VIDEO_VSO_BLINE, 0x0,},
+    {P_ENCP_VIDEO_VSO_ELINE, 0x2,},
+
+    {P_ENCP_VIDEO_EN,              1,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+    {MREG_END_MARKER,            0      }
+};
+
+static const reg_t tvregs_3840x540p200hz[] = {
+    {P_VENC_VDAC_SETTING,          0xff,  },
+
+    {P_ENCP_VIDEO_EN,              0,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+
+    {P_ENCP_VIDEO_MODE, 0x4040,},
+    {P_ENCP_VIDEO_MODE_ADV, 0x18,},
+    {P_ENCP_VIDEO_MAX_PXCNT, 0x149F,},
+    {P_ENCP_VIDEO_MAX_LNCNT, 0x231,},
+    {P_ENCP_VIDEO_HAVON_BEGIN, 0x180,},
+    {P_ENCP_VIDEO_HAVON_END, 0x107F,},
+    {P_ENCP_VIDEO_VAVON_BLINE, 0x14,},
+    {P_ENCP_VIDEO_VAVON_ELINE, 0x22F,},
+    {P_ENCP_VIDEO_HSO_BEGIN, 0x0,},
+    {P_ENCP_VIDEO_HSO_END, 0x58,},
+    {P_ENCP_VIDEO_VSO_BEGIN, 0x1E,},
+    {P_ENCP_VIDEO_VSO_END, 0x32,},
+    {P_ENCP_VIDEO_VSO_BLINE, 0x0,},
+    {P_ENCP_VIDEO_VSO_ELINE, 0x2,},
+
+    {P_ENCP_VIDEO_EN,              1,     },
+    {P_ENCI_VIDEO_EN,              0,     },
+    {MREG_END_MARKER,            0      }
+};
+
 // Using tvmode as index
 static struct tvregs_set_t tvregsTab[] = {
     {TVMODE_480I, tvregs_480i,        },
@@ -1206,6 +1310,14 @@ static struct tvregs_set_t tvregsTab[] = {
     {TVMODE_4K2K_60HZ, tvregs_4k2k_30hz,   },      // 4k2k60hz
     {TVMODE_4K2K_60HZ_Y420, tvregs_4k2k_30hz,   },      // 4k2k60hz YCbCr420 mode
     {TVMODE_4K2K_50HZ_Y420, tvregs_4k2k_25hz, },
+    {TVMODE_4K1K_120HZ, tvregs_3840x1080p120hz},
+    {TVMODE_4K1K_120HZ_Y420, tvregs_3840x1080p120hz},
+    {TVMODE_4K1K_100HZ, tvregs_3840x1080p100hz},
+    {TVMODE_4K1K_100HZ_Y420, tvregs_3840x1080p100hz},
+    {TVMODE_4K05K_240HZ, tvregs_3840x540p240hz},
+    {TVMODE_4K05K_240HZ_Y420, tvregs_3840x540p240hz},
+    {TVMODE_4K05K_200HZ, tvregs_3840x540p200hz},
+    {TVMODE_4K05K_200HZ_Y420, tvregs_3840x540p200hz},
     {TVMODE_VGA, tvregs_vga_640x480, },
     {TVMODE_SVGA, tvregs_svga_800x600,},
     {TVMODE_XGA, tvregs_xga_1024x768,},
@@ -1237,6 +1349,14 @@ static const tvinfo_t tvinfoTab[] = {
     {.tvmode = TVMODE_4K2K_60HZ_Y420, .xres = 3840, .yres = 2160, .id = "4k2k60hz420"},
     {.tvmode = TVMODE_4K2K_50HZ_Y420, .xres = 3840, .yres = 2160, .id = "4k2k50hz420"},
     {.tvmode = TVMODE_4K2K_60HZ, .xres = 3840, .yres = 2160, .id = "4k2k60hz"},
+    {.tvmode = TVMODE_4K1K_100HZ, .xres = 3840, .yres = 1080, .id = "4k1k100hz"},
+    {.tvmode = TVMODE_4K1K_100HZ_Y420, .xres = 3840, .yres = 1080, .id = "4k1k100hz420"},
+    {.tvmode = TVMODE_4K1K_120HZ, .xres = 3840, .yres = 1080, .id = "4k1k120hz"},
+    {.tvmode = TVMODE_4K1K_120HZ_Y420, .xres = 3840, .yres = 1080, .id = "4k1k120hz420"},
+    {.tvmode = TVMODE_4K05K_200HZ, .xres = 3840, .yres = 540, .id = "4k05k200hz"},
+    {.tvmode = TVMODE_4K05K_200HZ_Y420, .xres = 3840, .yres = 540, .id = "4k05k200hz420"},
+    {.tvmode = TVMODE_4K05K_240HZ, .xres = 3840, .yres = 540, .id = "4k05k240hz"},
+    {.tvmode = TVMODE_4K05K_240HZ_Y420, .xres = 3840, .yres = 540, .id = "4k05k240hz420"},
     {.tvmode = TVMODE_VGA, .xres = 640, .yres = 480, .id = "vga"},
     {.tvmode = TVMODE_SVGA, .xres = 800, .yres = 600, .id = "svga"},
     {.tvmode = TVMODE_XGA, .xres = 1024, .yres = 768, .id = "xga"},
