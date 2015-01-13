@@ -116,6 +116,10 @@ static DEFINE_MUTEX(vh264_mutex);
 
 #define INCPTR(p) ptr_atomic_wrap_inc(&p)
 
+#define SLICE_TYPE_I 2
+#define SLICE_TYPE_P 5
+#define SLICE_TYPE_B 6
+
 typedef struct {
     unsigned int y_addr;
     unsigned int u_addr;
@@ -989,7 +993,7 @@ static void vh264_isr(void)
     } else if ((cpu_cmd & 0xff) == 2) {
         int frame_mb_only, pic_struct_present, pic_struct, prog_frame, poc_sel, idr_flag, eos, error;
         int i, status, num_frame, b_offset;
-        int current_error_count;
+        int current_error_count, slice_type;
 
         vh264_running = 1;
         vh264_no_disp_count = 0;
@@ -1007,6 +1011,7 @@ static void vh264_isr(void)
             status = READ_VREG(AV_SCRATCH_1 + i);
             buffer_index = status & 0x1f;
             error = status & 0x200;
+            slice_type = (READ_VREG(AV_SCRATCH_H) >> (i*4)) & 0xf;
 
             if ((error_recovery_mode_use & 2) && error) {
                 check_pts_discontinue = true;
@@ -1209,7 +1214,7 @@ static void vh264_isr(void)
                 pts_valid &&
                 h264_first_valid_pts_ready && 
                 (!pts_discontinue)) {
-                pts_valid = (idr_flag) ? 1 : 0;
+                pts_valid = (slice_type == SLICE_TYPE_I) ? 1 : 0;
             }
 
             if (!h264_first_valid_pts_ready && pts_valid) {
