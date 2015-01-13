@@ -2309,8 +2309,9 @@ static unsigned char is_bypass(vframe_t *vf_in)
 #endif
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 /*prot is conflict with di post*/
-    if(di_pre_stru.orientation)
-	return 1;
+	if(vf_in && vf_in->video_angle){
+	    return 1;
+	}
 #endif
     if((di_vscale_skip_enable & 0x4)&& vf_in){
 	di_vscale_skip_count = get_current_vscale_skip_count(vf_in);
