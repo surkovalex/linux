@@ -1038,7 +1038,9 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 	int current_order;
 	struct page *page;
 	int migratetype, i;
+	int flags = start_migratetype & __GFP_BDEV;
 
+	start_migratetype &= (~__GFP_BDEV);
 	/* Find the largest possible block of pages in the other list */
 	for (current_order = MAX_ORDER-1; current_order >= order;
 						--current_order) {
@@ -1048,7 +1050,8 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 			/* MIGRATE_RESERVE handled later if necessary */
 			if (migratetype == MIGRATE_RESERVE)
 				break;
-
+			if(flags && migratetype == MIGRATE_CMA)
+				continue;
 			area = &(zone->free_area[current_order]);
 			if (list_empty(&area->free_list[migratetype]))
 				continue;
@@ -1121,6 +1124,7 @@ static struct page *__rmqueue(struct zone *zone, unsigned int order,
 {
 	struct page *page;
 #ifdef CONFIG_CMA
+	int ori_migratetype = migratetype;
 	int i = 0;
 	int tmp_migratetype = MIGRATE_RESERVE;
 	int flags = migratetype & __GFP_BDEV;
@@ -1128,16 +1132,14 @@ static struct page *__rmqueue(struct zone *zone, unsigned int order,
 
 #ifdef CONFIG_CMA
 	if(flags){
-		migratetype &= ~__GFP_BDEV;
+		ori_migratetype &= ~__GFP_BDEV;
 	}
-	if(migratetype == MIGRATE_MOVABLE){
+	if(ori_migratetype == MIGRATE_MOVABLE){
 		for (i = 0;; i++) {
-			tmp_migratetype = fallbacks[migratetype][i];
+			tmp_migratetype = fallbacks[ori_migratetype][i];
 			if (tmp_migratetype == MIGRATE_CMA){
-				if(flags){
-					fallbacks[migratetype][i] = MIGRATE_RESERVE;
-					goto retry_reserve;
-				}
+				if(flags)
+					tmp_migratetype = MIGRATE_RESERVE;
 				break;
 			}
 			if (tmp_migratetype == MIGRATE_RESERVE)
@@ -1145,16 +1147,17 @@ static struct page *__rmqueue(struct zone *zone, unsigned int order,
 		}
 		if (tmp_migratetype == MIGRATE_CMA){
 			page = __rmqueue_smallest(zone, order, MIGRATE_CMA);
-			if(page)
+			if(page){
+				ori_migratetype = MIGRATE_CMA;
 				goto alloc_page_success;
+			}
 		}
-
 	}
 #endif
 retry_reserve:
-	page = __rmqueue_smallest(zone, order, migratetype);
+	page = __rmqueue_smallest(zone, order, ori_migratetype);
 
-	if (unlikely(!page) && migratetype != MIGRATE_RESERVE) {
+	if (unlikely(!page) && ori_migratetype != MIGRATE_RESERVE) {
 		page = __rmqueue_fallback(zone, order, migratetype);
 
 		/*
@@ -1163,17 +1166,14 @@ retry_reserve:
 		 * and we want just one call site
 		 */
 		if (!page) {
-			migratetype = MIGRATE_RESERVE;
+			ori_migratetype = MIGRATE_RESERVE;
 			goto retry_reserve;
 		}
 	}
 #ifdef CONFIG_CMA
 alloc_page_success:
-	if(flags && (migratetype == MIGRATE_MOVABLE) && (tmp_migratetype == MIGRATE_CMA)){
-		fallbacks[migratetype][i] = MIGRATE_CMA;
-	}
 #endif
-	trace_mm_page_alloc_zone_locked(page, order, migratetype);
+	trace_mm_page_alloc_zone_locked(page, order, ori_migratetype);
 	return page;
 }
 
@@ -1585,6 +1585,8 @@ again:
 				spin_unlock(&zone->lock);
 				if (!page)
 					goto failed;
+				__mod_zone_freepage_state(zone, -(1 << order),
+							  get_pageblock_migratetype(page));
 				goto alloc_sucess;
 			}
 		}
