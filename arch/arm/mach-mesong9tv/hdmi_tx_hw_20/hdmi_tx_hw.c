@@ -2193,11 +2193,11 @@ static int hdmitx_cntl(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned argv)
     }
     else if(cmd == HDMITX_EARLY_SUSPEND_RESUME_CNTL) {
         if(argv == HDMITX_EARLY_SUSPEND) {
-            //aml_set_reg32_bits(P_HHI_VID_PLL_CNTL, 0, 30, 1);
+            aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 0, 30, 1);
             hdmi_phy_suspend();
         }
         if(argv == HDMITX_LATE_RESUME) {
-            aml_set_reg32_bits(P_HHI_VID_PLL_CNTL, 1, 30, 1);
+            aml_set_reg32_bits(P_HHI_HDMI_PLL_CNTL, 1, 30, 1);
             //hdmi_phy_wakeup();  	// no need
         }
         return 0;
@@ -3060,13 +3060,10 @@ typedef struct
     unsigned long val_save;
 }hdmi_phy_t;
 
-static unsigned int hdmi_phy_save = 0x08930e9b;     // Default setting
-
 static void hdmi_phy_suspend(void)
 {
-    hdmi_phy_save = aml_read_reg32(P_HHI_HDMI_PHY_CNTL0);
-    aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x08418d00);
-    //hdmi_print(INF, SYS "phy suspend\n");
+    aml_write_reg32(P_HHI_HDMI_PHY_CNTL0, 0x00350498);
+    aml_write_reg32(P_HHI_HDMI_PHY_CNTL3, 0x00000078);
 }
 
 static void hdmi_phy_wakeup(hdmitx_dev_t* hdmitx_device)
