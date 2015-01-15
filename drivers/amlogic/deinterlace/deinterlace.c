@@ -1660,6 +1660,7 @@ typedef struct{
     int pre_de_irq_timeout_count;
     int pre_throw_flag;
     int bad_frame_throw_count;
+    bool force_interlace;
 }di_pre_stru_t;
 static di_pre_stru_t di_pre_stru;
 
@@ -1690,7 +1691,8 @@ static void dump_di_pre_stru(void)
 #ifdef DET3D
     printk("vframe_interleave_flag = %d\n", di_pre_stru.vframe_interleave_flag);
 #endif
-    printk("left_right 		   = %d\n", di_pre_stru.left_right);
+    printk("left_right 		 = %d\n", di_pre_stru.left_right);
+    printk("force_interlace        = %s\n",di_pre_stru.force_interlace?"true":"false");
 }
 
 typedef struct{
@@ -2231,7 +2233,8 @@ static unsigned char is_source_change(vframe_t* vframe)
     	((di_pre_stru.cur_inp_type&VIDTYPE_VIU_FIELD)!=(vframe->type&VIDTYPE_VIU_FIELD))
     	){
     	/* just scan mode changed */
-    	pr_info("DI I<->P.\n");
+    	if(!di_pre_stru.force_interlace)
+    	    pr_info("DI I<->P.\n");
     	return 2;
     }
     return 0;
@@ -4055,6 +4058,8 @@ static unsigned char pre_de_buf_config(void)
         else{
             /* check if top/bot interleaved */
             if(di_pre_stru.cur_prog_flag == 0){
+            	if(change_type == 2)//source is i interleaves p fields
+            	    di_pre_stru.force_interlace = true;
                 if((di_pre_stru.cur_inp_type & VIDTYPE_TYPEMASK) ==
                     (di_buf->vframe->type & VIDTYPE_TYPEMASK)){
 #ifdef CHECK_VDIN_BUF_ERROR
@@ -4070,15 +4075,6 @@ static unsigned char pre_de_buf_config(void)
                     if(skip_wrong_field && is_from_vdin(di_buf->vframe)){
                         recycle_vframe_type_pre(di_buf);
                         return 0;
-                    }
-                }
-                /* process p fields in i source as interlace*/
-                if((di_buf->vframe->type & VIDTYPE_TYPEMASK) == VIDTYPE_PROGRESSIVE){
-               	    if((di_pre_stru.cur_inp_type & VIDTYPE_TYPEMASK) == VIDTYPE_INTERLACE_TOP){
-                        di_buf->vframe->type|=VIDTYPE_INTERLACE_BOTTOM;
-                }
-                    else{
-                        di_buf->vframe->type|=VIDTYPE_INTERLACE_TOP;
                     }
                 }
             }
@@ -4182,15 +4178,26 @@ static unsigned char pre_de_buf_config(void)
                 else{
                     //n
                     di_buf->post_proc_flag = 0;
-                    if(prog_proc_config & 0x40)
+                    if((prog_proc_config&0x40) || di_pre_stru.force_interlace){
                     	di_buf->post_proc_flag = 1;
-                    di_pre_stru.di_inp_buf = di_buf;
+                    }
                     if(di_pre_stru.prog_proc_type == 0){
-                        di_pre_stru.process_count = 1;
+                      	if(change_type == 2){
+               	            if((di_pre_stru.cur_inp_type & VIDTYPE_TYPEMASK) == VIDTYPE_INTERLACE_TOP){
+                                di_pre_stru.process_count = 0;
+                            }
+                            else{
+                                di_pre_stru.process_count = 1;
+                            }
+                        }else{
+                            di_pre_stru.process_count = 1;
+                        }
                     }
                     else{
                         di_pre_stru.process_count = 0;
                     }
+                    
+                    di_pre_stru.di_inp_buf = di_buf;
 #ifdef DI_DEBUG
                     di_print("%s: %s[%d] => di_inp_buf, process_count %d\n",
                         __func__, vframe_type_name[di_buf->type], di_buf->index, di_pre_stru.process_count);
