@@ -105,7 +105,6 @@ static int music_gain = 128;
 static int audio_out_mode = 0;
 static int audio_out_read_enable = 0;
 int amaudio2_enable = 0;
-
 static irqreturn_t i2s_out_callback(int irq, void* data);
 static unsigned get_i2s_out_size(void);
 static unsigned get_i2s_out_ptr(void);
@@ -717,6 +716,15 @@ static ssize_t store_audio_read_enable(struct class* class, struct class_attribu
   	return count;
 }
 
+int set_i2s_iec958_samesource(int enable){
+    if(enable == 0){
+        WRITE_MPEG_REG_BITS(AIU_I2S_MISC, 0, 3, 1);
+    }else if (enable == 1){
+        WRITE_MPEG_REG_BITS(AIU_I2S_MISC, 1, 3, 1);
+    }
+    return 0;
+}
+
 static ssize_t show_aml_amaudio2_enable(struct class* class, struct class_attribute* attr,
     char* buf)
 {
@@ -729,9 +737,11 @@ static ssize_t store_aml_amaudio2_enable(struct class* class, struct class_attri
 	if(buf[0] == '0'){
 		printk(KERN_INFO "amaudio2 is disable!\n");
 		amaudio2_enable = 0;
+		set_i2s_iec958_samesource(0);
 	}else if(buf[0] == '1'){
 		printk(KERN_INFO "amaudio2 is enable!\n");
 		amaudio2_enable = 1;
+		set_i2s_iec958_samesource(1);
 	}else{
 		printk(KERN_INFO "Invalid argument!\n");
 	}

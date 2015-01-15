@@ -37,12 +37,13 @@ static int i2s_pos_sync = 0;
 #define ALSA_DEBUG(fmt,args...) 
 #define ALSA_TRACE()   
 #endif
-
 extern int amaudio2_enable;
+extern int set_i2s_iec958_samesource(int enable);
+
 static int i2sbuf[32+16];
 static void  aml_i2s_play(void)
 {
-        audio_util_set_dac_i2s_format(AUDIO_ALGOUT_DAC_FORMAT_DSP); 	
+	audio_util_set_dac_i2s_format(AUDIO_ALGOUT_DAC_FORMAT_DSP);
 	audio_set_i2s_mode(AIU_I2S_MODE_PCM16);
 	memset(i2sbuf,0,sizeof(i2sbuf));	
 	audio_set_aiubuf((virt_to_phys(i2sbuf)+63)&(~63),128,2);
@@ -193,6 +194,7 @@ static int aml_dai_i2s_prepare(struct snd_pcm_substream *substream,
         aml_hw_i2s_init(runtime);
         if(amaudio2_enable == 1){
             aml_hw_iec958_init(substream);
+            set_i2s_iec958_samesource(1);
         }
     }
     if(runtime->channels == 8){
@@ -217,6 +219,7 @@ static int aml_dai_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 				audio_out_i2s_enable(1);
 				if(amaudio2_enable == 1){
 					audio_hw_958_enable(1);
+					set_i2s_iec958_samesource(1);
 				}
 			}else{
 				audio_in_i2s_enable(1);
@@ -233,6 +236,7 @@ static int aml_dai_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 				audio_out_i2s_enable(0);
 				if(amaudio2_enable == 1){
 					audio_hw_958_enable(0);
+					set_i2s_iec958_samesource(0);
 				}
 			}else{
 				audio_in_i2s_enable(0);
