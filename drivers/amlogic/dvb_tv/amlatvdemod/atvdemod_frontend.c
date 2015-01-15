@@ -237,7 +237,13 @@ static int aml_atvdemod_get_atv_status(struct dvb_frontend *fe, atv_status_t *at
 		}
 
 		if(fe->ops.tuner_ops.get_status){
-			//fe->ops.tuner_ops.get_status(fe, &tuner_state);
+			fe->ops.tuner_ops.get_status(fe, &tuner_state);
+			if (tuner_state == FE_HAS_LOCK)
+				atv_status->atv_lock = 1;
+			else
+				atv_status->atv_lock = 0;
+		}
+		else if(fe->ops.tuner_ops.get_pll_status){
 			fe->ops.tuner_ops.get_pll_status(fe, &tuner_state);
 			if (tuner_state == FE_HAS_LOCK)
 				atv_status->atv_lock = 1;
