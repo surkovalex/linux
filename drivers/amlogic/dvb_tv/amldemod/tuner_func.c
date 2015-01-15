@@ -12,7 +12,10 @@ int tuner_get_ch_power(struct aml_fe_dev *adap)
 	struct dvb_frontend *dvbfe;
 	dvbfe = get_si2177_tuner();
 	if (dvbfe != NULL)
-		strength=dvbfe->ops.tuner_ops.get_strength(dvbfe);
+	{
+		if (dvbfe->ops.tuner_ops.get_strength)
+			strength = dvbfe->ops.tuner_ops.get_strength(dvbfe);
+	}
 #endif
 
 	 return strength;
