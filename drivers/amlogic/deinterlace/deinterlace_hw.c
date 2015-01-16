@@ -287,7 +287,7 @@ static void set_di_chan2_mif ( DI_MIF_t *mif, int urgent, int hold_line );
 static void set_di_if0_mif ( DI_MIF_t *mif, int urgent, int hold_line );
 
 static void di_nr_init(void);
-#ifdef NEW_DI_V2
+#if (defined NEW_DI_V2 && !defined NEW_DI_TV)
 static void ma_di_init(void)
 {
     //420->422 chrome difference is large motion is large,flick
@@ -2215,8 +2215,8 @@ static void di_nr_init()
     Wr(NR3_SUREMOT_CGAIN,0x22264014);
 #elif (defined NEW_DI_V1)
     Wr(DI_NR_CTRL0,0xc60c0804);
-    Wr(DI_NR_CTRL1,0xbf3f8080);
-    Wr(DI_NR_CTRL2,0x3f3f8080);
+    Wr(DI_NR_CTRL1,0x403e3c3a);
+    Wr(DI_NR_CTRL2,0x08010a01);
     Wr(DI_NR_CTRL3,0x001002d0);
     Wr(NR2_3DEN_MODE, 0x77);
     Wr(NR2_SNR_SAD_CFG, 0x134f);
