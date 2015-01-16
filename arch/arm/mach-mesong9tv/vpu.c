@@ -245,9 +245,11 @@ unsigned int get_vpu_clk(void)
 		case 3:
 			clk_source = 364300000;
 			break;
+#ifdef GP1_CLK_TEST
 		case 7:
 			clk_source = 696000000;
 			break;
+#endif
 		default:
 			clk_source = 0;
 			break;
@@ -259,6 +261,7 @@ unsigned int get_vpu_clk(void)
 	return clk_freq;
 }
 
+#ifdef GP1_CLK_TEST
 static int switch_gp1_pll(int flag)
 {
 	int cnt = 100;
@@ -290,18 +293,6 @@ static int switch_gp1_pll(int flag)
 	
 	return ret;
 }
-
-#ifndef CONFIG_SMP
-static int _adjust_vpu_clk(void *pvconf)
-{
-	unsigned int clk_level;
-	VPU_Conf_t *vconf=(VPU_Conf_t *)pvconf;
-
-	clk_level = vconf->clk_level;
-	aml_write_reg32(P_HHI_VPU_CLK_CNTL, ((1 << 8) | (vpu_clk_setting[clk_level][1] << 9) | (vpu_clk_setting[clk_level][2] << 0)));
-	
-	return 0;
-}
 #endif
 
 static int adjust_vpu_clk(unsigned int clk_level)
@@ -321,6 +312,7 @@ static int adjust_vpu_clk(unsigned int clk_level)
 	}
 	else
 		ret = switch_gp1_pll(0);
+#endif
 	
 	aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, vpu_clk_setting[0][1], 25, 3);
 	aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, vpu_clk_setting[0][2], 16, 7);
@@ -334,13 +326,6 @@ static int adjust_vpu_clk(unsigned int clk_level)
 	udelay(20);
 	aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, 0, 31, 1);
 	aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, 0, 24, 1);
-#else
-#ifdef CONFIG_SMP
-	try_exclu_cpu_exe(_adjust_vpu_clk, &vpu_config);
-#else
-	_adjust_vpu_clk(&vpu_config);
-#endif
-#endif
 	
 	if (((aml_read_reg32(P_HHI_VPU_CLK_CNTL) >> 8) & 1) == 0)
 		aml_set_reg32_bits(P_HHI_VPU_CLK_CNTL, 1, 8, 1);
