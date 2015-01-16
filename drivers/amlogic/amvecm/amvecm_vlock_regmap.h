@@ -16,7 +16,7 @@
 #include <linux/amlogic/cm.h>
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
 //TV_ENC_LCD720x480
-static am_regs_t vlock_enc={
+static am_regs_t vlock_enc_lcd720x480={
 	20,
 	{
 /* optimize */
@@ -43,33 +43,35 @@ static am_regs_t vlock_enc={
 {0}
 	}
 };
-static am_regs_t vlock_pll={
+//out:TV_ENC_LCD1920x1080P60;in:50hz pal av
+static am_regs_t vlock_pll_in50hz_out60hz={
 	20,
 	{
 /* optimize */
-{REG_TYPE_VCBUS,	0x3000,	    0xffffffff,	0xE0f50f1b  },
-{REG_TYPE_VCBUS, 0x3001,     0xffffffff, 0x4013c3c   },
-{REG_TYPE_VCBUS, 0x3002,     0xffffffff, 0x6000000   },
-{REG_TYPE_VCBUS, 0x3003,     0xffffffff, 0x40240280  },
-{REG_TYPE_VCBUS, 0x3004,     0xffffffff, 0x240280    },
-{REG_TYPE_VCBUS, 0x3005,     0xffffffff, 0x8020000   },
-{REG_TYPE_VCBUS, 0x3006,     0xffffffff, 0x0100000   },
-{REG_TYPE_VCBUS, 0x3007,     0xffffffff, 0x6000000   },
-{REG_TYPE_VCBUS, 0x3008,     0xffffffff, 0x6000000   },
-{REG_TYPE_VCBUS, 0x3009,     0xffffffff, 0x0100000   },
-{REG_TYPE_VCBUS, 0x300a,     0xffffffff, 0x8000000   },
-{REG_TYPE_VCBUS, 0x300b,     0xffffffff, 0x0100000   },
-{REG_TYPE_VCBUS, 0x300c,     0xffffffff, 0x0100000   },
-{REG_TYPE_VCBUS, 0x300d,     0xffffffff, 0x0000100   },
-{REG_TYPE_VCBUS, 0x3010,     0xffffffff, 0x20001000  },
-{REG_TYPE_VCBUS, 0x3016,     0xffffffff, 0x81eff     },
-{REG_TYPE_VCBUS, 0x3017,     0xffffffff, 0x01080     },
-{REG_TYPE_VCBUS, 0x301d,     0xffffffff, 0x30501080  },
-{REG_TYPE_VCBUS, 0x301e,     0xffffffff, 0x7	    },
-{REG_TYPE_VCBUS, 0x301f,     0xffffffff, 0x6000000   },
+{REG_TYPE_VCBUS, 0x3000,     0xffffffff, 0x04f10f1b   },
+{REG_TYPE_VCBUS, 0x3001,     0xffffffff, 0x04053c32   },
+{REG_TYPE_VCBUS, 0x3002,     0xffffffff, 0x06000000   },
+{REG_TYPE_VCBUS, 0x3003,     0xffffffff, 0x40210280   },
+{REG_TYPE_VCBUS, 0x3004,     0xffffffff, 0x00210280   },
+{REG_TYPE_VCBUS, 0x3005,     0xffffffff, 0x00080000   },
+{REG_TYPE_VCBUS, 0x3006,     0xffffffff, 0x00070000   },
+{REG_TYPE_VCBUS, 0x3007,     0xffffffff, 0x00000000   },
+{REG_TYPE_VCBUS, 0x3008,     0xffffffff, 0x00000000   },
+{REG_TYPE_VCBUS, 0x3009,     0xffffffff, 0x00100000   },
+{REG_TYPE_VCBUS, 0x300a,     0xffffffff, 0x00100000   },
+{REG_TYPE_VCBUS, 0x300b,     0xffffffff, 0x00100000   },
+{REG_TYPE_VCBUS, 0x300c,     0xffffffff, 0x00010000   },
+{REG_TYPE_VCBUS, 0x300d,     0xffffffff, 0x00004000   },
+{REG_TYPE_VCBUS, 0x3010,     0xffffffff, 0x20001000   },
+{REG_TYPE_VCBUS, 0x3016,     0xffffffff, 0x0003de00   },
+{REG_TYPE_VCBUS, 0x3017,     0xffffffff, 0x00001080   },
+{REG_TYPE_VCBUS, 0x301d,     0xffffffff, 0x30501080   },
+{REG_TYPE_VCBUS, 0x301e,     0xffffffff, 0x00000007   },
+{REG_TYPE_VCBUS, 0x301f,     0xffffffff, 0x06000000   },
 {0}
 	}
 };
+
 #endif
 
 #endif
