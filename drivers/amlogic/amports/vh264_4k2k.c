@@ -552,10 +552,10 @@ static int get_max_dec_frame_buf_size(int level_idc, int max_reference_frame_num
             size = 42393600;
         break;
         case 51:
+        case 52:
+        default:
             size = 70778880;
         break;
-        default:
-            break;
     }
 
     size /= pic_size;
