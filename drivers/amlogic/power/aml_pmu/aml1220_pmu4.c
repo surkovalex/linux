@@ -30,7 +30,7 @@ struct i2c_client *g_aml1220_client = NULL;
 
 unsigned int pmu4_analog_reg[15] = {0x00, 0x00, 0x00, 0x00, 0x00, //Reg   0x20 - 0x24
 	                                0x00, 0x00, 0x00, 0x00, 0x51, // Reg  0x25 - 0x29
-                                    0x42, 0x00, 0x42, 0x41, 0x02  //Reg   0x2a - 0x2e
+                                    0x42, 0x00, 0x42, 0x41, 0x02  //Reg   0x2a - 0x2e             
                                    };
 
 #define PMU4_ANALOG_REG_LEN ARRAY_SIZE(pmu4_analog_reg)
@@ -39,8 +39,6 @@ unsigned int pmu4_analog_reg[15] = {0x00, 0x00, 0x00, 0x00, 0x00, //Reg   0x20 -
 
 int aml1220_write(int32_t add, uint8_t val)
 {
-	return 0;
-	#if 0
     int ret;
     uint8_t buf[3] = {};
     struct i2c_client *pdev;
@@ -65,14 +63,11 @@ int aml1220_write(int32_t add, uint8_t val)
         return ret;
     }
     return 0;
-    #endif
 }
 EXPORT_SYMBOL_GPL(aml1220_write);
 
 int aml1220_write16(int32_t add, uint16_t val)
 {
-	return 0;
-	#if 0
     int ret;
     uint8_t buf[4] = {};
     struct i2c_client *pdev;
@@ -98,14 +93,11 @@ int aml1220_write16(int32_t add, uint16_t val)
         return ret;
     }
     return 0;
-    #endif
 }
 EXPORT_SYMBOL_GPL(aml1220_write16);
 
 int aml1220_read(int add, uint8_t *val)
 {
-	return 0;
-	#if 0
     int ret;
     uint8_t buf[2] = {};
     struct i2c_client *pdev;
@@ -135,14 +127,11 @@ int aml1220_read(int add, uint8_t *val)
         return ret;
     }
     return 0;
-    #endif
 }
 EXPORT_SYMBOL_GPL(aml1220_read);
 
 int aml1220_read16(int add, uint16_t *val)
 {
-	return 0;
-	#if 0
     int ret;
     uint8_t buf[2] = {};
     struct i2c_client *pdev;
@@ -156,13 +145,13 @@ int aml1220_read16(int add, uint16_t *val)
         {
             .addr  = AML1220_ADDR,
             .flags = I2C_M_RD,
-            .len   = 2,
+            .len   = 2, 
             .buf   = (uint8_t *)val,
         }
     };
 
     CHECK_DRIVER();
-    pdev = g_aml1220_client;
+    pdev = g_aml1220_client; 
 
     buf[0] = add & 0xff;
     buf[1] = (add >> 8) & 0x0f;
@@ -172,7 +161,6 @@ int aml1220_read16(int add, uint16_t *val)
         return ret;
     }
     return 0;
-    #endif
 }
 
 EXPORT_SYMBOL_GPL(aml1220_read16);
@@ -247,7 +235,7 @@ static ssize_t aml1220_pmu4_reg_write_file(struct file *file,
 	if (copy_from_user(buf, user_buf, buf_size))
 		return -EFAULT;
 	buf[buf_size] = 0;
-
+	
 	while (*start == ' ')
 		start++;
 
@@ -289,11 +277,11 @@ static const struct file_operations aml1220_pmu4_reg_fops = {
 #endif
 
 
-static void aml_pmu4_reg_init(unsigned int reg_base, unsigned int *val,
+static void aml_pmu4_reg_init(unsigned int reg_base, unsigned int *val, 
 	            unsigned int reg_len)
 {
 	unsigned int i = 0;
-
+	
 	for(i=0; i< reg_len; i++){
 		aml1220_write(reg_base + i, val[i]);
 	}
@@ -305,9 +293,9 @@ static int aml_pmu4_power_init(void)
 	printk("enter %s\n",__func__);
 
 	//pmu4 analog register init
-	aml_pmu4_reg_init(AML1220_ANALOG_ADDR, &pmu4_analog_reg[0],
+	aml_pmu4_reg_init(AML1220_ANALOG_ADDR, &pmu4_analog_reg[0], 
 		   PMU4_ANALOG_REG_LEN);
-
+	
 	return 0;
 
 }
@@ -339,7 +327,7 @@ static int aml_pmu4_i2c_remove(struct i2c_client *client)
 {
 	printk("enter %s\n",__func__);
 	kfree(i2c_get_clientdata(client));
-
+	
 	return 0;
 }
 

@@ -268,12 +268,5 @@ config AM_MXL683_FE
 	depends on AM_DVB
 	help
 		Select to enable MXL683 demod driver.
-
-config AM_R840
-	tristate "the R840 tuner driver"
-	default n
-	depends on AM_DVB
-	help
-		Select to enable R840 tuner driver.		
 endmenu
 

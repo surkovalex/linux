@@ -59,8 +59,7 @@ typedef enum{
 	AM_TUNER_FQ1216 = 3,
 	AM_TUNER_HTM = 4,
 	AM_TUNER_CTC703=5,
-	AM_TUNER_SI2177 = 6,
-	AM_TUNER_R840 = 7
+	AM_TUNER_SI2177 = 6
 }aml_tuner_type_t;
 
 typedef enum{
@@ -70,8 +69,7 @@ typedef enum{
 	AM_ATV_DEMOD_HTM = 4,
 	AM_ATV_DEMOD_CTC703 = 5,
 	AM_ATV_DEMOD_SI2177 =6,
-	AM_ATV_DEMOD_AML =7,
-	AM_ATV_DEMOD_R840 =8
+	AM_ATV_DEMOD_AML =7
 }aml_atv_demod_type_t;
 
 typedef enum{

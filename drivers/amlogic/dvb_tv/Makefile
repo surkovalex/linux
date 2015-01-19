@@ -50,8 +50,4 @@ ifneq ($(wildcard $(srctree)/../hardware/dvb/maxlinear/drivers/mxl683),)
 	obj-$(CONFIG_AM_MXL683_FE) += ../../../../hardware/dvb/maxlinear/drivers/mxl683/
 endif
 
-ifneq ($(wildcard $(srctree)/../hardware/dvb/rafael/drivers/r840),)
-	obj-$(CONFIG_AM_R840) += ../../../../hardware/dvb/rafael/drivers/r840/
-endif
-
 EXTRA_CFLAGS += -I.
