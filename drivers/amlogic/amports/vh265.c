@@ -127,9 +127,10 @@ static u32 error_system_watchdog_count;
 #define H265_DEBUG_HW_RESET               0x100000
 #define H265_DEBUG_LOAD_UCODE_FROM_FILE   0x200000
 #define H265_DEBUG_ERROR_TRIG             0x400000
+#define H265_DEBUG_NO_EOS_SEARCH_DONE     0x800000
 
 extern const u32 h265_ucode_v;
-const u32 h265_version = 2;
+const u32 h265_version = 201501191;
 static u32 debug = 0;
 #ifdef ERROR_HANDLE_DEBUG
 static u32 dbg_nal_skip_flag = 0;   //bit[0], skip vps; bit[1], skip sps; bit[2], skip pps
@@ -416,7 +417,10 @@ bit [3:2]: valid when bit1==0;
 2, auto skip nal before first  vps/sps/pps, and not decode until the first I slice (with slice address of 0)
 
 3, auto skip before first I slice (nal_type >=16 && nal_type<=21)
-bit [16:4] nal skip count (valid when bit0 == 1 (manual mode) )
+bit [15:4] nal skip count (valid when bit0 == 1 (manual mode) )
+bit [16]: for NAL_UNIT_EOS when bit0 is 0: 
+        0, send SEARCH_DONE to arm ;  1, do not send SEARCH_DONE to arm
+bit [31:20]: used by ucode for debug purpose
 */
 #define NAL_SEARCH_CTL		      HEVC_ASSIST_SCRATCH_I
 #define CUR_NAL_UNIT_TYPE       HEVC_ASSIST_SCRATCH_J
@@ -2660,6 +2664,44 @@ static int get_display_pic_num(hevc_stru_t* hevc)
     return num;
 }
 
+static void flush_output(hevc_stru_t* hevc, PIC_t* pic)
+{
+    PIC_t* pic_display;
+    if(pic){
+        /*PB skip control*/
+        if(pic->error_mark==0 && hevc->PB_skip_mode==1){
+            hevc->ignore_bufmgr_error|=0x1;  //start decoding after first I
+        }
+        if(hevc->ignore_bufmgr_error&1){
+            if(hevc->PB_skip_count_after_decoding>0){
+                hevc->PB_skip_count_after_decoding--;
+            }
+            else{
+                hevc->ignore_bufmgr_error|=0x2; //start displaying
+            }
+        }
+        /**/
+        pic->output_mark = 1;
+        pic->recon_mark = 1;
+    }
+    do{			
+        pic_display = output_pic(hevc, 1);
+    
+        if(pic_display){
+            pic_display->referenced = 0;
+            if((pic_display->error_mark && ((hevc->ignore_bufmgr_error&0x2)==0))
+                ||(debug&H265_DEBUG_DISPLAY_CUR_FRAME)||(debug&H265_DEBUG_NO_DISPLAY)){
+           			 pic_display->output_ready = 0;
+                 if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d ==> Debug mode or error, recycle it\n", pic_display->POC, pic_display->decode_idx);
+            }
+            else{
+                prepare_display_buf(hevc, pic_display);
+                if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d\n", pic_display->POC, pic_display->decode_idx);
+            }
+        }
+    }while(pic_display);
+}
+
 static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_param, int decode_pic_begin)
 {
     int i;
@@ -2669,9 +2711,9 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
     if(hevc->wait_buf == 0){
         hevc->m_temporalId = rpm_param->p.m_temporalId;
         hevc->m_nalUnitType = rpm_param->p.m_nalUnitType;
-        if(hevc->m_nalUnitType == NAL_UNIT_EOS){ 
-            hevc->m_pocRandomAccess = MAX_INT; //add to fix RAP_B_Bossen_1
-        }
+        //if(hevc->m_nalUnitType == NAL_UNIT_EOS){ 
+        //    hevc->m_pocRandomAccess = MAX_INT; //add to fix RAP_B_Bossen_1
+        //}
         hevc->misc_flag0 = rpm_param->p.misc_flag0;
         if(rpm_param->p.first_slice_segment_in_pic_flag==0){
             hevc->slice_segment_addr = rpm_param->p.slice_segment_address;
@@ -2856,7 +2898,6 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
             }
             else{ 
                 //if(hevc->iPrevPOC!=0){ /* flush */
-                    PIC_t* pic_display;
                     if(debug&H265_DEBUG_BUFMGR){
                         printk("[Buffer Management] current pic is IDR, clear referenced flag of all buffers\n");
                     }
@@ -2864,39 +2905,7 @@ static int hevc_slice_segment_header_process(hevc_stru_t* hevc, param_t* rpm_par
                         dump_pic_list(hevc);
                     }
                     pic = get_pic_by_POC(hevc, hevc->iPrevPOC);
-                    if(pic){
-                        /*PB skip control*/
-                        if(pic->error_mark==0 && hevc->PB_skip_mode==1){
-                            hevc->ignore_bufmgr_error|=0x1;  //start decoding after first I
-                        }
-                        if(hevc->ignore_bufmgr_error&1){
-                            if(hevc->PB_skip_count_after_decoding>0){
-                                hevc->PB_skip_count_after_decoding--;
-                            }
-                            else{
-                                hevc->ignore_bufmgr_error|=0x2; //start displaying
-                            }
-                        }
-                        /**/
-                        pic->output_mark = 1;
-                        pic->recon_mark = 1;
-                    }
-                    do{			
-                        pic_display = output_pic(hevc, 1);
-        
-                        if(pic_display){
-                            pic_display->referenced = 0;
-                            if((pic_display->error_mark && ((hevc->ignore_bufmgr_error&0x2)==0))
-                                ||(debug&H265_DEBUG_DISPLAY_CUR_FRAME)||(debug&H265_DEBUG_NO_DISPLAY)){
-                           			 pic_display->output_ready = 0;
-                                 if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d ==> Debug mode or error, recycle it\n", pic_display->POC, pic_display->decode_idx);
-                            }
-                            else{
-                                prepare_display_buf(hevc, pic_display);
-                                if(debug&H265_DEBUG_BUFMGR) printk("[Buffer Management] Display: POC %d, decoding index %d\n", pic_display->POC, pic_display->decode_idx);
-                            }
-                        }
-                    }while(pic_display);
+                    flush_output(hevc, pic);
                 //}
             }
             
@@ -3524,7 +3533,10 @@ static void hevc_recover(hevc_stru_t* hevc)
     else{
         WRITE_VREG(NAL_SEARCH_CTL, 0x1); //manual parser NAL
     }
-        
+    
+    if(debug & H265_DEBUG_NO_EOS_SEARCH_DONE){
+        WRITE_VREG(NAL_SEARCH_CTL, READ_VREG(NAL_SEARCH_CTL)|0x10000);    
+    }    
     WRITE_VREG(DECODE_STOP_POS, decode_stop_pos);
 
         //if (amhevc_loadmc(vh265_mc) < 0) {
@@ -3626,10 +3638,14 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
             hevc->error_skip_nal_count = error_skip_nal_count;
             WRITE_VREG(NAL_SEARCH_CTL, 0x1); //manual parser NAL
         }
+        if(debug & H265_DEBUG_NO_EOS_SEARCH_DONE){
+            WRITE_VREG(NAL_SEARCH_CTL, READ_VREG(NAL_SEARCH_CTL)|0x10000);    
+        }    
         WRITE_VREG(HEVC_DEC_STATUS_REG, HEVC_ACTION_DONE); //search new nal
 
         //printk("%s: error handle\n", __func__);
         hevc->error_flag = 2;
+        return IRQ_HANDLED;
     }
     else if(hevc->error_flag==3){
         printk("error_flag=3, hevc_recover");
@@ -3640,6 +3656,7 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
             hevc->have_sps = 1;
             hevc->have_pps = 1;
         }
+        return IRQ_HANDLED;
     }
     
     i = READ_VREG(HEVC_SHIFT_BYTE_COUNT);
@@ -3659,6 +3676,16 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
                 slice_parse_begin--;
             }
         }
+        if(naltype == NAL_UNIT_EOS){
+            PIC_t* pic;
+            printk("get NAL_UNIT_EOS, flush output"); 
+            pic = get_pic_by_POC(hevc, hevc->curr_POC);
+            hevc->curr_POC = INVALID_POC;
+            hevc->m_pocRandomAccess = MAX_INT; //add to fix RAP_B_Bossen_1
+            flush_output(hevc, pic);
+            return IRQ_HANDLED;
+        }
+        
         if(hevc->error_skip_nal_count > 0){
             printk("nal type %d, discard %d\n", naltype, hevc->error_skip_nal_count);
             hevc->error_skip_nal_count--;
@@ -3671,6 +3698,7 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
                     hevc->have_pps = 1;
                 }
             }
+            return IRQ_HANDLED;
         }
         else if(naltype == NAL_UNIT_VPS){
             parse_type = HEVC_NAL_UNIT_VPS;
@@ -3735,6 +3763,10 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
             && hevc->error_flag==0 ){
             if((debug&H265_DEBUG_MAN_SEARCH_NAL)==0)
                 WRITE_VREG(NAL_SEARCH_CTL, 0x2); //auot parser NAL; do not check vps/sps/pps/idr
+
+            if(debug & H265_DEBUG_NO_EOS_SEARCH_DONE){
+                WRITE_VREG(NAL_SEARCH_CTL, READ_VREG(NAL_SEARCH_CTL)|0x10000);    
+            }    
         }
         
         if(debug&H265_DEBUG_BUFMGR){
@@ -3872,7 +3904,7 @@ static void vh265_put_timer_func(unsigned long arg)
 
     empty_flag = (READ_VREG(HEVC_PARSER_INT_STATUS)>>6)&0x1;
     // error watchdog
-    if (empty_flag == 0){
+    if ((empty_flag == 0)&&(gHevc.pic_list_init_flag == 0 || gHevc.pic_list_init_flag == 3)){
         // decoder has input
         if((debug&H265_DEBUG_DIS_LOC_ERROR_PROC)==0){
 
@@ -4072,6 +4104,9 @@ static void vh265_prot_init(void)
         }
         WRITE_VREG(NAL_SEARCH_CTL, ctl_val);
     }
+    if(debug & H265_DEBUG_NO_EOS_SEARCH_DONE){
+        WRITE_VREG(NAL_SEARCH_CTL, READ_VREG(NAL_SEARCH_CTL)|0x10000);    
+    }    
         
     WRITE_VREG(DECODE_STOP_POS, decode_stop_pos);
 
