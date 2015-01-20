@@ -1050,8 +1050,10 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 			/* MIGRATE_RESERVE handled later if necessary */
 			if (migratetype == MIGRATE_RESERVE)
 				break;
+#ifdef CONFIG_CMA
 			if(flags && migratetype == MIGRATE_CMA)
 				continue;
+#endif
 			area = &(zone->free_area[current_order]);
 			if (list_empty(&area->free_list[migratetype]))
 				continue;
@@ -1123,8 +1125,8 @@ static struct page *__rmqueue(struct zone *zone, unsigned int order,
 						int migratetype)
 {
 	struct page *page;
-#ifdef CONFIG_CMA
 	int ori_migratetype = migratetype;
+#ifdef CONFIG_CMA
 	int i = 0;
 	int tmp_migratetype = MIGRATE_RESERVE;
 	int flags = migratetype & __GFP_BDEV;
