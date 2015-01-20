@@ -52,8 +52,9 @@ unsigned int aml_i2s_capture_buf_size = 0;
 unsigned int aml_i2s_playback_enable = 1;
 unsigned int aml_i2s_alsa_write_addr = 0;
 
-//static int audio_type_info = -1;
-//static int audio_sr_info = -1;
+extern int android_left_gain;
+extern int android_right_gain;
+extern int set_android_gain_enable;
 extern unsigned audioin_mode;
 
 static DEFINE_MUTEX(gate_mutex);
@@ -606,6 +607,7 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
     if(access_ok(VERIFY_READ, buf, frames_to_bytes(runtime, count)))
     {
       if(runtime->format == SNDRV_PCM_FORMAT_S16_LE ){
+	  	
         int16_t * tfrom, *to, *left, *right;
         tfrom = (int16_t*)ubuf;
         to = (int16_t*)hwbuf;
@@ -615,14 +617,25 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 		if (pos % align) {
 		    printk("audio data unligned: pos=%d, n=%d, align=%d\n", (int)pos, n, align);
 		}
-		for (j = 0; j < n; j += 64) {
-		    for (i = 0; i < 16; i++) {
-	          *left++ = (*tfrom++) ;
-	          *right++ = (*tfrom++);
-		    }
-		    left += 16;
-		    right += 16;
-		 }
+		if(set_android_gain_enable == 0){
+			for (j = 0; j < n; j += 64) {
+		    	for (i = 0; i < 16; i++) {
+	          		*left++ = (*tfrom++) ;
+	          		*right++ = (*tfrom++);
+		    	}
+		    	left += 16;
+		    	right += 16;
+		 	}
+	  	}else{
+			for (j = 0; j < n; j += 64) {
+		    	for (i = 0; i < 16; i++) {
+	          		*left++ = (int16_t)(((*tfrom++)*android_left_gain)>>8);
+	          		*right++ = (int16_t)(((*tfrom++)*android_right_gain)>>8);
+		    	}
+		    	left += 16;
+		    	right += 16;
+		 	}
+	  	}
       }else if(runtime->format == SNDRV_PCM_FORMAT_S24_LE && I2S_MODE == AIU_I2S_MODE_PCM24){
         int32_t *tfrom, *to, *left, *right;
         tfrom = (int32_t*)ubuf;
