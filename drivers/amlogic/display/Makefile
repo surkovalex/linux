@@ -11,5 +11,6 @@ obj-$(CONFIG_AM_LOGO)		+= aml_logo/
 obj-y				+= backlight/
 
 obj-$(CONFIG_AM_TV_OUTPUT2)	+= vout2/
+obj-$(CONFIG_AMLOGIC_SYS_LED)	+= sys_led/
 
 

@@ -1075,6 +1075,25 @@ sdio{
             511      60  70  75  80
         >;
 	};
+
+/// ***************************************************************************************
+///    -       Led
+//$$ MODULE="Led"
+//$$ DEVICE="led"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 = "board_type"
+//$$ L2 PROP_STR = "red_led_gpio"
+//$$ L2 PROP_STR = "blue_led_gpio"
+//$$ L2 PROP_U32 = "led_mode"
+	led{
+		compatible = "amlogic-led";
+		dev_name = "aml-setio";
+		status = "okay";
+		red_led_gpio = "GPIO_TEST_N";/** if your board just need one gpio,please config red_led_gpio and blue_led_gpio the same */
+		blue_led_gpio = "GPIO_TEST_N";/**  */
+		red_led_mode = <1>; /** 1:H on L off , 0:H off L on */
+		blue_led_mode= <1>; /** 1:H on L off , 0:H off L on */
+	};
 	
 /// ***************************************************************************************
 /// -   Audio
