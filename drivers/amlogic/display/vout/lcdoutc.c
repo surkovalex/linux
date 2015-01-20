@@ -540,7 +540,7 @@ static void read_current_gamma_table(Lcd_Config_t *pConf)
     printk("\n");
 }
 
-static int write_gamma_table(Lcd_Config_t *pConf)
+static int write_gamma_table(Lcd_Config_t *pConf, unsigned int en)
 {
     int ret = 0;
 
@@ -549,8 +549,7 @@ static int write_gamma_table(Lcd_Config_t *pConf)
         ret = -1;
     }
     else {
-        pConf->lcd_effect.set_gamma_table(1); //force enable gamma table
-        printk("write gamma table ");
+        pConf->lcd_effect.set_gamma_table(en);
     }
     return ret;
 }
@@ -560,8 +559,25 @@ static void set_gamma_coeff(Lcd_Config_t *pConf, unsigned r_coeff, unsigned g_co
     pConf->lcd_effect.gamma_r_coeff = (unsigned short)(r_coeff);
     pConf->lcd_effect.gamma_g_coeff = (unsigned short)(g_coeff);
     pConf->lcd_effect.gamma_b_coeff = (unsigned short)(b_coeff);
-    if (write_gamma_table(pConf) == 0)
-        printk("with scale factor R:%u%%, G:%u%%, B:%u%%.\n", r_coeff, g_coeff, b_coeff);
+    if (write_gamma_table(pConf, 1) == 0)
+        printk("write gamma table with scale factor R:%u%%, G:%u%%, B:%u%%.\n", r_coeff, g_coeff, b_coeff);
+}
+
+static void reset_gamma_table(Lcd_Config_t *pConf)
+{
+    int i;
+
+    for (i=0; i<256; i++) {
+        pConf->lcd_effect.GammaTableR[i] = gamma_adjust_r[i];
+        pConf->lcd_effect.GammaTableG[i] = gamma_adjust_g[i];
+        pConf->lcd_effect.GammaTableB[i] = gamma_adjust_b[i];
+    }
+    pConf->lcd_effect.gamma_ctrl = gamma_ctrl;
+    pConf->lcd_effect.gamma_r_coeff = gamma_r_coeff;
+    pConf->lcd_effect.gamma_g_coeff = gamma_g_coeff;
+    pConf->lcd_effect.gamma_b_coeff = gamma_b_coeff;
+    if (write_gamma_table(pConf, ((pConf->lcd_effect.gamma_ctrl >> GAMMA_CTRL_EN) & 1)) == 0)
+        printk("write gamma table to original.\n");
 }
 
 static const char * usage_str =
@@ -580,8 +596,15 @@ static const char * usage_str =
 "    <value> : 0xXXXXXXXX, 32bit in Hex, 2 or 4 gamma table values (8 or 10bit gamma) combia in one <value>\n"
 "\n"
 "    echo f[r | g | b | w] <level_value> > write ; write R/G/B/white gamma level with fixed level_value\n"
+"    echo reset > write ; reset the gamma table to original\n"
 "data format:\n"
 "    <level_value>  : a number in Dec(0~255)\n"
+"\n"
+"    echo test <num> > write ; gamma curve test, you should control gamma table and video adjust enable manually by other command\n"
+"    echo auto [enable] > write ; gamma curve auto test, auto disable video adjust and run test pattern\n"
+"data format:\n"
+"    <num>   : a number in Dec(1~18), num=0 will disable gamma test pattern\n"
+"    <enable>: 0=disable gamma table(default), 1=enable gamma table."
 "\n"
 "    echo [0 | 1] > read ; readback original/current gamma table\n"
 };
@@ -623,20 +646,28 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
             t[0] = 1;
             t[1] = 0;
             ret = sscanf(buf, "ctrl %u %u", &t[0], &t[1]);
+            t[0] = (t[0] > 0) ? 1 : 0;
+            t[1] = (t[1] > 0) ? 1 : 0;
             pDev->pConf->lcd_effect.gamma_ctrl = ((t[0] << GAMMA_CTRL_EN) | (t[1] << GAMMA_CTRL_REVERSE));
-            if (write_gamma_table(pDev->pConf) == 0)
-                printk(" finished.\n");
+            printk("set gamma table enable=%d, reverse=%d.\n", t[0], t[1]);
+            if (write_gamma_table(pDev->pConf, t[0]) == 0)
+                printk("write gamma table finished.\n");
         }
         break;
     case 'r':
-        ret = sscanf(buf, "r %x %x %x %x %x %x %x %x %x", &i, &t[0], &t[1], &t[2], &t[3], &t[4], &t[5], &t[6], &t[7]);
-        if (i<16) {
-            i =  i * 8;
-            for (j=0; j<8; j++) {
-                gamma_adjust_r_temp[i+j] = t[j];
-            }
-            printk("write R table: step %u.\n", i/8);
-        }
+        if (buf[1] == 'e') {
+			reset_gamma_table(pDev->pConf);
+		}
+		else {
+			ret = sscanf(buf, "r %x %x %x %x %x %x %x %x %x", &i, &t[0], &t[1], &t[2], &t[3], &t[4], &t[5], &t[6], &t[7]);
+			if (i<16) {
+				i =  i * 8;
+				for (j=0; j<8; j++) {
+					gamma_adjust_r_temp[i+j] = t[j];
+				}
+				printk("write R table: step %u.\n", i/8);
+			}
+		}
         break;
     case 'g':
         ret = sscanf(buf, "g %x %x %x %x %x %x %x %x %x", &i, &t[0], &t[1], &t[2], &t[3], &t[4], &t[5], &t[6], &t[7]);
@@ -669,8 +700,8 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
                     pDev->pConf->lcd_effect.GammaTableB[i*4+j] = (unsigned short)(((gamma_adjust_b_temp[i] >> (24-j*8)) & 0xff) << 2);
                 }
             }
-            if (write_gamma_table(pDev->pConf) == 0)
-                printk("8bit finished.\n");
+            if (write_gamma_table(pDev->pConf, 1) == 0)
+                printk("write gamma table 8bit finished.\n");
         }
         else if (i == 10) {
             for (i=0; i<128; i++) {
@@ -680,17 +711,11 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
                     pDev->pConf->lcd_effect.GammaTableB[i*2+j] = (unsigned short)((gamma_adjust_b_temp[i] >> (16-j*16)) & 0xffff);
                 }
             }
-            if (write_gamma_table(pDev->pConf) == 0)
-                printk("10bit finished.\n");
+            if (write_gamma_table(pDev->pConf, 1) == 0)
+                printk("write gamma table 10bit finished.\n");
         }
         else {
-            for (i=0; i<256; i++) {
-                pDev->pConf->lcd_effect.GammaTableR[i] = gamma_adjust_r[i];
-                pDev->pConf->lcd_effect.GammaTableG[i] = gamma_adjust_g[i];
-                pDev->pConf->lcd_effect.GammaTableB[i] = gamma_adjust_b[i];
-            }
-            if (write_gamma_table(pDev->pConf) == 0)
-                printk("to original.\n");
+            reset_gamma_table(pDev->pConf);
         }
         break;
     case 'f':
@@ -702,7 +727,7 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
                 pDev->pConf->lcd_effect.GammaTableR[j] = i<<2;
             }
             set_gamma_coeff(pDev->pConf, 100, 0, 0);
-            printk("with R fixed value %u finished.\n", i);
+            printk("R fixed value: %u.\n", i);
         }
         else if (buf[1] == 'g') {
             ret = sscanf(buf, "fg %u", &i);
@@ -711,7 +736,7 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
                 pDev->pConf->lcd_effect.GammaTableG[j] = i<<2;
             }
             set_gamma_coeff(pDev->pConf, 0, 100, 0);
-            printk("with G fixed value %u finished.\n", i);
+            printk("G fixed value: %u.\n", i);
         }
         else if (buf[1] == 'b') {
             ret = sscanf(buf, "fb %u", &i);
@@ -720,7 +745,7 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
                 pDev->pConf->lcd_effect.GammaTableB[j] = i<<2;
             }
             set_gamma_coeff(pDev->pConf, 0, 0, 100);
-            printk("with B fixed value %u finished.\n", i);
+            printk("B fixed value: %u.\n", i);
         }
         else {
             ret = sscanf(buf, "fw %u", &i);
@@ -731,11 +756,41 @@ static ssize_t aml_lcd_gamma_debug(struct class *class, struct class_attribute *
                 pDev->pConf->lcd_effect.GammaTableB[j] = i<<2;
             }
             set_gamma_coeff(pDev->pConf, 100, 100, 100);
-            printk("with fixed value %u finished.\n", i);
+            printk("RGB fixed value: %u.\n", i);
         }
         break;
+    case 't':
+        ret = sscanf(buf, "test %u", &i);
+        if (pDev->pConf->lcd_effect.gamma_test)
+            pDev->pConf->lcd_effect.gamma_test(i);
+        else
+            printk("gamma test function is null\n");
+        break;
+    case 'a':
+        i = 0;
+        ret = sscanf(buf, "auto %u", &i);
+        i = (i > 0) ? 1 : 0;
+        if (write_gamma_table(pDev->pConf, i) == 0)
+            printk("%s gamma table.\n", i ? "enable" : "disable");
+
+        WRITE_LCD_REG(VPP_VADJ_CTRL, 0);
+        printk("disable video adjust.\n");
+
+        if (pDev->pConf->lcd_effect.gamma_test) {
+            for (i=1; i<=18; i++) {
+                pDev->pConf->lcd_effect.gamma_test(i);
+                for (j=0; j<10; j++) {
+                    printk("%d\n", (10-j));
+                    msleep(2000);
+                }
+            }
+            pDev->pConf->lcd_effect.gamma_test(0);
+        }
+        else
+            printk("gamma test function is null\n");
+        break;
     default:
-            printk("wrong format of gamma table writing.\n");
+        printk("wrong format of gamma table writing.\n");
     }
 
     if (ret != 1 || ret !=2)

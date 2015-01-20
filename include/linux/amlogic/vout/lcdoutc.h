@@ -176,7 +176,8 @@ typedef struct {
 	u16 GammaTableR[256];
 	u16 GammaTableG[256];
 	u16 GammaTableB[256];
-	void (*set_gamma_table)(unsigned gamma_en);
+	void (*set_gamma_table)(unsigned int gamma_en);
+	void (*gamma_test)(unsigned int num);
 } Lcd_Effect_t;
 
 //mipi-dsi config
