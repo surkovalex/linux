@@ -65,6 +65,8 @@ typedef struct rx_cap_
         unsigned char top_and_bottom;
         unsigned char side_by_side;
     } support_3d_format[VIC_MAX_NUM];
+    /*blk0 check sum*/
+    unsigned char blk0_chksum;
 }rx_cap_t;
 
 typedef struct Cts_conf_tab_ {
@@ -222,6 +224,12 @@ typedef struct hdmi_tx_dev_s {
 #define MISC_VIID_IS_USING      (CMD_MISC_OFFSET + 0x05)
 #define MISC_CONF_MODE420       (CMD_MISC_OFFSET + 0x06)
 #define MISC_TMDS_CLK_DIV40     (CMD_MISC_OFFSET + 0x07)
+#define MISC_COMP_HPLL         (CMD_MISC_OFFSET + 0x08)
+    #define COMP_HPLL_SET_OPTIMISE_HPLL1    0x1
+    #define COMP_HPLL_SET_OPTIMISE_HPLL2    0x2
+#define MISC_COMP_AUDIO         (CMD_MISC_OFFSET + 0x09)
+    #define COMP_AUDIO_SET_N_6144x2          0x1
+    #define COMP_AUDIO_SET_N_6144x3          0x2
 
 /***********************************************************************
  *                          Get State //GetState

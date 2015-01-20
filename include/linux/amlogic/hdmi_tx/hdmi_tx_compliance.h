@@ -21,16 +21,5 @@
 void hdmitx_special_handler_video(hdmitx_dev_t* hdmitx_device);
 void hdmitx_special_handler_audio(hdmitx_dev_t* hdmitx_device);
 
-// How to get RX's brand & product ?
-// root@android:/ # cat /sys/class/amhdmitx/amhdmitx0/edid
-// Receiver Brand Name: VSC
-// Receiver Product Name: VX2433wm
-// Then you will see VSC, ViewSonic's Abbr, and module is VX2433wm
-
-///////////////////////////////////
-// Brand: View Sonic
-#define HDMI_RX_VIEWSONIC           "VSC"           // must be 3 characters
-#define HDMI_RX_VIEWSONIC_MODEL     "VX2433wm"  // less than 13 characters
-
 #endif
 
