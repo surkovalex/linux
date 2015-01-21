@@ -1038,7 +1038,9 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 	int current_order;
 	struct page *page;
 	int migratetype, i;
+#ifdef CONFIG_CMA
 	int flags = start_migratetype & __GFP_BDEV;
+#endif
 
 	start_migratetype &= (~__GFP_BDEV);
 	/* Find the largest possible block of pages in the other list */
