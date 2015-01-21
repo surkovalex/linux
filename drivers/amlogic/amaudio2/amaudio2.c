@@ -584,6 +584,24 @@ static long amaudio_ioctl(struct file *file,unsigned int cmd, unsigned long arg)
 			}
 			spin_unlock_irqrestore(&amaudio->sw_read.lock, sw_readirqflags);
 			break;
+		case AMAUDIO_IOC_SET_ANDROID_VOLUME_ENABLE:
+			if(arg != 0 && arg != 1){
+				return -EINVAL;
+			}
+			set_android_gain_enable = arg;
+			break;
+		case AMAUDIO_IOC_SET_ANDROID_LEFT_VOLUME:
+			if(arg < 0 || arg > 256){
+				return -EINVAL;
+			}
+			android_left_gain = arg;
+			break;
+		case AMAUDIO_IOC_SET_ANDROID_RIGHT_VOLUME:
+			if(arg < 0 || arg > 256){
+				return -EINVAL;
+			}
+			android_right_gain = arg;
+			break;
 		default:
 			break;
 	};
