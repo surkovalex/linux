@@ -379,6 +379,7 @@ struct efuse_chip_identify_t{
 	efuse_socchip_type_e type;
 };
 static const struct efuse_chip_identify_t efuse_chip_hw_info[]={
+	{.chiphw_mver=28, .chiphw_subver=0, .chiphw_thirdver=0, .type=EFUSE_SOC_CHIP_G9TV},      //M8BABY 
 	{.chiphw_mver=27, .chiphw_subver=0, .chiphw_thirdver=0, .type=EFUSE_SOC_CHIP_M8BABY},      //M8BABY 
 	{.chiphw_mver=26, .chiphw_subver=0, .chiphw_thirdver=0, .type=EFUSE_SOC_CHIP_M6TVD},      //M6TVD 
 	{.chiphw_mver=25, .chiphw_subver=0, .chiphw_thirdver=0, .type=EFUSE_SOC_CHIP_M8},      //M8 
@@ -1054,6 +1055,7 @@ int efuse_read_intlItem(char *intl_item,char *buf,int size)
 			break;
 		case EFUSE_SOC_CHIP_M8:
 		case EFUSE_SOC_CHIP_M8BABY:
+		case EFUSE_SOC_CHIP_G9TV:
 			if(strcasecmp(intl_item,"temperature") == 0){
 				pos = 502;
 				len = 2;
