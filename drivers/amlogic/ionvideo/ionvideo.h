@@ -50,7 +50,7 @@
 #define ppmgr2_printk(level, fmt, arg...)                   \
     do {                                                    \
         if (get_ionvideo_debug() >= level)                  \
-            printk(KERN_DEBUG "ppmgr2-dev: " fmt, ## arg);  \
+            printk("ppmgr2-dev: " fmt, ## arg);  \
     } while (0)
 
 /* ------------------------------------------------------------------

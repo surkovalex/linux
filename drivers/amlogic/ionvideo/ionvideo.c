@@ -18,6 +18,7 @@ static unsigned video_nr = 13;
 
 static u64 last_pts_us64 = 0;
 
+static int scaling_rate = 50;
 module_param(video_nr, uint, 0644);
 MODULE_PARM_DESC(video_nr, "videoX start number, 13 is autodetect");
 
@@ -196,6 +197,11 @@ static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *b
             dev->ppmgr2_dev.dst_width = vf->width;
         if (vf->height <= dev->height)
             dev->ppmgr2_dev.dst_height = vf->height;
+            
+        if((dev->ppmgr2_dev.dst_width >= 1920) &&(dev->ppmgr2_dev.dst_height >= 1080)&&(vf->type & VIDTYPE_INTERLACE)){
+			dev->ppmgr2_dev.dst_width = dev->ppmgr2_dev.dst_width*scaling_rate/100;
+			dev->ppmgr2_dev.dst_height = dev->ppmgr2_dev.dst_height*scaling_rate/100 ;
+		}
         ret = ppmgr2_process(vf, &dev->ppmgr2_dev, vb->v4l2_buf.index);
         if (ret) {
             vf_put(vf, RECEIVER_NAME);
@@ -212,9 +218,7 @@ static int ionvideo_fillbuff(struct ionvideo_dev *dev, struct ionvideo_buffer *b
     return 0;
 }
 
-static int ionvideo_size_changed(struct ionvideo_dev *dev, struct vframe_s* vf) {
-    int aw = vf->width;
-    int ah = vf->height;
+static int ionvideo_size_changed(struct ionvideo_dev *dev, int aw , int ah) {
 
     v4l_bound_align_image(&aw, 48, MAX_WIDTH, 5, &ah, 32, MAX_HEIGHT, 0, 0);
     dev->c_width = aw;
@@ -232,15 +236,28 @@ static void ionvideo_thread_tick(struct ionvideo_dev *dev) {
     unsigned long flags = 0;
     struct vframe_s* vf;
 
+	int w ,h ;
     dprintk(dev, 4, "Thread tick\n");
     /* video seekTo clear list */
 
+    if(!dev){
+		return;
+	}
     vf = vf_peek(RECEIVER_NAME);
     if (!vf) {
         msleep(5);
         return;
     }
-    if (freerun_mode == 0 && ionvideo_size_changed(dev, vf)) {
+    if((vf->width >= 1920) &&(vf->height >= 1080)&&(vf->type & VIDTYPE_INTERLACE)){    	    	
+		dev->ppmgr2_dev.dst_width = vf->width*scaling_rate/100;
+		dev->ppmgr2_dev.dst_height = vf->height*scaling_rate/100 ;
+		w = dev->ppmgr2_dev.dst_width ; 
+		h = dev->ppmgr2_dev.dst_height ;
+	}else{
+		w = vf->width;
+		h = vf->height; 
+	}    
+    if (freerun_mode == 0 && ionvideo_size_changed(dev, w , h)) {
         msleep(10);
         return;
     }
@@ -962,8 +979,29 @@ static ssize_t vframe_states_show(struct class *class, struct class_attribute* a
     return ret;
 }
 
+static ssize_t scaling_rate_show(struct class *cla,struct class_attribute *attr,char *buf)
+{
+
+    return snprintf(buf,80,"current scaling rate is %d\n",scaling_rate);
+}
+
+static ssize_t scaling_rate_write(struct class *cla,
+					struct class_attribute *attr,
+					const char *buf, size_t count)
+{
+    ssize_t size;
+    char *endp;
+
+    scaling_rate = simple_strtoul(buf, &endp, 0);
+    size = endp - buf;
+    return count;
+}
 static struct class_attribute ion_video_class_attrs[] = {
 	__ATTR_RO(vframe_states),
+    __ATTR(scaling_rate,
+           S_IRUGO | S_IWUSR,
+           scaling_rate_show,
+           scaling_rate_write),	
     __ATTR_NULL
 };
 static struct class ionvideo_class = {
