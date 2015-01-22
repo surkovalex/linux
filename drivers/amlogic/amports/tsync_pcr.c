@@ -774,6 +774,9 @@ int tsync_pcr_set_apts(unsigned pts)
 }
 int tsync_pcr_start(void)
 {
+    timestamp_pcrscr_enable(0);
+    timestamp_pcrscr_set(0);
+    
     tsync_pcr_param_reset();
     
     if(tsync_get_mode() == TSYNC_MODE_PCRMASTER){

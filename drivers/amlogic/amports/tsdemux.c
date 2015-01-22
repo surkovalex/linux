@@ -674,15 +674,15 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc)
         tsdemux_set_sid(sid);
     }
 
-	curr_pcr_id = pcrid;
+    curr_pcr_id = pcrid;
     if ((pcrid < 0x1FFF) && (pcrid != vid) && (pcrid != aid) && (pcrid != sid)) {
     	tsdemux_set_pcrid(pcrid);
-	}
+    }
 #endif
 
-	reset_pcr_regs();
-	first_pcr = 0;
-    pcrscr_valid=1;
+    pcrscr_valid=(pcrid < 0x1FFF)? 1 : 0; 	
+    reset_pcr_regs();
+    first_pcr = 0;
 
     return 0;
 
@@ -1055,7 +1055,11 @@ void tsdemux_set_demux(int dev)
 
 u32 tsdemux_pcrscr_get(void)
 {
-    u32 pcr;
+    u32 pcr=0;
+
+    if(pcrscr_valid==0)
+    	return 0;
+
     if(READ_MPEG_REG(TS_HIU_CTL_2) & 0x40){
     	
     	pcr = READ_MPEG_REG(PCR_DEMUX_2);
@@ -1073,6 +1077,8 @@ u32 tsdemux_pcrscr_get(void)
 
  u32 tsdemux_first_pcrscr_get(void)
  {
+ 	if(pcrscr_valid==0)
+		return 0;
  	return first_pcr;
  }
 u8 tsdemux_pcrscr_valid(void)
