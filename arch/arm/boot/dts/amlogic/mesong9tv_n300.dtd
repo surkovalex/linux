@@ -353,8 +353,7 @@
 		compatible = "amlogic,wifi_power";
 		dev_name = "wifi_power";
 		status = "okay";
-		power_gpio = "GPIOY_5";
-		power_gpio2 = "GPIOAO_6";
+		power_gpio = "GPIOH_8";
 	};
 
 
