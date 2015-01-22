@@ -210,7 +210,7 @@ static int aml_sdhc_execute_tuning_ (struct mmc_host *mmc, u32 opcode,
 	int rx_phase = 0;
 	int wrap_win_start = -1, wrap_win_size = 0;
 	int best_win_start = -1, best_win_size = -1;
-	int curr_win_start = -1, curr_win_size = -1;
+	int curr_win_start = -1, curr_win_size = 0;
 
 	u8 rx_tuning_result[20] = { 0 };
 
