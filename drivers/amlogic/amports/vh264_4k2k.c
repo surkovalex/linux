@@ -97,8 +97,10 @@ static u32 frame_width, frame_height, frame_dur, frame_ar;
 static struct timer_list recycle_timer;
 static u32 stat;
 static u32 error_watchdog_count;
+static uint error_recovery_mode = 0;
 static u32 sync_outside;
 static u32 vh264_4k2k_rotation;
+static vframe_t *p_last_vf;
 
 #ifdef DEBUG_PTS
 static unsigned long pts_missed, pts_hit;
@@ -140,7 +142,7 @@ static struct device *cma_dev;
 #define CURRENT_UCODE           AV_SCRATCH_H
 #define CURRENT_SPS_PPS         AV_SCRATCH_I // bit[15:9]-SPS, bit[8:0]-PPS
 #define DECODE_SKIP_PICTURE     AV_SCRATCH_J
-#define RESERVED_REG_K          AV_SCRATCH_K
+#define DECODE_MODE             AV_SCRATCH_K
 #define RESERVED_REG_L          AV_SCRATCH_L
 #define REF_START_VIEW_0        AV_SCRATCH_M
 #define REF_START_VIEW_1        AV_SCRATCH_N
@@ -654,7 +656,7 @@ WRITE_VREG(DOS_SCRATCH1, 0x004c);
 
 static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
 {
-    int drop_status, display_buff_id, display_POC, slice_type;
+    int drop_status, display_buff_id, display_POC, slice_type, error;
     unsigned stream_offset;
     vframe_t *vf = NULL;
     int ret = READ_VREG(MAILBOX_COMMAND);
@@ -669,11 +671,12 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
         display_buff_id = (ret >> 0) & 0x3f;
         drop_status = (ret >> 8) & 0x1;
         slice_type = (ret >> 9) & 0x7;
+        error = (ret >> 12) & 0x1;
         display_POC = READ_VREG(MAILBOX_DATA_0);
         stream_offset = READ_VREG(MAILBOX_DATA_1);
 
-//printk("CMD_FRAME_DISPLAY, buffer_id = %d, drop_status = %d, POC = %d, offset = 0x%x, vb_level = 0x%x -- 0x%x\n",
-//        display_buff_id, drop_status, display_POC, stream_offset, READ_VREG(VLD_MEM_VIFIFO_LEVEL), READ_VREG(VDEC2_VLD_MEM_VIFIFO_LEVEL));
+//printk("CMD_FRAME_DISPLAY, buffer_id = %d, drop_status = %d, POC = %d, offset = 0x%x, error = 0x%x, slice_type=%d\n",
+//        display_buff_id, drop_status, display_POC, stream_offset, error, slice_type);
 
         smp_rmb();
 
@@ -693,15 +696,31 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
                 pts_lookup_offset(PTS_TYPE_VIDEO, stream_offset, &vf->pts, 0);
             }
 
+#ifdef H264_4K2K_SINGLE_CORE
+            if (READ_VREG(DECODE_MODE) & 1) {
+                // for I only mode, ignore the PTS information and only uses 10fps for each I frame decoded
+                if (p_last_vf) {
+                    vf->pts = 0;
+                }
+                frame_dur = 96000/10;
+            }
+#endif
+
             vf->index = display_buff_id;
             vf->type = VIDTYPE_PROGRESSIVE | VIDTYPE_VIU_FIELD;
             vf->type |= VIDTYPE_VIU_NV21;
             vf->canvas0Addr = vf->canvas1Addr = spec2canvas(&buffer_spec[display_buff_id]);
             set_frame_info(vf);
 
-            kfifo_put(&display_q, (const vframe_t **)&vf);
+            if ((error_recovery_mode & 2) && error) {
+                kfifo_put(&recycle_q, (const vframe_t **)&vf);
+            } else {
+                p_last_vf = vf;
 
-            vf_notify_receiver(PROVIDER_NAME,VFRAME_EVENT_PROVIDER_VFRAME_READY, NULL);
+                kfifo_put(&display_q, (const vframe_t **)&vf);
+
+                vf_notify_receiver(PROVIDER_NAME,VFRAME_EVENT_PROVIDER_VFRAME_READY,NULL);
+            }
         }
         break;
 
@@ -879,10 +898,10 @@ int vh264_4k2k_dec_status(struct vdec_status *vstatus)
 int vh264_4k2k_set_trickmode(unsigned long trickmode)
 {
     if (trickmode == TRICKMODE_I) {
-        WRITE_VREG(AV_SCRATCH_F, (READ_VREG(AV_SCRATCH_F) & 0xfffffffc) | 2);
+        WRITE_VREG(DECODE_MODE, 1);
         trickmode_i = 1;
     } else if (trickmode == TRICKMODE_NONE) {
-        WRITE_VREG(AV_SCRATCH_F, READ_VREG(AV_SCRATCH_F) & 0xfffffffc);
+        WRITE_VREG(DECODE_MODE, 0);
         trickmode_i = 0;
     }
 
@@ -1187,6 +1206,7 @@ static void vh264_4k2k_local_init(void)
     }
 
     reserved_buffer = 0;
+    p_last_vf = NULL;
 
     INIT_WORK(&alloc_work, do_alloc_work);
 
@@ -1314,7 +1334,10 @@ static s32 vh264_4k2k_init(void)
     stat |= STAT_VDEC_RUN;
 
     set_vdec_func(&vh264_4k2k_dec_status);
-    //set_trickmode_func(&vh264_4k2k_set_trickmode);
+
+    if (H264_4K2K_SINGLE_CORE) {
+        set_trickmode_func(&vh264_4k2k_set_trickmode);
+    }
 
     return 0;
 }
@@ -1569,6 +1592,9 @@ static void __exit amvdec_h264_4k2k_driver_remove_module(void)
 
 module_param(stat, uint, 0664);
 MODULE_PARM_DESC(stat, "\n amvdec_h264_4k2k stat \n");
+
+module_param(error_recovery_mode, uint, 0664);
+MODULE_PARM_DESC(error_recovery_mode, "\n amvdec_h264 error_recovery_mode \n");
 
 module_init(amvdec_h264_4k2k_driver_init_module);
 module_exit(amvdec_h264_4k2k_driver_remove_module);
