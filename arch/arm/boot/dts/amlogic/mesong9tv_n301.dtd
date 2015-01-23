@@ -1376,10 +1376,10 @@
 		//$$ L2 PROP_U32 2 = "amlogic,setmask"
 		//$$ L2 PROP_STR 2 = "amlogic,pins"
 		b_i2c_master:b_i2c {
-			amlogic,setmask = <10 0x30000>;		/* bit 16, 17 */
-			amlogic,clrmask = <9 0x301		/* bit 0, 8, 9 */
-					   3 0x20>;		/* bit 5 */
-			amlogic,pins = "GPIOY_10","GPIOY_11";
+			amlogic,setmask = <10 0xc000>;
+			amlogic,clrmask = <9 0xf00000c0>;
+			amlogic,pins = "GPIOY_12","GPIOY_13";
+
 		};
 
 		//$$ MATCH "remote_pin_0_match" = "&remote_pins"
