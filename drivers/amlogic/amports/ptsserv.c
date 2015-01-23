@@ -233,9 +233,21 @@ int calculation_stream_delayed_ms(u8 type, u32 *latestbitrate, u32 *avg_bitare)
         {
             diff2 = stbuf_level(get_buf_by_type(type));
         }
-        
-	if(diff2 > stbuf_space(get_buf_by_type(type)))
-            diff = diff2;
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
+	if (HAS_HEVC_VDEC) {
+	    if (pTable->hevc) {
+	         if(diff2 > stbuf_space(get_buf_by_type(PTS_TYPE_HEVC)))
+	 	   diff = diff2; 								
+	    }else{
+	        if(diff2 > stbuf_space(get_buf_by_type(type)))
+		   diff = diff2;				
+		}			
+	} else			
+#endif
+           {
+	    if(diff2 > stbuf_space(get_buf_by_type(type)))
+               diff = diff2;
+        	}
         delay_ms=diff*1000/(1+pTable->last_avg_bitrate/8);
 
         if (timestampe_delayed < 10 || (abs(timestampe_delayed - delay_ms)>3*1000 && delay_ms > 1000)) {
