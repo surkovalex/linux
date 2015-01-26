@@ -3261,7 +3261,8 @@ void  osd_suspend_hw(void)
 {
 	osd_hw.reg_status_save = aml_read_reg32(P_VPP_MISC) & OSD_RELATIVE_BITS;
 
-	aml_clr_reg32_mask(P_VPP_MISC, OSD_RELATIVE_BITS);
+	//aml_clr_reg32_mask(P_VPP_MISC, OSD_RELATIVE_BITS);
+	VSYNCOSD_CLR_MPEG_REG_MASK(VPP_MISC, OSD_RELATIVE_BITS);
 
     printk("osd_suspended\n");
 
@@ -3270,7 +3271,8 @@ void  osd_suspend_hw(void)
 }
 void osd_resume_hw(void)
 {
-    aml_set_reg32_mask(P_VPP_MISC, osd_hw.reg_status_save);
+    //aml_set_reg32_mask(P_VPP_MISC, osd_hw.reg_status_save);
+    VSYNCOSD_SET_MPEG_REG_MASK(VPP_MISC, osd_hw.reg_status_save);
 
     printk("osd_resumed\n");
 
