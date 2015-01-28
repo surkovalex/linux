@@ -1372,6 +1372,10 @@ static int vh264_4k2k_stop(void)
         amvdec2_disable();
     }
 
+#ifdef CONFIG_VSYNC_RDMA
+    msleep(100);
+#endif
+
     canvas_read((READ_VCBUS_REG(VD1_IF0_CANVAS0) & 0xff), &cur_canvas);
     disp_addr = cur_canvas.addr;
 
