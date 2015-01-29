@@ -107,6 +107,9 @@ int resample_delta=0;
 EXPORT_SYMBOL(resample_delta);
 extern unsigned int timestamp_enable_resample_flag;
 extern unsigned int timestamp_resample_type_flag;
+int kernel_android_50=0;
+EXPORT_SYMBOL(kernel_android_50);
+
 //--------------------------------------------
 #define DEBUG_DUMP 1
 
@@ -2034,6 +2037,8 @@ static ssize_t store_debug(struct class* class, struct class_attribute* attr,  c
            memset(dtsm6_apres_assets_Array,0,sizeof(dtsm6_apres_assets_Array));
      }else if(strncmp(buf, "dtsm6_hps_hint",14)==0){
            dtsm6_HPS_hint=simple_strtoul(buf+14,&after,10);;
+     }else if(strncmp(buf, "kernel_android_50",17)==0){
+           kernel_android_50=1;
      }
      return count;
 }

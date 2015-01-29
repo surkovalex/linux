@@ -804,10 +804,14 @@ static ssize_t digital_codec_show(struct class*cla, struct class_attribute* attr
   pbuf += sprintf(pbuf, "%d\n",IEC958_mode_codec);
   return (pbuf-buf);
 }
+
+extern void aml_audio_hw_trigger(void);
+extern int kernel_android_50;
 static ssize_t digital_codec_store(struct class* class, struct class_attribute* attr,
    const char* buf, size_t count )
 {
 	int digital_codec  = 0;
+	unsigned mode_codec = IEC958_mode_codec;
 	if(buf){
   		digital_codec = simple_strtoul(buf, NULL, 10);
 		if(digital_codec < SUPPORT_TYPE_NUM){
@@ -817,8 +821,14 @@ static ssize_t digital_codec_store(struct class* class, struct class_attribute* 
 		else{
 			printk("IEC958 type set exceed supported range \n");
 		}
-	}		
-  return count;
+	}
+	// when raw output switch to pcm output ,need trigger pcm hw prepare to re-init hw configuration
+	printk("last mode %d,now %d \n",mode_codec,IEC958_mode_codec);
+	if (mode_codec && !IEC958_mode_codec && kernel_android_50==1) {
+	    printk("[kernel_android_50/%d]trigger underrun\n",kernel_android_50);
+	    aml_audio_hw_trigger();
+	}
+	return count;
 }
 static ssize_t print_flag_show(struct class*cla, struct class_attribute* attr, char* buf)
 {

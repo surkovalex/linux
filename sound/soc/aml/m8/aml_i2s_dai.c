@@ -38,6 +38,10 @@ static int i2s_pos_sync = 0;
 #define ALSA_TRACE()   
 #endif
 extern int amaudio2_enable;
+extern unsigned int IEC958_mode_codec;
+extern int kernel_android_50;
+
+
 extern int set_i2s_iec958_samesource(int enable);
 
 static int i2sbuf[32+16];
@@ -195,6 +199,8 @@ static int aml_dai_i2s_prepare(struct snd_pcm_substream *substream,
         if(amaudio2_enable == 1){
             aml_hw_iec958_init(substream);
             set_i2s_iec958_samesource(1);
+        }else if(IEC958_mode_codec==0 && kernel_android_50==1){
+            aml_hw_iec958_init(substream);
         }
     }
     if(runtime->channels == 8){
@@ -220,6 +226,8 @@ static int aml_dai_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 				if(amaudio2_enable == 1){
 					audio_hw_958_enable(1);
 					set_i2s_iec958_samesource(1);
+				}else if(IEC958_mode_codec==0 && kernel_android_50==1){
+					audio_hw_958_enable(1);
 				}
 			}else{
 				audio_in_i2s_enable(1);
@@ -237,6 +245,8 @@ static int aml_dai_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
 				if(amaudio2_enable == 1){
 					audio_hw_958_enable(0);
 					set_i2s_iec958_samesource(0);
+				}else if(IEC958_mode_codec==0 && kernel_android_50==1){
+					audio_hw_958_enable(0);
 				}
 			}else{
 				audio_in_i2s_enable(0);
