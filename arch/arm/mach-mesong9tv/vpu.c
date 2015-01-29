@@ -27,6 +27,7 @@ static spinlock_t vpu_lock;
 static spinlock_t vpu_mem_lock;
 static DEFINE_MUTEX(vpu_mutex);
 
+static unsigned int enc_module = 0;
 static const char* vpu_mod_table[]={
 	"viu_osd1",
 	"viu_osd2",
@@ -137,6 +138,21 @@ static vpu_mod_t get_vpu_mod(unsigned int vmod)
 	unsigned int vpu_mod;
 
 	if (vmod < VPU_MOD_START) {
+		if(enc_module == 1){
+			switch (vmod) {
+				case VMODE_LCD:
+				case VMODE_720P:
+				case VMODE_1080P:
+				case VMODE_1080P_50HZ:
+				case VMODE_4K2K_60HZ:
+					vpu_mod = VPU_VENCL;
+					break;
+				default:
+					vpu_mod = VPU_MAX;
+					break;
+			}
+			return vpu_mod;	
+		}
 		switch (vmod) {
 			case VMODE_480P:
             case VMODE_480P_RPT:
@@ -172,12 +188,6 @@ static vpu_mod_t get_vpu_mod(unsigned int vmod)
 			case VMODE_480CVBS:
 			case VMODE_576CVBS:
 				vpu_mod = VPU_VENCI;
-				break;
-			case VMODE_LCD:
-			case VMODE_LVDS_1080P:
-			case VMODE_LVDS_1080P_50HZ:
-			case VMODE_VX1_4K2K_60HZ:
-				vpu_mod = VPU_VENCL;
 				break;
 			default:
 				vpu_mod = VPU_MAX;
@@ -806,6 +816,15 @@ static int get_vpu_config(struct platform_device *pdev)
 
 		vpu_config.clk_level = val;
 		printk("load vpu_clk in dts: %uHz(%u)\n", vpu_clk_setting[vpu_config.clk_level][0], vpu_config.clk_level);
+	}
+
+	ret = of_property_read_u32(vpu_np,"module",&val);
+	if(ret){
+		printk("don't find to match vmode\n");
+	}
+	else {
+		enc_module = val;
+		printk("enc_module: %d\n", enc_module);
 	}
 
 	return ret;

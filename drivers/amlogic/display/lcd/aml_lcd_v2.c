@@ -195,7 +195,7 @@ typedef struct {
 } lcd_dev_t;
 static lcd_dev_t *pDev = NULL;
 
-static vmode_t cur_vmode = VMODE_VX1_4K2K_60HZ;
+static vmode_t cur_vmode = VMODE_720P;
 
 static int pn_swap = 0;
 MODULE_PARM_DESC(pn_swap, "\n pn_swap \n");
@@ -239,6 +239,161 @@ int flagd = 0;
 MODULE_PARM_DESC(flagd, "\n flagd \n");
 module_param(flagd, int, 0664);
 EXPORT_SYMBOL(flagd);
+
+
+void vclk_set_encl_ttl(vmode_t vmode)
+{
+	int hdmi_clk_out;
+	//int hdmi_vx1_clk_od1;
+	int vx1_phy_div;
+	int encl_div;
+	unsigned int xd;
+	//no used, od2 must >= od3.
+	//hdmi_vx1_clk_od1 = 1; //OD1 always 1
+
+	//pll_video.pl 3500 pll_out
+	switch(vmode) {
+		case VMODE_720P: //total: 1650*750 pixel clk = 74.25MHz,phy_clk(s)=(pclk*7)= 519.75 = 1039.5/2
+			hdmi_clk_out = 1039.5;
+			vx1_phy_div  = 2/2;
+			encl_div     = vx1_phy_div*7;
+			break;
+
+		default:
+			pr_err("Error video format!\n");
+			return;
+	}
+	//if(set_hdmi_dpll(hdmi_clk_out,hdmi_vx1_clk_od1)) {
+	if(set_hdmi_dpll(hdmi_clk_out,0)) {
+		pr_err("Unsupported HDMI_DPLL out frequency!\n");
+		return;
+	}
+
+	//configure vid_clk_div_top
+	if((encl_div%14)==0){//7*even
+		clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_14);
+		xd = encl_div/14;
+	}else if((encl_div%7)==0){ //7*odd
+		clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_7);
+		xd = encl_div/7;
+	}else{ //3.5*odd
+		clocks_set_vid_clk_div(CLK_UTIL_VID_PLL_DIV_3p5);
+		xd = encl_div/3.5;
+	}
+
+	//configure crt_video
+	set_crt_video_enc(0,0,xd);  //configure crt_video V1: inSel=vid_pll_clk(0),DivN=xd)
+	enable_crt_video_encl(1,0); //select and enable the output
+}
+
+
+static void set_pll_ttl(Lcd_Config_t *pConf)
+{
+	vclk_set_encl_ttl(pDev->lcd_info.mode);
+//	set_video_spread_spectrum(pll_sel, ss_level);
+}
+
+static void venc_set_ttl(Lcd_Config_t *pConf)
+{
+	printk("%s\n", __FUNCTION__);
+	aml_write_reg32(P_ENCL_VIDEO_EN,           0);
+	aml_write_reg32(P_VPU_VIU_VENC_MUX_CTRL,
+	   (0<<0) |    // viu1 select ENCL
+	   (0<<2)      // viu2 select ENCL
+	);
+	aml_write_reg32(P_ENCL_VIDEO_MODE,        0);
+	aml_write_reg32(P_ENCL_VIDEO_MODE_ADV,    0x0418);
+
+	// bypass filter
+	aml_write_reg32(P_ENCL_VIDEO_FILT_CTRL,    0x1000);
+	aml_write_reg32(P_VENC_DVI_SETTING,        0x11);
+	aml_write_reg32(P_VENC_VIDEO_PROG_MODE,    0x100);
+
+	aml_write_reg32(P_ENCL_VIDEO_MAX_PXCNT,    pConf->lcd_basic.h_period - 1);
+	aml_write_reg32(P_ENCL_VIDEO_MAX_LNCNT,    pConf->lcd_basic.v_period - 1);
+
+	aml_write_reg32(P_ENCL_VIDEO_HAVON_BEGIN,  pConf->lcd_timing.video_on_pixel);
+	aml_write_reg32(P_ENCL_VIDEO_HAVON_END,    pConf->lcd_basic.h_active - 1 + pConf->lcd_timing.video_on_pixel);
+	aml_write_reg32(P_ENCL_VIDEO_VAVON_BLINE,  pConf->lcd_timing.video_on_line);
+	aml_write_reg32(P_ENCL_VIDEO_VAVON_ELINE,  pConf->lcd_basic.v_active + 3  + pConf->lcd_timing.video_on_line);
+
+	aml_write_reg32(P_ENCL_VIDEO_HSO_BEGIN,    15);
+	aml_write_reg32(P_ENCL_VIDEO_HSO_END,      31);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_BEGIN,    15);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_END,      31);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_BLINE,    0);
+	aml_write_reg32(P_ENCL_VIDEO_VSO_ELINE,    2);
+
+	// enable ENCL
+	aml_write_reg32(P_ENCL_VIDEO_EN,           1);
+}
+
+static void set_tcon_ttl(Lcd_Config_t *pConf)
+{
+	Lcd_Timing_t *tcon_adr = &(pConf->lcd_timing);
+
+	//set_lcd_gamma_table_ttl(pConf->lcd_effect.GammaTableR, LCD_H_SEL_R);
+	//set_lcd_gamma_table_ttl(pConf->lcd_effect.GammaTableG, LCD_H_SEL_G);
+	//set_lcd_gamma_table_ttl(pConf->lcd_effect.GammaTableB, LCD_H_SEL_B);
+
+	aml_write_reg32(P_L_GAMMA_CNTL_PORT, 0);//pConf->lcd_effect.gamma_cntl_port);
+	//aml_write_reg32(P_GAMMA_VCOM_HSWITCH_ADDR, pConf->lcd_effect.gamma_vcom_hswitch_addr);
+
+	aml_write_reg32(P_L_RGB_BASE_ADDR,   0xf0);//pConf->lcd_effect.rgb_base_addr);
+	aml_write_reg32(P_L_RGB_COEFF_ADDR,  0x74a);//pConf->lcd_effect.rgb_coeff_addr);
+	//aml_write_reg32(P_POL_CNTL_ADDR,   pConf->lcd_timing.pol_cntl_addr);
+	if(pConf->lcd_basic.lcd_bits == 8)
+		aml_write_reg32(P_L_DITH_CNTL_ADDR,  0x400);
+	else
+		aml_write_reg32(P_L_DITH_CNTL_ADDR,  0x600);
+
+	aml_write_reg32(P_L_STH1_HS_ADDR,    tcon_adr->sth1_hs_addr);
+	aml_write_reg32(P_L_STH1_HE_ADDR,    tcon_adr->sth1_he_addr);
+	aml_write_reg32(P_L_STH1_VS_ADDR,    tcon_adr->sth1_vs_addr);
+	aml_write_reg32(P_L_STH1_VE_ADDR,    tcon_adr->sth1_ve_addr);
+
+	aml_write_reg32(P_L_OEH_HS_ADDR,     tcon_adr->oeh_hs_addr);
+	aml_write_reg32(P_L_OEH_HE_ADDR,     tcon_adr->oeh_he_addr);
+	aml_write_reg32(P_L_OEH_VS_ADDR,     tcon_adr->oeh_vs_addr);
+	aml_write_reg32(P_L_OEH_VE_ADDR,     tcon_adr->oeh_ve_addr);
+
+	aml_write_reg32(P_L_VCOM_HSWITCH_ADDR, tcon_adr->vcom_hswitch_addr);
+	aml_write_reg32(P_L_VCOM_VS_ADDR,    tcon_adr->vcom_vs_addr);
+	aml_write_reg32(P_L_VCOM_VE_ADDR,    tcon_adr->vcom_ve_addr);
+
+	aml_write_reg32(P_L_CPV1_HS_ADDR,    tcon_adr->cpv1_hs_addr);
+	aml_write_reg32(P_L_CPV1_HE_ADDR,    tcon_adr->cpv1_he_addr);
+	aml_write_reg32(P_L_CPV1_VS_ADDR,    tcon_adr->cpv1_vs_addr);
+	aml_write_reg32(P_L_CPV1_VE_ADDR,    tcon_adr->cpv1_ve_addr);
+
+	aml_write_reg32(P_L_STV1_HS_ADDR,    tcon_adr->stv1_hs_addr);
+	aml_write_reg32(P_L_STV1_HE_ADDR,    tcon_adr->stv1_he_addr);
+	aml_write_reg32(P_L_STV1_VS_ADDR,    tcon_adr->stv1_vs_addr);
+	aml_write_reg32(P_L_STV1_VE_ADDR,    tcon_adr->stv1_ve_addr);
+
+	aml_write_reg32(P_L_OEV1_HS_ADDR,    tcon_adr->oev1_hs_addr);
+	aml_write_reg32(P_L_OEV1_HE_ADDR,    tcon_adr->oev1_he_addr);
+	aml_write_reg32(P_L_OEV1_VS_ADDR,    tcon_adr->oev1_vs_addr);
+	aml_write_reg32(P_L_OEV1_VE_ADDR,    tcon_adr->oev1_ve_addr);
+
+	aml_write_reg32(P_L_INV_CNT_ADDR,    tcon_adr->inv_cnt_addr);
+	aml_write_reg32(P_L_TCON_MISC_SEL_ADDR,     tcon_adr->tcon_misc_sel_addr);
+	aml_write_reg32(P_L_DUAL_PORT_CNTL_ADDR, tcon_adr->dual_port_cntl_addr);
+
+	aml_write_reg32(P_VPP_MISC, aml_read_reg32(P_VPP_MISC) & ~(VPP_OUT_SATURATE));
+}
+
+void set_ttl_pinmux(void)
+{
+	aml_set_reg32_bits(P_PERIPHS_PIN_MUX_0, 0x3f, 0, 6);
+	//aml_set_reg32_bits(P_PERIPHS_PIN_MUX_0, 0x3, 18, 2);
+	//aml_set_reg32_bits(P_PERIPHS_PIN_MUX_0, 0x1, 29, 1);
+	aml_set_reg32_bits(P_PERIPHS_PIN_MUX_8, 0x7, 22, 3);
+	aml_set_reg32_bits(P_PERIPHS_PIN_MUX_8, 0x1, 28, 1);
+
+	//aml_set_reg32_bits(P_PAD_PULL_UP_EN_REG4, 0x1, 26, 1);
+	//aml_set_reg32_bits(P_PAD_PULL_UP_REG4, 0x1, 26, 1);
+}
 
 void vpp_set_matrix_ycbcr2rgb (int vd1_or_vd2_or_post, int mode)
 {
@@ -344,7 +499,7 @@ void vclk_set_encl_lvds(vmode_t vmode, int lvds_ports)
 	if(lvds_ports<2){
 		//pll_video.pl 3500 pll_out
 		switch(vmode) {
-			case VMODE_LVDS_1080P: //total: 2200x1125 pixel clk = 148.5MHz,phy_clk(s)=(pclk*7)= 1039.5 = 2079/2
+			case VMODE_1080P: //total: 2200x1125 pixel clk = 148.5MHz,phy_clk(s)=(pclk*7)= 1039.5 = 2079/2
 				hdmi_clk_out = 2079;
 				vx1_phy_div  = 2/2;
 				encl_div     = vx1_phy_div*7;
@@ -414,7 +569,7 @@ static void venc_set_lvds(Lcd_Config_t *pConf)
 	aml_write_reg32(P_ENCL_VIDEO_FILT_CTRL, 0x1000);
 
 	aml_write_reg32(P_ENCL_VIDEO_MAX_PXCNT, pConf->lcd_basic.h_period - 1);
-	if(cur_vmode == VMODE_LVDS_1080P_50HZ)
+	if(cur_vmode == VMODE_1080P_50HZ)
 		aml_write_reg32(P_ENCL_VIDEO_MAX_LNCNT, 1350 - 1);
 	else
 		aml_write_reg32(P_ENCL_VIDEO_MAX_LNCNT, pConf->lcd_basic.v_period - 1);
@@ -839,7 +994,7 @@ void set_vx1_pinmux(void)
 	aml_set_reg32_bits(P_PERIPHS_PIN_MUX_7, 3, 18, 2);
 }
 
-static inline void _init_display_driver(Lcd_Config_t *pConf)
+static void _init_display_driver(Lcd_Config_t *pConf)
 {
 	int lcd_type;
 
@@ -856,6 +1011,13 @@ static inline void _init_display_driver(Lcd_Config_t *pConf)
 	printk("\nInit LCD type: %s.\n", lcd_type_table[lcd_type]);
 
 	switch(lcd_type){
+		case LCD_DIGITAL_TTL:
+			printk("ttl mode is selected!\n");
+			set_pll_ttl(pConf);
+			venc_set_ttl(pConf);
+			set_tcon_ttl(pConf);
+			set_ttl_pinmux();
+			break;
 		case LCD_DIGITAL_LVDS:
 			printk("lvds mode is selected!\n");
 			set_pll_lvds(pConf);
@@ -887,7 +1049,7 @@ static inline void _disable_display_driver(void)
 
 	aml_set_reg32_bits(P_HHI_VIID_DIVIDER_CNTL, 0, 11, 1);	//close lvds phy clk gate: 0x104c[11]
 
-	aml_write_reg32(P_ENCT_VIDEO_EN, 0);	//disable enct
+	aml_write_reg32(P_ENCL_VIDEO_EN, 0);	//disable ENCL
 	aml_write_reg32(P_ENCL_VIDEO_EN, 0);	//disable encl
 
 	if (vclk_sel)
@@ -900,7 +1062,7 @@ static inline void _disable_display_driver(void)
 
 static inline void _enable_vsync_interrupt(void)
 {
-	if ((aml_read_reg32(P_ENCT_VIDEO_EN) & 1) || (aml_read_reg32(P_ENCL_VIDEO_EN) & 1)) {
+	if ((aml_read_reg32(P_ENCL_VIDEO_EN) & 1) || (aml_read_reg32(P_ENCL_VIDEO_EN) & 1)) {
 		aml_write_reg32(P_VENC_INTCTRL, 0x200);
 	}else{
 		aml_write_reg32(P_VENC_INTCTRL, 0x2);
@@ -916,138 +1078,33 @@ static void _lcd_module_enable(void)
 static void change_panel(lcd_dev_t *pDev)
 {
 	pDev->lcd_info.name = PANEL_NAME;
+	pDev->lcd_info.width = pDev->conf.lcd_basic.h_active;
+	pDev->lcd_info.height = pDev->conf.lcd_basic.v_active;
+	pDev->lcd_info.field_height = pDev->conf.lcd_basic.v_active;
+	pDev->lcd_info.aspect_ratio_num = pDev->conf.lcd_basic.screen_ratio_width;
+	pDev->lcd_info.aspect_ratio_den = pDev->conf.lcd_basic.screen_ratio_height;
+	pDev->lcd_info.screen_real_width= pDev->conf.lcd_basic.screen_actual_width;
+	pDev->lcd_info.screen_real_height= pDev->conf.lcd_basic.screen_actual_height;
+	pDev->lcd_info.sync_duration_num = pDev->conf.lcd_timing.sync_duration_num;
+	pDev->lcd_info.sync_duration_den = pDev->conf.lcd_timing.sync_duration_den;
 
-	if((cur_vmode == VMODE_LVDS_1080P)||
-		(cur_vmode == VMODE_LVDS_1080P_50HZ))
+	if((cur_vmode == VMODE_1080P)||
+		(cur_vmode == VMODE_1080P_50HZ))
 	{
-		pDev->lcd_info.width = pDev->conf.lcd_basic.h_active;
-		pDev->lcd_info.height = pDev->conf.lcd_basic.v_active;
-		pDev->lcd_info.field_height = pDev->conf.lcd_basic.v_active;
-		pDev->lcd_info.aspect_ratio_num = pDev->conf.lcd_basic.screen_ratio_width;
-		pDev->lcd_info.aspect_ratio_den = pDev->conf.lcd_basic.screen_ratio_height;
-		pDev->lcd_info.screen_real_width= pDev->conf.lcd_basic.screen_actual_width;
-		pDev->lcd_info.screen_real_height= pDev->conf.lcd_basic.screen_actual_height;
-		pDev->lcd_info.sync_duration_num = pDev->conf.lcd_timing.sync_duration_num;
-		pDev->lcd_info.sync_duration_den = pDev->conf.lcd_timing.sync_duration_den;
 		pDev->conf.lcd_basic.lcd_type = LCD_DIGITAL_LVDS;
-	}
-	else if(cur_vmode == VMODE_VX1_4K2K_60HZ)
+	}else if(cur_vmode == VMODE_4K2K_60HZ)
 	{
 		pDev->conf.lcd_basic.lcd_type = LCD_DIGITAL_VBYONE;
+	}else if(cur_vmode == VMODE_720P)
+	{
+		pDev->conf.lcd_basic.lcd_type = LCD_DIGITAL_TTL;
 	}
 }
-
-static const vinfo_t *lcd_get_current_info(void)
-{
-	if(cur_vmode == VMODE_LVDS_1080P){
-		pDev->lcd_info.name = "lvds1080p";
-		pDev->lcd_info.mode = VMODE_LVDS_1080P;
-		pDev->lcd_info.sync_duration_num = 60;
-		pDev->lcd_info.sync_duration_den = 1;
-	}else if(cur_vmode == VMODE_LVDS_1080P_50HZ){
-		pDev->lcd_info.name = "lvds1080p50hz";
-		pDev->lcd_info.mode = VMODE_LVDS_1080P_50HZ;
-		pDev->lcd_info.sync_duration_num = 50;
-		pDev->lcd_info.sync_duration_den = 1;
-	}else if(cur_vmode == VMODE_VX1_4K2K_60HZ){
-		pDev->lcd_info.name = "vx14k2k60hz";
-		pDev->lcd_info.mode = VMODE_VX1_4K2K_60HZ;
-		pDev->lcd_info.sync_duration_num = 60;
-		pDev->lcd_info.sync_duration_den = 1;
-	}
-	return &pDev->lcd_info;
-}
-
-static int lcd_set_current_vmode(vmode_t mode)
-{
-	if ((mode != VMODE_LCD)&&(mode != VMODE_LVDS_1080P)&&(mode != VMODE_LVDS_1080P_50HZ)&&(mode != VMODE_VX1_4K2K_60HZ))
-		return -EINVAL;
-
-	if(VMODE_LVDS_1080P==(mode&VMODE_MODE_BIT_MASK))
-		cur_vmode = VMODE_LVDS_1080P;
-	else if(VMODE_LVDS_1080P_50HZ==(mode&VMODE_MODE_BIT_MASK))
-		cur_vmode = VMODE_LVDS_1080P_50HZ;
-	else if(VMODE_VX1_4K2K_60HZ==(mode&VMODE_MODE_BIT_MASK))
-		cur_vmode = VMODE_VX1_4K2K_60HZ;	
-
-	aml_write_reg32(P_VPP_POSTBLEND_H_SIZE, pDev->lcd_info.width);
-	change_panel(pDev);
-	_lcd_module_enable();
-
-	if (VMODE_INIT_NULL == pDev->lcd_info.mode)
-		pDev->lcd_info.mode = VMODE_LCD;
-
-	return 0;
-}
-
-static vmode_t lcd_validate_vmode(char *mode)
-{
-	if ((strncmp(mode, "lvds1080p", strlen("lvds1080p"))) == 0)
-		return VMODE_LVDS_1080P;	
-	else if ((strncmp(mode, "lvds1080p50hz", strlen("lvds1080p50hz"))) == 0)
-		return VMODE_LVDS_1080P_50HZ; 
-	else if ((strncmp(mode, "vx14k2k60hz", strlen("vx14k2k60hz"))) == 0)
-		return VMODE_VX1_4K2K_60HZ;
-
-	return VMODE_MAX;
-}
-
-static int lcd_vmode_is_supported(vmode_t mode)
-{
-	mode&=VMODE_MODE_BIT_MASK;
-
-	if((mode == VMODE_LCD ) || (mode == VMODE_LVDS_1080P) || (mode == VMODE_LVDS_1080P_50HZ)|| 
-		(mode == VMODE_VX1_4K2K_60HZ))
-		return true;
-
-	return false;
-}
-
-static int lcd_module_disable(vmode_t cur_vmod)
-{
-	return 0;
-}
-
-#ifdef  CONFIG_PM
-static int lcd_suspend(void)
-{
-	BUG_ON(pDev==NULL);
-	pr_info("lcd_suspend \n");
-
-	_disable_display_driver();
-
-	return 0;
-}
-
-static int lcd_resume(void)
-{
-	pr_info("lcd_resume\n");
-
-	_lcd_module_enable();
-
-	return 0;
-}
-#endif
-
-static vout_server_t lcd_vout_server={
-	.name = "lcd_vout_server",
-	.op = {
-		.get_vinfo = lcd_get_current_info,
-		.set_vmode = lcd_set_current_vmode,
-		.validate_vmode = lcd_validate_vmode,
-		.vmode_is_supported=lcd_vmode_is_supported,
-		.disable=lcd_module_disable,
-#ifdef  CONFIG_PM
-		.vout_suspend=lcd_suspend,
-		.vout_resume=lcd_resume,
-#endif
-	},
-};
 
 static void _init_vout(lcd_dev_t *pDev)
 {
 	change_panel(pDev);
-	vout_register_server(&lcd_vout_server);
+//	vout_register_server(&lcd_vout_server);
 }
 
 static void _lcd_init(Lcd_Config_t *pConf)
@@ -1117,7 +1174,7 @@ static CLASS_ATTR(power, S_IWUSR | S_IRUGO, power_show, power_store);
 static inline int _get_lcd_default_config(struct platform_device *pdev)
 {
 	int ret = 0;
-	unsigned int lvds_para[10];
+	unsigned int lvds_para[14];
 	if (!pdev->dev.of_node){
 		pr_err("\n can't get dev node---error----%s----%d",__FUNCTION__,__LINE__);
 	}
@@ -1137,6 +1194,26 @@ static inline int _get_lcd_default_config(struct platform_device *pdev)
 		pDev->conf.lcd_basic.screen_actual_height = lvds_para[7];
 		pDev->conf.lcd_basic.lcd_type = lvds_para[8];
 		pDev->conf.lcd_basic.lcd_bits = lvds_para[9];
+	}
+	ret = of_property_read_u32_array(pdev->dev.of_node,"lcd_timing",&lvds_para[0], 14);
+	if(ret){
+		pr_err("don't find to match lcd_timing, use default setting.\n");
+	}else{
+		pr_info("get lcd_timing ok.\n");
+		pDev->conf.lcd_timing.video_on_pixel = lvds_para[0];
+		pDev->conf.lcd_timing.video_on_line = lvds_para[1];
+		pDev->conf.lcd_timing.sth1_hs_addr = lvds_para[2];
+		pDev->conf.lcd_timing.sth1_he_addr = lvds_para[3];
+		pDev->conf.lcd_timing.sth1_vs_addr = lvds_para[4];
+		pDev->conf.lcd_timing.sth1_ve_addr = lvds_para[5];
+		pDev->conf.lcd_timing.stv1_hs_addr = lvds_para[6];
+		pDev->conf.lcd_timing.stv1_he_addr = lvds_para[7];
+		pDev->conf.lcd_timing.stv1_vs_addr = lvds_para[8];
+		pDev->conf.lcd_timing.stv1_ve_addr = lvds_para[9];
+		pDev->conf.lcd_timing.oeh_hs_addr = lvds_para[10];
+		pDev->conf.lcd_timing.oeh_he_addr = lvds_para[11];
+		pDev->conf.lcd_timing.oeh_vs_addr = lvds_para[12];
+		pDev->conf.lcd_timing.oeh_ve_addr = lvds_para[13];		
 	}
 	ret = of_property_read_u32_array(pdev->dev.of_node,"delay_setting",&lvds_para[0], 8);
 	if(ret){
@@ -1202,6 +1279,10 @@ static Lcd_Config_t m6tv_lvds_config = {
 		.stv1_he_addr = 2164,
 		.stv1_vs_addr = 3,
 		.stv1_ve_addr = 5,
+		.oeh_hs_addr = VIDEO_ON_PIXEL+19,
+		.oeh_he_addr = VIDEO_ON_PIXEL+19+H_ACTIVE,
+		.oeh_vs_addr = VIDEO_ON_LINE,
+		.oeh_ve_addr = VIDEO_ON_LINE+V_ACTIVE-1,
 
 		.pol_cntl_addr = (0x0 << LCD_CPH1_POL) |(0x0 << LCD_HS_POL) | (0x1 << LCD_VS_POL),
 		.inv_cnt_addr = (0<<LCD_INV_EN) | (0<<LCD_INV_CNT),
@@ -1254,6 +1335,37 @@ static inline struct aml_lcd_platform *lvds_get_driver_data(struct platform_devi
 }
 #endif
 
+static void lcd_output_mode_info(void)
+{
+	const vinfo_t *info;
+	info = get_current_vinfo();
+	if(info){
+		if(strncmp(info->name, "720p", 4) == 0){
+			cur_vmode = VMODE_720P;	
+		}else if(strncmp(info->name, "1080p", 5) == 0){
+			cur_vmode = VMODE_1080P;
+		}else if(strncmp(info->name, "4k2k60hz", 8) == 0){
+			cur_vmode = VMODE_4K2K_60HZ;
+		}else{
+			cur_vmode = VMODE_1080P;
+			printk("the output mode is not support,use default mode!\n");
+		}
+	}
+	_lcd_init(&pDev->conf);
+}
+
+static int lcd_notify_callback_v(struct notifier_block *block, unsigned long cmd , void *para)
+{
+    if (cmd != VOUT_EVENT_MODE_CHANGE)
+        return 0;
+
+    lcd_output_mode_info();
+    return 0;
+}
+
+static struct notifier_block lcd_mode_notifier_nb_v = {
+    .notifier_call    = lcd_notify_callback_v,
+};
 
 static int lcd_probe(struct platform_device *pdev)
 {
@@ -1280,6 +1392,7 @@ static int lcd_probe(struct platform_device *pdev)
 #endif
 
 	printk("LCD probe ok\n");
+	vout_register_client(&lcd_mode_notifier_nb_v);
 	_lcd_init(&pDev->conf);
 	lcd_reboot_nb.notifier_call = lcd_reboot_notifier;
 	err = register_reboot_notifier(&lcd_reboot_nb);
@@ -1352,12 +1465,14 @@ module_exit(lcd_exit);
 
 int __init outputmode_setup(char *s)
 {
-	if(!strcmp(s,"lvds1080p")){
-		cur_vmode = VMODE_LVDS_1080P;
-	}else  if(!strcmp(s,"lvds1080p50hz")){
-	        cur_vmode = VMODE_LVDS_1080P_50HZ;
-	}else  if(!strcmp(s,"vx14k2k60hz")){
-		cur_vmode = VMODE_VX1_4K2K_60HZ;
+	if(!strcmp(s,"1080p")){
+		cur_vmode = VMODE_1080P;
+	}else  if(!strcmp(s,"1080p50hz")){
+	        cur_vmode = VMODE_1080P_50HZ;
+	}else  if(!strcmp(s,"4k2k60hz")){
+		cur_vmode = VMODE_4K2K_60HZ;
+	}else  if(!strcmp(s,"720p")){
+		cur_vmode = VMODE_720P;
 	}else{
 		cur_vmode = VMODE_INIT_NULL;
 		printk("the output mode is not support!\n");
