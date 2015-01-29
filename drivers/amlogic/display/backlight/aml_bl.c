@@ -88,6 +88,10 @@ typedef enum {
     BL_PWM_B,
     BL_PWM_C,
     BL_PWM_D,
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+    BL_PWM_E,
+    BL_PWM_F,
+#endif
     BL_PWM_MAX,
 } BL_PWM_t;
 
@@ -207,6 +211,20 @@ static void power_on_bl(int bl_flag)
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 23, 1);  //pwm_d_clk_en
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 1, 1);  //enable pwm_d
                     break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                case BL_PWM_E:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, bl_config.pwm_pre_div, 8, 7);  //pwm_c_clk_div
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 4, 2);  //pwm_c_clk_sel
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 15, 1);  //pwm_c_clk_en
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 0, 1);  //enable pwm_c
+                    break;
+                case BL_PWM_F:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, bl_config.pwm_pre_div, 16, 7);  //pwm_d_clk_div
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 6, 2);  //pwm_d_clk_sel
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 23, 1);  //pwm_d_clk_en
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 1, 1);  //enable pwm_d
+                    break;
+#endif
                 default:
                     break;
             }
@@ -260,6 +278,20 @@ static void power_on_bl(int bl_flag)
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 23, 1);  //pwm_d_clk_en
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 1, 1);  //enable pwm_d
                     break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                case BL_PWM_E:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, bl_config.combo_high_pre_div, 8, 7);  //pwm_c_clk_div
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 4, 2);  //pwm_c_clk_sel
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 15, 1);  //pwm_c_clk_en
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 0, 1);  //enable pwm_c
+                    break;
+                case BL_PWM_F:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, bl_config.combo_high_pre_div, 16, 7);  //pwm_d_clk_div
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 6, 2);  //pwm_d_clk_sel
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 23, 1);  //pwm_d_clk_en
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 1, 1);  //enable pwm_d
+                    break;
+#endif
                 default:
                     break;
             }
@@ -288,6 +320,20 @@ static void power_on_bl(int bl_flag)
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 23, 1);  //pwm_d_clk_en
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 1, 1, 1);  //enable pwm_d
                     break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                case BL_PWM_E:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, bl_config.combo_low_pre_div, 8, 7);  //pwm_c_clk_div
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 4, 2);  //pwm_c_clk_sel
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 15, 1);  //pwm_c_clk_en
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 0, 1);  //enable pwm_c
+                    break;
+                case BL_PWM_F:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, bl_config.combo_low_pre_div, 16, 7);  //pwm_d_clk_div
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 6, 2);  //pwm_d_clk_sel
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 23, 1);  //pwm_d_clk_en
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 1, 1, 1);  //enable pwm_d
+                    break;
+#endif
                 default:
                     break;
             }
@@ -412,6 +458,14 @@ void bl_power_off(int bl_flag)
                 case BL_PWM_D:
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 1, 1);  //disable pwm_d
                     break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                case BL_PWM_E:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 0, 1);  //disable pwm_c
+                    break;
+                case BL_PWM_F:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 1, 1);  //disable pwm_d
+                    break;
+#endif
                 default:
                     break;
             }
@@ -430,6 +484,14 @@ void bl_power_off(int bl_flag)
                 case BL_PWM_D:
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 1, 1);  //disable pwm_d
                     break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                case BL_PWM_E:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 0, 1);  //disable pwm_c
+                    break;
+                case BL_PWM_F:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 1, 1);  //disable pwm_d
+                    break;
+#endif
                 default:
                     break;
             }
@@ -446,6 +508,14 @@ void bl_power_off(int bl_flag)
                 case BL_PWM_D:
                     aml_set_reg32_bits(P_PWM_MISC_REG_CD, 0, 1, 1);  //disable pwm_d
                     break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                case BL_PWM_E:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 0, 1);  //disable pwm_c
+                    break;
+                case BL_PWM_F:
+                    aml_set_reg32_bits(P_PWM_MISC_REG_EF, 0, 1, 1);  //disable pwm_d
+                    break;
+#endif
                 default:
                     break;
             }
@@ -530,6 +600,14 @@ static void set_backlight_level(unsigned level)
                     case BL_PWM_D:
                         aml_write_reg32(P_PWM_PWM_D, (pwm_hi << 16) | (pwm_lo));
                         break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                    case BL_PWM_E:
+                        aml_write_reg32(P_PWM_PWM_E, (pwm_hi << 16) | (pwm_lo));
+                        break;
+                    case BL_PWM_F:
+                        aml_write_reg32(P_PWM_PWM_F, (pwm_hi << 16) | (pwm_lo));
+                        break;
+#endif
                     default:
                         break;
                 }
@@ -558,6 +636,14 @@ static void set_backlight_level(unsigned level)
                         case BL_PWM_D:
                             aml_write_reg32(P_PWM_PWM_D, (pwm_hi << 16) | (pwm_lo));
                             break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                        case BL_PWM_E:
+                            aml_write_reg32(P_PWM_PWM_E, (pwm_hi << 16) | (pwm_lo));
+                            break;
+                        case BL_PWM_F:
+                            aml_write_reg32(P_PWM_PWM_F, (pwm_hi << 16) | (pwm_lo));
+                            break;
+#endif
                         default:
                             break;
                     }
@@ -585,6 +671,14 @@ static void set_backlight_level(unsigned level)
                         case BL_PWM_D:
                             aml_write_reg32(P_PWM_PWM_D, (pwm_hi << 16) | (pwm_lo));
                             break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                        case BL_PWM_E:
+                            aml_write_reg32(P_PWM_PWM_E, (pwm_hi << 16) | (pwm_lo));
+                            break;
+                        case BL_PWM_F:
+                            aml_write_reg32(P_PWM_PWM_F, (pwm_hi << 16) | (pwm_lo));
+                            break;
+#endif
                         default:
                             break;
                     }
@@ -612,6 +706,14 @@ static void set_backlight_level(unsigned level)
                         case BL_PWM_D:
                             aml_write_reg32(P_PWM_PWM_D, (pwm_hi << 16) | (pwm_lo));
                             break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                        case BL_PWM_E:
+                            aml_write_reg32(P_PWM_PWM_E, (pwm_hi << 16) | (pwm_lo));
+                            break;
+                        case BL_PWM_F:
+                            aml_write_reg32(P_PWM_PWM_F, (pwm_hi << 16) | (pwm_lo));
+                            break;
+#endif
                         default:
                             break;
                     }
@@ -639,6 +741,14 @@ static void set_backlight_level(unsigned level)
                         case BL_PWM_D:
                             aml_write_reg32(P_PWM_PWM_D, (pwm_hi << 16) | (pwm_lo));
                             break;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                        case BL_PWM_E:
+                            aml_write_reg32(P_PWM_PWM_E, (pwm_hi << 16) | (pwm_lo));
+                            break;
+                        case BL_PWM_F:
+                            aml_write_reg32(P_PWM_PWM_F, (pwm_hi << 16) | (pwm_lo));
+                            break;
+#endif
                         default:
                             break;
                     }
@@ -1061,12 +1171,12 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                 bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH;
             }
             else {
-								if (strcmp(str, "2") == 0)
+                if (strcmp(str, "2") == 0)
                     bl_config.gpio_on = LCD_POWER_GPIO_INPUT;
                 else if(strcmp(str, "0") == 0)
-                		bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_LOW; 
+                    bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_LOW;
                 else
-                		bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH; 		   
+                    bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH;
             }
             ret = of_property_read_string_index(pdev->dev.of_node, "bl_gpio_port_on_off", 2, &str);
             if (ret) {
@@ -1074,13 +1184,13 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                 bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_LOW;
             }
             else {
-								if (strcmp(str, "2") == 0)
+                if (strcmp(str, "2") == 0)
                     bl_config.gpio_off = LCD_POWER_GPIO_INPUT;
                 else if(strcmp(str, "1") == 0)
-                		bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_HIGH; 
+                    bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_HIGH;
                 else
-                		bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_LOW; 		   
-            } 	
+                    bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_LOW;
+            }
             DPRINT("bl gpio_on=%u, bl gpio_off=%u\n", bl_config.gpio_on, bl_config.gpio_off);
             ret = of_property_read_u32_array(pdev->dev.of_node,"bl_gpio_dim_max_min",&bl_para[0],2);
             if (ret) {
@@ -1135,12 +1245,12 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                 bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH;
             }
             else {
-								if (strcmp(str, "2") == 0)
+                if (strcmp(str, "2") == 0)
                     bl_config.gpio_on = LCD_POWER_GPIO_INPUT;
                 else if(strcmp(str, "0") == 0)
-                		bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_LOW; 
+                    bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_LOW;
                 else
-                		bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH; 		   
+                    bl_config.gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH;
             }
             ret = of_property_read_string_index(pdev->dev.of_node, "bl_gpio_port_on_off", 2, &str);
             if (ret) {
@@ -1148,13 +1258,13 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                 bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_LOW;
             }
             else {
-								if (strcmp(str, "2") == 0)
+                if (strcmp(str, "2") == 0)
                     bl_config.gpio_off = LCD_POWER_GPIO_INPUT;
                 else if(strcmp(str, "1") == 0)
-                		bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_HIGH; 
+                    bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_HIGH;
                 else
-                		bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_LOW; 		   
-            } 	
+                    bl_config.gpio_off = LCD_POWER_GPIO_OUTPUT_LOW;
+            }
             DPRINT("gpio_on=%u, gpio_off=%u\n", bl_config.gpio_on, bl_config.gpio_off);
           }
             ret = of_property_read_string_index(pdev->dev.of_node, "bl_pwm_port_gpio_used", 0, &str);
@@ -1177,6 +1287,12 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                     bl_config.pwm_port = BL_PWM_C;
                 else if (strcmp(str, "PWM_D") == 0)
                     bl_config.pwm_port = BL_PWM_D;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                else if (strcmp(str, "PWM_E") == 0)
+                    bl_config.pwm_port = BL_PWM_E;
+                else if (strcmp(str, "PWM_F") == 0)
+                    bl_config.pwm_port = BL_PWM_F;
+#endif
                 else
                     bl_config.pwm_port = BL_PWM_MAX;
                 DPRINT("bl pwm_port: %s(%u)\n", str, bl_config.pwm_port);
@@ -1239,6 +1355,12 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                     bl_config.combo_high_port = BL_PWM_C;
                 else if (strcmp(str, "PWM_D") == 0)
                     bl_config.combo_high_port = BL_PWM_D;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                else if (strcmp(str, "PWM_E") == 0)
+                    bl_config.pwm_port = BL_PWM_E;
+                else if (strcmp(str, "PWM_F") == 0)
+                    bl_config.pwm_port = BL_PWM_F;
+#endif
                 else
                     bl_config.combo_high_port = BL_PWM_MAX;
             }
@@ -1271,6 +1393,12 @@ static inline int _get_backlight_config(struct platform_device *pdev)
                     bl_config.combo_low_port = BL_PWM_C;
                 else if (strcmp(str, "PWM_D") == 0)
                     bl_config.combo_low_port = BL_PWM_D;
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
+                else if (strcmp(str, "PWM_E") == 0)
+                    bl_config.pwm_port = BL_PWM_E;
+                else if (strcmp(str, "PWM_F") == 0)
+                    bl_config.pwm_port = BL_PWM_F;
+#endif
                 else
                     bl_config.combo_low_port = BL_PWM_MAX;
             }

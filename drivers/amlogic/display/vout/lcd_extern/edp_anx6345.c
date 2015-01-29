@@ -27,7 +27,7 @@
 #include <linux/amlogic/vout/aml_lcd_extern.h>
 #include "edp_anx6345.h"
 
-static struct lcd_extern_config_t *lcd_ext_config = NULL;
+static struct lcd_extern_config_t *lcd_extern_config = NULL;
                           
 static struct i2c_client *aml_anx6345_70_client;
 static struct i2c_client *aml_anx6345_72_client;
@@ -349,51 +349,57 @@ static int lcd_extern_i2c_remove(void)
     return ret;
 }
 
-static int lcd_extern_driver_update(void)
+static int get_lcd_extern_config(struct device_node* of_node, struct lcd_extern_config_t *lcd_ext_cfg)
 {
+    int ret = 0;
     struct aml_lcd_extern_driver_t* lcd_ext;
 
+    ret = get_lcd_extern_dt_data(of_node, lcd_ext_cfg);
+    if (ret) {
+        printk("[error] %s: failed to get dt data\n", LCD_EXTERN_NAME);
+        return ret;
+    }
+
+    //lcd extern driver update
     lcd_ext = aml_lcd_extern_get_driver();
     if (lcd_ext) {
-        lcd_ext->type      = lcd_ext_config->type;
-        lcd_ext->name      = lcd_ext_config->name;
+        lcd_ext->type      = lcd_ext_cfg->type;
+        lcd_ext->name      = lcd_ext_cfg->name;
         lcd_ext->reg_read  = i2c_reg_read;
         lcd_ext->reg_write = i2c_reg_write;
         lcd_ext->power_on  = lcd_extern_i2c_init;
         lcd_ext->power_off = lcd_extern_i2c_remove;
     }
     else {
-        printk("[error] %s get lcd_extern_driver failed\n", lcd_ext_config->name);
+        printk("[error] %s get lcd_extern_driver failed\n", lcd_ext_cfg->name);
+        ret = -1;
     }
 
-    return 0;
+    return ret;
 }
 
 static int aml_anx6345_70_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
-
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
         printk("[error] %s: functionality check failed\n", __FUNCTION__);
         return -ENODEV;
     }
     else {
         aml_anx6345_70_client = client;
-        lcd_extern_driver_update();
     }
 
     printk("%s OK\n", __FUNCTION__);
     return 0;
 }
+
 static int aml_anx6345_72_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
-
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
         printk("[error] %s: functionality check failed\n", __FUNCTION__);
         return -ENODEV;
     }
     else {
         aml_anx6345_72_client = client;
-      //  lcd_extern_driver_update();
     }
 
     printk("%s OK\n", __FUNCTION__);
@@ -447,55 +453,55 @@ static int aml_anx6345_probe(struct platform_device *pdev)
     struct i2c_board_info i2c_info[2];
     struct i2c_adapter *adapter;
     struct i2c_client *i2c_client;
-   // struct lcd_extern_config_t extern_config[3];
+    // struct lcd_extern_config_t extern_config[3];
     int i = 0;
     int ret = 0;
 
     if (lcd_extern_driver_check()) {
         return -1;
     }
-    if (lcd_ext_config == NULL)
-        lcd_ext_config = kzalloc(sizeof(*lcd_ext_config), GFP_KERNEL);
-    if (lcd_ext_config == NULL) {
+    if (lcd_extern_config == NULL)
+        lcd_extern_config = kzalloc(sizeof(*lcd_extern_config), GFP_KERNEL);
+    if (lcd_extern_config == NULL) {
         printk("[error] %s probe: failed to alloc data\n", LCD_EXTERN_NAME);
         return -1;
     }
 
-    pdev->dev.platform_data = lcd_ext_config;
+    pdev->dev.platform_data = lcd_extern_config;
 
-    if (get_lcd_extern_dt_data(pdev->dev.of_node, lcd_ext_config) != 0) {
-        printk("[error] %s probe: failed to get dt data\n", LCD_EXTERN_NAME);
+    ret = get_lcd_extern_config(pdev->dev.of_node, lcd_extern_config);
+    if (ret) {
         goto lcd_extern_probe_failed;
     }
-   for(i=0; i<2; i++){
-    	memset(&i2c_info[i], 0, sizeof(i2c_info[i]));
-   }
 
-    adapter = i2c_get_adapter(lcd_ext_config->i2c_bus);
+    for (i=0;i<2;i++) {
+        memset(&i2c_info[i], 0, sizeof(i2c_info[i]));
+    }
+
+    adapter = i2c_get_adapter(lcd_extern_config->i2c_bus);
     if (!adapter) {
         printk("[error] %s£ºfailed to get i2c adapter\n", LCD_EXTERN_NAME);
         goto lcd_extern_probe_failed;
     }
     for(i=0; i<2; i++){
-    	strncpy(i2c_info[i].type, anx_addr_name[i], I2C_NAME_SIZE);
+        strncpy(i2c_info[i].type, anx_addr_name[i], I2C_NAME_SIZE);
     }
     i2c_info[0].addr = 0x38;//0x70 >> 1;
     i2c_info[1].addr = 0x39;//0x72 >>1;
     for(i=0; i<2; i++){
-    	//i2c_info[i].platform_data = extern_config[i];
-    	i2c_info[i].flags = 0;
-    	if(i2c_info[i].addr > 0x7f)
-      		i2c_info[i].flags = 0x10;
-    	i2c_client = i2c_new_device(adapter, &i2c_info[i]);
-			if (!i2c_client) {
-					printk("[error] %x :failed to new i2c device\n", i2c_info[i].addr);
-					goto lcd_extern_probe_failed;
-			}
-			else{
-					DBG_PRINT("[error] %x: new i2c device succeed\n",i2c_info[i].addr);
-			}
+        //i2c_info[i].platform_data = extern_config[i];
+        i2c_info[i].flags = 0;
+        if (i2c_info[i].addr>0x7f)
+            i2c_info[i].flags = 0x10;
+        i2c_client = i2c_new_device(adapter, &i2c_info[i]);
+        if (!i2c_client) {
+            printk("[error] %x :failed to new i2c device\n", i2c_info[i].addr);
+            goto lcd_extern_probe_failed;
+        }
+        else{
+            DBG_PRINT("[error] %x: new i2c device succeed\n",i2c_info[i].addr);
+        }
    }
-    
 
     if (!aml_anx6345_70_client) {
         ret = i2c_add_driver(&aml_anx6345_70_driver);
@@ -504,7 +510,7 @@ static int aml_anx6345_probe(struct platform_device *pdev)
             goto lcd_extern_probe_failed;
         }
     }
-    
+
     if (!aml_anx6345_72_client) {
         ret = i2c_add_driver(&aml_anx6345_72_driver);
         if (ret) {
@@ -512,20 +518,20 @@ static int aml_anx6345_probe(struct platform_device *pdev)
             goto lcd_extern_probe_failed;
         }
     }
-    
 
     printk("%s ok\n", __FUNCTION__);
     return ret;
 
 lcd_extern_probe_failed:
-    if (lcd_ext_config)
-        kfree(lcd_ext_config);
+    if (lcd_extern_config) {
+        kfree(lcd_extern_config);
+        lcd_extern_config = NULL;
+    }
     return -1;
 }
 
 static int aml_anx6345_remove(struct platform_device *pdev)
 {
-    remove_lcd_extern(lcd_ext_config);
     if (pdev->dev.platform_data)
         kfree (pdev->dev.platform_data);
     return 0;

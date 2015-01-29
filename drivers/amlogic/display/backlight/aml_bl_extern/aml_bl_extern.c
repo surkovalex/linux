@@ -79,13 +79,13 @@ int get_bl_extern_dt_data(struct device_node* of_node, struct bl_extern_config_t
     }
     else {
         if (strncmp(str, "G", 1) == 0) {//"GPIO_xx"
-                pdata->gpio_used = 1;
-                val = amlogic_gpio_name_map_num(str);
-                ret = bl_extern_gpio_request(val);
-                if (ret) {
-                    printk("%s warning: faild to alloc gpio (%s)\n", pdata->name, str);
-                }
-                pdata->gpio = val;
+            pdata->gpio_used = 1;
+            val = amlogic_gpio_name_map_num(str);
+            ret = bl_extern_gpio_request(val);
+            if (ret) {
+                printk("%s warning: faild to alloc gpio (%s)\n", pdata->name, str);
+            }
+            pdata->gpio = val;
         }
         DBG_PRINT("%s: gpio_enable %s\n", pdata->name, ((pdata->gpio_used) ? str:"none"));
     }
@@ -94,24 +94,24 @@ int get_bl_extern_dt_data(struct device_node* of_node, struct bl_extern_config_t
         printk("%s warning: get gpio_enable_on failed\n", pdata->name);
     }
     else {
-    		if (strncmp(str, "2", 1) == 0)
-    				pdata->gpio_on = LCD_POWER_GPIO_INPUT;
-    		else if (strncmp(str, "0", 1) == 0)
-    				pdata->gpio_on = LCD_POWER_GPIO_OUTPUT_LOW;
-    		else
-    				pdata->gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH;			
+        if (strncmp(str, "2", 1) == 0)
+            pdata->gpio_on = LCD_POWER_GPIO_INPUT;
+        else if (strncmp(str, "0", 1) == 0)
+            pdata->gpio_on = LCD_POWER_GPIO_OUTPUT_LOW;
+        else
+            pdata->gpio_on = LCD_POWER_GPIO_OUTPUT_HIGH;
     }
     ret = of_property_read_string_index(of_node, "gpio_enable_on_off", 2, &str);
     if (ret) {
         printk("%s warning: get gpio_enable_off failed\n", pdata->name);
     }
     else {
-    		if (strncmp(str, "2", 1) == 0)
-    				pdata->gpio_off = LCD_POWER_GPIO_INPUT;
-    		else if (strncmp(str, "1", 1) == 0)
-    				pdata->gpio_off = LCD_POWER_GPIO_OUTPUT_HIGH;
-    		else
-    				pdata->gpio_off = LCD_POWER_GPIO_OUTPUT_LOW;			
+        if (strncmp(str, "2", 1) == 0)
+            pdata->gpio_off = LCD_POWER_GPIO_INPUT;
+        else if (strncmp(str, "1", 1) == 0)
+            pdata->gpio_off = LCD_POWER_GPIO_OUTPUT_HIGH;
+        else
+            pdata->gpio_off = LCD_POWER_GPIO_OUTPUT_LOW;
     }
     DBG_PRINT("%s: gpio_on = %d, gpio_off = %d \n", pdata->name, pdata->gpio_on, pdata->gpio_off);
     switch (pdata->type) {
