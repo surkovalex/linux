@@ -823,7 +823,7 @@ static void vvc1_put_timer_func(unsigned long arg)
 
 static s32 vvc1_init(void)
 {
-    printk("vvc1_init\n");
+    printk("vvc1_init, format %d\n", vvc1_amstream_dec_info.format);
     init_timer(&recycle_timer);
 
     stat |= STAT_TIMER_INIT;

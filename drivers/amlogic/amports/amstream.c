@@ -249,7 +249,11 @@ static int sub_port_inited;
 /* wait queue for poll */
 static wait_queue_head_t amstream_sub_wait;
 atomic_t userdata_ready = ATOMIC_INIT(0);
+static int userdata_length = 0;
 static wait_queue_head_t amstream_userdata_wait;
+#define USERDATA_FIFO_NUM    1024
+static struct userdata_poc_info_t userdata_poc_info[USERDATA_FIFO_NUM];
+static int userdata_poc_ri=0, userdata_poc_wi=0;
 
 static stream_port_t ports[] = {
     {
@@ -1030,13 +1034,32 @@ static unsigned int amstream_sub_poll(struct file *file, poll_table *wait_table)
     return 0;
 }
 
-int wakeup_userdata_poll(int wp, int start_phyaddr, int buf_size)
+void set_userdata_poc(struct userdata_poc_info_t poc)
+{
+    //printk("id %d, slicetype %d\n", userdata_slicetype_wi, slicetype);
+    userdata_poc_info[userdata_poc_wi] = poc;
+    userdata_poc_wi++;
+    if (userdata_poc_wi == USERDATA_FIFO_NUM) {
+        userdata_poc_wi = 0;
+    }
+
+    return;
+}
+
+void init_userdata_fifo()
+{
+    userdata_poc_ri = 0;
+    userdata_poc_wi = 0;
+}
+
+int wakeup_userdata_poll(int wp, int start_phyaddr, int buf_size, int data_length)
 {
     stream_buf_t *userdata_buf = &bufs[BUF_TYPE_USERDATA];
 	userdata_buf->buf_start= start_phyaddr;
 	userdata_buf->buf_wp = wp;
 	userdata_buf->buf_size = buf_size;
     atomic_set(&userdata_ready, 1);
+    userdata_length += data_length;
     wake_up_interruptible(&amstream_userdata_wait);
     return userdata_buf->buf_rp;
 }
@@ -1072,22 +1095,22 @@ static ssize_t amstream_userdata_read(struct file *file, char __user *buf, size_
     if (buf_wp < userdata_buf->buf_rp) {
         int first_num = userdata_buf->buf_size - userdata_buf->buf_rp ;
         if (data_size <= first_num) {
-            res = copy_to_user((void *)buf, (void *)(phys_to_virt(userdata_buf->buf_rp + userdata_buf->buf_start)), data_size);
+            res = copy_to_user((void *)buf, (void *)(/*phys_to_virt*/(userdata_buf->buf_rp + userdata_buf->buf_start)), data_size);
             userdata_buf->buf_rp +=  data_size - res;
             retVal =  data_size - res;
         } else {
             if (first_num > 0) {
-                res = copy_to_user((void *)buf, (void *)(phys_to_virt(userdata_buf->buf_rp + userdata_buf->buf_start)), first_num);
+                res = copy_to_user((void *)buf, (void *)(/*phys_to_virt*/(userdata_buf->buf_rp + userdata_buf->buf_start)), first_num);
                userdata_buf->buf_rp += first_num - res;
                 retVal = first_num - res;
             }	else	{
-            res = copy_to_user((void *)buf, (void *)(phys_to_virt(userdata_buf->buf_start)), data_size - first_num);
+            res = copy_to_user((void *)buf, (void *)(/*phys_to_virt*/(userdata_buf->buf_start)), data_size - first_num);
 		userdata_buf->buf_rp =  data_size - first_num - res;
             retVal =  data_size - first_num - res;
             }
         }
     } else {
-        res = copy_to_user((void *)buf, (void *)(phys_to_virt(userdata_buf->buf_rp + userdata_buf->buf_start)), data_size);
+        res = copy_to_user((void *)buf, (void *)(/*phys_to_virt*/(userdata_buf->buf_rp + userdata_buf->buf_start)), data_size);
 	userdata_buf->buf_rp +=  data_size - res;
         retVal = data_size - res;
     }
@@ -1601,6 +1624,35 @@ static long amstream_ioctl(struct file *file,
         }
         break;
 
+    case AMSTREAM_IOC_UD_LENGTH:
+        if (this->type & PORT_TYPE_USERDATA) {
+            //*((u32 *)arg) = userdata_length;
+            put_user(userdata_length,(unsigned long __user *)arg);
+            userdata_length = 0;
+        } else {
+            r = -EINVAL;
+        }
+        break;
+
+    case AMSTREAM_IOC_UD_POC:
+        if (this->type & PORT_TYPE_USERDATA) {
+            //*((u32 *)arg) = userdata_length;
+            int res;
+            struct userdata_poc_info_t userdata_poc = userdata_poc_info[userdata_poc_ri];
+            //put_user(userdata_poc.poc_number, (unsigned long __user *)arg);
+            res = copy_to_user((unsigned long __user *)arg, &userdata_poc, sizeof(struct userdata_poc_info_t));
+            if (res < 0) {
+                r = -EFAULT;
+            }
+            userdata_poc_ri++;
+            if (USERDATA_FIFO_NUM == userdata_poc_ri) {
+                userdata_poc_ri = 0;
+            }
+        } else {
+            r = -EINVAL;
+        }
+        break;
+
     case AMSTREAM_IOC_SET_DEC_RESET:
         tsync_set_dec_reset();
         break;
@@ -1896,6 +1948,11 @@ static ssize_t bufs_show(struct class *class, struct class_attribute *attr, char
 #endif
             } else {
                 pbuf += sprintf(pbuf, "\tbuf no used.\n");
+            }
+
+            if (p->type == BUF_TYPE_USERDATA) {
+                pbuf += sprintf(pbuf, "\tbuf write pointer:%#x\n", p->buf_wp);
+                pbuf += sprintf(pbuf, "\tbuf read pointer:%#x\n", p->buf_rp);
             }
         } else {
             u32 sub_wp, sub_rp, data_size;

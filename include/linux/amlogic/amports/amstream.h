@@ -111,6 +111,8 @@
 #define AMSTREAM_IOC_SUB_INFO	_IOR(AMSTREAM_IOC_MAGIC, 0x51, unsigned long)
 #define AMSTREAM_IOC_GET_BLACKOUT_POLICY   _IOR(AMSTREAM_IOC_MAGIC, 0x52, unsigned long)
 #define AMSTREAM_IOC_SET_BLACKOUT_POLICY   _IOW(AMSTREAM_IOC_MAGIC, 0x53, unsigned long)
+#define AMSTREAM_IOC_UD_LENGTH _IOR(AMSTREAM_IOC_MAGIC, 0x54, unsigned long)
+#define AMSTREAM_IOC_UD_POC _IOR(AMSTREAM_IOC_MAGIC, 0x55, unsigned long)
 #define AMSTREAM_IOC_GET_SCREEN_MODE _IOR(AMSTREAM_IOC_MAGIC, 0x58, int)
 #define AMSTREAM_IOC_SET_SCREEN_MODE _IOW(AMSTREAM_IOC_MAGIC, 0x59, int)
 #define AMSTREAM_IOC_GET_VIDEO_DISCONTINUE_REPORT _IOR(AMSTREAM_IOC_MAGIC, 0x5a, int)
@@ -280,6 +282,12 @@ struct codec_profile_t
 	char *profile;	// Attributes,seperated by commas
 };
 
+struct userdata_poc_info_t
+{
+    unsigned int poc_info;
+    unsigned int poc_number;
+};
+
 #define SUPPORT_VDEC_NUM	(8)
 
 int vcodec_profile_register(const struct codec_profile_t *vdec_profile);
@@ -309,7 +317,9 @@ void set_vdec_func(int (*vdec_func)(struct vdec_status *));
 void set_adec_func(int (*adec_func)(struct adec_status *));
 void set_trickmode_func(int (*trickmode_func)(unsigned long trickmode));
 void wakeup_sub_poll(void);
-int wakeup_userdata_poll(int wp, int start_phyaddr, int buf_size);
+void set_userdata_poc(struct userdata_poc_info_t poc);
+void init_userdata_fifo(void);
+int wakeup_userdata_poll(int wp, int start_phyaddr, int buf_size, int data_length);
 int get_sub_type(void);
 #endif
 

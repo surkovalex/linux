@@ -269,7 +269,7 @@ static irqreturn_t vmpeg12_isr(int irq, void *dev_id)
     reg = READ_VREG(MREG_BUFFEROUT);
 
     if ((reg >> 16) == 0xfe) {	
-        wakeup_userdata_poll(reg & 0xffff, ccbuf_phyAddress, CCBUF_SIZE);
+        wakeup_userdata_poll(reg & 0xffff, ccbuf_phyAddress, CCBUF_SIZE, 0);
         WRITE_VREG(MREG_BUFFEROUT, 0);
     }
     else if (reg) {
