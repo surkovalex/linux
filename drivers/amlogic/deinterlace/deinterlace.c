@@ -2254,6 +2254,8 @@ static unsigned char is_vframe_type_change(vframe_t* vframe)
 static int trick_mode;
 static unsigned char is_bypass(vframe_t *vf_in)
 {
+    unsigned int vtype = 0;
+
     if(di_debug_flag&0x10000){ //for debugging
         return (di_debug_flag>>17)&0x1;
     }
@@ -2314,12 +2316,15 @@ static unsigned char is_bypass(vframe_t *vf_in)
 	}
 #endif
     if((di_vscale_skip_enable & 0x4)&& vf_in){
-	di_vscale_skip_count = get_current_vscale_skip_count(vf_in);
-	if((di_vscale_skip_count > 0 && di_pre_stru.cur_prog_flag) ||
-           (di_vscale_skip_count > 1 && !di_pre_stru.cur_prog_flag)
-          )
+        /*backup vtype,set type as progressive*/
+        vtype = vf_in->type;
+        vf_in->type &= (~VIDTYPE_TYPEMASK);
+        di_vscale_skip_count = get_current_vscale_skip_count(vf_in);
+        vf_in->type = vtype;
+        if (di_vscale_skip_count > 0)
             return 1;
-	return 0;
+        else
+            return 0;
     }
     return 0;
 
