@@ -777,14 +777,14 @@ ssize_t drm_tswrite(struct file *file,
 
 {
     s32 r;
-	u32 realcount;
-	u32 re_count = count;
-	u32 havewritebytes =0;
-    
+    u32 realcount = count;
+    u32 re_count = count;
+    u32 havewritebytes =0;
+
     drminfo_t tmpmm;
-	drminfo_t *drm=&tmpmm;
-	u32 res=0;
-	int isphybuf=0;
+    drminfo_t *drm=&tmpmm;
+    u32 res=0;
+    int isphybuf=0;
 
     stream_port_t *port = (stream_port_t *)file->private_data;
     size_t wait_size, write_size;
@@ -792,73 +792,76 @@ ssize_t drm_tswrite(struct file *file,
     if (buf == NULL || count == 0) {
         return -EINVAL;
     }
-	
-	res = copy_from_user(drm, buf, sizeof(drminfo_t));
-	if (res) {
-		printk("drm kmalloc failed res[%d]\n",res);	
-		return -EFAULT;
-	}
 
-	realcount = drm->drm_pktsize;  //buf only has drminfo not have esdata;
-	buf = (char *)drm->drm_phy;
-	isphybuf =1;
-	//printk("drm->drm_flag = 0x%x,realcount = %d , buf = 0x%x ", drm->drm_flag,realcount, buf);
-	
-	count = realcount;
-	
-	while (count > 0){
-		if ((stbuf_space(vbuf) < count) ||
-			(stbuf_space(abuf) < count)) {
-			if (file->f_flags & O_NONBLOCK) {
-				write_size=min(stbuf_space(vbuf), stbuf_space(abuf));
-				if(write_size<=188)/*have 188 bytes,write now., */
-					return -EAGAIN;
-			}
-			else{
-				wait_size = min(stbuf_canusesize(vbuf) / 8, stbuf_canusesize(abuf) / 4);
-				if ((port->flag & PORT_FLAG_VID)
-					&& (stbuf_space(vbuf) < wait_size)) {
-					r = stbuf_wait_space(vbuf, wait_size);
-		
-					if (r < 0) {
-						printk("write no space--- no space,%d--%d,r-%d\n",stbuf_space(vbuf),stbuf_space(abuf),r);
-						return r;
-					}
-				}
-		
-				if ((port->flag & PORT_FLAG_AID)
-					&& (stbuf_space(abuf) < wait_size)) {
-					r = stbuf_wait_space(abuf, wait_size);
-		
-					if (r < 0) {
-						printk("write no stbuf_wait_space--- no space,%d--%d,r-%d\n",stbuf_space(vbuf),stbuf_space(abuf),r);
-						return r;
-					}
-				}
-			}
-		}
-		
-		write_size = min(stbuf_space(vbuf), stbuf_space(abuf));
-		write_size = min(count, write_size);
-		//printk("write_size = %d,count = %d, \n", write_size, count);
-		if (write_size > 0) {
-			r = _tsdemux_write(buf, write_size, isphybuf);
-		} else {
-			return -EAGAIN;
-		}
-		
-		havewritebytes += r;
-		
-		//printk("havewritebytes = %d, r = %d, \n", havewritebytes,  r);
-	  	if (havewritebytes == realcount){
-			break;//write ok;
-		}else if (havewritebytes > realcount) {
-			printk(" error ! write too much \n");
-		}
+    res = copy_from_user(drm, buf, sizeof(drminfo_t));
+    if (res) {
+        printk("drm kmalloc failed res[%d]\n",res);
+        return -EFAULT;
+    }
 
-		count -= r;
-	}
-	return re_count;
+    if (drm->drm_flag == TYPE_DRMINFO && drm->drm_level == DRM_LEVEL1) {
+        realcount = drm->drm_pktsize;  //buf only has drminfo not have esdata;
+        buf = (char *)drm->drm_phy;
+        isphybuf =1;
+    }
+    //printk("drm->drm_flag = 0x%x,realcount = %d , buf = 0x%x ", drm->drm_flag,realcount, buf);
+
+    count = realcount;
+
+    while (count > 0) {
+        if ((stbuf_space(vbuf) < count) ||
+                (stbuf_space(abuf) < count)) {
+            if (file->f_flags & O_NONBLOCK) {
+                write_size=min(stbuf_space(vbuf), stbuf_space(abuf));
+                if (write_size <= 188)/*have 188 bytes,write now., */
+                    return -EAGAIN;
+            }
+            else{
+                wait_size = min(stbuf_canusesize(vbuf) / 8, stbuf_canusesize(abuf) / 4);
+                if ((port->flag & PORT_FLAG_VID)
+                        && (stbuf_space(vbuf) < wait_size)) {
+                    r = stbuf_wait_space(vbuf, wait_size);
+
+                    if (r < 0) {
+                        printk("write no space--- no space,%d--%d,r-%d\n",stbuf_space(vbuf),stbuf_space(abuf),r);
+                        return r;
+                    }
+                }
+
+                if ((port->flag & PORT_FLAG_AID)
+                        && (stbuf_space(abuf) < wait_size)) {
+                    r = stbuf_wait_space(abuf, wait_size);
+
+                    if (r < 0) {
+                        printk("write no stbuf_wait_space--- no space,%d--%d,r-%d\n",
+                                      stbuf_space(vbuf),stbuf_space(abuf),r);
+                        return r;
+                    }
+                }
+            }
+        }
+
+        write_size = min(stbuf_space(vbuf), stbuf_space(abuf));
+        write_size = min(count, write_size);
+        //printk("write_size = %d,count = %d, \n", write_size, count);
+        if (write_size > 0) {
+            r = _tsdemux_write(buf, write_size, isphybuf);
+        } else {
+            return -EAGAIN;
+        }
+
+        havewritebytes += r;
+
+        //printk("havewritebytes = %d, r = %d, \n", havewritebytes,  r);
+        if (havewritebytes == realcount) {
+            break;//write ok;
+        }else if (havewritebytes > realcount) {
+            printk(" error ! write too much \n");
+        }
+
+        count -= r;
+    }
+    return re_count;
 }
 
 ssize_t tsdemux_write(struct file *file,
