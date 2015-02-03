@@ -2319,6 +2319,7 @@ static unsigned char is_bypass(vframe_t *vf_in)
         /*backup vtype,set type as progressive*/
         vtype = vf_in->type;
         vf_in->type &= (~VIDTYPE_TYPEMASK);
+        vf_in->type |= VIDTYPE_VIU_422;
         di_vscale_skip_count = get_current_vscale_skip_count(vf_in);
         vf_in->type = vtype;
         if (di_vscale_skip_count > 0)
