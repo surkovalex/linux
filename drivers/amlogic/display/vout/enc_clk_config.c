@@ -76,8 +76,16 @@ static void set_hpll_clk_out(unsigned clk)
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 		case 2976:		// only for 4k mode with clock*0.999
 #endif
-            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84000);
-            aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xce49c022);
+            aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x0000043d);
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+            if( clk == 2976 )
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69d84d04); // lower div_frac to get clk*0.999
+            else
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69d84e00);
+#else
+            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69d84e00);
+#endif
+            aml_write_reg32(P_HHI_VID_PLL_CNTL3, 0xca46c023);
             aml_write_reg32(P_HHI_VID_PLL_CNTL4, 0x4123b100);
             aml_set_reg32_bits(P_HHI_VID2_PLL_CNTL2, 1, 16, 1);
             aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x00012385);
@@ -86,14 +94,6 @@ static void set_hpll_clk_out(unsigned clk)
             WAIT_FOR_PLL_LOCKED(P_HHI_VID_PLL_CNTL);
             h_delay();
             aml_write_reg32(P_HHI_VID_PLL_CNTL5, 0x00016385);   // optimise HPLL VCO 2.97GHz performance
-#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-			if( clk == 2976 )
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84d04); // lower div_frac to get clk*0.999
-			else
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84e00);
-#else
-            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84e00);
-#endif
 
             break;
         case 2970:      // for 1080p/i 720p mode
