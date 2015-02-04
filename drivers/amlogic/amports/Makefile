@@ -134,6 +134,12 @@ ifeq ($(CONFIG_ARCH_MESONG9TV),y)
 obj-$(CONFIG_AM_VDEC_AVS) += amvdec_avs.o
 amvdec_avs-objs := vavs.o
 amvdec_avs-y    := vavs.o
+else
+ifeq ($(CONFIG_ARCH_MESON6),y)
+obj-$(CONFIG_AM_VDEC_AVS) += amvdec_avs.o
+amvdec_avs-objs := vavs.o
+amvdec_avs-y    := vavs.o
+endif
 endif
 endif
 endif
