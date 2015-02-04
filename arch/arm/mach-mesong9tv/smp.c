@@ -129,17 +129,25 @@ int __cpuinit meson_boot_secondary(unsigned int cpu, struct task_struct *idle)
 	 * the holding pen - release it, then wait for it to flag
 	 * that it has been released by resetting pen_release.
 	 */
-	//printk("write pen_release: %d\n",cpu_logical_map(cpu));
+	printk("write pen_release: %d\n",cpu_logical_map(cpu));
 	write_pen_release(cpu_logical_map(cpu));
 
 #ifndef CONFIG_MESON_TRUSTZONE
-	//check_and_rewrite_cpu_entry();
+//	check_and_rewrite_cpu_entry();
+	meson_set_cpu_ctrl_addr(cpu,
+			(const uint32_t)virt_to_phys(meson_secondary_startup));
 	meson_set_cpu_power_ctrl(cpu, 1);
+	timeout = jiffies + (10* HZ);
+	while (meson_get_cpu_ctrl_addr(cpu))
+	{
+		if (!time_before(jiffies, timeout))
+			return -EPERM;
+	}
 #endif
 	meson_secondary_set(cpu);
 	dsb_sev();
 
-	smp_send_reschedule(cpu);
+//	smp_send_reschedule(cpu);
 	timeout = jiffies + (10* HZ);
 	while (time_before(jiffies, timeout)) {
 		smp_rmb();

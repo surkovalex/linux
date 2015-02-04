@@ -1817,3 +1817,15 @@ static int __init meson_clock_init(void)
 
 /* initialize clocking early to be available later in the boot */
 core_initcall(meson_clock_init);
+
+int meson_get_cpu_ctrl_addr(int cpu)
+{
+#ifdef CONFIG_MESON_TRUSTZONE
+//	meson_auxcoreboot_addr(cpu, addr);
+	return 0;
+#else
+//printk("sram=0x%x addr=0x%x\n",(MESON_CPU1_CONTROL_ADDR_REG + ((cpu-1) << 2)),addr);
+	return aml_read_reg32(MESON_CPU1_CONTROL_ADDR_REG + ((cpu-1) << 2));
+#endif
+
+}
