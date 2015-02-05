@@ -1967,6 +1967,7 @@ sdio{
 	smartcard {
 		compatible = "amlogic,smartcard";
 		smc0_irq = <69>;
+		smc0_clock_source = <0>;
 		//smc0_enable_pin = "GPIOX_16";
 		//smc0_enable_level = <1>;
 		smc0_reset_pin = "GPIOX_17";

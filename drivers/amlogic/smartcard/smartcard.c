@@ -149,6 +149,10 @@ MODULE_PARM_DESC(cwt_det_en, "\n\t\t cwt_det_en");
 static int cwt_det_en = 1;
 module_param(cwt_det_en, int, 0644);
 
+MODULE_PARM_DESC(clock_source, "\n\t\t clock_source");
+static int clock_source = 0;
+module_param(clock_source, int, 0644);
+
 #define NO_HOT_RESET
 //#define DISABLE_RECV_INT
 #define ATR_FROM_INT
@@ -245,7 +249,6 @@ typedef struct {
 		u32 		   reset_pin;
 #define SMC_RESET_PIN_NAME "smc:RESET"
 #endif
-	
 
 	struct pinctrl	   *pinctrl;
 } smc_dev_t;
@@ -474,7 +477,7 @@ static int smc_hw_set_param(smc_dev_t *smc)
 	SMC_ANSWER_TO_RST_t *reg1;
 	SMC_INTERRUPT_Reg_t *reg_int;
 */
-	unsigned sys_clk_rate = get_module_clk(CLK_SRC_DEFAULT);
+	unsigned sys_clk_rate = get_module_clk(clock_source);
 	unsigned long freq_cpu = sys_clk_rate/1000;
 
 	v = SMC_READ_REG(REG0);
@@ -496,7 +499,7 @@ static int smc_hw_set_param(smc_dev_t *smc)
 	reg2->clk_tcnt = freq_cpu/smc->param.freq - 1;
 	reg2->det_filter_sel = DET_FILTER_SEL_DEFAULT;
 	reg2->io_filter_sel = IO_FILTER_SEL_DEFAULT; 
-	reg2->clk_sel = CLK_SRC_DEFAULT;
+	reg2->clk_sel = clock_source;
 	//reg2->pulse_irq = 0;
 	SMC_WRITE_REG(REG2, v);
 
@@ -549,7 +552,7 @@ static int smc_hw_setup(smc_dev_t *smc)
 	SMCCARD_HW_Reg5_t *reg5;
 	SMCCARD_HW_Reg6_t *reg6;
 
-	unsigned sys_clk_rate = get_module_clk(CLK_SRC_DEFAULT);
+	unsigned sys_clk_rate = get_module_clk(clock_source);
 
 	unsigned long freq_cpu = sys_clk_rate/1000;
 
@@ -601,7 +604,7 @@ static int smc_hw_setup(smc_dev_t *smc)
 	reg2->clk_tcnt = freq_cpu/smc->param.freq - 1;
 	reg2->det_filter_sel = DET_FILTER_SEL_DEFAULT;
 	reg2->io_filter_sel = IO_FILTER_SEL_DEFAULT; 
-	reg2->clk_sel = CLK_SRC_DEFAULT;
+	reg2->clk_sel = clock_source;
 	//reg2->pulse_irq = 0;
 	SMC_WRITE_REG(REG2, v);
 	pr_error("REG2: 0x%08lx\n", v);
@@ -948,7 +951,7 @@ static int smc_hw_read_atr(smc_dev_t *smc)
 	char *ptr = smc->atr.atr;
 	int his_len, t, tnext = 0, only_t0 = 1, loop_cnt=0;
 	int i;
-	
+
 	pr_dbg("read atr\n");
 
 #ifdef ATR_FROM_INT
@@ -1848,6 +1851,28 @@ static int smc_dev_init(smc_dev_t *smc, int id)
 #endif /*CONFIG_OF*/
 	}
 #endif
+
+	if (1) {
+		snprintf(buf, sizeof(buf), "smc%d_clock_source", id);
+#ifdef CONFIG_OF
+		ret = of_property_read_u32(smc->pdev->dev.of_node, buf, &value);
+		if (!ret) {
+			clock_source = value;
+			pr_error("%s: %d\n", buf, clock_source);
+		} else {
+			pr_error("cannot find resource \"%s\"\n", buf);
+			pr_error("using clock source default: %d\n", clock_source);
+		}
+#else /*CONFIG_OF*/
+		res = platform_get_resource_byname(smc->pdev, IORESOURCE_MEM, buf);
+		if (!res) {
+			pr_error("cannot get resource \"%s\"\n", buf);
+			pr_error("using clock source default: %d\n", clock_source);
+		} else {
+			clock_source = res->start;
+		}
+#endif /*CONFIG_OF*/
+	}
 
 	init_waitqueue_head(&smc->rd_wq);
 	init_waitqueue_head(&smc->wr_wq);
