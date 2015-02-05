@@ -250,6 +250,8 @@ typedef struct {
 #define SMC_RESET_PIN_NAME "smc:RESET"
 #endif
 
+	int                detect_invert;
+
 	struct pinctrl	   *pinctrl;
 } smc_dev_t;
 
@@ -282,7 +284,7 @@ static const unsigned char inv_table[256] = {
 	0xFC, 0x7C, 0xBC, 0x3C, 0xDC, 0x5C, 0x9C, 0x1C, 0xEC, 0x6C, 0xAC, 0x2C, 0xCC, 0x4C, 0x8C, 0x0C,
 	0xF4, 0x74, 0xB4, 0x34, 0xD4, 0x54, 0x94, 0x14, 0xE4, 0x64, 0xA4, 0x24, 0xC4, 0x44, 0x84, 0x04,
 	0xF8, 0x78, 0xB8, 0x38, 0xD8, 0x58, 0x98, 0x18, 0xE8, 0x68, 0xA8, 0x28, 0xC8, 0x48, 0x88, 0x08,
-	0xF0, 0x70, 0xB0, 0x30, 0xD0, 0x50, 0x90, 0x10, 0xE0, 0x60, 0xA0, 0x20, 0xC0, 0x40, 0x80, 0x00 
+	0xF0, 0x70, 0xB0, 0x30, 0xD0, 0x50, 0x90, 0x10, 0xE0, 0x60, 0xA0, 0x20, 0xC0, 0x40, 0x80, 0x00
 };
 #endif /*SW_INVERT*/
 
@@ -492,7 +494,7 @@ static int smc_hw_set_param(smc_dev_t *smc)
 	reg2->recv_lsb_msb = smc->param.recv_lsb_msb;
 	reg2->xmit_invert = smc->param.xmit_invert;
 	reg2->xmit_parity = smc->param.xmit_parity;
-	reg2->xmit_lsb_msb = smc->param.xmit_lsb_msb;   
+	reg2->xmit_lsb_msb = smc->param.xmit_lsb_msb;
 	reg2->xmit_retries = smc->param.xmit_retries;
 	reg2->xmit_repeat_dis = smc->param.xmit_repeat_dis;
 	reg2->recv_no_parity = smc->param.recv_no_parity;
@@ -1064,7 +1066,7 @@ static int smc_hw_reset(smc_dev_t *smc)
 		if(smc->active) {
 			pr_dbg("hot reset\n");
 
-			sc_reg0_reg->rst_level = RESET_ENABLE; 
+			sc_reg0_reg->rst_level = RESET_ENABLE;
 			sc_reg0_reg->clk_en = 1;
 			sc_reg0_reg->etu_divider = ETU_DIVIDER_CLOCK_HZ*smc->param.f/(smc->param.d*smc->param.freq)-1;
 			SMC_WRITE_REG(REG0, sc_reg0);
@@ -1192,10 +1194,12 @@ static int smc_hw_get_status(smc_dev_t *smc, int *sret)
 	reg_val = SMC_READ_REG(REG0);
 	smc->cardin = reg->card_detect;
 	//pr_dbg("get_status: smc reg0 %08x, card detect: %d\n", reg_val, smc->cardin);
-#endif	
+#endif
+	if (smc->detect_invert)
+		smc->cardin = !smc->cardin;
 
 	*sret = smc->cardin;
-	
+
 	spin_unlock_irqrestore(&smc->slock, flags);
 
 	return 0;
@@ -1262,7 +1266,7 @@ static int smc_hw_start_send(smc_dev_t *smc)
 	}
 	pr_dbg("send %d bytes to hw\n", cnt);
 #endif
-	
+
 	return 0;
 }
 
@@ -1272,6 +1276,8 @@ static irqreturn_t smc_bridge_isr(int irq, void *dev_id)
 
 #ifdef DET_FROM_PIO
 	smc->cardin = _gpio_in(smc->detect_pin, SMC_DETECT_PIN_NAME);
+	if (smc->detect_invert)
+		smc->cardin = !smc->cardin;
 #endif
 
     if(smc->recv_start != smc->recv_end)
@@ -1368,12 +1374,14 @@ static void smc_irq_handler(void)
 		}
 
 		sc_int_reg->send_fifo_last_byte_int = 0;
-		
+
 	}
 
 #ifndef DET_FROM_PIO
 	sc_reg0 = SMC_READ_REG(REG0);
 	smc->cardin = sc_reg0_reg->card_detect;
+	if (smc->detect_invert)
+		smc->cardin = !smc->cardin;
 #endif
 
 	SMC_WRITE_REG(INTR, sc_int|0x3FF);
@@ -1502,21 +1510,23 @@ static irqreturn_t smc_irq_handler(int irq, void *data)
 		}
 
 		sc_int_reg->send_fifo_last_byte_int = 0;
-		
+
 		wake_up_interruptible(&smc->wr_wq);
 	}
-	
+
 #ifndef DET_FROM_PIO
 	sc_reg0 = SMC_READ_REG(REG0);
 	smc->cardin = sc_reg0_reg->card_detect;
 #else
 	smc->cardin = _gpio_in(smc->detect_pin, SMC_DETECT_PIN_NAME);
 #endif
+	if (smc->detect_invert)
+		smc->cardin = !smc->cardin;
 
 	SMC_WRITE_REG(INTR, sc_int|0x3FF);
 
 	spin_unlock_irqrestore(&smc->slock, flags);
-	
+
 	return IRQ_HANDLED;
 }
 #endif
@@ -1870,6 +1880,27 @@ static int smc_dev_init(smc_dev_t *smc, int id)
 			pr_error("using clock source default: %d\n", clock_source);
 		} else {
 			clock_source = res->start;
+		}
+#endif /*CONFIG_OF*/
+	}
+
+	smc->detect_invert = 0;
+	if (1) {
+		snprintf(buf, sizeof(buf), "smc%d_det_invert", id);
+#ifdef CONFIG_OF
+		ret = of_property_read_u32(smc->pdev->dev.of_node, buf, &value);
+		if (!ret) {
+			smc->detect_invert = value;
+			pr_error("%s: %d\n", buf, smc->detect_invert);
+		}else{
+			pr_error("cannot find resource \"%s\"\n", buf);
+		}
+#else /*CONFIG_OF*/
+		res = platform_get_resource_byname(smc->pdev, IORESOURCE_MEM, buf);
+		if (!res) {
+			pr_error("cannot get resource \"%s\"\n", buf);
+		} else {
+			smc->detect_invert = res->start;
 		}
 #endif /*CONFIG_OF*/
 	}

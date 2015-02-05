@@ -1979,6 +1979,7 @@ sdio{
 		//smc0_clk_pin = "GPIOX_18";
 		smc0_clk_bit = <0x40000>;
 		smc0_det_pin = "GPIOX_16";
+		smc0_det_invert = <0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&smc_pins>;
 	};
