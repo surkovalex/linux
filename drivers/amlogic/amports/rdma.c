@@ -209,7 +209,7 @@ void rdma_table_prepare_read(unsigned long reg_adr)
 #else
 void rdma2_table_prepare_write(unsigned long reg_adr, unsigned long val)
 {
-    if(((rmda2_item_count<<1)+1)<(RDMA_TABLE_SIZE/4)){
+    if(((rmda2_item_count<<1)+1)<(RDMA2_TABLE_SIZE/4)){
         rmda2_table[rmda2_item_count<<1] = reg_adr; //CBUS_REG_ADDR(reg_adr);
         rmda2_table[(rmda2_item_count<<1)+1] = val;
         rmda2_item_count++;
@@ -252,7 +252,7 @@ int rdma2_config(unsigned int trigger_signal)
 		Wr(RDMA_ACCESS_AUTO, data32);
 	}
 	else{
-		data32 &= 0xff00ffff;
+		data32 &= 0xfffdffbf;
 		Wr(RDMA_ACCESS_AUTO, data32);
 	}
     rmda2_item_count = 0;

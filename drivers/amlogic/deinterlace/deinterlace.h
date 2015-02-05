@@ -359,12 +359,12 @@ void enable_di_pre_aml (
    DI_SIM_MIF_t    *di_contwr_mif,
 #endif
    		int nr_en, int mtn_en, int pd32_check_en, int pd22_check_en, int hist_check_en,
-   		int pre_field_num, int pre_viu_link, int hold_line, int urgent
+   		int pre_field_num, int pre_vdin_link, int hold_line, int urgent
    	);
 
 #ifdef NEW_DI_V3
-void enable_mc_di_pre(DI_MC_MIF_t *di_mcinford_mif,DI_MC_MIF_t *di_mcinfowr_mif,DI_MC_MIF_t *di_mcvecwr_mif);
-void enable_mc_di_post(DI_MC_MIF_t *di_mcvecrd_mif);
+void enable_mc_di_pre(DI_MC_MIF_t *di_mcinford_mif,DI_MC_MIF_t *di_mcinfowr_mif,DI_MC_MIF_t *di_mcvecwr_mif,int urgent);
+void enable_mc_di_post(DI_MC_MIF_t *di_mcvecrd_mif,int urgent);
 #endif
 
 void enable_region_blend (

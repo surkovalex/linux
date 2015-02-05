@@ -155,6 +155,10 @@ MODULE_PARM_DESC(overturn,"overturn /disable reverse");
 static bool check_start_drop_prog = false;
 module_param(check_start_drop_prog,bool,0644);
 MODULE_PARM_DESC(check_start_drop_prog,"enable/disable progress start drop function");
+
+static bool mcpre_en = true;
+module_param(mcpre_en,bool,0644);
+MODULE_PARM_DESC(mcpre_en,"enable/disable me in pre");
 #define CHECK_VDIN_BUF_ERROR
 
 #define DEVICE_NAME "deinterlace"
@@ -186,7 +190,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2015-1-8a";//disable cue for side-effect
+static char version_s[] = "2015-1-29a";//enable pre vdin link when input2pre
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -278,7 +282,7 @@ static bool use_2_interlace_buff = false;
 #endif
 static int input2pre_buf_miss_count = 0;
 static int input2pre_proc_miss_count = 0;
-static int input2pre_throw_count = 1;
+static int input2pre_throw_count = 0;
 
 #ifdef NEW_DI_V1
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
@@ -1691,8 +1695,9 @@ static void dump_di_pre_stru(void)
 #ifdef DET3D
     printk("vframe_interleave_flag = %d\n", di_pre_stru.vframe_interleave_flag);
 #endif
-    printk("left_right 		 = %d\n", di_pre_stru.left_right);
+    printk("left_right 		   = %d\n", di_pre_stru.left_right);
     printk("force_interlace        = %s\n",di_pre_stru.force_interlace?"true":"false");
+    printk("vdin2nr 		   = %d\n", di_pre_stru.vdin2nr);
 }
 
 typedef struct{
@@ -2361,18 +2366,16 @@ static unsigned char is_bypass_post(void)
 #ifdef RUN_DI_PROCESS_IN_IRQ
 static unsigned char is_input2pre(void)
 {
-    if( input2pre
-        &&vdin_source_flag
-        &&(bypass_state==0)){
-#ifdef NEW_DI_V1
-        pre_urgent = 1;
-#endif
+    if(input2pre
+    	#ifdef NEW_DI_V3
+    	&& di_pre_stru.cur_prog_flag
+    	#endif
+        && vdin_source_flag
+        && (bypass_state==0)){
+
         return 1;
     }
 
-#ifdef NEW_DI_V1
-    pre_urgent = 0;
-#endif
     return 0;
 }
 #endif
@@ -3448,13 +3451,13 @@ static void pre_de_process(void)
                di_pre_stru.enable_pulldown_check,                                  // pd22 check_en
 			         0,                      											// hist check_en
                chan2_field_num,                      //  field num for chan2. 1 bottom, 0 top.
-               0,                      // pre viu link.
+               di_pre_stru.vdin2nr,                  // pre vdin link.
                pre_hold_line,                     //hold line.
                pre_urgent
              );
 		Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL)|(0x3 << 30)); //add for M6, reset
 #ifdef NEW_DI_V3
-    enable_mc_di_pre(&di_pre_stru.di_mcinford_mif,&di_pre_stru.di_mcinfowr_mif,&di_pre_stru.di_mcvecwr_mif);
+    enable_mc_di_pre(&di_pre_stru.di_mcinford_mif,&di_pre_stru.di_mcinfowr_mif,&di_pre_stru.di_mcvecwr_mif,pre_urgent);
 #endif
 #ifdef NEW_DI_V1
     if(get_new_mode_flag() == 1){
@@ -3480,7 +3483,7 @@ static void pre_de_process(void)
             Wr(DI_PRE_CTRL, Rd(DI_PRE_CTRL)|(cont_rd<<25));
             #ifdef NEW_DI_V3
             if(di_pre_stru.cur_prog_flag == 0)
-                Wr(DI_MTN_CTRL1, 0x3000|Rd(DI_MTN_CTRL1));//enable me(mc di)
+                Wr(DI_MTN_CTRL1, (mcpre_en?0x3000:0)|Rd(DI_MTN_CTRL1));//enable me(mc di)
             if(di_pre_stru.field_count_for_cont == 4){
             	di_mtn_1_ctrl1 &= (~(1<<30)); // enable contp2rd and contprd
             	Wr(MCDI_MOTINEN,1<<1|1);    //enable motin refinement
@@ -5015,7 +5018,7 @@ static int de_post_process(void* arg, unsigned zoom_start_x_lines,
                         #endif
 	    	);
     	#ifdef NEW_DI_V3
-	enable_mc_di_post(&di_post_stru.di_mcvecrd_mif);
+	enable_mc_di_post(&di_post_stru.di_mcvecrd_mif,post_urgent);
 	#endif
 	}
 	else
