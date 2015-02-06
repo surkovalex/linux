@@ -1115,12 +1115,13 @@ static int asyncfifo_alloc_buffer(struct aml_asyncfifo *afifo)
 	return 0;
 }
 
-int async_fifo_init(struct aml_asyncfifo *afifo)
+int async_fifo_init(struct aml_asyncfifo *afifo, int initirq)
 {
 	int irq;
 
 	if (afifo->init)
 		return 0;
+
 	afifo->source  = AM_DMX_MAX;
 	afifo->pages = 0;
 	afifo->buf_toggle = 0;
@@ -1132,8 +1133,12 @@ int async_fifo_init(struct aml_asyncfifo *afifo)
 		/*Do not return error*/
 		return 0;
 	}
+
 	tasklet_init(&afifo->asyncfifo_tasklet, dvr_irq_bh_handler, (unsigned long)afifo);
-	irq = request_irq(afifo->asyncfifo_irq, dvr_irq_handler, IRQF_SHARED, "dvr irq", afifo);
+	if (initirq)
+		irq = request_irq(afifo->asyncfifo_irq, dvr_irq_handler, IRQF_SHARED, "dvr irq", afifo);
+	else
+		enable_irq(afifo->asyncfifo_irq);
 
 	/*alloc buffer*/
 	asyncfifo_alloc_buffer(afifo);
@@ -1143,10 +1148,11 @@ int async_fifo_init(struct aml_asyncfifo *afifo)
 	return 0;
 }
 
-int async_fifo_deinit(struct aml_asyncfifo *afifo)
+int async_fifo_deinit(struct aml_asyncfifo *afifo, int freeirq)
 {
 	if (! afifo->init)
 		return 0;
+
 	CLEAR_ASYNC_FIFO_REG_MASK(afifo->id, REG1, 1 << ASYNC_FIFO_FLUSH_EN);
 	CLEAR_ASYNC_FIFO_REG_MASK(afifo->id, REG2, 1 << ASYNC_FIFO_FILL_EN);
 	if (afifo->pages) {
@@ -1161,9 +1167,12 @@ int async_fifo_deinit(struct aml_asyncfifo *afifo)
 	afifo->buf_len = 0;
 
 	if (afifo->asyncfifo_irq != -1) {
-		free_irq(afifo->asyncfifo_irq, afifo);
-		tasklet_kill(&afifo->asyncfifo_tasklet);
+		if (freeirq)
+			free_irq(afifo->asyncfifo_irq, afifo);
+		else
+			disable_irq(afifo->asyncfifo_irq);
 	}
+	tasklet_kill(&afifo->asyncfifo_tasklet);
 
 	afifo->init = 0;
 
@@ -2614,7 +2623,7 @@ int aml_asyncfifo_hw_init(struct aml_asyncfifo *afifo)
 	CLK_GATE_ON(ASYNC_FIFO);
 #endif
 
-	ret = async_fifo_init(afifo);
+	ret = async_fifo_init(afifo, 1);
 	spin_unlock_irqrestore(&dvb->slock, flags);
 
 	return ret;
@@ -2625,8 +2634,9 @@ int aml_asyncfifo_hw_deinit(struct aml_asyncfifo *afifo)
 	struct aml_dvb *dvb = afifo->dvb;
 	unsigned long flags;
 	int ret;
+
 	spin_lock_irqsave(&dvb->slock, flags);
-	ret = async_fifo_deinit(afifo);
+	ret = async_fifo_deinit(afifo, 1);
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	CLK_GATE_OFF(ASYNC_FIFO);
@@ -2645,9 +2655,9 @@ int aml_asyncfifo_hw_reset(struct aml_asyncfifo *afifo)
 	spin_lock_irqsave(&dvb->slock, flags);
 	if (afifo->init) {
 		src = afifo->source;
-		async_fifo_deinit(afifo);
+		async_fifo_deinit(afifo, 0);
 	}
-	ret = async_fifo_init(afifo);
+	ret = async_fifo_init(afifo, 0);
 	/* restore the source */
 	if (src != -1) {
 		afifo->source = src;
