@@ -1118,15 +1118,24 @@ int dsc_set_pid(struct aml_dsc *dsc, int pid)
 	data = READ_MPEG_REG(TS_PL_PID_DATA);
 	if(dsc->id&1) {
 		data &= 0xFFFF0000;
-		data |= pid;
+		data |= pid&0x1fff;
+		if (!dsc->used)
+			data |= 1<<PID_MATCH_DISABLE_LOW;
 	} else {
 		data &= 0xFFFF;
-		data |= (pid<<16);
+		data |= (pid&0x1fff)<<16;
+		if (!dsc->used)
+			data |= 1<<PID_MATCH_DISABLE_HIGH;
 	}
 	WRITE_MPEG_REG(TS_PL_PID_INDEX, (dsc->id & 0x0f)>>1);
 	WRITE_MPEG_REG(TS_PL_PID_DATA, data);
 	WRITE_MPEG_REG(TS_PL_PID_INDEX, 0);
-	pr_dbg("set DSC %d PID %d\n", dsc->id, pid);
+
+	if (dsc->used) {
+		pr_dbg("set DSC %d PID %d\n", dsc->id, pid);
+	} else {
+		pr_dbg("disable DSC %d\n", dsc->id);
+	}
 	return 0;
 }
 
@@ -1148,24 +1157,6 @@ int dsc_set_key(struct aml_dsc *dsc, int type, u8 *key)
 
 	pr_dbg("set DSC %d type %d key %04x %04x %04x %04x\n", dsc->id, type,
 			k0, k1, k2, k3);
-	return 0;
-}
-
-int dsc_release(struct aml_dsc *dsc)
-{
-	u32 data;
-
-	WRITE_MPEG_REG(TS_PL_PID_INDEX, (dsc->id & 0x0f)>>1);
-	data = READ_MPEG_REG(TS_PL_PID_DATA);
-	if(dsc->id&1) {
-		data |= 1<<PID_MATCH_DISABLE_LOW;
-	} else {
-		data |= 1<<PID_MATCH_DISABLE_HIGH;
-	}
-	WRITE_MPEG_REG(TS_PL_PID_INDEX, (dsc->id & 0x0f)>>1);
-	WRITE_MPEG_REG(TS_PL_PID_DATA, data);
-
-	pr_dbg("release DSC %d\n", dsc->id);
 	return 0;
 }
 
@@ -2216,7 +2207,7 @@ void dmx_reset_hw_ex(struct aml_dvb *dvb, int reset_irq)
 	{
 		struct aml_dsc *dsc = &dvb->dsc[id];
 
-		if(dsc->used)
+		//if(dsc->used)
 		{
 			dsc_set_pid(dsc, dsc->pid);
 
@@ -2258,6 +2249,7 @@ void dmx_reset_dmx_hw_ex_unlock(struct aml_dvb *dvb, struct aml_dmx *dmx, int re
 #endif
 
 	WRITE_MPEG_REG(RESET3_REGISTER, (dmx->id)? ((dmx->id==1)? RESET_DEMUX1 : RESET_DEMUX2) : RESET_DEMUX0);
+	WRITE_MPEG_REG(RESET3_REGISTER, RESET_DES);
 
 	{
 		int times;
@@ -2377,7 +2369,7 @@ void dmx_reset_dmx_hw_ex_unlock(struct aml_dvb *dvb, struct aml_dmx *dmx, int re
 		{
 			struct aml_dsc *dsc = &dvb->dsc[id];
 
-			if(dsc->used)
+			//if(dsc->used)
 			{
 				dsc_set_pid(dsc, dsc->pid);
 

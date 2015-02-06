@@ -265,7 +265,7 @@ static int dvb_dsc_open(struct inode *inode, struct file *file)
 
 	dsc = &dvb->dsc[id];
 	dsc->id   = id;
-	dsc->pid  = -1;
+	dsc->pid  = 0x1fff;
 	dsc->set  = 0;
 	dsc->dvb  = dvb;
 
@@ -328,7 +328,10 @@ static int dvb_dsc_release(struct inode *inode, struct file *file)
 	spin_lock_irqsave(&dvb->slock, flags);
 
 	dsc->used = 0;
-	dsc_release(dsc);
+	dsc_set_pid(dsc, 0x1fff);
+
+	dsc->pid  = 0x1fff;
+	dsc->set = 0;
 	dvb->dsc_dev->users--;
 
 	spin_unlock_irqrestore(&dvb->slock, flags);
@@ -1260,6 +1263,13 @@ static int aml_dvb_probe(struct platform_device *pdev)
 		if ((ret=aml_dvb_dmx_init(advb, &advb->dmx[i], i))<0) {
 			goto error;
 		}
+	}
+
+	for (i=0; i<DSC_COUNT; i++) {
+		advb->dsc[i].id = i;
+		advb->dsc[i].used = 0;
+		advb->dsc[i].set = 0;
+		advb->dsc[i].pid = 0x1fff;
 	}
 
 	/*Register descrambler device*/

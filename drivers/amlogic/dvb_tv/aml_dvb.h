@@ -240,7 +240,6 @@ extern int dmx_get_ts_serial(aml_ts_source_t src);
 /*AMLogic dsc interface*/
 extern int dsc_set_pid(struct aml_dsc *dsc, int pid);
 extern int dsc_set_key(struct aml_dsc *dsc, int type, u8 *key);
-extern int dsc_release(struct aml_dsc *dsc);
 
 /*AMLogic ASYNC FIFO interface*/
 extern int aml_asyncfifo_hw_init(struct aml_asyncfifo *afifo);
