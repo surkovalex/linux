@@ -621,17 +621,17 @@ static ssize_t demux##i##_store_source(struct class *class,  struct class_attrib
 static ssize_t demux##i##_show_free_filters(struct class *class,  struct class_attribute *attr,char *buf)\
 {\
 	struct aml_dvb *dvb = &aml_dvb_device;\
-	struct aml_dmx *dmx = &dvb->dmx[i];\
+	struct dvb_demux *dmx = &dvb->dmx[i].demux;\
 	int fid, count;\
 	ssize_t ret = 0;\
-	unsigned long flags;\
-	spin_lock_irqsave(&dvb->slock, flags);\
+	if (mutex_lock_interruptible(&dmx->mutex)) \
+		return -ERESTARTSYS; \
 	count = 0;\
-	for(fid = 0; fid < FILTER_COUNT; fid++){\
-		if(!dmx->filter[fid].used)\
+	for (fid = 0; fid < dmx->filternum; fid++) {\
+		if (!dmx->filter[fid].state != DMX_STATE_FREE)\
 			count++;\
 	}\
-	spin_unlock_irqrestore(&dvb->slock, flags);\
+	mutex_unlock(&dmx->mutex);\
 	ret = sprintf(buf, "%d\n", count);\
 	return ret;\
 }
