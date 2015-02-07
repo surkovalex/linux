@@ -100,6 +100,7 @@ static u32 error_watchdog_count;
 static uint error_recovery_mode = 0;
 static u32 sync_outside;
 static u32 vh264_4k2k_rotation;
+static u32 first_i_recieved;
 static vframe_t *p_last_vf;
 
 #ifdef DEBUG_PTS
@@ -712,11 +713,11 @@ static irqreturn_t vh264_4k2k_isr(int irq, void *dev_id)
             vf->canvas0Addr = vf->canvas1Addr = spec2canvas(&buffer_spec[display_buff_id]);
             set_frame_info(vf);
 
-            if ((error_recovery_mode & 2) && error) {
+       if (((error_recovery_mode & 2) && error) ||(!first_i_recieved && (slice_type != SLICE_TYPE_I))) {
                 kfifo_put(&recycle_q, (const vframe_t **)&vf);
             } else {
                 p_last_vf = vf;
-
+                first_i_recieved = 1;
                 kfifo_put(&display_q, (const vframe_t **)&vf);
 
                 vf_notify_receiver(PROVIDER_NAME,VFRAME_EVENT_PROVIDER_VFRAME_READY,NULL);
@@ -848,7 +849,7 @@ static void vh264_4k2k_put_timer_func(unsigned long arg)
 #ifdef CONFIG_H264_2K4K_SINGLE_CORE
         && (READ_VREG(VDEC2_MS_ID) & 0x100)                   // with both decoder have started decoding
 #endif
-       ) {
+        && first_i_recieved) {
         if (++error_watchdog_count == ERROR_RESET_COUNT) {    // and it lasts for a while
             printk("H264 4k2k decoder fatal error watchdog.\n");
             fatal_error = DECODER_FATAL_ERROR_UNKNOW;
@@ -1207,7 +1208,7 @@ static void vh264_4k2k_local_init(void)
 
     reserved_buffer = 0;
     p_last_vf = NULL;
-
+    first_i_recieved = 0;
     INIT_WORK(&alloc_work, do_alloc_work);
 
     return;
