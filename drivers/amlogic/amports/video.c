@@ -2524,12 +2524,13 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
         pts = timestamp_vpts_get() + (cur_vf ? DUR2PTS(cur_vf->duration) : 0);
     }
     /* check video PTS discontinuity */
-    else if ((enable_video_discontinue_report) &&
+    else if (timestamp_pcrscr_enable_state()>0&&
+             (enable_video_discontinue_report) &&
              (abs(systime - pts) > tsync_vpts_discontinuity_margin()) &&
              ((next_vf->flag & VFRAME_FLAG_NO_DISCONTINUE) == 0)) {
         pts = timestamp_vpts_get() + (cur_vf ? DUR2PTS(cur_vf->duration) : 0);
 			//printk("system=0x%x vpts=0x%x\n", systime, timestamp_vpts_get());
-        if ((int)(systime - pts) >= 0){
+        if ((int)(systime - pts) >= 0) {
 		if(next_vf->pts != 0)
       			tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, next_vf->pts);
 		else

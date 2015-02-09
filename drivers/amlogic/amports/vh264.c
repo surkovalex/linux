@@ -167,7 +167,7 @@ static const struct vframe_operations_s vh264_vf_provider_ops = {
 static struct vframe_provider_s vh264_vf_prov;
 
 static u32 frame_buffer_size;
-static u32 frame_width, frame_height, frame_dur, frame_prog, frame_packing_type;
+static u32 frame_width, frame_height, frame_dur, frame_prog, frame_packing_type, last_duration;
 static u32 last_mb_width, last_mb_height;
 
 static DECLARE_KFIFO(newframe_q, vframe_t *, VF_POOL_SIZE);
@@ -567,6 +567,7 @@ static int vh264_set_params(void)
     mb_mv_byte = (mb_width & 0x80000000) ? 24 : 96;
     mb_width = mb_width & 0xff;
     mb_height = mb_total / mb_width;
+    last_duration=0;
 
     /* AV_SCRATCH_2
        bit 15: frame_mbs_only_flag
@@ -1169,16 +1170,23 @@ static void vh264_isr(void)
                             }
 
                             if (duration_from_pts_done == 0) {
-			        if (close_to(pts_duration, old_duration, RATE_CORRECTION_THRESHOLD)) {
-                                    //printk("finished correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
+                                if (close_to(pts_duration, old_duration, RATE_CORRECTION_THRESHOLD)) {
+                                    printk("finished correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
                                     duration_from_pts_done = 1;
-                                }else{/*not the same,redo it.*/
-                                    //printk("restart correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
+                                }
+                                else{/*not the same,redo it.*/
+                                    if (!close_to(pts_duration, old_duration, 1000) &&
+                                        !close_to(pts_duration, frame_dur, 1000) &&
+                                        close_to(pts_duration, last_duration, 200))	// yangle: frame_dur must wrong,recover it.
+                                        frame_dur=pts_duration;
+
+                                    printk("restart correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
                                     h264pts1 = h264pts2;
                                     h264_pts_count = 0;
                                     duration_from_pts_done = 0;
                                 }
                             }
+                            last_duration=pts_duration;
                         }
                     }
                 }

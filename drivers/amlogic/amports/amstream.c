@@ -51,6 +51,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/dma-contiguous.h>
 #include <asm/uaccess.h>
+#include <linux/clk.h>
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 #include <mach/mod_gate.h>
 #include <mach/power_gate.h>

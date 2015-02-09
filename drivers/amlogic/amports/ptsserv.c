@@ -299,7 +299,7 @@ int calculation_acached_delayed(void){
 
 	pTable = &pts_table[PTS_TYPE_AUDIO];
 
-	delay = pTable->last_checkin_pts-pTable->last_checkout_pts;
+	delay = pTable->last_checkin_pts-timestamp_apts_get();
 	if (0<delay && delay<5*90000) 
 		return delay;
 

@@ -34,7 +34,7 @@
 
 #include <asm/uaccess.h>
 #include <mach/am_regs.h>
-
+#include <linux/clk.h>
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6
 #include <mach/mod_gate.h>
 #endif
@@ -447,44 +447,59 @@ static ssize_t _tsdemux_write(const char __user *buf, size_t count, int isphybuf
     return count - r;
 }
 
-static void reset_pcr_regs(void)
+static int reset_pcr_regs(void)
 {
     u32 pcr_num;
 
     if (curr_pcr_id >= 0x1FFF)
-		return;
+        return 0;
 
     /* set paramater to fetch pcr */  
     pcr_num=0;
     if(curr_pcr_id == curr_vid_id)
-    	pcr_num=0;
+        pcr_num=0;
     else if(curr_pcr_id == curr_aud_id)
-    	pcr_num=1;
+        pcr_num=1;
     else if(curr_pcr_id == curr_sub_id)
-    	pcr_num=2;
+        pcr_num=2;
     else
-    	pcr_num=3;
-	
-	if(pcr_num == curr_pcr_num)
-		return;
+        pcr_num=3;
 
-    if(READ_MPEG_REG(TS_HIU_CTL_2) & 0x40){
-    	WRITE_MPEG_REG(PCR90K_CTL_2, 12 << 1);    
-    	WRITE_MPEG_REG(ASSIGN_PID_NUMBER_2, pcr_num);    
-    	printk("[tsdemux_init] To use device 2,pcr_num=%d \n",pcr_num);
-    }
-    else if(READ_MPEG_REG(TS_HIU_CTL_3) & 0x40){
-    	WRITE_MPEG_REG(PCR90K_CTL_3, 12 << 1); 
-    	WRITE_MPEG_REG(ASSIGN_PID_NUMBER_3, pcr_num);    
-    	printk("[tsdemux_init] To use device 3,pcr_num=%d \n",pcr_num);
-    }
-    else{
-    	WRITE_MPEG_REG(PCR90K_CTL, 12 << 1); 
-    	WRITE_MPEG_REG(ASSIGN_PID_NUMBER, pcr_num);    
-    	printk("[tsdemux_init] To use device 1,pcr_num=%d \n",pcr_num);
+    if (pcr_num != curr_pcr_num) {
+        u32 clk_unit=0;
+        u32 clk_81=0;
+        struct clk *clk;
+        clk = clk_get_sys("clk81", NULL);
+        if (IS_ERR(clk) || clk == 0) {
+            printk("[%s:%d] error clock \n",__FUNCTION__,__LINE__);
+            return 0;
+        }
+
+        clk_81=clk_get_rate(clk);
+        clk_unit = clk_81/80000;
+
+        printk("[%s:%d] clk_81 = %x clk_unit =%x \n",__FUNCTION__,__LINE__,clk_81,clk_unit);
+
+        if (READ_MPEG_REG(TS_HIU_CTL_2) & 0x40) {
+            WRITE_MPEG_REG(PCR90K_CTL_2, (12 << 1)|clk_unit);
+            WRITE_MPEG_REG(ASSIGN_PID_NUMBER_2, pcr_num);
+            printk("[tsdemux_init] To use device 2,pcr_num=%d \n",pcr_num);
+        }
+        else if (READ_MPEG_REG(TS_HIU_CTL_3) & 0x40) {
+            WRITE_MPEG_REG(PCR90K_CTL_3, (12 << 1)|clk_unit);
+            WRITE_MPEG_REG(ASSIGN_PID_NUMBER_3, pcr_num);
+            printk("[tsdemux_init] To use device 3,pcr_num=%d \n",pcr_num);
+        }
+        else{
+            WRITE_MPEG_REG(PCR90K_CTL, (12 << 1)|clk_unit);
+            WRITE_MPEG_REG(ASSIGN_PID_NUMBER, pcr_num);
+            printk("[tsdemux_init] To use device 1,pcr_num=%d \n",pcr_num);
+        }
+
+        curr_pcr_num = pcr_num;
     }
 
-	curr_pcr_num = pcr_num;
+    return 1;
 }
 
 s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc)
@@ -676,12 +691,11 @@ s32 tsdemux_init(u32 vid, u32 aid, u32 sid, u32 pcrid, bool is_hevc)
 
     curr_pcr_id = pcrid;
     if ((pcrid < 0x1FFF) && (pcrid != vid) && (pcrid != aid) && (pcrid != sid)) {
-    	tsdemux_set_pcrid(pcrid);
+        tsdemux_set_pcrid(pcrid);
     }
 #endif
 
-    pcrscr_valid=(pcrid < 0x1FFF)? 1 : 0; 	
-    reset_pcr_regs();
+    pcrscr_valid=reset_pcr_regs();
     first_pcr = 0;
 
     return 0;
@@ -725,11 +739,11 @@ void tsdemux_release(void)
     tsdemux_set_pcrid(0xffff);
     tsdemux_free_irq();
 
-	curr_vid_id  = 0xffff;
-	curr_aud_id  = 0xffff;
-	curr_sub_id  = 0xffff;
-	curr_pcr_id  = 0xffff;
-	curr_pcr_num = 0xffff;
+    curr_vid_id  = 0xffff;
+    curr_aud_id  = 0xffff;
+    curr_sub_id  = 0xffff;
+    curr_pcr_id  = 0xffff;
+    curr_pcr_num = 0xffff;
 
 #endif
 
@@ -953,13 +967,13 @@ void tsdemux_change_avid(unsigned int vid, unsigned int aid)
         ;
     }
 #else
-	curr_vid_id = vid;
-	curr_aud_id = aid;
+    curr_vid_id = vid;
+    curr_aud_id = aid;
 
     tsdemux_set_vid(vid);
     tsdemux_set_aid(aid);
 
-	reset_pcr_regs();
+    reset_pcr_regs();
 #endif
     return;
 }
@@ -974,11 +988,11 @@ void tsdemux_change_sid(unsigned int sid)
         ;
     }
 #else
-	curr_sub_id = sid;
+    curr_sub_id = sid;
 
     tsdemux_set_sid(sid);
 
-	reset_pcr_regs();
+    reset_pcr_regs();
 #endif
     return;
 }
@@ -986,7 +1000,7 @@ void tsdemux_change_sid(unsigned int sid)
 void tsdemux_audio_reset(void)
 {
     ulong flags;
-	DEFINE_SPINLOCK(lock);
+    DEFINE_SPINLOCK(lock);
 
     spin_lock_irqsave(&lock, flags);
 
@@ -1012,7 +1026,7 @@ void tsdemux_audio_reset(void)
 void tsdemux_sub_reset(void)
 {
     ulong flags;
-	DEFINE_SPINLOCK(lock);
+    DEFINE_SPINLOCK(lock);
     u32 parser_sub_start_ptr;
     u32 parser_sub_end_ptr;
 
@@ -1061,29 +1075,44 @@ u32 tsdemux_pcrscr_get(void)
     u32 pcr=0;
 
     if(pcrscr_valid==0)
-    	return 0;
+        return 0;
 
     if(READ_MPEG_REG(TS_HIU_CTL_2) & 0x40){
-    	
-    	pcr = READ_MPEG_REG(PCR_DEMUX_2);
+        pcr = READ_MPEG_REG(PCR_DEMUX_2);
     }
     else if(READ_MPEG_REG(TS_HIU_CTL_3) & 0x40){
-    	pcr = READ_MPEG_REG(PCR_DEMUX_3);
+        pcr = READ_MPEG_REG(PCR_DEMUX_3);
     }
     else{
-    	pcr = READ_MPEG_REG(PCR_DEMUX);    
+        pcr = READ_MPEG_REG(PCR_DEMUX);
    }
     if(first_pcr == 0)
-    	first_pcr = pcr;
+        first_pcr = pcr;
     return pcr;
 }
 
  u32 tsdemux_first_pcrscr_get(void)
  {
- 	if(pcrscr_valid==0)
-		return 0;
- 	return first_pcr;
- }
+     if (pcrscr_valid == 0)
+        return 0;
+
+    if (first_pcr == 0) {
+        u32 pcr;
+        if (READ_MPEG_REG(TS_HIU_CTL_2) & 0x40) {
+            pcr = READ_MPEG_REG(PCR_DEMUX_2);
+        }
+        else if (READ_MPEG_REG(TS_HIU_CTL_3) & 0x40) {
+            pcr = READ_MPEG_REG(PCR_DEMUX_3);
+        }
+        else{
+            pcr = READ_MPEG_REG(PCR_DEMUX);
+        }
+        first_pcr = pcr;
+       // printk("set first_pcr = 0x%x\n", pcr);
+    }
+
+    return first_pcr;
+}
 u8 tsdemux_pcrscr_valid(void)
 {
     return pcrscr_valid;
