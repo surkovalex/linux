@@ -69,6 +69,7 @@
 #define DUR2PTS(x) ((x)*90/96)
 #define PTS2DUR(x) ((x)*96/90)
 #define DUR2PTS_REM(x) (x*90 - DUR2PTS(x)*96)
+#define FIX_FRAME_RATE_CHECK_IDRFRAME_NUM 2
 
 static inline bool close_to(int a, int b, int m)
 {
@@ -192,6 +193,7 @@ static u32 use_idr_framerate = 0;
 static u32 seq_info;
 static u32 timing_info_present_flag;
 static u32 fixed_frame_rate_flag;
+static u32 fixed_frame_rate_check_count;
 static u32 aspect_ratio_info;
 static u32 num_units_in_tick;
 static u32 time_scale;
@@ -934,8 +936,8 @@ static void vh264_isr(void)
     unsigned int buffer_index;
     vframe_t *vf;
     unsigned int cpu_cmd;
-    unsigned int pts, pts_valid = 0, pts_duration = 0;
-	u64 pts_us64;
+    unsigned int pts,pts_lookup_save, pts_valid = 0, pts_duration = 0;
+    u64 pts_us64;
     bool force_interlaced_frame = false;
 
     WRITE_VREG(ASSIST_MBOX1_CLR_REG, 1);
@@ -1077,6 +1079,25 @@ static void vh264_isr(void)
 #ifdef DEBUG_PTS
                 pts_missed++;
 #endif
+            }
+
+            /* on second IDR frame,check the diff between pts compute from duration and pts from lookup ,
+             * if large than frame_dur,we think it is uncorrect.
+             */
+            pts_lookup_save = pts;
+            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
+                if (idr_flag && pts_valid) {
+                    fixed_frame_rate_check_count ++ ;
+                    //printk("diff:%d\n",last_pts - pts_lookup_save);
+                    if ((fixed_frame_rate_check_count == FIX_FRAME_RATE_CHECK_IDRFRAME_NUM) && (abs(pts - (last_pts + DUR2PTS(frame_dur))) > DUR2PTS(frame_dur))) {
+                        fixed_frame_rate_flag = 0;
+                        printk("pts sync mode play\n");
+                    }
+
+                    if (fixed_frame_rate_flag && (fixed_frame_rate_check_count > FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
+                        printk("fix_frame_rate mode play\n");
+                    }
+                }
             }
 
             if (READ_VREG(AV_SCRATCH_F) & 2) {
@@ -1226,6 +1247,10 @@ static void vh264_isr(void)
             }
 
             last_pts = pts;
+
+            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
+                pts = pts_lookup_save;
+            }
 
             if (pic_struct_present) {
                 if ((pic_struct == PIC_TOP_BOT) || (pic_struct == PIC_BOT_TOP)) {
@@ -1720,6 +1745,7 @@ static s32 vh264_init(void)
     first_pts64 = 0;
     first_offset = 0;
     first_pts_cached = false;
+    fixed_frame_rate_check_count = 0;
     vh264_local_init();
 
     query_video_status(0, &trickmode_fffb);
@@ -2222,6 +2248,8 @@ module_param(ucode_type, uint, 0664);
 MODULE_PARM_DESC(ucode_type, "\n amvdec_h264 decoder buffering or not for reference frame \n");
 module_param(debugfirmware, uint, 0664);
 MODULE_PARM_DESC(debugfirmware, "\n amvdec_h264 debug load firmware \n");
+module_param(fixed_frame_rate_flag, uint, 0664);
+MODULE_PARM_DESC(fixed_frame_rate_flag, "\n amvdec_h264 fixed_frame_rate_flag \n");
 
 module_init(amvdec_h264_driver_init_module);
 module_exit(amvdec_h264_driver_remove_module);
