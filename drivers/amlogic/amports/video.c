@@ -2486,6 +2486,10 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
     u32 systime;
     u32 adjust_pts, org_vpts;
 
+    if (timestamp_pcrscr_enable_state() == 0 && tsync_get_mode() == TSYNC_MODE_PCRMASTER) {
+        return false;
+    }
+
     if(debug_flag & DEBUG_FLAG_TOGGLE_FRAME_PER_VSYNC){
         return true;
     }
