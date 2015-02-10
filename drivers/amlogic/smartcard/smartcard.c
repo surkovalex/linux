@@ -218,6 +218,10 @@ typedef struct {
 #define SMC_ENABLE_PIN_NAME "smc:ENABLE"
 	int 			   enable_level;
 
+	u32 			   enable_5v3v_pin;
+#define SMC_ENABLE_5V3V_PIN_NAME "smc:5V3V"
+	int 			   enable_5v3v_level;
+
 	int                (*reset)(void *, int);
 	u32                irq_num;
 	int                reset_level;
@@ -296,6 +300,7 @@ static const unsigned char inv_table[256] = {
 	pr_dbg("\n"); \
 	}while(0)
 
+static int _gpio_out(unsigned int gpio, int val, const char *owner);
 
 static ssize_t show_gpio_pull(struct class *class, struct class_attribute *attr,	char *buf)
 {
@@ -307,20 +312,57 @@ static ssize_t show_gpio_pull(struct class *class, struct class_attribute *attr,
 
 static ssize_t set_gpio_pull(struct class *class, struct class_attribute *attr,	const char *buf, size_t count)
 {
-    unsigned int dbg;
-    ssize_t r;
+	unsigned int dbg;
+	ssize_t r;
 
-    r = sscanf(buf, "%d", &dbg);
-    if (r != 1)
-    return -EINVAL;
+	r = sscanf(buf, "%d", &dbg);
+	if (r != 1)
+		return -EINVAL;
 
-    ENA_GPIO_PULL = dbg;
-    printk("Smartcard the ENA_GPIO_PULL is:%d.\n", ENA_GPIO_PULL);
-    return count;
+	ENA_GPIO_PULL = dbg;
+	printk("Smartcard the ENA_GPIO_PULL is:%d.\n", ENA_GPIO_PULL);
+	return count;
+}
+
+static ssize_t show_5v3v(struct class *class, struct class_attribute *attr,	char *buf)
+{
+	smc_dev_t *smc = NULL;
+	int enable_5v3v = 0;
+
+	mutex_lock(&smc_lock);
+	smc = &smc_dev[0];
+	enable_5v3v = smc->enable_5v3v_level;
+	mutex_unlock(&smc_lock);
+
+	return sprintf(buf, "5v3v_pin level=%d\n", enable_5v3v);
+}
+
+static ssize_t store_5v3v(struct class *class, struct class_attribute *attr,	const char *buf, size_t count)
+{
+	unsigned int enable_5v3v=0;
+	ssize_t r;
+	smc_dev_t *smc = NULL;
+
+	r = sscanf(buf, "%d", &enable_5v3v);
+	if (r != 1)
+		return -EINVAL;
+
+	mutex_lock(&smc_lock);
+	smc = &smc_dev[0];
+	smc->enable_5v3v_level = enable_5v3v;
+
+	if (smc->enable_5v3v_pin != -1) {
+		_gpio_out(smc->enable_5v3v_pin, smc->enable_5v3v_level, SMC_ENABLE_5V3V_PIN_NAME);
+		pr_error("enable_pin: -->(%d)\n", (smc->enable_5v3v_level)? 1 : 0);
+	}
+	mutex_unlock(&smc_lock);
+
+	return count;
 }
 
 static struct class_attribute smc_class_attrs[] = {
 	__ATTR(smc_gpio_pull,  S_IRUGO | S_IWUSR, show_gpio_pull,    set_gpio_pull),
+	__ATTR(ctrl_5v3v,      S_IRUGO | S_IWUSR, show_5v3v,         store_5v3v),
     __ATTR_NULL
 };
 
@@ -1901,6 +1943,54 @@ static int smc_dev_init(smc_dev_t *smc, int id)
 			pr_error("cannot get resource \"%s\"\n", buf);
 		} else {
 			smc->detect_invert = res->start;
+		}
+#endif /*CONFIG_OF*/
+	}
+
+	smc->enable_5v3v_pin = -1;
+	if (smc->enable_5v3v_pin == -1) {
+		snprintf(buf, sizeof(buf), "smc%d_5v3v_pin", id);
+#ifdef CONFIG_OF
+		ret = of_property_read_string(smc->pdev->dev.of_node, buf, &str);
+		if (!ret) {
+			smc->enable_5v3v_pin = amlogic_gpio_name_map_num(str);
+			ret = _gpio_request(smc->enable_5v3v_pin, SMC_ENABLE_5V3V_PIN_NAME);
+			pr_error("%s: %s [%d]\n", buf, str, ret);
+		} else {
+			pr_error("cannot find resource \"%s\"\n", buf);
+		}
+#else /*CONFIG_OF*/
+		res = platform_get_resource_byname(smc->pdev, IORESOURCE_MEM, buf);
+		if (!res) {
+			pr_error("cannot get resource \"%s\"\n", buf);
+		} else {
+			smc->enable_5v3v_pin = res->start;
+			gpio_request(smc->enable_5v3v_pin, SMC_ENABLE_5V3V_PIN_NAME);
+		}
+#endif /*CONFIG_OF*/
+	}
+
+	smc->enable_5v3v_level = 0;
+	if (1) {
+		snprintf(buf, sizeof(buf), "smc%d_5v3v_level", id);
+#ifdef CONFIG_OF
+		ret = of_property_read_u32(smc->pdev->dev.of_node, buf, &value);
+		if (!ret) {
+			smc->enable_5v3v_level = value;
+			pr_error("%s: %d\n", buf, smc->enable_5v3v_level);
+			if (smc->enable_5v3v_pin != -1) {
+				_gpio_out(smc->enable_5v3v_pin, smc->enable_5v3v_level, SMC_ENABLE_5V3V_PIN_NAME);
+				pr_error("enable_pin: -->(%d)\n", (smc->enable_5v3v_level)? 1 : 0);
+			}
+		} else {
+			pr_error("cannot find resource \"%s\"\n", buf);
+		}
+#else /*CONFIG_OF*/
+		res = platform_get_resource_byname(smc->pdev, IORESOURCE_MEM, buf);
+		if (!res) {
+			pr_error("cannot get resource \"%s\"\n", buf);
+		} else {
+			smc->enable_5v3v_level = res->start;
 		}
 #endif /*CONFIG_OF*/
 	}

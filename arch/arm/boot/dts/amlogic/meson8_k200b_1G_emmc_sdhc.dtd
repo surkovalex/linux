@@ -1863,12 +1863,12 @@ sdio{
 //$$ L2 PROP_U32 8 = "amlogic,clrmask"
 //$$ L2 PROP_STR 12 = "amlogic,pins"
 		dvb_p_ts0_pins: dvb_p_ts0_pins {
-			amlogic,setmask = <3 0x3F>;
+			amlogic,setmask = <3 0x37>;
 			amlogic,clrmask = <1 0xCCE41
 								4 0x2000000
 								7 0x20000000
 								9 0x431F>;
-			amlogic,pins = "GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14","GPIOY_15","GPIOY_16","GPIOY_0","GPIOY_1","GPIOY_4","GPIOY_8";
+			amlogic,pins = "GPIOY_9","GPIOY_10","GPIOY_11","GPIOY_12","GPIOY_13","GPIOY_14","GPIOY_15","GPIOY_16","GPIOY_0","GPIOY_1","GPIOY_8";
 		};
 
 //$$ MATCH "dvb_s_ts0_pins_match" = "&dvb_s_ts0_pins"
@@ -1876,11 +1876,11 @@ sdio{
 //$$ L2 PROP_U32 6 = "amlogic,clrmask"
 //$$ L2 PROP_STR 5 = "amlogic,pins"
 		dvb_s_ts0_pins: dvb_s_ts0_pins {
-			amlogic,setmask = <3 0x1F>;
+			amlogic,setmask = <3 0x17>;
 			amlogic,clrmask = <1 0xCCE41
 								4 0x2000000
 								9 0x310>;
-			amlogic,pins = "GPIOY_9","GPIOY_0","GPIOY_1","GPIOY_4","GPIOY_8";
+			amlogic,pins = "GPIOY_9","GPIOY_0","GPIOY_1","GPIOY_8";
 		};
 
 //$$ MATCH "dvb_fe_pins_match" = "&dvb_fe_pins"
@@ -1970,6 +1970,8 @@ sdio{
 		smc0_clock_source = <0>;
 		//smc0_enable_pin = "GPIOX_16";
 		//smc0_enable_level = <1>;
+		//smc0_5v3v_pin = "GPIOY_4";
+		//smc0_5v3v_level = <0>;
 		smc0_reset_pin = "GPIOX_17";
 		smc0_reset_level = <0>;
 		smc0_clk_pinmux_reg = <0x2030>;
