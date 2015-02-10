@@ -2078,6 +2078,16 @@ sdio{
         status = "okay";
     };
 
+    aml_aes{
+       compatible = "amlogic,aes";
+       dev_name = "aml_aes";
+    };
+
+    aml_tdes{
+       compatible = "amlogic,des,tdes";
+       dev_name = "aml_tdes";
+    };
+
 /// **************************************************************************************
 /// -   GPIO
 //$$ MODULE="GPIO"
