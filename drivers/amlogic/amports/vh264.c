@@ -1266,7 +1266,7 @@ static void vh264_isr(void)
 
             last_pts = pts;
 
-            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
+            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM) && (sync_outside == 0)) {
                 pts = pts_lookup_save;
             }
 
