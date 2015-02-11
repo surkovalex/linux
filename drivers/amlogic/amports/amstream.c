@@ -641,7 +641,11 @@ static  int amstream_port_init(stream_port_t *port)
     stream_buf_t *pabuf = &bufs[BUF_TYPE_AUDIO];
     stream_buf_t *psbuf = &bufs[BUF_TYPE_SUBTITLE];
     stream_buf_t *pubuf = &bufs[BUF_TYPE_USERDATA];
-
+    mutex_lock(&amstream_mutex);
+    if (port->flag & PORT_FLAG_INITED) {
+        mutex_unlock(&amstream_mutex);
+        return 0;
+    }
     if ((port->type & PORT_TYPE_AUDIO) && (port->flag & PORT_FLAG_AFORMAT)) {
         r = audio_port_init(port, pabuf);
         if (r < 0) {
@@ -723,6 +727,7 @@ static  int amstream_port_init(stream_port_t *port)
 	set_vsync_pts_inc_mode(0); // clear video inc
 
     port->flag |= PORT_FLAG_INITED;
+    mutex_unlock(&amstream_mutex);
     return 0;
     /*errors follow here*/
 error5:
@@ -734,7 +739,7 @@ error3:
 error2:
     audio_port_release(port, pabuf, 0);
 error1:
-
+    mutex_unlock(&amstream_mutex);
     return r;
 }
 static  int amstream_port_release(stream_port_t *port)
@@ -1123,12 +1128,12 @@ static int amstream_open(struct inode *inode, struct file *file)
     s32 i;
     stream_port_t *s;
     stream_port_t *this = &ports[iminor(inode)];
-
     if (iminor(inode) >= amstream_port_num) {
         return (-ENODEV);
     }
-
+    mutex_lock(&amstream_mutex);
     if (this->flag & PORT_FLAG_IN_USE) {
+        mutex_unlock(&amstream_mutex);
         return (-EBUSY);
     }
 
@@ -1136,6 +1141,7 @@ static int amstream_open(struct inode *inode, struct file *file)
     for (s = &ports[0], i = 0; i < amstream_port_num; i++, s++) {
         if ((s->flag & PORT_FLAG_IN_USE) &&
             ((this->type) & (s->type) & (PORT_TYPE_VIDEO | PORT_TYPE_AUDIO))) {
+            mutex_unlock(&amstream_mutex);
             return (-EBUSY);
         }
     }
@@ -1192,17 +1198,17 @@ static int amstream_open(struct inode *inode, struct file *file)
         debug_filp = NULL;
     }
 #endif
-
+    mutex_unlock(&amstream_mutex);
     return 0;
 }
 
 static int amstream_release(struct inode *inode, struct file *file)
 {
     stream_port_t *this = &ports[iminor(inode)];
-
     if (iminor(inode) >= amstream_port_num) {
         return (-ENODEV);
     }
+    mutex_lock(&amstream_mutex);
     if (this->flag & PORT_FLAG_INITED) {
         amstream_port_release(this);
     }
@@ -1257,7 +1263,7 @@ static int amstream_release(struct inode *inode, struct file *file)
 
     switch_mod_gate_by_name("demux", 0);
 #endif 
-
+    mutex_unlock(&amstream_mutex);
     return 0;
 }
 

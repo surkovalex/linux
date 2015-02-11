@@ -111,6 +111,7 @@ s32 vdec_init(vformat_t vf)
     if (IS_ERR(vdec_device)) {
         r = PTR_ERR(vdec_device);
         printk("vdec: Decoder device register failed (%d)\n", r);
+        inited_vcodec_num--;
         goto error;
     }
 
