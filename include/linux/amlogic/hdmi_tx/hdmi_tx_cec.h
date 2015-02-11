@@ -531,7 +531,10 @@ unsigned int cec_intr_stat(void);
 void cec_test_function(unsigned char* arg, unsigned char arg_cnt);
 void cec_node_init(hdmitx_dev_t* hdmitx_device);
 void cec_node_uninit(hdmitx_dev_t* hdmitx_device);
-
+void dumpaocecreg(void);
+void raocec(unsigned int addr);
+void waocec(unsigned int addr, unsigned int value);
+void cec_rx_buf_check(void);
 void cec_hw_reset(void);
 
 unsigned int dispatch_buffer_parse(const char *buf, const char *string,  char *param, size_t count);
