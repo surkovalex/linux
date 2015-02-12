@@ -1856,7 +1856,7 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdev, Hdmi_tx_video_para_t *param)
     }
     aml_write_reg32(P_VPU_HDMI_FMT_CTRL,(((TX_INPUT_COLOR_FORMAT==HDMI_COLOR_FORMAT_420)?2:0)  << 0) | // [ 1: 0] hdmi_vid_fmt. 0=444; 1=convert to 422; 2=convert to 420.
                          (2                                                     << 2) | // [ 3: 2] chroma_dnsmp. 0=use pixel 0; 1=use pixel 1; 2=use average.
-                         (((TX_COLOR_DEPTH==HDMI_COLOR_DEPTH_24B)? 1:0)         << 4) | // [    4] dith_en. 1=enable dithering before HDMI TX input.
+                         (0                                                     << 4) | // [    4] dith_en. 1=enable dithering before HDMI TX input.
                          (0                                                     << 5) | // [    5] hdmi_dith_md: random noise selector.
                          (0                                                     << 6)); // [ 9: 6] hdmi_dith10_cntl.
     if(hdev->mode420 == 1) {
@@ -2590,7 +2590,6 @@ static void hdmitx_4k2k5g420_debug(void)
     aml_write_reg32(P_HHI_VID_CLK_DIV, 0x100);
     aml_set_reg32_bits(P_HHI_HDMI_CLK_CNTL, 1, 16, 4);
     aml_write_reg32(P_VPU_HDMI_SETTING, 0x10e);
-    aml_write_reg32(P_VPU_HDMI_FMT_CTRL, 0x1a);
     hdmitx_wr_reg(HDMITX_DWC_FC_SCRAMBLER_CTRL, 0);
     hdmitx_wr_reg(HDMITX_TOP_TMDS_CLK_PTTN_01, 0x001f001f);
     printk("%s[%d]\n", __func__, __LINE__);
@@ -3108,7 +3107,7 @@ static int hdmitx_cntl_misc(hdmitx_dev_t* hdmitx_device, unsigned cmd, unsigned 
         return !!(aml_read_reg32(P_HHI_VID2_PLL_CNTL) & (1 << 30));     // bit30: enable
         break;
     case MISC_CONF_MODE420:
-        aml_write_reg32(P_VPU_HDMI_FMT_CTRL, 0x1a);
+        aml_write_reg32(P_VPU_HDMI_FMT_CTRL, 0xa);
         aml_write_reg32(P_VPU_HDMI_SETTING, 0x10e);
         break;
     case MISC_TMDS_CLK_DIV40:
