@@ -3166,7 +3166,9 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
                         vsync_toggle_frame(cur_dispbuf);
                     }
                 }
-
+#if defined(CONFIG_AM_VECM)
+            amvecm_on_vs(vf);
+#endif
             break;
         }
 
