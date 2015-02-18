@@ -2164,6 +2164,17 @@ sdio{
 	firmware_timeout=<6>;
 	suspend_timeout=<6>;
 	};
+
+    aml_aes{
+       compatible = "amlogic,aes";
+       dev_name = "aml_aes";
+    };
+
+    aml_tdes{
+       compatible = "amlogic,des,tdes";
+       dev_name = "aml_tdes";
+    };
+
 /// **************************************************************************************
 /// -   GPIO
 //$$ MODULE="GPIO"

@@ -7,12 +7,4 @@ config CRYPTO_AML_HW_CRYPRO
 	select CRYPTO_BLKCIPHER
 	select CRYPTO_HASH
 	default y
-
-config CRYPTO_DEVICE_DRIVER
-  bool "crypto device for user interface"
-	select CRYPTO_ALGAPI
-	select CRYPTO_BLKCIPHER
-	select CRYPTO_HASH
-  default y
-  
 endmenu
