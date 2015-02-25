@@ -41,6 +41,7 @@ static const struct of_device_id stmmac_dt_ids[] = {
 	{ .compatible = "amlogic,meson8b-rgmii-dwmac", },// s805 chip 1000m mode
 	{ .compatible = "amlogic,meson8b-rmii-dwmac", .data = &meson6_dwmac_data },// s805 chip 100m mode
 	{ .compatible = "amlogic,meson6-rmii-dwmac",.data = &meson6_dwmac_data },// defined
+	{ .compatible = "amlogic,mesong9tv-rmii-dwmac",},// defined
 #endif
 	/* SoC specific glue layers should come before generic bindings */
 	{ .compatible = "st,spear600-gmac"},

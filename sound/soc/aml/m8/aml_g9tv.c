@@ -718,8 +718,8 @@ static void aml_g9tv_pinmux_init(struct snd_soc_card *card) {
                 "mute_inv");
         amlogic_gpio_request_one(p_aml_audio->gpio_mute, GPIOF_OUT_INIT_LOW,
                 "mute_spk");
-        amlogic_set_value(p_aml_audio->gpio_mute, 0, "mute_spk");
-    }
+        amlogic_set_value(p_aml_audio->gpio_mute, (!(p_aml_audio->mute_inv)), "mute_spk");
+        }
 }
 
 static void aml_g9tv_pinmux_deinit(struct snd_soc_card *card) {
