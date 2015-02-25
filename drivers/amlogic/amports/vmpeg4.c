@@ -296,9 +296,9 @@ static irqreturn_t vmpeg4_isr(int irq, void *dev_id)
         }
 #endif
         if (vmpeg4_amstream_dec_info.rate == 0) {
-            if ((rate >> 16) != 0) {
-                /* fixed VOP rate */
-                vmpeg4_amstream_dec_info.rate = (rate & 0xffff) * DURATION_UNIT / (rate >> 16);
+            // if ((rate >> 16) != 0) {
+            if ((rate & 0xffff) != 0) {
+                vmpeg4_amstream_dec_info.rate = (rate >> 16) * DURATION_UNIT / (rate & 0xffff);
                 duration = vmpeg4_amstream_dec_info.rate;
             } else if (rate_detect < RATE_DETECT_COUNT) {
                 if (vop_time_inc < last_vop_time_inc) {
