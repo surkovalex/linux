@@ -546,6 +546,55 @@ static void vh264_ppmgr_reset(void)
     printk("vh264dec: vf_ppmgr_reset\n");
 }
 #endif
+static int get_max_dpb_size(int max_dpb_size, int level_idc, int mb_width, int mb_height)
+{
+    int size, r;
+    switch (level_idc) {
+      case 10:
+        r = 1485;
+        break;
+      case 11:
+        r = 3375;
+        break;
+      case 12:
+      case 13:
+      case 20:
+        r = 8910;
+        break;
+      case 21:
+        r = 17820;
+        break;
+      case 22:
+      case 30:
+        r = 30375;
+        break;
+      case 31:
+        r = 67500;
+        break;
+      case 32:
+        r = 76800;
+        break;
+      case 40:
+      case 41:
+      case 42:
+        r = 122880;
+        break;
+      case 50:
+        r = 414000;
+        break;
+      case 51:
+        r = 691200;
+        break;
+      default:
+        return max_dpb_size;
+    }
+    size = (mb_width * mb_height + (mb_width * mb_height / 2)) * 256 * 10;
+    r = (r * 1024 + size-1) / size;
+    r = min(r, 16);
+    r = min(r, max_dpb_size);
+    printk("max_dpb %d->%d size:%d\n", max_dpb_size, r, size);
+    return r;
+}
 
 static int vh264_set_params(void)
 {
@@ -556,7 +605,7 @@ static int vh264_set_params(void)
     unsigned int post_canvas;
     unsigned int frame_mbs_only_flag;
     unsigned int chroma_format_idc, chroma444;
-    unsigned int crop_infor, crop_bottom,crop_right;
+    unsigned int crop_infor, crop_bottom,crop_right, level_idc;
 
     post_canvas = get_post_canvas();
 
@@ -566,6 +615,7 @@ static int vh264_set_params(void)
     aspect_ratio_info = READ_VREG(AV_SCRATCH_3);
     num_units_in_tick = READ_VREG(AV_SCRATCH_4);
     time_scale = READ_VREG(AV_SCRATCH_5);
+    level_idc = READ_VREG(AV_SCRATCH_A);
     mb_total = (mb_width >> 8) & 0xffff;
     max_reference_size = (mb_width >> 24) & 0x7f;
     mb_mv_byte = (mb_width & 0x80000000) ? 24 : 96;
@@ -914,6 +964,7 @@ static int vh264_set_params(void)
     WRITE_VREG(AV_SCRATCH_3, post_canvas); // should be modified later
     addr += mb_total * mb_mv_byte * max_reference_size;
     WRITE_VREG(AV_SCRATCH_4, addr);
+    max_dpb_size = get_max_dpb_size(max_dpb_size, level_idc, mb_width, mb_height);
     WRITE_VREG(AV_SCRATCH_0, (max_reference_size << 24) | (actual_dpb_size << 16) | (max_dpb_size << 8));
     return 0;
 }
