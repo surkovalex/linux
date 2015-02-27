@@ -4263,6 +4263,10 @@ static long amvideo_ioctl(struct file *file,
         }
         break;
 
+    case AMSTREAM_IOC_GET_OMX_VPTS:
+        put_user(omx_pts, (unsigned long __user *)arg);
+        break;
+
     case AMSTREAM_IOC_TRICKMODE:
         if (arg == TRICKMODE_I) {
             trickmode_i = 1;
@@ -6406,6 +6410,9 @@ module_param(cur_dev_idx, uint, 0664);
 
 MODULE_PARM_DESC(new_frame_count, "\n new_frame_count\n");
 module_param(new_frame_count, uint, 0664);
+
+MODULE_PARM_DESC(omx_pts, "\n omx_pts\n");
+module_param(omx_pts, uint, 0664);
 
 #ifdef TV_REVERSE
 module_param(reverse,bool,0644);
