@@ -93,6 +93,7 @@ extern int atvdemod_init(void);
 extern void atv_dmd_set_std(void);
 extern void retrieve_vpll_carrier_lock(int *lock);
 extern void retrieve_video_lock(int *lock);
+extern int retrieve_vpll_carrier_afc(void);
 
 //atv demod block address
 //address interval is 4, because it's 32bit interface, but the address is in byte

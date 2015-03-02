@@ -1114,9 +1114,9 @@ static dtmb_cfg_t list_dtmb_v1[99] = {
 
 extern int memstart;
 
-void dtmb_initial(struct aml_demod_sta *demod_sta)
+
+void dtmb_all_reset(void)
 {
-//	dtmb_write_reg(0x049, memstart);		//only for init
 	dtmb_write_reg(0x010, 0x52);
 	dtmb_write_reg(0x047, 0x33202);  //20 bits, 1 - fpga. 0 - m6tvd
 	dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
@@ -1124,7 +1124,14 @@ void dtmb_initial(struct aml_demod_sta *demod_sta)
     dtmb_write_reg(0x18,0x000a1316); // shorten mobile detect time.
     dtmb_write_reg(0x15,0x0199999A); // shift -5M.
 	dtmb_write_reg(0x2f,0x13064263); // speed up src
-#if 0
+
+}
+
+void dtmb_initial(struct aml_demod_sta *demod_sta)
+{
+//	dtmb_write_reg(0x049, memstart);		//only for init
+	dtmb_all_reset();
+#if 0	
 	int i;
 	  for (i=0; list_dtmb_v1[i].adr != 0; i++) {
 	        if (list_dtmb_v1[i].rw){
@@ -1163,16 +1170,76 @@ int dtmb_information(void)
 
 }
 
+void dtmb_mobile_mode_set(int mode)
+{	
+	  if(mode==enable_mobile){
+		  dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9) + (1 << 1)); // set mobile mode
+		  #ifdef dtmb_mobile_mode
+		  dtmb_write_reg(0x50, 0x1241);	//180m mobile mode
+		  dtmb_write_reg(0x4f, 0x303f05df);// set belta byhand
+		  #endif
+	  }else if(mode==disable_mobile){
+		  dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9)); // set static mode
+		  #ifdef dtmb_mobile_mode
+		  dtmb_write_reg(0x50, 0x1120); //180m mobile mode
+		  dtmb_write_reg(0x4f, 0x1f0205df);// set belta byhand
+		  #endif
+	}
+	  
 
+}
+
+void dtmb_time_eq_mode_set(int mode)
+{
+	int reg_46,reg_6b;
+	if(CLOSE_TIME_EQ==mode){
+		dtmb_write_reg(0x2e, 0x131a747d);  // cancel timing-loop
+		dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
+		reg_46 = dtmb_read_reg(0x46);
+		reg_46 = reg_46 &~ ((1<<20) + (1<<16));			// bypass fe and set time_eq
+		dtmb_write_reg(0x46, reg_46);
+	}else if (OPEN_TIME_EQ==mode){
+		dtmb_write_reg(0x2e, 0x31a747d);  // start timing-loop
+        dtmb_write_reg(0x0d, 0x14400640);  // delay fec sync time
+        reg_46 = dtmb_read_reg(0x46);
+        reg_46 = reg_46 | ((1<<20) + (1<<16));           // bypass fe and set time_eq
+        dtmb_write_reg(0x46, reg_46);
+        reg_6b = dtmb_read_reg(0x6b);
+        reg_6b = (reg_6b &~(0x3<<16)) | (1<<17);           // set tune auto
+        dtmb_write_reg(0x6b, reg_6b);
+	}
+
+
+}
+
+void dtmb_set_ddc_phase(void)
+{
+	int ddc_phase,icfo_phase,fcfo_phase,ddc_phase_new;
+	ddc_phase  = dtmb_read_reg(0x15) & 0x1ffffff;
+	icfo_phase = dtmb_read_reg(0xe0) & 0xfffff;
+	fcfo_phase = dtmb_read_reg(0xe1) & 0xfffff;
+	if(icfo_phase > (1<<19))
+		icfo_phase -= (1<<20);
+	if(fcfo_phase > (1<<19))
+		fcfo_phase -= (1<<20);
+	ddc_phase_new = ddc_phase + icfo_phase*4 + fcfo_phase;
+	//pr_dbg("before is DDC_phase %x, now is %x \n", ddc_phase, ddc_phase_new);
+	dtmb_write_reg(0x15, ddc_phase_new);
+
+}
+
+
+static int mobile_times = 0;
+static int time_eq_cnt = 0;
+static int time_eq_lost_cnt = 0;
 int dtmb_read_snr(void){
-	int tmp,che_snr,snr,snr_avg,fec_lock,reg_46;
+	int tmp,che_snr,snr,snr_avg,fec_lock;
 	int fsm_state,fec_ldpc_it_avg,local_state,fbe_in_num,SC_mode,time_eq;
 	int time_cnt=0,fec_bch_add;
-	int ddc_phase,icfo_phase,fcfo_phase,ddc_phase_new,reg_6b;
 	int mobi_det_power;
-    int mobile_times,front_cci0_count;
+    int front_cci0_count;
     int ctrl_che_working_state,pm_change,constell;
-	mobile_times = 0;
+	
 	pm_change = 0;
 
 	tmp=dtmb_read_reg(0x0e3);
@@ -1196,43 +1263,36 @@ int dtmb_read_snr(void){
 		dtmb_reset();
 		return 0;
 	}else{
-		 if(fec_lock && fec_ldpc_it_avg < (4 * 256)){
+		 if(fec_lock && fec_ldpc_it_avg < (4 * 256)){		// 0.4 is 3~4*256, 0.6 is 5~6*256,0.8 is 6~7*256
 			 pr_dbg("-----------  lock ! ------------ \n");
 			 return 1;
 		 }else{
 			fsm_state = dtmb_read_reg(0xd7) & 0xf;
-            local_state = 2;
+            local_state = AMLOGIC_DTMB_STEP2;
 			time_cnt=0;
 			 while(fsm_state < 8 && time_cnt < 10) {// state change to pm
                 msleep(50);
                 fsm_state = dtmb_read_reg(0xd7) & 0xf;
                 time_cnt++;
-                local_state = 3;
+                local_state = AMLOGIC_DTMB_STEP3;
                 pr_dbg("*************** local_state = %d ************ \n", local_state);
             }
 
-			 if(fsm_state >= 8) { // check whether SC and two path mode
+			 if(fsm_state >= DTMB_PM_INIT_READY) { // check whether SC and two path mode
 		     	  fbe_in_num = (dtmb_read_reg(0xe4) >> 16) & 0x3ff;  // two path distance
 		     	  SC_mode = (dtmb_read_reg(0xe6) >> 24) & 0x1;
 		     	  time_eq = (dtmb_read_reg(0x46) >> 16) & 0x1;
 		     	  fec_ldpc_it_avg = dtmb_read_reg(0xdd) & 0xffff;
-
 			  	  mobi_det_power = (dtmb_read_reg(0xf1)>>8) & 0x7ffff;
 
-             	  if(mobi_det_power > 10) {
-             	      mobile_times = 15;//8;
-             	      dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9) + (1 << 1)); // set mobile mode
-             	      #ifdef dtmb_mobile_mode
-             	      dtmb_write_reg(0x50, 0x1241);	//180m mobile mode
-             	      #endif
+             	  if(mobi_det_power > 10 && (time_eq == 0)) {
+             	      mobile_times = 8;//8;
+             	      dtmb_mobile_mode_set(enable_mobile);
              	  }
              	  else {
              	      mobile_times -= 1;
              	      if(mobile_times <= 0) {
-             	          dtmb_write_reg(0x46, (dtmb_read_reg(0x46) & 0xfffffff9)); // set static mode
-             	          #ifdef dtmb_mobile_mode
-             	          dtmb_write_reg(0x50, 0x1120);	//180m mobile mode
-             	          #endif
+					  	  dtmb_mobile_mode_set(disable_mobile);
              	          mobile_times = 0;
              	      }
              	  }
@@ -1249,80 +1309,72 @@ int dtmb_read_snr(void){
              	  }
 
 
-		     	  local_state = 4;
+		     	  local_state = AMLOGIC_DTMB_STEP4;
 		     	  pr_dbg("*************** local_state = %d ************ \n", local_state);
 		     	  if(mobile_times > 0)
                          pr_dbg("***************  mobile state ************,mobile_times is %d \n",mobile_times);
 		     	  if(time_eq){  // in time_eq mode
-		     	      local_state = 5;
-		     	      pr_dbg("*************** local_state = %d ************ \n", local_state);
-
-		     	      if(SC_mode == 1 || fbe_in_num < 30){ // MC mode or not two path mode, restore normal mode
-		     	          dtmb_write_reg(0x2e, 0x131a747d);  // cancel timing-loop
-		     	          dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
-		     	          reg_46 = dtmb_read_reg(0x46);
-		                reg_46 = reg_46 &~ ((1<<20) + (1<<16));           // bypass fe and set time_eq
-		                dtmb_write_reg(0x46, reg_46);
-		                pr_dbg(" ------------ normal mode -------------\n");
-		                local_state = 6;
-		                pr_dbg("*************** local_state = %d ************ \n", local_state);
-
-		     	      }
+		     	      local_state = AMLOGIC_DTMB_STEP5;
+					  mobile_times = 0;
+		     	      pr_dbg("*************** local_state = %d ,time_eq_cnt is %d************ \n", local_state,time_eq_cnt);
+                      if(fec_lock == 1){
+					  	  return 1;
+                      }
+					  else if(SC_mode == 1) {
+					  	  dtmb_time_eq_mode_set(CLOSE_TIME_EQ);
+		                  pr_dbg(" ------------ normal mode MC-------------\n");
+		                  local_state = AMLOGIC_DTMB_STEP10;
+		                  pr_dbg("*************** local_state = %d ************ \n", local_state);					  	
+					  }
+					  else {
+			     	      if(fbe_in_num < 30 || time_eq_lost_cnt > 5){ // MC mode or not two path mode, restore normal mode
+			     	          if(time_eq_cnt <= 0) {
+							  	time_eq_lost_cnt = 0;
+							    dtmb_time_eq_mode_set(CLOSE_TIME_EQ);
+				                pr_dbg(" ------------ normal mode SC-------------\n");
+				                local_state = AMLOGIC_DTMB_STEP6;
+								dtmb_reset();
+				                pr_dbg("*************** local_state = %d ************ \n", local_state);
+			     	        }
+							else{
+								time_eq_cnt--;
+							}
+			     	      }
+						  else{
+						  	time_eq_lost_cnt++;
+						  }
+						 }
 		        }
 		        else {
-		            local_state = 7;
+		            local_state = AMLOGIC_DTMB_STEP7;
 					front_cci0_count=(dtmb_read_reg(0xe9) >> 22) & 0xff;
 		            pr_dbg("*************** local_state = %d ************ ,front_cci0_count is %d\n", local_state,front_cci0_count);
 		            constell = (dtmb_read_reg(0xe5) >> 16) & 0x3;
-		            if((SC_mode == 0)&&(fec_ldpc_it_avg > 640)&& (constell > 1)/*2.5*256*/&& ((fbe_in_num > 30)||(front_cci0_count>0))) { // switch to time_eq mode
-		                ddc_phase  = dtmb_read_reg(0x15) & 0x1ffffff;
-		                icfo_phase = dtmb_read_reg(0xe0) & 0xfffff;
-		                fcfo_phase = dtmb_read_reg(0xe1) & 0xfffff;
-		                if(icfo_phase > (1<<19))
-		                    icfo_phase -= (1<<20);
-		                if(fcfo_phase > (1<<19))
-		                    fcfo_phase -= (1<<20);
-		                ddc_phase_new = ddc_phase + icfo_phase*4 + fcfo_phase;
-		                //printf("before is DDC_phase %x, now is %x \n", ddc_phase, ddc_phase_new);
-		                dtmb_write_reg(0x15, ddc_phase_new);
-
-		                //printf("switch to time_eq configure : 0 -- No, 1 -- yes");
-		                //scanf("%d", &tmp);
-		                tmp = 1;
-		                if(tmp == 1) {
-		                    dtmb_write_reg(0x2e, 0x31a747d);  // start timing-loop
-		                    dtmb_write_reg(0x0d, 0x14400640);  // delay fec sync time
-		                    reg_46 = dtmb_read_reg(0x46);
-		                    reg_46 = reg_46 | ((1<<20) + (1<<16));           // bypass fe and set time_eq
-		                    dtmb_write_reg(0x46, reg_46);
-
-		                    reg_6b = dtmb_read_reg(0x6b);
-		                    reg_6b = (reg_6b &~(0x3<<16)) | (1<<17);           // set tune auto
-		                    dtmb_write_reg(0x6b, reg_6b);
-		                }
+		            if((SC_mode == 0)&&(fec_ldpc_it_avg > 640)&& (constell > 0)/*2.5*256*/&& ((fbe_in_num > 30)||(front_cci0_count>0))) { // switch to time_eq mode
+		                time_eq_cnt = 5;
+						time_eq_lost_cnt = 0;
+		                dtmb_set_ddc_phase();
+						dtmb_time_eq_mode_set(OPEN_TIME_EQ);
 		                pr_dbg(" ------------ time_eq mode -------------\n");
-		                local_state = 8;
+		                local_state = AMLOGIC_DTMB_STEP8;
 		                pr_dbg("*************** local_state = %d ************ \n", local_state);
 		                dtmb_reset();
 						msleep(300);
-	                        }
-	                    }
-	                }else if(time_cnt >=10) // don't sync, all reset
-                        {
-                            local_state = 9;
-                            pr_dbg("*************** local_state = %d ************ \n", local_state);
+	                  }
+	               }
+	           }else if(time_cnt >=10) // don't sync, all reset
+	            {
+	                local_state = AMLOGIC_DTMB_STEP9;
+	                pr_dbg("*************** local_state = %d ************ \n", local_state);
 
-                            dtmb_register_reset();
-                        //    dtmb_write_reg(0x49,memstart); //set memory
-                            dtmb_write_reg(0x10,0x52); //set memory
-                            dtmb_write_reg(0xd, 0x141a0320); // increase interleaver0 waiting time.
-                            dtmb_write_reg(0xc, 0x41444400); // shorten che waiting time.
-                            dtmb_write_reg(0x47,0x33202);
-							dtmb_write_reg(0x18,0x000a1316); // shorten mobile detect time.
-				            dtmb_write_reg(0x15,0x0199999A); // shift -5M.
-				            dtmb_write_reg(0x2f,0x13064263); // speed up src
-				            pm_change = 0;
-                        }
+	                dtmb_register_reset();
+	            //    dtmb_write_reg(0x49,memstart); //set memory
+	                dtmb_all_reset();
+		            time_eq_cnt = 0;
+					time_eq_lost_cnt = 0;
+					mobile_times= 0;
+		            pm_change = 0;
+	            }
 
 		 }
 
@@ -1530,6 +1582,11 @@ int demod_set_sys(struct aml_demod_sta *demod_sta,
 		pr_dbg("Cry_mode\n");
 	}
 	#endif
+	//open dtv adc pinmux
+	demod_set_cbus_reg(0x10000,0x2034);
+	printk("[R840]set adc pinmux\n");
+
+	//
     demod_set_adc_core_clk(clk_adc, clk_dem,dvb_mode);
 	//init for dtmb
 	if(dvb_mode==M6_Dtmb){

@@ -77,6 +77,9 @@ struct analog_parameters {
 	unsigned int lock_range;
 	unsigned int leap_step;
 	v4l2_std_id std;
+	unsigned int tuner_id;//for amlatvdemod
+	unsigned int if_freq;//for amlatvdemod
+	unsigned int if_inv;//for tuner r840
 	unsigned int reserved;
 };
 

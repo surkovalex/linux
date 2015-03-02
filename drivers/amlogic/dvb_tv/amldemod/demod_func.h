@@ -99,6 +99,48 @@
 #define Wr(addr, data) *(volatile unsigned long *)(addr)=(data)
 #define Rd(addr) *(volatile unsigned long *)(addr)
 
+typedef enum{
+	enable_mobile,
+	disable_mobile
+}dtmb_mobile_t;
+
+typedef enum{
+	OPEN_TIME_EQ,
+	CLOSE_TIME_EQ
+}dtmb_time_eq_t;
+
+typedef enum{
+	AMLOGIC_DTMB_STEP0,
+	AMLOGIC_DTMB_STEP1,
+	AMLOGIC_DTMB_STEP2,
+	AMLOGIC_DTMB_STEP3,
+	AMLOGIC_DTMB_STEP4,
+	AMLOGIC_DTMB_STEP5,		//time eq
+	AMLOGIC_DTMB_STEP6,		//set normal mode sc
+	AMLOGIC_DTMB_STEP7,
+	AMLOGIC_DTMB_STEP8,		//set time eq mode
+	AMLOGIC_DTMB_STEP9,		//reset
+	AMLOGIC_DTMB_STEP10,	//set normal mode mc
+	AMLOGIC_DTMB_STEP11,
+}dtmb_step_t;
+
+typedef enum{
+	DTMB_IDLE=0,
+	DTMB_AGC_READY=1,
+	DTMB_TS1_READY=2,
+	DTMB_TS2_READY=3,
+	DTMB_FE_READY=4,
+	DTMB_PNPHASE_READY=5,
+	DTMB_SFO_INIT_READY=6,
+	DTMB_TS3_READY=7,
+	DTMB_PM_INIT_READY=8,
+	DTMB_CHE_INIT_READY=9,
+	DTMB_FEC_READY=10
+	
+}dtmb_fec_status_t;
+
+
+
 // i2c functions
 //int aml_i2c_sw_test_bus(struct aml_demod_i2c *adap, char *name);
 int am_demod_i2c_xfer(struct aml_demod_i2c *adap, struct i2c_msg *msgs, int num);

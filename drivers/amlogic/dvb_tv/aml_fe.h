@@ -137,6 +137,12 @@ struct aml_fe_dev{
 	int      mem_start;
 	int      mem_end;
 };
+struct aml_demod_param{
+	/*for tuner video if to amlatvdemod*/
+	unsigned int      if_freq;//HZ
+	/*for tuner output*/
+	unsigned int      if_inv;
+};
 
 struct aml_fe{
 	struct dvb_frontend *fe;
@@ -149,6 +155,7 @@ struct aml_fe{
 	int      dev_id;
 	int      capability;
 	aml_ts_source_t    ts;
+	struct aml_demod_param demod_param;
 	struct aml_fe_dev *tuner;
 	struct aml_fe_dev *atv_demod;
 	struct aml_fe_dev *dtv_demod;
@@ -171,6 +178,7 @@ extern int aml_register_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
 extern int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
 
 extern struct dvb_frontend * get_si2177_tuner(void);
+extern struct dvb_frontend * get_r840_tuner(void);
 extern const char* soundsys_to_str(unsigned short soundsys);
 extern const char* audmode_to_str(unsigned short soundsys);
 extern const char* v4l2_std_to_str(v4l2_std_id std);

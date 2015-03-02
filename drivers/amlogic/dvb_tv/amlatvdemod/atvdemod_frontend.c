@@ -213,8 +213,8 @@ static void aml_atvdemod_get_pll_status(struct dvb_frontend *fe, void *stat)
 	fe_status_t *status = (fe_status_t*)stat;
 	retrieve_vpll_carrier_lock(&vpll_lock);
 	if((vpll_lock&0x1)==0){
-		//*status = FE_HAS_LOCK;
-		*status = FE_TIMEDOUT;
+		*status = FE_HAS_LOCK;
+		//*status = FE_TIMEDOUT;
 		pr_info("visual carrier lock:locked\n");
 	}else{
 		pr_info("visual carrier lock:unlocked\n");
@@ -259,15 +259,26 @@ void aml_atvdemod_set_params(struct dvb_frontend *fe,struct analog_parameters *p
 {
 	if(FE_ANALOG == fe->ops.info.type)
 	{
-		if(p->std != amlatvdemod_devp->parm.std)
+		if((p->std != amlatvdemod_devp->parm.std) || (p->tuner_id == AM_TUNER_R840))
 		{
 			amlatvdemod_devp->parm.std  = p->std;
+			amlatvdemod_devp->parm.if_freq = p->if_freq;
+			amlatvdemod_devp->parm.if_inv = p->if_inv;
+			amlatvdemod_devp->parm.tuner_id = p->tuner_id;
 			atv_dmd_set_std();
 			pr_info("[amlatvdemod..]%s set std color %s, audio type %s.\n",__func__,\
 			v4l2_std_to_str(0xff000000&amlatvdemod_devp->parm.std), v4l2_std_to_str(0xffffff&amlatvdemod_devp->parm.std));
+			pr_info("[amlatvdemod..]%s set if_freq %d, if_inv %d.\n",__func__,\
+			amlatvdemod_devp->parm.if_freq,amlatvdemod_devp->parm.if_inv );
 		}
 	}
 	return;
+}
+static int aml_atvdemod_get_afc(struct dvb_frontend *fe, s32 *afc)
+{
+	*afc = retrieve_vpll_carrier_afc();
+	pr_info("[amlatvdemod..]%s afc %d.\n",__func__,*afc);
+	return 0;
 }
 
 static int aml_atvdemod_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
@@ -279,7 +290,7 @@ static int aml_atvdemod_get_ops(struct aml_fe_dev *dev, int mode, void *ops)
                 printk("[amlatvdemod..]%s null pointer error.\n",__func__);
                 return -1;
         }
-        //aml_analog_ops->get_afc = aml_atvdemod_get_afc;
+        aml_analog_ops->get_afc = aml_atvdemod_get_afc;
         aml_analog_ops->get_snr = aml_atvdemod_get_snr;
         aml_analog_ops->get_status = aml_atvdemod_get_status;
 	aml_analog_ops->set_params = aml_atvdemod_set_params;
