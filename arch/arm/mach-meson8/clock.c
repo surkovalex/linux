@@ -887,8 +887,9 @@ void meson_set_cpu_ctrl_reg(int cpu,int is_on)
 {
 #ifdef CONFIG_MESON_TRUSTZONE
 	uint32_t value = 0;
-#endif
+#else
 	spin_lock(&clockfw_lock);
+#endif
 
 #ifdef CONFIG_MESON_TRUSTZONE
 	value = meson_read_corectrl();
@@ -900,12 +901,16 @@ void meson_set_cpu_ctrl_reg(int cpu,int is_on)
 	aml_set_reg32_bits(MESON_CPU_CONTROL_REG,1,0,1);
 #endif
 
+#ifndef CONFIG_MESON_TRUSTZONE
 	spin_unlock(&clockfw_lock);
+#endif
 }
 
 void meson_set_cpu_ctrl_addr(uint32_t cpu, const uint32_t addr)
 {
+#ifndef CONFIG_MESON_TRUSTZONE
 	spin_lock(&clockfw_lock);
+#endif
 
 #ifdef CONFIG_MESON_TRUSTZONE
 	meson_auxcoreboot_addr(cpu, addr);
@@ -913,7 +918,9 @@ void meson_set_cpu_ctrl_addr(uint32_t cpu, const uint32_t addr)
 	aml_write_reg32((MESON_CPU1_CONTROL_ADDR_REG + ((cpu-1) << 2)), addr);
 #endif
 
-	spin_unlock(&clockfw_lock);	
+#ifndef CONFIG_MESON_TRUSTZONE
+	spin_unlock(&clockfw_lock);
+#endif
 }
 
 int meson_get_cpu_ctrl_addr(int cpu)
