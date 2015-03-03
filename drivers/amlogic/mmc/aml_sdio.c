@@ -1363,28 +1363,16 @@ static int aml_sdio_probe(struct platform_device *pdev)
         /*Register card detect irq : plug in & unplug*/
         if(pdata->irq_in && pdata->irq_out){
             pdata->irq_init(pdata);
-#ifdef CONFIG_ARCH_MESONG9TV
-            ret = request_threaded_irq(pdata->irq_in+INT_GPIO_1,
-                    (irq_handler_t)aml_sd_irq_cd, aml_irq_cd_thread,
-                    IRQF_DISABLED, "mmc_in", (void*)pdata);
-#else
             ret = request_threaded_irq(pdata->irq_in+INT_GPIO_0,
                     (irq_handler_t)aml_sd_irq_cd, aml_irq_cd_thread,
                     IRQF_DISABLED, "mmc_in", (void*)pdata);
-#endif                    
             if (ret) {
                 sdio_err("Failed to request mmc IN detect\n");
                 goto probe_free_host;
             }
-#ifdef CONFIG_ARCH_MESONG9TV            
-            ret |= request_threaded_irq(pdata->irq_out+INT_GPIO_1,
-                    (irq_handler_t)aml_sd_irq_cd, aml_irq_cd_thread,
-                    IRQF_DISABLED, "mmc_out", (void*)pdata);
-#else
             ret |= request_threaded_irq(pdata->irq_out+INT_GPIO_0,
                     (irq_handler_t)aml_sd_irq_cd, aml_irq_cd_thread,
                     IRQF_DISABLED, "mmc_out", (void*)pdata);
-#endif                    
             //ret = request_irq(pdata->irq_in+INT_GPIO_0, aml_sd_irq_cd, IRQF_DISABLED, "mmc_in", pdata);
             //ret |= request_irq(pdata->irq_out+INT_GPIO_0, aml_sd_irq_cd, IRQF_DISABLED, "mmc_out", pdata);
             if (ret) {
