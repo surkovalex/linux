@@ -306,7 +306,7 @@
 		key_num = <3>;
 		key_code = <28 105 106>;
 		key_chan = <0 0 0>;
-		key_val = <0 460 900>;
+		key_val = <50 460 900>;
 		key_tolerance = <40 40 40>;
 	};
 
