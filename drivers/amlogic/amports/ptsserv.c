@@ -772,7 +772,13 @@ static int _pts_lookup_offset_inline(
                 *val = pTable->first_checkin_pts;
                 pTable->first_lookup_ok = 1;
                 pTable->first_lookup_is_fail = 1;
-
+                if ( type == PTS_TYPE_VIDEO ) {
+                    if ( timestamp_vpts_get() == 0 ) {
+                        timestamp_firstvpts_set(1);
+                    } else {
+                        timestamp_firstvpts_set(timestamp_vpts_get());
+                    }
+                }
                 if (tsync_get_debug_pts_checkout()) {
                     if (tsync_get_debug_vpts() && (type == PTS_TYPE_VIDEO))
                         printk("first vpts look up offset<0x%x> failed, return first_checkin_pts<0x%x>\n",
