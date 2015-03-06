@@ -277,7 +277,11 @@ int run_arc_program(void)
 //    	for(i = 0; i<sizeof(arc_code)/4; i+=4,pbuffer+=4)
 //    		printk(" 0x%x	0x%x	0x%x	0x%x \n",*(pbuffer),*(pbuffer+1),*(pbuffer+2),*(pbuffer+3));
         v = ((IO_SRAM_PHY_BASE & 0xFFFFF)>>12);
+#ifdef CONFIG_MESON_TRUSTZONE
+        meson_secure_reg_write(P_AO_SECURE_REG0, v<<8 | meson_secure_reg_read(P_AO_SECURE_REG0)); //TEST_N : 1->output mode; 0->input mode
+#else
         aml_write_reg32(P_AO_SECURE_REG0, v<<8 | aml_read_reg32(P_AO_SECURE_REG0)); //TEST_N : 1->output mode; 0->input mode
+#endif
     
         aml_write_reg32(P_AO_RTI_STATUS_REG1, 0);//clean status
     
