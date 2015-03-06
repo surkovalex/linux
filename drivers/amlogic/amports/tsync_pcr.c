@@ -63,6 +63,9 @@ typedef enum {
 #define PAUSE_CHECK_TIME   2700
 #define PAUSE_RESUME_TIME   18000
 
+static u32 tsync_pcr_recovery_span = 3;
+
+
 /* the delay from ts demuxer to the amvideo  */
 #define DEFAULT_VSTREAM_DELAY 18000
 
@@ -98,17 +101,17 @@ static u32 tsync_pcr_discontinue_threshold = (TIME_UNIT90K * 1.5);
 static u32 tsync_pcr_ref_latency = (TIME_UNIT90K * 0.3);				//TIME_UNIT90K*0.3
 
 // use for pcr valid mode
-static u32 tsync_pcr_max_cache_time = TIME_UNIT90K*2;				//TIME_UNIT90K*2;
-static u32 tsync_pcr_up_cache_time = TIME_UNIT90K*1.5;				//TIME_UNIT90K*1.5;
-static u32 tsync_pcr_down_cache_time = TIME_UNIT90K*0.8;			//TIME_UNIT90K*0.8;
-static u32 tsync_pcr_min_cache_time = TIME_UNIT90K*0.5;			//TIME_UNIT90K*0.5;
+static u32 tsync_pcr_max_cache_time = TIME_UNIT90K*1.5;			//TIME_UNIT90K*1.5;
+static u32 tsync_pcr_up_cache_time = TIME_UNIT90K*1.2;				//TIME_UNIT90K*1.2;
+static u32 tsync_pcr_down_cache_time = TIME_UNIT90K*0.6;			//TIME_UNIT90K*0.6;
+static u32 tsync_pcr_min_cache_time = TIME_UNIT90K*0.2;			//TIME_UNIT90K*0.2;
 
 
 // use for pcr invalid mode
 static u32 tsync_pcr_max_delay_time = TIME_UNIT90K*3;				//TIME_UNIT90K*3;
 static u32 tsync_pcr_up_delay_time = TIME_UNIT90K*2;				//TIME_UNIT90K*2;
 static u32 tsync_pcr_down_delay_time = TIME_UNIT90K*1.5;			//TIME_UNIT90K*1.5;
-static u32 tsync_pcr_min_delay_time = TIME_UNIT90K*1;				//TIME_UNIT90K*0.8;
+static u32 tsync_pcr_min_delay_time = TIME_UNIT90K*0.8;			//TIME_UNIT90K*0.8;
 
 
 static u32 tsync_pcr_first_video_frame_pts = 0;				
@@ -249,7 +252,7 @@ int get_stream_buffer_size(int type){
 
 int get_min_cache_delay(void){
     int video_cache_time = calculation_vcached_delayed();
-    int audio_cache_time = calculation_vcached_delayed();
+    int audio_cache_time = calculation_acached_delayed();
 
     if (video_cache_time>0 && audio_cache_time>0) {
         return min(video_cache_time,audio_cache_time);
@@ -700,16 +703,23 @@ static unsigned long tsync_pcr_check(void)
             cur_apts,cur_vpts,old_pcr,new_pcr,last_checkin_apts,last_checkin_vpts);
     }
 
-    if (((vbuf_level * 5 > vbuf_size * 4 && vbuf_size > 0) || (abuf_level * 5 > abuf_size * 4 && abuf_size > 0)) && play_mode != PLAY_MODE_FORCE_SPEED) {
-        // the video stream buffer will happen overflow
+    if (((vbuf_level * 3 > vbuf_size * 2 && vbuf_size > 0) || (abuf_level * 3 > abuf_size * 2 && abuf_size > 0)) && play_mode != PLAY_MODE_FORCE_SPEED) {
+        // the stream buffer have too much data. speed out
+        printk("[tsync_pcr_check]Buffer will overflow and speed play. vlevel=%x vsize=%x alevel=%x asize=%x play_mode=%d\n",
+            vbuf_level,vbuf_size,abuf_level,abuf_size, play_mode);
+        play_mode=PLAY_MODE_FORCE_SPEED;
+    }
+    else if ((vbuf_level * 5 > vbuf_size * 4 && vbuf_size > 0) || (abuf_level * 5 > abuf_size * 4 && abuf_size > 0)) {
+        // the stream buffer will happen overflow. quikly speed out
         u32 new_pcr=0;
+        printk("[tsync_pcr_check]Buffer will overflow and fast speed play. vlevel=%x vsize=%x alevel=%x asize=%x play_mode=%d\n",
+            vbuf_level,vbuf_size,abuf_level,abuf_size, play_mode);
         play_mode=PLAY_MODE_FORCE_SPEED;
         new_pcr=timestamp_pcrscr_get()+72000;		// 90000*0.8
         if (new_pcr < timestamp_pcrscr_get())
             printk("[%s]set the system pts now system 0x%x  pcr 0x%x!\n",__func__,timestamp_pcrscr_get(),new_pcr);
         timestamp_pcrscr_set(new_pcr);
-        printk("[tsync_pcr_check]Buffer will overflow and speed play. new_pcr=%x vlevel=%x vsize=%x alevel=%x asize=%x play_mode=%d\n",
-            new_pcr,vbuf_level,vbuf_size,abuf_level,abuf_size, play_mode);
+        printk("[tsync_pcr_check]set new pcr =%x",new_pcr);
     }
 
     if (play_mode == PLAY_MODE_FORCE_SLOW) {
@@ -756,7 +766,7 @@ static unsigned long tsync_pcr_check(void)
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] diff=%lld to speed play  \n",diff);
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] ref_pcr=%lld to speed play  \n",ref_pcr);
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] cur_pcr=%lld to speed play  \n",cur_pcr);
-            amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] tsync_pcr_max_cache_time=%d to speed play  \n",tsync_pcr_max_cache_time);
+            amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] cur_delta=%lld to speed play  \n",cur_delta);
         }
         //else if(diff > OPEN_RECOVERY_THRESHOLD && cur_pcr>ref_pcr && play_mode!=PLAY_MODE_SLOW && need_recovery){
         else if(diff< (tsync_pcr_min_cache_time) && (play_mode!=PLAY_MODE_SLOW) && need_recovery){
@@ -764,14 +774,14 @@ static unsigned long tsync_pcr_check(void)
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] diff=%lld to slow play  \n",diff);
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] ref_pcr=%lld to slow play  \n",ref_pcr);
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] cur_pcr=%lld to slow play  \n",cur_pcr);
-            amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] tsync_pcr_max_cache_time=%d to slow play  \n",tsync_pcr_max_cache_time);
+            amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] cur_delta=%lld to slow play  \n",cur_delta);
         }
         //else if(diff < CLOSE_RECOVERY_THRESHOLD && play_mode!=PLAY_MODE_NORMAL){
         else if((!need_recovery||((tsync_pcr_down_cache_time<diff)&&(diff<tsync_pcr_up_cache_time)))&&(play_mode!=PLAY_MODE_NORMAL)){
             play_mode=PLAY_MODE_NORMAL;
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] ref_pcr=%lld to nomal play  \n",ref_pcr);
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] cur_pcr=%lld to nomal play  \n",cur_pcr);
-            amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] tsync_pcr_max_cache_time=%d to nomal play  \n",tsync_pcr_max_cache_time);
+            amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] cur_delta=%lld to nomal play  \n",cur_delta);
             amlog_level(LOG_LEVEL_INFO, "[tsync_pcr_check] diff=%lld,need_recovery=%d to nomal play  \n",diff,need_recovery);
         }
     }
@@ -800,11 +810,11 @@ static unsigned long tsync_pcr_check(void)
  
     if (need_recovery && !tsync_pcr_vpause_flag) {
         if (play_mode == PLAY_MODE_SLOW)
-            timestamp_pcrscr_set(timestamp_pcrscr_get()-RECOVERY_SPAN);
+            timestamp_pcrscr_set(timestamp_pcrscr_get()-tsync_pcr_recovery_span);
         else if ( play_mode == PLAY_MODE_FORCE_SLOW)
             timestamp_pcrscr_set(timestamp_pcrscr_get()-FORCE_RECOVERY_SPAN);
         else if (play_mode == PLAY_MODE_SPEED)
-            timestamp_pcrscr_set(timestamp_pcrscr_get()+RECOVERY_SPAN);
+            timestamp_pcrscr_set(timestamp_pcrscr_get()+tsync_pcr_recovery_span);
         else if ( play_mode == PLAY_MODE_FORCE_SPEED)
             timestamp_pcrscr_set(timestamp_pcrscr_get()+FORCE_RECOVERY_SPAN);
     }
@@ -986,6 +996,27 @@ static ssize_t show_apause_flag(struct class *class,
     return sprintf(buf, "%d\n", tsync_pcr_apause_flag);
 }
 
+static ssize_t tsync_pcr_recovery_span_show(struct class *cla, struct class_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%d\n", tsync_pcr_recovery_span);
+}
+
+static ssize_t tsync_pcr_recovery_span_store(struct class *cla, struct class_attribute *attr, const char *buf,
+                                   size_t count)
+{
+    size_t r;
+
+    r = sscanf(buf, "%d", &tsync_pcr_recovery_span);
+
+    printk("%s(%d)\n", __func__, tsync_pcr_recovery_span);
+
+    if (r != 1) {
+        return -EINVAL;
+    }
+
+    return count;
+}
+
 // --------------------------------------------------------------------------------
 // define of tsync pcr module
 
@@ -996,6 +1027,7 @@ static struct class_attribute tsync_pcr_class_attrs[] = {
     __ATTR(tsync_pcr_freerun_mode, S_IRUGO | S_IWUSR, tsync_pcr_freerun_mode_show, tsync_pcr_freerun_mode_store),
     __ATTR(tsync_pcr_reset_flag,  S_IRUGO | S_IWUSR | S_IWGRP, show_reset_flag, NULL),
     __ATTR(tsync_pcr_apause_flag,  S_IRUGO | S_IWUSR | S_IWGRP, show_apause_flag, NULL),
+    __ATTR(tsync_pcr_recovery_span, S_IRUGO | S_IWUSR, tsync_pcr_recovery_span_show, tsync_pcr_recovery_span_store),
     __ATTR_NULL
 };
 static struct class tsync_pcr_class = {
