@@ -1169,7 +1169,7 @@ void hdmitx_hpd_plugin_handler(struct work_struct *work)
 tmp_no_edid_handler:
     set_disp_mode_auto();
     hdmitx_set_audio(hdev, &(hdev->cur_audio_param), hdmi_ch);
-//    switch_set_state(&sdev, 1);
+    switch_set_state(&sdev, 1);
     cec_node_init(hdev);
 
     hdev->hdmitx_event &= ~HDMI_TX_HPD_PLUGIN;
@@ -1186,6 +1186,7 @@ void hdmitx_hpd_plugout_handler(struct work_struct *work)
     hdev->hpd_state = 0;
     //hdev->HWOp.CntlConfig(hdev, CONF_CLR_AVI_PACKET, 0);
     printk("TODO plugout\n");
+    switch_set_state(&sdev, 0);
     hdev->hdmitx_event &= ~HDMI_TX_HPD_PLUGOUT;
     mutex_unlock(&setclk_mutex);
 }
@@ -1551,7 +1552,7 @@ static int amhdmitx_probe(struct platform_device *pdev)
         hdmi_print(INF, SYS "get hdmi platform data\n");
     }
 #endif
-    //switch_dev_register(&sdev);
+    switch_dev_register(&sdev);
     switch_dev_register(&lang_dev);
 
     hdmitx_init_parameters(&hdmitx_device.hdmi_info);
