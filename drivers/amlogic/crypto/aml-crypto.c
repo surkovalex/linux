@@ -78,6 +78,7 @@ void ndma_set_table_position(unsigned long thread_num,
 	}
 }
 
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8)
 void ndma_set_table_position_secure(unsigned long thread_num,
 		unsigned long table_start, unsigned long size)
 {
@@ -118,6 +119,8 @@ void ndma_set_table_position_secure(unsigned long thread_num,
 		break;
 	}
 }
+#endif
+
 /* --------------------------------------------
    ndma_add_descriptor_1d
    -------------------------------------------- */
