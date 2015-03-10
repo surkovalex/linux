@@ -173,7 +173,7 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-                reserve-memory = <0x02000000>;//32M
+                reserve-memory = <0x04000000>;//64M
 		reserve-iomap = "true";
         };
 
