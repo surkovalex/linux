@@ -90,7 +90,7 @@ void root_func(){
 		mem_4k2k_decoder: region@1 {
 			region_name = "cma_4k2k";
 			linux,contiguous-region;
-			reg = <0x00000000 0x0c000000>;
+			reg = <0x00000000 0x0ca00000>;
 		};
 
         cma_0:region@0 {
