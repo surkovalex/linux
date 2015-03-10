@@ -59,6 +59,22 @@
 #define Wr_reg_bits(adr, val, start, len)  WRITE_MPEG_REG_BITS(adr, val, start, len)
 #endif
 
+
+#if (defined CONFIG_RDMA_IN_RDMAIRQ)||(defined CONFIG_RDMA_IN_TASK)
+#if MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV
+#define RDMA_CHECK_REG   VPU_D2D3_MMC_CTRL
+#define RDMA_CHECK_BIT      6
+#endif
+#endif
+
+#if 0
+#if MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8
+#define RDMA_CHECK_REG   VPU_VD3_MMC_CTRL
+#define RDMA_CHECK_BIT      6
+#endif
+#endif
+
+
 //#define RDMA_CHECK_PRE
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV
 #undef READ_BACK_SUPPORT
@@ -271,10 +287,17 @@ static int rdma_config(unsigned char type)
     Wr(GCLK_REG_MISC_RDMA, Rd(GCLK_REG_MISC_RDMA)|GCLK_MASK_MISC_RDMA);
 #endif
     if(rmda_item_count>0){
-    memcpy(rmda_table_addr_remap, rmda_table, rmda_item_count*8);
+#if (defined RDMA_CHECK_REG)&&(defined RDMA_CHECK_BIT)
+        unsigned long check_val = Rd(RDMA_CHECK_REG);
+        rdma_table_prepare_write(RDMA_CHECK_REG, check_val|(1<<RDMA_CHECK_BIT));
+#endif
+        memcpy(rmda_table_addr_remap, rmda_table, rmda_item_count*8);
 #ifdef RDMA_CHECK_PRE
         memcpy(rmda_table_pre, rmda_table, rmda_item_count*8);
 #endif
+    }
+    else {
+        rdma_config_flag = 2;
     }
 #ifdef RDMA_CHECK_PRE
     rmda_item_count_pre = rmda_item_count;
@@ -441,6 +464,14 @@ EXPORT_SYMBOL(vsync_rdma_config_pre);
 
 static irqreturn_t rdma_isr(int irq, void *dev_id)
 {
+#if (defined RDMA_CHECK_REG)&&(defined RDMA_CHECK_BIT)
+        unsigned long check_val = Rd(RDMA_CHECK_REG);
+        if (((check_val>>RDMA_CHECK_BIT)&0x1) == 0) {
+            return IRQ_HANDLED;
+        }
+        Wr(RDMA_CHECK_REG, Rd(RDMA_CHECK_REG)&(~(1<<RDMA_CHECK_BIT)));
+#endif
+
 #ifdef CONFIG_RDMA_IN_TASK
       if(rmda_item_count > 0){
         rdma_config_flag = 1;
@@ -800,6 +831,10 @@ static int  __init rdma_init(void)
     enable = 1;
     vout_register_client(&display_mode_notifier_nb_v);
 #endif
+#if (defined RDMA_CHECK_REG)&&(defined RDMA_CHECK_BIT)
+    Wr(RDMA_CHECK_REG, Rd(RDMA_CHECK_REG)&(~(1<<RDMA_CHECK_BIT)));
+#endif
+
 #ifdef CONFIG_RDMA_IN_TASK
      sema_init(&rdma_sema,1);
      kthread_run(rdma_task_handle, NULL, "kthread_h265");

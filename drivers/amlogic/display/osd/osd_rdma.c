@@ -37,6 +37,10 @@ static int ctrl_ahb_rd_burst_size = 3;
 static int ctrl_ahb_wr_burst_size = 3;
 
 static int  osd_rdma_init(void);
+void osd_rdma_start(void);
+
+static u32		   sw_item_count=0;
+static rdma_table_item_t sw_rdma_table[(TABLE_SIZE+7)/8];
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define Wr(adr,val) WRITE_VCBUS_REG(adr, val)
@@ -54,13 +58,38 @@ static int  osd_rdma_init(void);
 
 static int  update_table_item(u32 addr,u32 val)
 {
-	if(item_count > (MAX_TABLE_ITEM-1)) return -1;
-
-	//new comer,then add it .
-	rdma_table[item_count].addr=addr;
-	rdma_table[item_count].val=val;
-	item_count++;
-	aml_write_reg32(END_ADDR,(table_paddr + item_count*8-1));
+	unsigned int rdma_flag = Rd(OSD_RDMA_FLAG_REG);
+	if (item_count > (MAX_TABLE_ITEM-2))
+		return -1;
+	if ((rdma_flag == OSD_RDMA_IDLE) || (rdma_flag == OSD_RDMA_WAIT)) {
+		if (!item_count) {
+			rdma_table[0].addr=addr;
+			rdma_table[0].val=val;
+			rdma_table[1].addr=OSD_RDMA_FLAG_REG;
+			rdma_table[1].val=OSD_RDMA_DONE;
+			item_count=2;
+			aml_write_reg32(END_ADDR,(table_paddr + item_count*8 - 1));
+		}
+		else{
+			rdma_table[item_count].addr=OSD_RDMA_FLAG_REG;
+			rdma_table[item_count].val=OSD_RDMA_DONE;
+			aml_write_reg32(END_ADDR,(table_paddr + (item_count+1)*8 - 1));
+			rdma_table[item_count-1].addr=addr;
+			rdma_table[item_count-1].val=val;
+			item_count++;
+		}
+		if (rdma_flag == OSD_RDMA_IDLE) {
+			Wr(OSD_RDMA_FLAG_REG, OSD_RDMA_WAIT);
+		}
+	}
+	else{ // OSD_RDMA_DONE
+		if (sw_item_count > (MAX_TABLE_ITEM-1))
+			return -1;
+		printk("WARNING: ===== osd_rdma reg added between vsync and rdma_done =====\n");
+		sw_rdma_table[sw_item_count].addr=addr;
+		sw_rdma_table[sw_item_count].val=val;
+		sw_item_count++;
+	}
 	return 0;
 }
 
@@ -70,9 +99,16 @@ u32  VSYNCOSD_RD_MPEG_REG(unsigned long addr)
 
 	if(rdma_enable)
 	{
-		for(i=(item_count -1); i>=0; i--)
+		if (Rd(OSD_RDMA_FLAG_REG) == OSD_RDMA_DONE) {
+			for (i=(sw_item_count -1); i>=0; i--)
+			{
+				if (addr == sw_rdma_table[i].addr)
+				return sw_rdma_table[i].val;
+			}
+		}
+		for (i=(item_count -1); i>=0; i--)
 		{
-			if(addr==rdma_table[i].addr)
+			if (addr == rdma_table[i].addr)
 			return rdma_table[i].val;
 		}
 	}
@@ -200,6 +236,42 @@ int reset_rdma(void)
 }
 EXPORT_SYMBOL(reset_rdma);
 
+void osd_rdma_table_setup(void)
+{
+	int i, j;
+	unsigned addr;
+
+	if (Rd(OSD_RDMA_FLAG_REG) == OSD_RDMA_DONE) {
+		aml_write_reg32(END_ADDR,(table_paddr - 1));
+		for (i=0;i<item_count-1;i++) {
+			addr = rdma_table[i].addr;
+			for (j=item_count-2;j>i;j--) {
+				if (rdma_table[j].addr == addr) {
+					break;
+				}
+			}
+			if (Rd(addr) != rdma_table[j].val) { // make sure all registers write in even if it was added between hw vsync and rdma done interrupt handler(not write in last rdma)
+				Wr(addr, rdma_table[j].val);
+				printk("===== osd_rdma missed [%x]=%x, [%x]=%x =====\n", addr, rdma_table[i].val, rdma_table[j].addr, rdma_table[j].val);
+			}
+		}
+		item_count = 0;
+		if (sw_item_count) {
+			memcpy(rdma_table, sw_rdma_table, sw_item_count*8);
+			rdma_table[sw_item_count].addr=OSD_RDMA_FLAG_REG;
+			rdma_table[sw_item_count].val=OSD_RDMA_DONE;
+			item_count=sw_item_count+1;
+			sw_item_count=0;
+			Wr(OSD_RDMA_FLAG_REG, OSD_RDMA_WAIT);
+			aml_write_reg32(END_ADDR,(table_paddr + item_count*8 - 1));
+		}
+		else {
+			Wr(OSD_RDMA_FLAG_REG, OSD_RDMA_IDLE);
+		}
+	}
+}
+EXPORT_SYMBOL(osd_rdma_table_setup);
+
 int osd_rdma_enable(u32  enable)
 {
 	if (!osd_rdma_init_flat){
@@ -208,12 +280,13 @@ int osd_rdma_enable(u32  enable)
 
 	if(enable == rdma_enable) return 0;
 	rdma_enable = enable;
-	if(enable){
+	if (enable) {
+		Wr(OSD_RDMA_FLAG_REG, OSD_RDMA_IDLE);
 		aml_write_reg32(START_ADDR,table_paddr);
 		//enable then start it.
 		reset_rdma();
 		start_osd_rdma(RDMA_CHANNEL_INDEX);
-	}else{
+	}else {
 		stop_rdma(RDMA_CHANNEL_INDEX);
 	}
 	return 1;
