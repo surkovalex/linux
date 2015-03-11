@@ -329,28 +329,26 @@ static irqreturn_t vmpeg4_isr(int irq, void *dev_id)
 #endif
         }
 
-        if ((I_PICTURE == picture_type) || (P_PICTURE == picture_type)) {
-            offset = READ_VREG(MP4_OFFSET_REG);
-	 	/*2500-->3000,because some mpeg4 video may checkout failed;
-                 may have av sync problem.can changed small later.
-		 263 may need small?
-           */
-            if (pts_lookup_offset_us64(PTS_TYPE_VIDEO, offset, &pts, 3000, &pts_us64) == 0) {
-                pts_valid = 1;
-                last_anch_pts = pts;
-                last_anch_pts_us64 = pts_us64;
+        offset = READ_VREG(MP4_OFFSET_REG);
+        /*2500-->3000,because some mpeg4 video may checkout failed;
+         may have av sync problem.can changed small later.
+         263 may need small?
+        */
+        if (pts_lookup_offset_us64(PTS_TYPE_VIDEO, offset, &pts, 3000, &pts_us64) == 0 && (I_PICTURE == picture_type)) {
+            pts_valid = 1;
+            last_anch_pts = pts;
+            last_anch_pts_us64 = pts_us64;
 #ifdef CONFIG_AM_VDEC_MPEG4_LOG
-                pts_hit++;
+            pts_hit++;
 #endif
-            } else {
+        } else {
 #ifdef CONFIG_AM_VDEC_MPEG4_LOG
-                pts_missed++;
-#endif
-            }
-#ifdef CONFIG_AM_VDEC_MPEG4_LOG
-            amlog_mask(LOG_MASK_PTS, "I offset 0x%x, pts_valid %d pts=0x%x\n", offset, pts_valid, pts);
+            pts_missed++;
 #endif
         }
+#ifdef CONFIG_AM_VDEC_MPEG4_LOG
+        amlog_mask(LOG_MASK_PTS, "I offset 0x%x, pts_valid %d pts=0x%x\n", offset, pts_valid, pts);
+#endif
 
         if (pts_valid) {
             last_anch_pts = pts;
