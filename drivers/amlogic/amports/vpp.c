@@ -221,11 +221,8 @@ static unsigned int bypass_spscl1 = 0;
 module_param(bypass_spscl1,uint,0664);
 MODULE_PARM_DESC(bypass_spscl1, "\n bypass_spscl1  \n");
 #endif
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
-static unsigned int bypass_ratio = 150;
-#else
+
 static unsigned int bypass_ratio = 196;
-#endif
 module_param(bypass_ratio,uint,0664);
 MODULE_PARM_DESC(bypass_ratio, "\n bypass_ratio  \n");
 

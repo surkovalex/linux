@@ -2171,14 +2171,33 @@ static void viu_set_dcu(vpp_frame_par_t *frame_par, vframe_t *vf)
     } else if (vf->type & VIDTYPE_VIU_FIELD) {
         vini_phase = 0xc << VFORMATTER_INIPHASE_BIT;
         vphase = ((vf->type & VIDTYPE_VIU_422) ? 0x10 : 0x08) << VFORMATTER_PHASE_BIT;
+#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)
+        if ((vf->width >= 3840) && (vinfo->width == 3840) && (vf->height == 2160) && (vinfo->height == 2160) && (vf->type & VIDTYPE_VIU_422)) {
+           VSYNC_WR_MPEG_REG(VIU_VD1_FMT_CTRL + cur_dev->viu_off,
+                             HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
+                             VFORMATTER_RPTLINE0_EN | vini_phase | vphase);
 
-        VSYNC_WR_MPEG_REG(VIU_VD1_FMT_CTRL + cur_dev->viu_off,
-                       HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
-                       VFORMATTER_RPTLINE0_EN | vini_phase | vphase | VFORMATTER_EN);
+           VSYNC_WR_MPEG_REG(VIU_VD2_FMT_CTRL + cur_dev->viu_off,
+                             HFORMATTER_RRT_PIXEL0 | HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
+                             VFORMATTER_RPTLINE0_EN | vini_phase | vphase);
+         }else{
+           VSYNC_WR_MPEG_REG(VIU_VD1_FMT_CTRL + cur_dev->viu_off,
+                             HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
+                             VFORMATTER_RPTLINE0_EN | vini_phase | vphase | VFORMATTER_EN);
 
-        VSYNC_WR_MPEG_REG(VIU_VD2_FMT_CTRL + cur_dev->viu_off,
-                       HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
-                       VFORMATTER_RPTLINE0_EN | vini_phase | vphase | VFORMATTER_EN);
+           VSYNC_WR_MPEG_REG(VIU_VD2_FMT_CTRL + cur_dev->viu_off,
+                             HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
+                             VFORMATTER_RPTLINE0_EN | vini_phase | vphase | VFORMATTER_EN);
+         }
+#else
+           VSYNC_WR_MPEG_REG(VIU_VD1_FMT_CTRL + cur_dev->viu_off,
+                             HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
+                             VFORMATTER_RPTLINE0_EN | vini_phase | vphase | VFORMATTER_EN);
+
+           VSYNC_WR_MPEG_REG(VIU_VD2_FMT_CTRL + cur_dev->viu_off,
+                             HFORMATTER_YC_RATIO_2_1 | HFORMATTER_EN |
+                             VFORMATTER_RPTLINE0_EN | vini_phase | vphase | VFORMATTER_EN);
+#endif
     } else if (vf->type & VIDTYPE_MVC) {
         VSYNC_WR_MPEG_REG(VIU_VD1_FMT_CTRL + cur_dev->viu_off,
                        HFORMATTER_YC_RATIO_2_1 |
