@@ -1047,7 +1047,7 @@ int retrieve_vpll_carrier_afc(void)
 		data_ret = data_exg;
 		data_ret = data_ret*488/1000;
 	}
-	if((abs(data_ret) < 50)&&(line_lock_strong == 0x8 || field_lock == 0x4)){
+	if ((abs(data_ret) < 50) && (line_lock_strong == 0x8) && (field_lock == 0x4)) {
 		data_ret = 100;
 		return data_ret;
 	}
