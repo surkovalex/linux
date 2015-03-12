@@ -67,7 +67,7 @@ static void saradc_reset(void)
 {
 	int i;
 
-#ifdef CONFIG_ARCH_MESONG9TV
+#if defined(CONFIG_ARCH_MESONG9TV) || defined(CONFIG_ARCH_MESONG9BB)
 	set_sar_adc_clk();
 #endif
 

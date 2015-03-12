@@ -8,7 +8,7 @@
 #define set_reg	aml_write_reg32
 #define get_reg	aml_read_reg32
 
-#if MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9BB)
 #define PP_SAR_ADC_REG0						P_AO_SAR_ADC_REG0
 #define PP_SAR_ADC_CHAN_LIST 			P_AO_SAR_ADC_CHAN_LIST
 #define PP_SAR_ADC_AVG_CNTL				P_AO_SAR_ADC_AVG_CNTL
@@ -222,7 +222,7 @@ enum {
 
 // REG10
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-#ifdef CONFIG_G9TV
+#if defined(CONFIG_ARCH_MESONG9TV) || defined(CONFIG_ARCH_MESONG9BB)
 #define enable_bandgap()    set_bits(P_AO_SAR_ADC_REG11, 1, 13, 1)
 #define disable_bandgap()   set_bits(P_AO_SAR_ADC_REG11, 0, 13, 1)
 #define set_trimming(x)     set_bits(P_AO_SAR_ADC_REG11, x, 14, 5)
