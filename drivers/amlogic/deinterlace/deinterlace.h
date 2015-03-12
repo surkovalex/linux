@@ -16,16 +16,6 @@
 #define NEW_KEEP_LAST_FRAME
 #endif
 
-#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)
-#ifndef CONFIG_POST_PROCESS_MANAGER_3D_PROCESS
-#define CONFIG_POST_PROCESS_MANAGER_3D_PROCESS
-#endif
-#if (MESON_CPU_TYPE!=MESON_CPU_TYPE_MESONG9TV)
-#define D2D3_SUPPORT
-#endif
-#define DET3D
-//#define SUPPORT_MPEG_TO_VDIN
-#endif
 #define SUPPORT_MPEG_TO_VDIN //for all ic after m6c@20140731
 
 #if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)
@@ -43,10 +33,28 @@
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
 #define NEW_DI_V3 //from g9tv(mcdi added,d2d3 removed)
-#elif (MESON_CPU_TYPE > MESON_CPU_TYPE_MESONG9TV)
+#elif (MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9BB)
+#define NEW_DI_TV
 #define NEW_DI_V1 //from m6tvc
 #define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
-#define NEW_DI_V3
+#define NEW_DI_V3 //from g9tv(mcdi added,d2d3 removed)
+#define NEW_DI_V4 //from g9tvbb(dnr added)
+#elif (MESON_CPU_TYPE > MESON_CPU_TYPE_MESONG9BB)
+#define NEW_DI_V1 //from m6tvc
+#define NEW_DI_V2 //from m6tvd(noise meter bug fix,improvement for 2:2 pull down)
+#define NEW_DI_V3 //from g9tv(mcdi added,d2d3 removed)
+#define NEW_DI_V4 //from g9tvbb(dnr added)
+#endif
+
+#if ((MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9BB))
+#ifndef CONFIG_POST_PROCESS_MANAGER_3D_PROCESS
+#define CONFIG_POST_PROCESS_MANAGER_3D_PROCESS
+#endif
+#if (MESON_CPU_TYPE < MESON_CPU_TYPE_MESONG9TV)
+#define D2D3_SUPPORT
+#endif
+#define DET3D
+//#define SUPPORT_MPEG_TO_VDIN
 #endif
 
 #ifndef CONFIG_VSYNC_RDMA

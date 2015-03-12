@@ -1,7 +1,7 @@
 #ifndef _DET3D_H
 #define _DET3D_H
 
-#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TV)||(MESON_CPU_TYPE==MESON_CPU_TYPE_MESON6TVD)||( MESON_CPU_TYPE==MESON_CPU_TYPE_MESONG9TV)
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV)
 //***************************************************************************
 //******** DET3D REGISTERS ********
 //***************************************************************************
@@ -290,7 +290,7 @@ typedef enum det3d_fmt_e {
 //****************************************************************************
 extern void det3d_enable(bool flag);
 extern enum det3d_fmt_e det3d_fmt_detect(void);
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 #define WRITE_DET3D_REG(x,val)				WRITE_VCBUS_REG(x,val)
 #define WRITE_DET3D_REG_BITS(x,val,start,length)		WRITE_VCBUS_REG_BITS(x,val,start,length)
 #define READ_DET3D_REG(x)					READ_VCBUS_REG(x)
@@ -302,7 +302,6 @@ extern enum det3d_fmt_e det3d_fmt_detect(void);
 #define READ_DET3D_REG_BITS(x,start,length)		READ_CBUS_REG_BITS(x,start,length)
 #endif
 
-#endif  // _DET3D_H
-
+#endif
 
 #endif  // _DET3D_H
