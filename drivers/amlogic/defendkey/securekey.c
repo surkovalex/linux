@@ -1,6 +1,10 @@
 #include <linux/types.h>
 #include <linux/slab.h>
 
+#ifdef CONFIG_MESON_TRUSTZONE
+#include <mach/meson-secure.h>
+#include <plat/io.h>
+#endif
 
 #include "../efuse/efuse_regs.h"
 
@@ -22,6 +26,7 @@ int aml_is_secure_set(void)
 	type = secure_chip_type();
 	switch(type)
 	{
+		case EFUSE_SOC_CHIP_M8BABY:
 		case EFUSE_SOC_CHIP_M8:{
 			unsigned int info1=0,info2=-1;
 			loff_t pos=0;
@@ -113,6 +118,10 @@ static int aml_kernelkey_verify(unsigned char *pSRC,int nLen)
 	unsigned char *pBuf = (unsigned char *)&chk_blk;
 	unsigned int nState  = 0;
 	loff_t pos=0;
+#ifdef CONFIG_MESON_TRUSTZONE
+	struct efuse_hal_api_arg arg;
+	unsigned int retcnt;
+#endif
 
 	if(nLen & 0xF){
 		printk("source data is not 16 byte aligned\n");
@@ -126,10 +135,13 @@ static int aml_kernelkey_verify(unsigned char *pSRC,int nLen)
 		nRet = 0;
 		goto exit;
 	}
-	boot_rsa_read_puk(&cb1_ctx,(nState & (1<<23)) ? 1 : 0);
+
 	cb1_ctx.len = (nState & (1<<23)) ? 256 : 128;
 
 	memcpy((unsigned char*)&chk_blk,(unsigned char*)(pSRC+nLen-sizeof(chk_blk)),sizeof(chk_blk));
+
+#ifndef CONFIG_MESON_TRUSTZONE
+	boot_rsa_read_puk(&cb1_ctx,(nState & (1<<23)) ? 1 : 0);
 
 	for(i = 0;i< sizeof(chk_blk);i+=cb1_ctx.len){
 		if(rsa_public(&cb1_ctx, pBuf+i, pBuf+i )){
@@ -137,6 +149,17 @@ static int aml_kernelkey_verify(unsigned char *pSRC,int nLen)
 			goto exit;
 		}
 	}
+#else
+	arg.cmd=EFUSE_HAL_API_VERIFY_IMG;
+	arg.size = sizeof(chk_blk);
+	arg.buffer_phy=virt_to_phys(&chk_blk);
+	arg.retcnt_phy=virt_to_phys(&retcnt);
+	nRet = meson_trustzone_efuse(&arg);
+	if (nRet) {
+		printk("meson trustzone verify failed.\n");
+		goto exit;
+	}
+#endif
 
 	if(AMLOGIC_CHKBLK_ID != chk_blk.unAMLID ||
 		AMLOGIC_CHKBLK_VER < chk_blk.nVer)
@@ -169,6 +192,7 @@ int aml_img_key_check(unsigned char *pSRC,int nLen)
 	efuse_socchip_type_e type;
 	type = secure_chip_type();
 	switch(type){
+		case EFUSE_SOC_CHIP_M8BABY:
 		case EFUSE_SOC_CHIP_M8:
 		ret = aml_kernelkey_verify(pSRC,nLen);
 		break;
