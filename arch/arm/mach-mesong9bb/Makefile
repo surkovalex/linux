@@ -51,4 +51,4 @@ plus_sec                      := $(call as-instr,.arch_extension sec,+sec)
 AFLAGS_meson-smc.o            := -Wa,-march=armv7-a$(plus_sec)
 endif
 
-#obj-$(CONFIG_AM_TV_OUTPUT) += enc_clk_config.o
+obj-$(CONFIG_AM_TV_OUTPUT) += enc_clk_config.o

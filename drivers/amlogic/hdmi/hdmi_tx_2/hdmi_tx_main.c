@@ -433,6 +433,7 @@ static int set_disp_mode_auto(void)
     hdmitx_device.output_blank_flag = 1;
     return ret;
 }
+
 #if 0
 static unsigned int set_cec_code(const char * buf, size_t count)
 {
@@ -979,6 +980,7 @@ static struct notifier_block hdmitx_notifier_nb_v2 = {
 #endif
 
 // Refer to CEA-861-D Page 88
+#ifdef CONFIG_SND_SOC
 #define AOUT_EVENT_REFER_TO_STREAM_HEADER       0x0
 #define AOUT_EVENT_IEC_60958_PCM                0x1
 #define AOUT_EVENT_RAWDATA_AC_3                 0x2
@@ -1141,7 +1143,7 @@ static int hdmitx_notify_callback_a(struct notifier_block *block, unsigned long 
 
     return 0;
 }
-
+#endif
 static DEFINE_MUTEX(setclk_mutex);
 void hdmitx_hpd_plugin_handler(struct work_struct *work)
 {
@@ -1478,8 +1480,9 @@ static int amhdmitx_probe(struct platform_device *pdev)
 #ifdef CONFIG_AM_TV_OUTPUT2
     vout2_register_client(&hdmitx_notifier_nb_v2);
 #endif
+#ifdef CONFIG_SND_SOC
     aout_register_client(&hdmitx_notifier_nb_a);
-
+#endif
 #ifdef CONFIG_USE_OF
     if(pdev->dev.of_node){
         memset(&hdmitx_device.config_data, 0, sizeof(struct hdmi_config_platform_data));
@@ -1580,8 +1583,9 @@ static int amhdmitx_remove(struct platform_device *pdev)
 #ifdef CONFIG_AM_TV_OUTPUT2
     vout2_unregister_client(&hdmitx_notifier_nb_v2);
 #endif
+#ifdef CONFIG_SND_SOC
     aout_unregister_client(&hdmitx_notifier_nb_a);
-
+#endif
     /* Remove the cdev */
     device_remove_file(hdmitx_dev, &dev_attr_disp_mode);
     device_remove_file(hdmitx_dev, &dev_attr_aud_mode);
