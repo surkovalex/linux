@@ -507,11 +507,11 @@ struct sdhc_misc{
 	u32 reserved:4; /*[3:0] reserved*/
 	u32 wcrc_err_patt:3; /*[6:4] WCRC Error Pattern*/
 	u32 wcrc_ok_patt:3; /*[9:7] WCRC OK Pattern*/
-	u32 txstart_thres:6; /*[15:10] reserved*/
+	u32 txstart_thres:6; /*[15:10] txstart_thres(if (txfifo_cnt/4)>(threshold*2), Tx will start)*/
 	u32 burst_num:6; /*[21:16] Burst Number*/
 	u32 thread_id:6; /*[27:22] Thread ID*/
 	u32 manual_stop:1; /*[28] 0:auto stop mode, 1:manual stop mode*/
-	u32 reserved1:3; /*[31:29] txstart_thres(if (txfifo_cnt/4)>(threshold*2), Tx will start)*/
+	u32 reserved1:3; /*[31:29] reserved*/
 };
 
 struct sdhc_ictl{

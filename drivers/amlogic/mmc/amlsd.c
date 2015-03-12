@@ -927,7 +927,7 @@ static int aml_is_card_insert (struct amlsd_platform * pdata)
 static int aml_is_sdjtag(struct amlsd_platform * pdata)
 {
     int card0;
-#ifdef CONFIG_ARCH_MESONG9TV
+#if (defined(CONFIG_ARCH_MESONG9TV) || defined(CONFIG_ARCH_MESONG9BB))
 	card0 = aml_get_reg32_bits(P_PREG_PAD_GPIO2_I, 20, 1);
 #else
        card0 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I, 22, 1);
@@ -955,6 +955,8 @@ static int aml_is_sdjtag(struct amlsd_platform * pdata)
 
 static int aml_is_sduart(struct amlsd_platform * pdata)
 {
+    return 0;
+#if 0
 #ifdef CONFIG_MESON_CPU_EMULATOR
 	return 0;
 #else
@@ -965,12 +967,14 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
         return 1;
 
     for (i = 0; i < 10; i++) {
-#ifdef CONFIG_ARCH_MESONG9TV
+#if (defined(CONFIG_ARCH_MESONG9TV) || defined(CONFIG_ARCH_MESONG9BB))
 	dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO2_I,24,1);
 #else
        dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO0_I,26,1);
 #endif
-
+#if defined(CONFIG_ARCH_MESONG9BB)
+    return 0;
+#endif
         if(dat3 == 1){
             // if (cnt)
                 // sdhc_err("cnt=%d\n", cnt);
@@ -1002,6 +1006,7 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
         // }
     // }
     // return 0;
+#endif
 #endif
 }
 
@@ -1172,7 +1177,7 @@ irqreturn_t aml_irq_cd_thread(int irq, void *data)
     //mdelay(500);
     if(pdata->is_in == 0){
     	mmc_detect_change(pdata->mmc, msecs_to_jiffies(2));
-    	
+
     }
     else{
     	mmc_detect_change(pdata->mmc, msecs_to_jiffies(500));
@@ -1357,16 +1362,16 @@ void aml_emmc_hw_reset(struct mmc_host *mmc)
     //high
     aml_set_reg32_mask(P_PREG_PAD_GPIO3_O, (1<<9));
     mdelay(1);
-#elif ((defined CONFIG_ARCH_MESONG9TV))  
-     aml_clr_reg32_mask(P_PREG_PAD_GPIO2_EN_N, (1<<9));  //high+    
+#elif ((defined CONFIG_ARCH_MESONG9TV) || defined(CONFIG_ARCH_MESONG9BB))
+     aml_clr_reg32_mask(P_PREG_PAD_GPIO2_EN_N, (1<<9));  //high+
      aml_set_reg32_mask(P_PREG_PAD_GPIO2_O, (1<<9));
      mdelay(1);
-	 //low    
+    //low
     aml_clr_reg32_mask(P_PREG_PAD_GPIO2_O, (1<<9));
     mdelay(2);
-	 //high
+    //high
     aml_set_reg32_mask(P_PREG_PAD_GPIO2_O, (1<<9));
-    mdelay(1);  
+    mdelay(1);
  #endif
 
     return;
