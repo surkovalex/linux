@@ -2540,7 +2540,7 @@ static inline bool vpts_expire(vframe_t *cur_vf, vframe_t *next_vf)
 		else
 			tsync_avevent_locked(VIDEO_TSTAMP_DISCONTINUITY, pts);
 
-    		printk(" discontinue, system=0x%x vpts=0x%x\n", systime, pts);
+		printk(" discontinue, system=0x%x vpts=0x%x   next_vf->pts = 0x%x \n", systime, pts,next_vf->pts);
 
 		if(systime>next_vf->pts || next_vf->pts==0){// pts==0 is a keep frame maybe.
             		return true;

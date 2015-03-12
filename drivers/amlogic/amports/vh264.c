@@ -945,7 +945,7 @@ static void vh264_isr(void)
     unsigned int buffer_index;
     vframe_t *vf;
     unsigned int cpu_cmd;
-    unsigned int pts,pts_lookup_save, pts_valid = 0, pts_duration = 0;
+    unsigned int pts,pts_lookup_save,pts_valid_save, pts_valid = 0, pts_duration = 0;
     u64 pts_us64;
     bool force_interlaced_frame = false;
     unsigned int sei_itu35_flags;
@@ -1096,6 +1096,7 @@ static void vh264_isr(void)
              * if large than frame_dur,we think it is uncorrect.
              */
             pts_lookup_save = pts;
+            pts_valid_save = pts_valid;
             if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
                 if (idr_flag && pts_valid) {
                     fixed_frame_rate_check_count ++ ;
@@ -1222,7 +1223,6 @@ static void vh264_isr(void)
                 last_pts = pts - DUR2PTS(frame_dur);
                 last_pts_remainder = 0;
             }
-
             // calculate PTS of next frame and smooth PTS for fixed rate source
             if (pts_valid) {
                 if ((fixed_frame_rate_flag) &&
@@ -1266,7 +1266,7 @@ static void vh264_isr(void)
 
             last_pts = pts;
 
-            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM) && (sync_outside == 0)) {
+            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM) && (sync_outside == 0) && pts_valid_save) {
                 pts = pts_lookup_save;
             }
 
@@ -1301,7 +1301,6 @@ static void vh264_isr(void)
                 vf->pts_us64= (pts_valid) ? pts_us64 : 0;
                 vf->canvas0Addr = vf->canvas1Addr = spec2canvas(&buffer_spec[buffer_index]);
                 vfbuf_use[buffer_index]++;
-
                 if ((error_recovery_mode_use & 2) && error) {
                     kfifo_put(&recycle_q, (const vframe_t **)&vf);
                 } else {
