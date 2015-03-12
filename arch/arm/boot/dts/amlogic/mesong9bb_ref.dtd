@@ -337,7 +337,7 @@
 	meson-eth {
 		compatible = "amlogic,meson-eth";
 		dev_name = "meson-eth";
-		status = "disable";
+		status = "okay";
 		ethbaseaddr = <0xfe0c0000>;
 		interruptnum = <40>;
 		new_maclogic = <1>;
@@ -930,7 +930,7 @@
 			reg = <0x35>; /** device i2c address, must have  */
 			// soft_limit_to99 = <0>;  /** optional                             */
 			// vbus_dcin_short_connect = <0>;
-			status = "disable"; /** status of pmu, only one should be OK */
+			status = "okay"; /** status of pmu, only one should be OK */
 		};
 	};
 
@@ -1072,7 +1072,7 @@
 	audio_pmu4_codec {
 		compatible = "amlogic,aml_pmu4_codec";
 		dev_name = "aml_pmu4_codec.0";
-		status = "disable";
+		status = "okay";
 	};
 
 	//$$ DEVICE="aml_audio_codec"
@@ -1082,12 +1082,12 @@
 
 		pmu4:pmu4{
 			codec_name = "amlpmu4";
-			status = "disable";
+			status = "okay";
 		};
 
 		dummy:dummy {
 			codec_name = "dummy_codec";
-			status = "okay";
+			status = "disable";
 		};
 	};
 
@@ -1096,7 +1096,7 @@
 	dummy_codec {
 		compatible = "amlogic,aml_dummy_codec";
 		dev_name = "dummy_codec.0";
-		status = "okay";
+		status = "disable";
 	};
 
 	//$$ DEVICE="aml_g9tv_sound_card"

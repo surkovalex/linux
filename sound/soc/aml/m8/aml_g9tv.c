@@ -231,7 +231,7 @@ static int aml_hdmi_audio_type_get_enum(struct snd_kcontrol *kcontrol,
             //LPCM
             ucontrol->value.enumerated.item[0] = 0;
     } else
-        ucontrol->value.enumerated.item[0] = 2; //un-stable. un-known       
+        ucontrol->value.enumerated.item[0] = 2; //un-stable. un-known
 
     return 0;
 }
@@ -260,7 +260,7 @@ static int aml_spdif_audio_type_get_enum(struct snd_kcontrol *kcontrol,
         ucontrol->value.enumerated.item[0] = 0;
     //}
     //else
-    //    ucontrol->value.enumerated.item[0] = 2; //un-stable. un-known       
+    //    ucontrol->value.enumerated.item[0] = 2; //un-stable. un-known
     return 0;
 }
 
@@ -703,7 +703,7 @@ static void aml_g9tv_pinmux_init(struct snd_soc_card *card) {
 
     printk(KERN_INFO "Set audio codec pinmux!\n");
 
-    if (!IS_MESON_MG9TV_CPU_REVA)
+//    if (!IS_MESON_MG9TV_CPU_REVA)
         p_aml_audio->pin_ctl = devm_pinctrl_get_select(card->dev,
                 "aml_snd_g9tv");
 
