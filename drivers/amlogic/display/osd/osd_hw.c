@@ -52,11 +52,11 @@
 #include <mach/vpu.h>
 #define OSD_SUPER_SCALER_MEM_POWER_ON() \
 	do { \
-		switch_vpu_mem_pd_vmod(VPU_VIU_OSDSR, VPU_MEM_POWER_ON); \
+		switch_vpu_mem_pd_vmod(VPU_VIU_OSD_SCALE, VPU_MEM_POWER_ON); \
 	} while (0)
 #define OSD_SUPER_SCALER_MEM_POWER_OFF() \
 	do { \
-		switch_vpu_mem_pd_vmod(VPU_VIU_OSDSR, VPU_MEM_POWER_DOWN); \
+		switch_vpu_mem_pd_vmod(VPU_VIU_OSD_SCALE, VPU_MEM_POWER_DOWN); \
 	} while (0)
 #endif
 
