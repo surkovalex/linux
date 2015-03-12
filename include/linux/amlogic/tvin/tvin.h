@@ -547,7 +547,7 @@ typedef enum tvafe_cvbs_video_e {
 // for pin selection
 typedef enum tvafe_adc_pin_e {
         TVAFE_ADC_PIN_NULL = 0,
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 	TVAFE_CVBS_IN0		= 1,
 	TVAFE_CVBS_IN1		= 2,
 	TVAFE_CVBS_IN2		= 3,
@@ -606,7 +606,7 @@ typedef enum tvafe_adc_pin_e {
 } tvafe_adc_pin_t;
 
 typedef enum tvafe_src_sig_e {
-#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
+#if (MESON_CPU_TYPE >= MESON_CPU_TYPE_MESONG9TV)
 	CVBS_IN0 = 0,
 	CVBS_IN1,
 	CVBS_IN2,
