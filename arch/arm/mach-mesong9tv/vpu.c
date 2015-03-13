@@ -838,6 +838,7 @@ static struct of_device_id vpu_of_table[]=
 	{},
 };
 
+#if 0
 static void power_switch_to_vpu_hdmi(int pwr_ctrl)
 {
     unsigned int i;
@@ -884,7 +885,7 @@ static void set_vpu_defconf(void)
 {
     power_switch_to_vpu_hdmi(1);
 }
-
+#endif
 static int vpu_probe(struct platform_device *pdev)
 {
 	int ret;
@@ -893,8 +894,7 @@ static int vpu_probe(struct platform_device *pdev)
 	spin_lock_init(&vpu_mem_lock);
 
 	printk("VPU driver version: %s\n", VPU_VERION);
-
-    set_vpu_defconf();
+	//set_vpu_defconf();
 	get_vpu_config(pdev);
 	set_vpu_clk(vpu_config.clk_level);
 
