@@ -106,6 +106,7 @@ typedef struct hdmi_tx_dev_s {
         void (*SetAudioInfoFrame)(unsigned char* AUD_DB, unsigned char* CHAN_STAT_BUF);
         int (*SetDispMode)(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_video_para_t *param);
         int (*SetAudMode)(struct hdmi_tx_dev_s* hdmitx_device, Hdmi_tx_audio_para_t* audio_param);
+        void (*SetAudN)(void);
         void (*SetupIRQ)(struct hdmi_tx_dev_s* hdmitx_device);
         void (*DebugFun)(struct hdmi_tx_dev_s* hdmitx_device, const char * buf);
         void (*UnInit)(struct hdmi_tx_dev_s* hdmitx_device);

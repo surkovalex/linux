@@ -977,6 +977,12 @@ static int hdmitx_notify_callback_v(struct notifier_block *block, unsigned long 
     else {
         hdmi_print(IMP, VID "get current mode: %s\n", info->name);
     }
+    if ( ((vic_ready == HDMI_1080p24) && (info->mode == VMODE_1080P_23HZ)) ||
+        ((vic_ready == HDMI_1080p24) && (info->mode == VMODE_1080P_24HZ)) ) {
+        if (hdmitx_device.HWOp.SetAudN) {
+            hdmitx_device.HWOp.SetAudN();
+        }
+    }
 	if( is_similar_hdmi_vic(vic_ready, info->mode) )
 		return 0;
 #endif
