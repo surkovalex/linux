@@ -89,6 +89,8 @@ EXPORT_SYMBOL(has_cma_page);
 #else
 void wakeup_wq(bool has_cma) {}
 bool has_cma_page(struct page *page){return false;}
+EXPORT_SYMBOL(has_cma_page);
+EXPORT_SYMBOL(wakeup_wq);
 #endif
 /*
  * migrate_prep() needs to be called before we start compiling a list of pages
