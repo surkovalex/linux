@@ -6057,6 +6057,10 @@ static void super_scaler_init(void)
     WRITE_VCBUS_REG(0x312c,0x00017f00);
     WRITE_VCBUS_REG(0x312d,0x00017f00);
     WRITE_VCBUS_REG(0x312e,0x00017f00);
+
+    /* disable sync latch,controlled by rdma */
+    WRITE_VCBUS_REG_BITS(0x3111,1,20,1);
+    WRITE_VCBUS_REG_BITS(0x3129,1,20,1);
 }
 #endif
 static int __init video_init(void)
