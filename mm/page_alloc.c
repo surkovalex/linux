@@ -584,7 +584,7 @@ static inline void __free_one_page(struct page *page,
 			list_del(&buddy->lru);
 			zone->free_area[order].nr_free--;
 			rmv_page_order(buddy);
-			if(is_migrate_cma(migratetype))
+			if (is_migrate_cma(migratetype) || is_migrate_isolate(migratetype))
 				zone->free_area[order].nr_free_cma--;
 		}
 		combined_idx = buddy_idx & page_idx;
@@ -618,7 +618,7 @@ static inline void __free_one_page(struct page *page,
 	list_add(&page->lru, &zone->free_area[order].free_list[migratetype]);
 out:
 	zone->free_area[order].nr_free++;
-	if(is_migrate_cma(migratetype))
+	if (is_migrate_cma(migratetype) || is_migrate_isolate(migratetype))
 		zone->free_area[order].nr_free_cma++;
 }
 
@@ -850,7 +850,7 @@ static inline void expand(struct zone *zone, struct page *page,
 #endif
 		list_add(&page[size].lru, &area->free_list[migratetype]);
 		area->nr_free++;
-		if(is_migrate_cma(migratetype))
+		if (is_migrate_cma(migratetype) || is_migrate_isolate(migratetype))
 			area->nr_free_cma++;
 		set_page_order(&page[size], high);
 	}
@@ -917,10 +917,14 @@ struct page *__rmqueue_smallest(struct zone *zone, unsigned int order,
 
 		page = list_entry(area->free_list[migratetype].next,
 							struct page, lru);
+#ifdef CONFIG_CMA
+		if (is_migrate_isolate(get_pageblock_migratetype(page)))
+			continue;
+#endif
 		list_del(&page->lru);
 		rmv_page_order(page);
 		area->nr_free--;
-		if(is_migrate_cma(migratetype))
+		if (is_migrate_cma(migratetype) || is_migrate_isolate(migratetype))
 			area->nr_free_cma--;
 		expand(zone, page, order, current_order, area, migratetype);
 		return page;
@@ -1063,7 +1067,7 @@ __rmqueue_fallback(struct zone *zone, int order, int start_migratetype)
 			page = list_entry(area->free_list[migratetype].next,
 					struct page, lru);
 			area->nr_free--;
-			if(is_migrate_cma(migratetype))
+			if (is_migrate_cma(migratetype) || is_migrate_isolate(migratetype))
 				area->nr_free_cma--;
 
 			/*
@@ -1224,7 +1228,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 		}
 		set_freepage_migratetype(page, mt);
 		list = &page->lru;
-		if (is_migrate_cma(mt))
+		if (is_migrate_cma(mt) || is_migrate_isolate(mt))
 			__mod_zone_page_state(zone, NR_FREE_CMA_PAGES,
 					      -(1 << order));
 	}
@@ -1492,7 +1496,7 @@ static int __isolate_free_page(struct page *page, unsigned int order)
 	list_del(&page->lru);
 	zone->free_area[order].nr_free--;
 	rmv_page_order(page);
-	if(is_migrate_cma(mt))
+	if (is_migrate_cma(mt) || is_migrate_isolate(mt))
 		zone->free_area[order].nr_free_cma--;
 	/* Set the pageblock if the isolated page is at least a pageblock */
 	if (order >= pageblock_order - 1) {
@@ -6043,7 +6047,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
 		       unsigned migratetype)
 {
 	unsigned long outer_start, outer_end;
-	int ret = 0, order;
+	int ret = 0, order, try_times = 0;
 
 	struct compact_control cc = {
 		.nr_migratepages = 0,
@@ -6084,6 +6088,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
 	if (ret)
 		return ret;
 
+try_again:
 	ret = __alloc_contig_migrate_range(&cc, start, end);
 	if (ret)
 		goto done;
@@ -6113,6 +6118,9 @@ int alloc_contig_range(unsigned long start, unsigned long end,
 	while (!PageBuddy(pfn_to_page(outer_start))) {
 		if (++order >= MAX_ORDER) {
 			ret = -EBUSY;
+			try_times++;
+			if (try_times < 10)
+				goto try_again;
 			goto done;
 		}
 		outer_start &= ~0UL << order;
@@ -6122,6 +6130,9 @@ int alloc_contig_range(unsigned long start, unsigned long end,
 	if (test_pages_isolated(outer_start, end, false)) {
 		pr_warn("alloc_contig_range test_pages_isolated(%lx, %lx) failed\n",
 		       outer_start, end);
+		try_times++;
+		if (try_times < 10)
+			goto try_again;
 		ret = -EBUSY;
 		goto done;
 	}
@@ -6256,7 +6267,8 @@ __offline_isolated_pages(unsigned long start_pfn, unsigned long end_pfn)
 		list_del(&page->lru);
 		rmv_page_order(page);
 		zone->free_area[order].nr_free--;
-		if(is_migrate_cma(get_pageblock_migratetype(page)))
+		if (is_migrate_cma(get_pageblock_migratetype(page)) ||
+		   is_migrate_isolate(get_pageblock_migratetype(page)))
 			zone->free_area[order].nr_free_cma--;
 #ifdef CONFIG_HIGHMEM
 		if (PageHighMem(page))

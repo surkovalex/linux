@@ -36,6 +36,7 @@
 #include <linux/hugetlb_cgroup.h>
 #include <linux/gfp.h>
 #include <linux/balloon_compaction.h>
+#include <linux/page-isolation.h>
 
 #include <asm/tlbflush.h>
 
@@ -43,7 +44,52 @@
 #include <trace/events/migrate.h>
 
 #include "internal.h"
-
+#ifdef CONFIG_CMA
+DEFINE_MUTEX(migrate_wait);
+int migrate_status = 0;
+int mutex_status = 0;
+int migrate_refcount = 0;
+wait_queue_head_t migrate_wq;
+EXPORT_SYMBOL(migrate_status);
+EXPORT_SYMBOL(migrate_refcount);
+EXPORT_SYMBOL(migrate_wq);
+EXPORT_SYMBOL(migrate_wait);
+EXPORT_SYMBOL(mutex_status);
+void wakeup_wq(bool has_cma)
+{
+	if (has_cma) {
+		if (migrate_refcount > 0) {
+			mutex_lock(&migrate_wait);
+			mutex_status = 0x0d;
+			migrate_refcount--;
+			if (!migrate_refcount) {
+				if (migrate_status == MIGRATE_CMA_ALLOC) {
+					wake_up_interruptible(&migrate_wq);
+					migrate_status = MIGRATE_CMA_REL;
+				}
+			}
+			mutex_status = 0x0d1;
+			mutex_unlock(&migrate_wait);
+		}
+	}
+}
+EXPORT_SYMBOL(wakeup_wq);
+bool has_cma_page(struct page *page)
+{
+	if (is_migrate_cma(get_pageblock_migratetype(page)) ||
+	   is_migrate_isolate(get_pageblock_migratetype(page))) {
+		migrate_refcount++;
+		if (migrate_status != MIGRATE_CMA_ALLOC)
+			migrate_status = MIGRATE_CMA_HOLD;
+		return true;
+	}
+	return false;
+}
+EXPORT_SYMBOL(has_cma_page);
+#else
+void wakeup_wq(bool has_cma) {}
+bool has_cma_page(struct page *page){return false;}
+#endif
 /*
  * migrate_prep() needs to be called before we start compiling a list of pages
  * to be migrated using isolate_lru_page(). If scheduling work on other CPUs is
@@ -851,6 +897,25 @@ uncharge:
 				 (rc == MIGRATEPAGE_SUCCESS ||
 				  rc == MIGRATEPAGE_BALLOON_SUCCESS));
 	unlock_page(page);
+#ifdef CONFIG_CMA
+	if ((force && rc == -EAGAIN) && (mode == MIGRATE_SYNC)) {
+		DECLARE_WAITQUEUE(wait, current);
+		if (migrate_status == MIGRATE_CMA_HOLD ||
+		   migrate_status == MIGRATE_CMA_ALLOC) {
+			mutex_lock(&migrate_wait);
+			migrate_status = MIGRATE_CMA_ALLOC;
+			init_waitqueue_head(&migrate_wq);
+			add_wait_queue(&migrate_wq, &wait);
+			mutex_unlock(&migrate_wait);
+
+			schedule_timeout_interruptible(20);
+
+			mutex_lock(&migrate_wait);
+			remove_wait_queue(&migrate_wq, &wait);
+			mutex_unlock(&migrate_wait);
+		}
+	}
+#endif
 out:
 	return rc;
 }
