@@ -4,13 +4,13 @@
 make uImage -j8
 #make modules
 
-make mesong9bb_ref.dtd
-make mesong9bb_ref.dtb
+make mesong9bb_n302.dtd
+make mesong9bb_n302.dtb
 
 ROOTFS="rootfs.cpio"
 #ROOTFS="arch/arm/mach-mesong9bb/rootfs.cpio"
 
-./mkbootimg --kernel ./arch/arm/boot/uImage --ramdisk ./${ROOTFS} --second ./arch/arm/boot/dts/amlogic/mesong9bb_ref.dtb --output ./boot.img
+./mkbootimg --kernel ./arch/arm/boot/uImage --ramdisk ./${ROOTFS} --second ./arch/arm/boot/dts/amlogic/mesong9bb_n302.dtb --output ./boot.img
 ls -l ./boot.img
 echo "boot.img done"
 
