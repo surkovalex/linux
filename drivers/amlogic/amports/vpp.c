@@ -1173,8 +1173,6 @@ static void vpp_set_scaler(u32 src_width,
        //zoom in the under parm because super scaler1 is open
         next_frame_par->VPP_hsc_startp <<= next_frame_par->supsc1_hori_ratio;
         next_frame_par->VPP_hsc_endp = (next_frame_par->VPP_hsc_endp << next_frame_par->supsc1_hori_ratio) + next_frame_par->supsc1_hori_ratio;
-        next_frame_par->VPP_hsc_linear_startp = next_frame_par->VPP_hsc_linear_startp << next_frame_par->supsc1_hori_ratio;
-        next_frame_par->VPP_hsc_linear_endp = (next_frame_par->VPP_hsc_linear_endp << next_frame_par->supsc1_hori_ratio) + next_frame_par->supsc1_hori_ratio;
         next_frame_par->VPP_vsc_startp <<= next_frame_par->supsc1_vert_ratio;
         next_frame_par->VPP_vsc_endp = (next_frame_par->VPP_vsc_endp << next_frame_par->supsc1_vert_ratio) + next_frame_par->supsc1_vert_ratio;
     }
