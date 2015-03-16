@@ -34,9 +34,4 @@ typedef  struct{
 #define START_ADDR		(P_RDMA_AHB_START_ADDR_MAN+(RDMA_CHANNEL_INDEX<<3))
 #define END_ADDR		(P_RDMA_AHB_END_ADDR_MAN+(RDMA_CHANNEL_INDEX<<3))
 
-#define OSD_RDMA_FLAG_REG	VPU_OSD4_MMC_CTRL
-#define OSD_RDMA_IDLE ((0x3f<<6)|0x2d)
-#define OSD_RDMA_DONE ((0x3e<<6)|0x2d)
-#define OSD_RDMA_WAIT ((0x3d<<6)|0x2d)
-
 #endif

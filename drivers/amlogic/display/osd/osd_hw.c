@@ -70,7 +70,6 @@
 int reset_rdma(void);
 int osd_rdma_enable(u32  enable);
 int read_rdma_table(void);
-void osd_rdma_table_setup(void);
 #endif
 
 static DEFINE_MUTEX(osd_mutex);
@@ -466,12 +465,14 @@ static irqreturn_t osd_rdma_isr(int irq, void *dev_id)
 	unsigned  char output_type=0;
 
 	read_rdma_table();
-#if 0
 	do{
 		if((aml_read_reg32(P_RDMA_STATUS)&0x0fffff0f) == 0){
 			break;
 		}
 	}while(1);
+
+#ifdef CONFIG_VSYNC_RDMA
+	reset_rdma();
 #endif
 
 	output_type=aml_read_reg32(P_VPU_VIU_VENC_MUX_CTRL)&0x3;
@@ -544,11 +545,6 @@ static irqreturn_t osd_rdma_isr(int irq, void *dev_id)
 	}
 
 	osd_update_3d_mode(osd_hw.mode_3d[OSD1].enable,osd_hw.mode_3d[OSD2].enable);
-
-#ifdef CONFIG_VSYNC_RDMA
-	//reset_rdma();
-	osd_rdma_table_setup();
-#endif
 
 	if (!vsync_hit)
 	{
