@@ -301,7 +301,7 @@
 //$$ L2 PROP_U32 2 = "key_tolerance"
 	adc_keypad {
 		compatible = "amlogic,adc_keypad";
-		status = "okay";
+		status = "disabled";
 		key_name = "enter", "left","right";
 		key_num = <3>;
 		key_code = <28 105 106>;
