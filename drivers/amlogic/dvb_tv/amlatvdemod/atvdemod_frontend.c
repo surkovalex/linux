@@ -50,6 +50,7 @@ static ssize_t aml_atvdemod_store(struct class *cls, struct class_attribute *att
 	char *parm[4];
 	unsigned int data_snr[128];
 	unsigned int data_snr_avg;
+	int data_afc;
 	int i;
 	struct aml_fe *atvdemod_fe = NULL;
 	buf_orig = kstrdup(buf, GFP_KERNEL);
@@ -106,6 +107,11 @@ static ssize_t aml_atvdemod_store(struct class *cls, struct class_attribute *att
 		}
 		data_snr_avg = data_snr_avg/128;
 		printk("**********snr_hist_128avg:0x%x(%d)*********\n",data_snr_avg,data_snr_avg);
+	}
+	else if (!strncmp(parm[0],"afc_info",strlen("afc_info")))
+	{
+		data_afc = retrieve_vpll_carrier_afc();
+		printk("[amlatvdemod..]afc %d Khz.\n",data_afc);
 	}
 	else
 		printk("invalid command\n");

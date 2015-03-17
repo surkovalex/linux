@@ -1229,8 +1229,8 @@ void atv_dmd_set_std(void)
                 amlatvdemod_devp->fre_offset = 2750000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_50HZ_VERT;
 		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_SECAM_L;
-        }
-	if(amlatvdemod_devp->parm.tuner_id == AM_TUNER_R840){
+	}
+	if (amlatvdemod_devp->parm.tuner_id == AM_TUNER_R840) {
 		if_freq = amlatvdemod_devp->parm.if_freq;
 		if_inv = amlatvdemod_devp->parm.if_inv;
 		if(atvdemod_agc_pinmux == 1){
