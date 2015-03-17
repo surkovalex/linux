@@ -44,53 +44,13 @@
 #include <trace/events/migrate.h>
 
 #include "internal.h"
+
 #ifdef CONFIG_CMA
-DEFINE_MUTEX(migrate_wait);
-int migrate_status = 0;
-int mutex_status = 0;
-int migrate_refcount = 0;
-wait_queue_head_t migrate_wq;
-EXPORT_SYMBOL(migrate_status);
-EXPORT_SYMBOL(migrate_refcount);
-EXPORT_SYMBOL(migrate_wq);
-EXPORT_SYMBOL(migrate_wait);
-EXPORT_SYMBOL(mutex_status);
-void wakeup_wq(bool has_cma)
-{
-	if (has_cma) {
-		if (migrate_refcount > 0) {
-			mutex_lock(&migrate_wait);
-			mutex_status = 0x0d;
-			migrate_refcount--;
-			if (!migrate_refcount) {
-				if (migrate_status == MIGRATE_CMA_ALLOC) {
-					wake_up_interruptible(&migrate_wq);
-					migrate_status = MIGRATE_CMA_REL;
-				}
-			}
-			mutex_status = 0x0d1;
-			mutex_unlock(&migrate_wait);
-		}
-	}
-}
-EXPORT_SYMBOL(wakeup_wq);
-bool has_cma_page(struct page *page)
-{
-	if (is_migrate_cma(get_pageblock_migratetype(page)) ||
-	   is_migrate_isolate(get_pageblock_migratetype(page))) {
-		migrate_refcount++;
-		if (migrate_status != MIGRATE_CMA_ALLOC)
-			migrate_status = MIGRATE_CMA_HOLD;
-		return true;
-	}
-	return false;
-}
-EXPORT_SYMBOL(has_cma_page);
-#else
-void wakeup_wq(bool has_cma) {}
-bool has_cma_page(struct page *page){return false;}
-EXPORT_SYMBOL(has_cma_page);
-EXPORT_SYMBOL(wakeup_wq);
+extern struct mutex migrate_wait;
+extern int migrate_status;
+extern int mutex_status;
+extern int migrate_refcount;
+extern wait_queue_head_t migrate_wq;
 #endif
 /*
  * migrate_prep() needs to be called before we start compiling a list of pages
