@@ -3,7 +3,7 @@
 #include <linux/amlogic/saradc.h>
 #include <mach/thermal.h>
 #include <linux/slab.h>
-
+#include <mach/am_regs.h>
 #define  NOT_WRITE_EFUSE 0x0
 #define EFUSE_MIGHT_WRONG 0x8
 #define EFUEE_PRIVATE 0x4
@@ -52,7 +52,8 @@ int thermal_firmware_init(void)
 		temps->efuse_flag=-1;
 	}
 	if (temps->flag) {
-		temp_sensor_adc_init(temps->trimming);
+		aml_set_reg32_mask(P_AO_SAR_ADC_REG11,((1<<13)|(1<<19)|(1<<21)));
+		aml_set_reg32_bits(P_AO_SAR_ADC_REG11,temps->trimming,14,5);
 		return 0;
 	}
 	else
@@ -66,7 +67,7 @@ int get_cpu_temp(void)
 	if (temps->flag) {
 		ret=get_adc_sample(6);
 		if (ret >= 0) {
-			tempa=(10*(ret-temps->adc_efuse))/32+27;
+			tempa=(10*(ret-temps->adc_efuse))/34+27;
 			ret=tempa;
 		}
 	}
