@@ -60,7 +60,9 @@ typedef enum{
 	AM_TUNER_HTM = 4,
 	AM_TUNER_CTC703=5,
 	AM_TUNER_SI2177 = 6,
-	AM_TUNER_R840 = 7
+	AM_TUNER_R840 = 7,
+	AM_TUNER_SI2157 = 8,
+	AM_TUNER_SI2151 = 9
 }aml_tuner_type_t;
 
 typedef enum{
@@ -177,8 +179,7 @@ extern int aml_register_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
 
 extern int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv);
 
-extern struct dvb_frontend * get_si2177_tuner(void);
-extern struct dvb_frontend * get_r840_tuner(void);
+extern struct dvb_frontend * get_tuner(void);
 extern const char* soundsys_to_str(unsigned short soundsys);
 extern const char* audmode_to_str(unsigned short soundsys);
 extern const char* v4l2_std_to_str(v4l2_std_id std);

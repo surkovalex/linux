@@ -54,4 +54,8 @@ ifneq ($(wildcard $(srctree)/../hardware/dvb/rafael/drivers/r840),)
 	obj-$(CONFIG_AM_R840) += ../../../../hardware/dvb/rafael/drivers/r840/
 endif
 
+ifneq ($(wildcard $(srctree)/../hardware/dvb/silabs/drivers/si2151),)
+	obj-$(CONFIG_AM_SI2151) += ../../../../hardware/dvb/silabs/drivers/si2151/
+endif
+
 EXTRA_CFLAGS += -I.

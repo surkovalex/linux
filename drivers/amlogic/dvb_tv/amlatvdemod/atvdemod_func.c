@@ -1193,40 +1193,40 @@ int atvdemod_init(void)
 
 void atv_dmd_set_std(void)
 {
-        v4l2_std_id ptstd = amlatvdemod_devp->parm.std;
-        /* set broad standard of tuner*/
-        if (ptstd & V4L2_STD_PAL_BG){
-                amlatvdemod_devp->fre_offset = 2250000;
+	v4l2_std_id ptstd = amlatvdemod_devp->parm.std;
+	/* set broad standard of tuner*/
+	if (ptstd & V4L2_STD_PAL_BG) {
+		amlatvdemod_devp->fre_offset = 2250000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_50HZ_VERT;
-                broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_BG;
+		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_BG;
 		if_freq = 3250000;
-        }else if (ptstd & V4L2_STD_PAL_DK){
-                amlatvdemod_devp->fre_offset = 2250000;
+	} else if (ptstd & V4L2_STD_PAL_DK) {
+		amlatvdemod_devp->fre_offset = 2250000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_50HZ_VERT;
 		if_freq = 3250000;
-                broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_DK;
-        }else if (ptstd & V4L2_STD_PAL_M){
-                amlatvdemod_devp->fre_offset = 2250000;
+		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_DK;
+	} else if (ptstd & V4L2_STD_PAL_M) {
+		amlatvdemod_devp->fre_offset = 2250000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_60HZ_VERT;
-                broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_M;
+		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_M;
 		if_freq = 4250000;
-        }else if (ptstd & V4L2_STD_NTSC_M){
-                amlatvdemod_devp->fre_offset = 1750000;
+	} else if (ptstd & V4L2_STD_NTSC_M) {
+		amlatvdemod_devp->fre_offset = 1750000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_60HZ_VERT;
 		if_freq = 4250000;
-                broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_NTSC;
-        }else if (ptstd & V4L2_STD_NTSC_M_JP){
-                amlatvdemod_devp->fre_offset = 1750000;
+		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_NTSC;
+	} else if (ptstd & V4L2_STD_NTSC_M_JP) {
+		amlatvdemod_devp->fre_offset = 1750000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_50HZ_VERT;
-                broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_NTSC_J;
+		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_NTSC_J;
 		if_freq = 4250000;
-        }else if (ptstd & V4L2_STD_PAL_I){
-                amlatvdemod_devp->fre_offset = 2750000;
+	} else if (ptstd & V4L2_STD_PAL_I) {
+		amlatvdemod_devp->fre_offset = 2750000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_50HZ_VERT;
-                broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_I;
+		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_PAL_I;
 		if_freq = 3250000;
-        }else if (ptstd & (V4L2_STD_SECAM_L | V4L2_STD_SECAM_LC)){
-                amlatvdemod_devp->fre_offset = 2750000;
+	} else if (ptstd & (V4L2_STD_SECAM_L | V4L2_STD_SECAM_LC)) {
+		amlatvdemod_devp->fre_offset = 2750000;
 		freq_hz_cvrt = AML_ATV_DEMOD_FREQ_50HZ_VERT;
 		broad_std = AML_ATV_DEMOD_VIDEO_MODE_PROP_SECAM_L;
 	}

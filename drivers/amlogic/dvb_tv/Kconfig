@@ -274,6 +274,13 @@ config AM_R840
 	default n
 	depends on AM_DVB
 	help
-		Select to enable R840 tuner driver.		
+		Select to enable R840 tuner driver.
+
+config AM_SI2151
+	tristate "the SI2151 tuner driver"
+	default n
+	depends on AM_DVB
+	help
+		Select to enable SI2151 tuner driver.
 endmenu
 

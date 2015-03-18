@@ -160,37 +160,31 @@ int aml_unregister_fe_drv(aml_fe_dev_type_t type, struct aml_fe_drv *drv)
 }
 EXPORT_SYMBOL(aml_unregister_fe_drv);
 
-struct dvb_frontend * get_si2177_tuner(void)
+struct dvb_frontend * get_tuner(void)
 {
 	int i;
 	struct aml_fe_dev *dev;
 
-	for(i = 0; i < FE_DEV_COUNT; i++){
+	for (i = 0; i < FE_DEV_COUNT; i++) {
 		dev = &fe_man.tuner[i];
-		if (!strcmp(dev->drv->name, "si2177_tuner")){
+#if (defined CONFIG_AM_SI2177)
+		if (!strcmp(dev->drv->name, "si2177_tuner")) {
+#elif (defined CONFIG_AM_SI2157)
+              if (!strcmp(dev->drv->name, "si2157_tuner")) {
+#elif (defined CONFIG_AM_SI2151)
+              if (!strcmp(dev->drv->name, "si2151_tuner")) {
+#elif (defined CONFIG_AM_R840)
+              if (!strcmp(dev->drv->name, "r840_tuner")) {
+#else
+              if (0) {
+#endif
 			return dev->fe->fe;
 		}
 	}
 	pr_error("can not find out tuner drv\n");
 	return NULL;
 }
-EXPORT_SYMBOL(get_si2177_tuner);
-
-struct dvb_frontend * get_r840_tuner(void)
-{
-	int i;
-	struct aml_fe_dev *dev;
-
-	for(i = 0; i < FE_DEV_COUNT; i++){
-		dev = &fe_man.tuner[i];
-		if (!strcmp(dev->drv->name, "r840_tuner")){
-			return dev->fe->fe;
-		}
-	}
-	pr_error("can not find out tuner drv\n");
-	return NULL;
-}
-EXPORT_SYMBOL(get_r840_tuner);
+EXPORT_SYMBOL(get_tuner);
 
 
 int aml_fe_analog_set_frontend(struct dvb_frontend* fe)
@@ -208,6 +202,9 @@ int aml_fe_analog_set_frontend(struct dvb_frontend* fe)
 		p.tuner_id = AM_TUNER_R840;
 		p.if_freq = fee->demod_param.if_freq;
 		p.if_inv = fee->demod_param.if_inv;
+	}
+	if (fee->tuner->drv->id == AM_TUNER_SI2151) {
+		p.tuner_id = AM_TUNER_SI2151;
 	}
 
 	p.frequency  = c->frequency;
@@ -392,7 +389,7 @@ static enum dvbfe_search aml_fe_analog_search(struct dvb_frontend *fe)
 		 while( p->frequency<=maxafcfreq)
 		{
 			pr_dbg("[%s] p->frequency=[%d] is processing\n",__func__,p->frequency);
-			if(fee->tuner->drv->id == AM_TUNER_R840){
+			if ((fee->tuner->drv->id == AM_TUNER_R840) || (fee->tuner->drv->id == AM_TUNER_SI2151)) {
 
 			}
 			else{
@@ -506,7 +503,7 @@ static int aml_fe_afc_closer(struct dvb_frontend *fe,int minafcfreq,int maxafcfq
 		set_freq=c->frequency;
 
 		while(abs(afc) > AFC_BEST_LOCK){
-			if((fe->ops.analog_ops.get_afc)&&(fee->tuner->drv->id == AM_TUNER_R840))
+			if ((fe->ops.analog_ops.get_afc) && ((fee->tuner->drv->id == AM_TUNER_R840) || (fee->tuner->drv->id == AM_TUNER_SI2151)))
 				fe->ops.analog_ops.get_afc(fe, &afc);
 			else if(fe->ops.tuner_ops.get_afc)
 				fe->ops.tuner_ops.get_afc(fe, &afc);
