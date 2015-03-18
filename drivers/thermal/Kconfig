@@ -90,7 +90,6 @@ config CPUCORE_THERMAL
 
 config GPU_THERMAL
 	bool "generic gpu cooling support"
-	depends on (MALI400 || MALI400_MODULE)
 	help
 	  This implements the generic gpu cooling mechanism through frequency
 	  reduction. An ACPI version of this already exists
