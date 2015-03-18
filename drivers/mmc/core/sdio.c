@@ -1310,11 +1310,10 @@ err:
 }
 EXPORT_SYMBOL(sdio_reset_comm);
 
-#if 0
+
 static void sdio_rescan (struct mmc_host *host)
 {
     int ret;
-
     host->rescan_entered = 0;
 	host->host_rescan_disable = false;
     mmc_detect_change(host, 0); // start the delayed_work
@@ -1326,21 +1325,20 @@ static void sdio_rescan (struct mmc_host *host)
         // printk("\033[0;40;32m [%s] delayed_work mmc_rescan() finish \033[0m\n", __FUNCTION__);
     // }
 }
-#endif
+
 
 void sdio_reinit (void)
 {
     if(comm_card) { // run sdio_rescan() already
         sdio_reset_comm(comm_card);
     } else {
-    #if 0
         // printk("\033[0;40;35m [%s] real init \033[0m\n", __func__);
         if (sdio_host) {
             sdio_rescan(sdio_host);
         } else {
             printk("\033[0;47;33m [%s] Error: sdio_host is NULL \033[0m\n", __func__);
         }
-#endif
+
     }
     printk("[%s] finish\n", __func__);
 }

@@ -955,17 +955,13 @@ static int aml_is_sdjtag(struct amlsd_platform * pdata)
 
 static int aml_is_sduart(struct amlsd_platform * pdata)
 {
-    return 0;
-#if 0
 #ifdef CONFIG_MESON_CPU_EMULATOR
 	return 0;
 #else
     int dat3, i;
     int cnt=0;
-
     if(pdata->is_sduart)
         return 1;
-
     for (i = 0; i < 10; i++) {
 #if (defined(CONFIG_ARCH_MESONG9TV) || defined(CONFIG_ARCH_MESONG9BB))
 	dat3 = aml_get_reg32_bits(P_PREG_PAD_GPIO2_I,24,1);
@@ -1006,7 +1002,6 @@ static int aml_is_sduart(struct amlsd_platform * pdata)
         // }
     // }
     // return 0;
-#endif
 #endif
 }
 
