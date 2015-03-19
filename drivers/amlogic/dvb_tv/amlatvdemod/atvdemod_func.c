@@ -64,6 +64,10 @@ static unsigned int atvdemod_afc_offset = 500;
 module_param( atvdemod_afc_offset, uint, 0644) ; 
 MODULE_PARM_DESC( atvdemod_afc_offset, "\n atvdemod_afc_offset\n");
 
+static unsigned int atvdemod_timer_en = 1;
+module_param( atvdemod_timer_en, uint, 0644);
+MODULE_PARM_DESC( atvdemod_afc_offset, "\n atvdemod_afc_offset\n");
+
 static unsigned int mix1_freq = 0;
 static unsigned int timer_init_flag = 0;
 extern struct amlatvdemod_device_s *amlatvdemod_devp;
@@ -1136,9 +1140,11 @@ void atvdemod_timer_hander(unsigned long arg)
 int atvdemod_init(void)
 {
 	//unsigned long data32;
-	if(timer_init_flag == 1){
-		del_timer_sync(&atvdemod_timer);
-		timer_init_flag = 0;
+	if (atvdemod_timer_en == 1) {
+		if (timer_init_flag == 1) {
+			del_timer_sync(&atvdemod_timer);
+			timer_init_flag = 0;
+		}
 	}
 	//clocks_set_hdtv ();
 	//1.set system clock
@@ -1178,14 +1184,16 @@ int atvdemod_init(void)
 		delay_us(400);
 	}*/
 	#if 1//temp mark
-	/*atvdemod timer hander*/
-	init_timer(&atvdemod_timer);
-	//atvdemod_timer.data = (ulong) devp;
-	atvdemod_timer.function = atvdemod_timer_hander;
-	atvdemod_timer.expires = jiffies + ATVDEMOD_INTERVAL*300;//after 3s enable demod auto detect
-	add_timer(&atvdemod_timer);
-	mix1_freq = atv_dmd_rd_byte(APB_BLOCK_ADDR_MIXER_1,0x0);
-	timer_init_flag = 1;
+	if (atvdemod_timer_en == 1) {
+		/*atvdemod timer hander*/
+		init_timer(&atvdemod_timer);
+		//atvdemod_timer.data = (ulong) devp;
+		atvdemod_timer.function = atvdemod_timer_hander;
+		atvdemod_timer.expires = jiffies + ATVDEMOD_INTERVAL*300;//after 3s enable demod auto detect
+		add_timer(&atvdemod_timer);
+		mix1_freq = atv_dmd_rd_byte(APB_BLOCK_ADDR_MIXER_1,0x0);
+		timer_init_flag = 1;
+	}
 	#endif
 	pr_info("delay done\n");
 	return(0);

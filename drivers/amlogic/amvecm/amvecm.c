@@ -139,12 +139,17 @@ module_param(pq_load_en, uint, 0664);
 MODULE_PARM_DESC(pq_load_en, "\n pq_load_en \n");
 
 #if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESONG9TV)
-bool wb_gamma_en = 0;  // wb_gamma_en enable/disable
+bool gamma_en = 0;  // wb_gamma_en enable/disable
 #else
-bool wb_gamma_en = 1;
+bool gamma_en = 1;
 #endif
-module_param(wb_gamma_en, bool, 0664);
-MODULE_PARM_DESC(wb_gamma_en, "\n wb_gamma_en \n");
+module_param(gamma_en, bool, 0664);
+MODULE_PARM_DESC(gamma_en, "\n gamma_en \n");
+
+bool wb_en = 1;  // wb_en enable/disable
+module_param(wb_en, bool, 0664);
+MODULE_PARM_DESC(wb_en, "\n wb_en \n");
+
 
 extern unsigned int cm_size;
 extern unsigned int ve_size;
@@ -696,16 +701,19 @@ static long amvecm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	gamma ioctl
 	**********************************************************************/
 	case AMVECM_IOC_GAMMA_TABLE_EN:
-		if (!wb_gamma_en)
+		if (!gamma_en)
 			return (-EINVAL);
 
 		vecm_latch_flag |= FLAG_GAMMA_TABLE_EN;
 		break;
 	case AMVECM_IOC_GAMMA_TABLE_DIS:
+		if (!gamma_en)
+			return (-EINVAL);
+
 		vecm_latch_flag |= FLAG_GAMMA_TABLE_DIS;
 		break;
 	case AMVECM_IOC_GAMMA_TABLE_R:
-		if (!wb_gamma_en)
+		if (!gamma_en)
 			return (-EINVAL);
 
 		if (copy_from_user(&video_gamma_table_r, (void __user *)arg, sizeof(struct tcon_gamma_table_s)))
@@ -714,7 +722,7 @@ static long amvecm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			vecm_latch_flag |= FLAG_GAMMA_TABLE_R;
 		break;
 	case AMVECM_IOC_GAMMA_TABLE_G:
-		if (!wb_gamma_en)
+		if (!gamma_en)
 			return (-EINVAL);
 
 		if (copy_from_user(&video_gamma_table_g, (void __user *)arg, sizeof(struct tcon_gamma_table_s)))
@@ -723,7 +731,7 @@ static long amvecm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			vecm_latch_flag |= FLAG_GAMMA_TABLE_G;
 		break;
 	case AMVECM_IOC_GAMMA_TABLE_B:
-		if (!wb_gamma_en)
+		if (!gamma_en)
 			return (-EINVAL);
 
 		if (copy_from_user(&video_gamma_table_b, (void __user *)arg, sizeof(struct tcon_gamma_table_s)))
@@ -732,7 +740,7 @@ static long amvecm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			vecm_latch_flag |= FLAG_GAMMA_TABLE_B;
 		break;
 	case AMVECM_IOC_S_RGB_OGO:
-		if (!wb_gamma_en)
+		if (!wb_en)
 			return (-EINVAL);
 
 		if (copy_from_user(&video_rgb_ogo, (void __user *)arg, sizeof(struct tcon_rgb_ogo_s)))
@@ -741,7 +749,7 @@ static long amvecm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			ve_ogo_param_update();
 		break;
 	case AMVECM_IOC_G_RGB_OGO:
-		if (!wb_gamma_en)
+		if (!wb_en)
 			return (-EINVAL);
 
 		if (copy_to_user((void __user *)arg, &video_rgb_ogo, sizeof(struct tcon_rgb_ogo_s))){
