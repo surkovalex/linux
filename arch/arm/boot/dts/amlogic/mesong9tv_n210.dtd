@@ -995,7 +995,7 @@ NON sdio device(means sd/mmc card), other:reserved */
 		compatible = "amlogic,aml-spdif-codec";
 		dev_name = "spdif-dit.0";
 		pinctrl-names = "aml_audio_spdif";
-		//pinctrl-0 = <&audio_spdif_pins>;
+		pinctrl-0 = <&audio_spdif_pins>;
 		status = "okay";
 	};
 
@@ -1401,6 +1401,12 @@ NON sdio device(means sd/mmc card), other:reserved */
 			amlogic,clrmask = <2 0x140000
 			                   3 0x80000>;
 			amlogic,pins = "GPIOZ_1", "GPIOZ_2", "GPIOZ_3", "GPIOZ_4", "GPIOZ_5";
+		};
+
+		audio_spdif_pins:audio_spdif_pins {
+			amlogic,setmask = <9 0x800>; /* SPDIF */
+			amlogic,clrmask = <9 0x400>;
+			amlogic,pins = "GPIOH_10";
 		};
 
 		//$$ MATCH "dvb_p_ts0_pins_match" = "&dvb_p_ts0_pins"
