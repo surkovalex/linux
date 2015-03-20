@@ -161,8 +161,7 @@ void cec_standby(cec_rx_message_t* pcec_message)
     unsigned int mask;
 
     mask = (1 << CEC_FUNC_MSAK) | (1 << ONE_TOUCH_STANDBY_MASK);
-    if (hdmitx_device->cec_func_config & mask)
-    {
+    if ((hdmitx_device->cec_func_config & mask) == mask) {
         hdmi_print(INF, CEC  ": System will be in standby mode\n");
         input_event(cec_global_info.remote_cec_dev, EV_KEY, KEY_POWER, 1);
         input_sync(cec_global_info.remote_cec_dev);
