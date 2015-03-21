@@ -3424,7 +3424,13 @@ static int prepare_display_buf(hevc_stru_t* hevc, PIC_t* pic)
             hevc->last_lookup_pts = vf->pts;
         }
 
-        if ((hevc->pts_mode == PTS_NONE_REF_USE_DURATION) && (slice_type != 2)) {
+        if (((hevc->pts_mode == PTS_NONE_REF_USE_DURATION) && (slice_type != 2)) ||
+            (i_only_flag)) {
+            if (frame_dur == 0) {
+                // add a default duration for 1/30 second if there is no valid frame duration available
+                frame_dur = 96000/30;
+            }
+
             vf->pts = hevc->last_pts + DUR2PTS(frame_dur);
         }
         hevc->last_pts = vf->pts;
