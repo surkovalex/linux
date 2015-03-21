@@ -1,7 +1,7 @@
 /dts-v1/;
 /{
 	compatible = "AMLOGIC,T826_G9BB";
-	model = "AMLOGIC G9BB T826 For PXP";
+	model = "AMLOGIC G9BB T826 For SKT";
 	interrupt-parent = <&gic>;
 	#address-cells = <1>;
 	#size-cells = <1>;
@@ -255,7 +255,7 @@
 	uart_1 {
 		compatible = "amlogic,aml_uart";
 		port_name = "uart_b";
-		status = "okay";
+		status = "disabled";
 		dev_name = "uart_1";
 		pinctrl-names = "default";
 		pinctrl-0 = <&b_uart_pins>;
@@ -301,7 +301,7 @@
 //$$ L2 PROP_U32 2 = "key_tolerance"
 	adc_keypad {
 		compatible = "amlogic,adc_keypad";
-		status = "okay";
+		status = "disabled";
 		key_name = "enter", "left","right";
 		key_num = <3>;
 		key_code = <28 105 106>;
@@ -346,6 +346,19 @@
 
 
 
+/// ****************************************************************************
+//$$ DEVICE="wifi_power"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_STR = "power_gpio"
+	wifi_power {
+		compatible = "amlogic,wifi_power";
+		dev_name = "wifi_power";
+		status = "disable";
+		power_gpio = "GPIOY_5";
+	};
+
+
+
 
 /// ****************************************************************************
 ///	-	HDMI
@@ -357,7 +370,7 @@
 	amhdmitx {
 		compatible = "amlogic,amhdmitx";
 		dev_name = "amhdmitx";
-		status = "ok";
+		status = "disable";
 		vend-data = <&vend_data>;
 		pwr-ctrl = <&pwr_ctrl>;
 
@@ -418,7 +431,7 @@
 
 
 
-/// ***************************************************************************************
+/// ****************************************************************************
 ///	-	Securitykey
 //$$ MODULE="Securitykey"
 //$$ DEVICE="securitykey"
@@ -935,7 +948,7 @@
 	};
 
 
-/// ***************************************************************************************
+/// ****************************************************************************
 ///	-	USB Controller
 //$$ MODULE="USB Controller"
 	usb_con {
@@ -1122,7 +1135,7 @@
 			"LINEIN","Linein right 1";
 		pinctrl-names = "aml_snd_g9tv";
 		pinctrl-0 = <&audio_pins>;
-		status = "okay";
+		status = "disable";
 	};
 
 
@@ -1571,8 +1584,5 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&smc_pins>;
 	};*/
-
-
-
 
 }; /* end of root */

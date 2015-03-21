@@ -1,7 +1,7 @@
 /dts-v1/;
 /{
 	compatible = "AMLOGIC,T826_G9BB";
-	model = "AMLOGIC G9BB T826 For PXP";
+	model = "AMLOGIC G9BB T826";
 	interrupt-parent = <&gic>;
 	#address-cells = <1>;
 	#size-cells = <1>;
