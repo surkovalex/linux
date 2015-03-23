@@ -109,6 +109,8 @@ static unsigned long pts_missed, pts_hit;
 
 static struct dec_sysinfo vh264_4k2k_amstream_dec_info;
 extern u32 trickmode_i;
+static dma_addr_t mc_dma_handle;
+static void *mc_cpu_addr;
 
 static DEFINE_SPINLOCK(lock);
 static int fatal_error;
@@ -212,6 +214,10 @@ static struct device *cma_dev;
 #define CMD_ALLOC_VIEW             1
 #define CMD_FRAME_DISPLAY          3
 #define CMD_DEBUG                  10
+
+#define MC_TOTAL_SIZE       (28*SZ_1K)
+#define MC_SWAP_SIZE        ( 4*SZ_1K)
+
 
 static unsigned work_space_adr, decoder_buffer_start, decoder_buffer_end;
 static unsigned reserved_buffer;
@@ -1216,12 +1222,6 @@ static void vh264_4k2k_local_init(void)
 
 static s32 vh264_4k2k_init(void)
 {
-    void __iomem *p = ioremap_nocache(work_space_adr, DECODER_WORK_SPACE_SIZE);
-
-    if (!p) {
-        printk("\nvh264_4k2k_init: Cannot remap ucode swapping memory\n");
-        return -ENOMEM;
-    }
 
     printk("\nvh264_4k2k_init\n");
 
@@ -1233,16 +1233,31 @@ static s32 vh264_4k2k_init(void)
 
     amvdec_enable();
 
+   //-- ucode loading (amrisc and swap code)
+    mc_cpu_addr = dma_alloc_coherent(NULL, MC_TOTAL_SIZE, &mc_dma_handle, GFP_KERNEL);
+    if (!mc_cpu_addr) {
+    amvdec_disable();
+    printk("vh264_4k2k init: Can not allocate mc memory.\n");
+    return -ENOMEM;
+   }
+
+    printk("4k2k ucode swap area: physical address 0x%x, cpu virtual addr %p\n", mc_dma_handle, mc_cpu_addr);
+
+    WRITE_VREG(AV_SCRATCH_L, mc_dma_handle);
+                if (!H264_4K2K_SINGLE_CORE)
+                   WRITE_VREG(VDEC2_AV_SCRATCH_L,mc_dma_handle);
     if (H264_4K2K_SINGLE_CORE) {
         if (amvdec_loadmc(vh264_4k2k_mc_single) < 0) {
             amvdec_disable();
-            iounmap(p);
+            dma_free_coherent(NULL, MC_TOTAL_SIZE, mc_cpu_addr, mc_dma_handle);
+            mc_cpu_addr = NULL;
             return -EBUSY;
         }
     } else {
         if (amvdec_loadmc(vh264_4k2k_mc) < 0) {
             amvdec_disable();
-            iounmap(p);
+          dma_free_coherent(NULL, MC_TOTAL_SIZE, mc_cpu_addr, mc_dma_handle);
+            mc_cpu_addr = NULL;
             return -EBUSY;
         }
     }
@@ -1253,32 +1268,31 @@ static s32 vh264_4k2k_init(void)
         if (amvdec2_loadmc(vh264_4k2k_mc) < 0) {
             amvdec_disable();
             amvdec2_disable();
-            iounmap(p);
+            dma_free_coherent(NULL, MC_TOTAL_SIZE, mc_cpu_addr, mc_dma_handle);
+            mc_cpu_addr = NULL;
             return -EBUSY;
         }
     }
 
     if (H264_4K2K_SINGLE_CORE) {
-        memcpy(p,
+        memcpy(mc_cpu_addr,
                vh264_4k2k_header_mc_single, sizeof(vh264_4k2k_header_mc_single));
 
-        memcpy((void *)((ulong)p + 0x1000),
+        memcpy((void *)((ulong)mc_cpu_addr + 0x1000),
                vh264_4k2k_mmco_mc_single, sizeof(vh264_4k2k_mmco_mc_single));
 
-        memcpy((void *)((ulong)p + 0x3000),
+        memcpy((void *)((ulong)mc_cpu_addr + 0x3000),
                vh264_4k2k_slice_mc_single, sizeof(vh264_4k2k_slice_mc_single));
     } else {
-        memcpy(p,
+        memcpy(mc_cpu_addr,
                vh264_4k2k_header_mc, sizeof(vh264_4k2k_header_mc));
 
-        memcpy((void *)((ulong)p + 0x1000),
+        memcpy((void *)((ulong)mc_cpu_addr + 0x1000),
                vh264_4k2k_mmco_mc, sizeof(vh264_4k2k_mmco_mc));
 
-        memcpy((void *)((ulong)p + 0x3000),
+        memcpy((void *)((ulong)mc_cpu_addr + 0x3000),
                vh264_4k2k_slice_mc, sizeof(vh264_4k2k_slice_mc));
     }
-
-    iounmap(p);
 
     stat |= STAT_MC_LOAD;
 
@@ -1390,6 +1404,14 @@ static int vh264_4k2k_stop(void)
         WRITE_VREG(VDEC2_MDEC_DOUBLEW_CFG0, 0);
     }
 #endif
+
+    if (stat & STAT_MC_LOAD) {
+     if (mc_cpu_addr != NULL) {
+        dma_free_coherent(NULL, MC_TOTAL_SIZE, mc_cpu_addr, mc_dma_handle);
+        mc_cpu_addr = NULL;
+     }
+     stat &= ~STAT_MC_LOAD;
+    }
 
     amvdec_disable();
     if (!H264_4K2K_SINGLE_CORE) {
