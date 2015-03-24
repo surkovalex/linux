@@ -13,5 +13,6 @@
 #define VPP_PRE_FG_OSD2             (1 << 5)
 #define VPP_PREBLEND_EN             (1 << 6)
 #define VPP_POST_FG_OSD2            (1 << 4)
-
+#define VPP_FIFO_RESET_DE		(1 << 2)
+#define VPP_OUT_SATURATE		(1 << 0)
 #endif

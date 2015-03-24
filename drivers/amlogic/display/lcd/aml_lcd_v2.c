@@ -195,7 +195,7 @@ typedef struct {
 } lcd_dev_t;
 static lcd_dev_t *pDev = NULL;
 
-static vmode_t cur_vmode = VMODE_720P;
+static vmode_t cur_vmode = VMODE_1080P;
 
 static int pn_swap = 0;
 MODULE_PARM_DESC(pn_swap, "\n pn_swap \n");
