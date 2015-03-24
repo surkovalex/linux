@@ -902,6 +902,19 @@ NON sdio device(means sd/mmc card), other:reserved */
 		>;
 	};
 
+/// ***************************************************************************************
+///	-	DISP&MM-AMLVIDEO2
+//$$ MODULE = "DISP&MM-AMLVIDEO2"
+//$$ DEVICE="amlvideo2"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 2 ="reg"
+    amlvideo2{
+        compatible = "amlogic,amlvideo2";
+        dev_name = "amlvideo2.0";
+        status = "okay";
+        reserve-memory = <0x01800000>;
+        reserve-iomap = "true";
+    };
 
 /// ****************************************************************************
 ///	-	ION
