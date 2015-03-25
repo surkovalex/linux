@@ -34,7 +34,7 @@
 #define MII_BUSY 0x00000001
 #define MII_WRITE 0x00000002
 
-#ifdef CONFIG_DWMAC_MESON
+#ifndef CONFIG_DWMAC_MESON
 #define ETH_MAC_4_GMII_Addr         (0x0010)
 #define ETH_MAC_5_GMII_Data         (0x0014)
 #define ETH_MAC_4_GMII_Addr_CR_P                2
@@ -223,7 +223,7 @@ int stmmac_mdio_register(struct net_device *ndev)
 	else
 		irqlist = priv->mii_irq;
 	new_bus->name = "stmmac";
-#ifdef CONFIG_DWMAC_MESON
+#ifndef CONFIG_DWMAC_MESON
 	new_bus->read = &mdio_read;
 	new_bus->write = &mdio_write;
 	new_bus->reset = &mdio_reset;

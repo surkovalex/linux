@@ -55,6 +55,7 @@
 #include<plat/cpu.h>
 #include <mach/am_regs.h>
 #include <mach/am_eth_reg.h>
+#include <linux/clk.h>
 #endif
 //#undef STMMAC_DEBUG
 //#define STMMAC_DEBUG
@@ -203,6 +204,24 @@ static void stmmac_clk_csr_set(struct stmmac_priv *priv)
 	 * the frequency of clk_csr_i. So we do not change the default
 	 * divider.
 	 */
+	if (!(priv->clk_csr & MAC_CSR_H_FRQ_MASK)) {
+		if (clk_rate < CSR_F_35M)
+			priv->clk_csr = STMMAC_CSR_20_35M;
+		else if ((clk_rate >= CSR_F_35M) && (clk_rate < CSR_F_60M))
+			priv->clk_csr = STMMAC_CSR_35_60M;
+		else if ((clk_rate >= CSR_F_60M) && (clk_rate < CSR_F_100M))
+			priv->clk_csr = STMMAC_CSR_60_100M;
+		else if ((clk_rate >= CSR_F_100M) && (clk_rate < CSR_F_150M))
+			priv->clk_csr = STMMAC_CSR_100_150M;
+		else if ((clk_rate >= CSR_F_150M) && (clk_rate < CSR_F_250M))
+			priv->clk_csr = STMMAC_CSR_150_250M;
+		else if ((clk_rate >= CSR_F_250M) && (clk_rate < CSR_F_300M))
+			priv->clk_csr = STMMAC_CSR_250_300M;
+	}
+}
+#else
+static void amlmac_clk_csr_set(struct stmmac_priv *priv,u32 clk_rate)
+{
 	if (!(priv->clk_csr & MAC_CSR_H_FRQ_MASK)) {
 		if (clk_rate < CSR_F_35M)
 			priv->clk_csr = STMMAC_CSR_20_35M;
@@ -3141,7 +3160,10 @@ struct stmmac_priv *stmmac_dvr_probe(struct device *device,
 	int ret = 0;
 	struct net_device *ndev = NULL;
 	struct stmmac_priv *priv;
-
+#ifdef CONFIG_DWMAC_MESON
+	struct clk * clk81;
+	u32 clk_rate;
+#endif
 	ndev = alloc_etherdev(sizeof(struct stmmac_priv));
 	if (!ndev)
 		return NULL;
@@ -3210,8 +3232,14 @@ struct stmmac_priv *stmmac_dvr_probe(struct device *device,
 		goto error_netdev_register;
 	}
 #ifdef CONFIG_DWMAC_MESON
-	priv->clk_csr = STMMAC_CSR_100_150M;
-//	priv->clk_csr = STMMAC_CSR_150_250M;
+	clk81 = clk_get_sys("clk81", "pll_fixed");
+        if (IS_ERR_OR_NULL(clk81)) {
+		pr_info("meson_eth_change_speed: clk81 is not available\n");
+		goto error_clk_get;
+	}
+	msleep(1);
+	clk_rate = clk_get_rate(clk81);
+	amlmac_clk_csr_set(priv,clk_rate);
 #else
 	priv->stmmac_clk = clk_get(priv->device, STMMAC_RESOURCE_NAME);
 	if (IS_ERR(priv->stmmac_clk)) {
@@ -3251,10 +3279,8 @@ struct stmmac_priv *stmmac_dvr_probe(struct device *device,
 
 error_mdio_register:
 	clk_put(priv->stmmac_clk);
-#ifndef CONFIG_DWMAC_MESON
 error_clk_get:
 	unregister_netdev(ndev);
-#endif
 error_netdev_register:
 	netif_napi_del(&priv->napi);
 error_free_netdev:
