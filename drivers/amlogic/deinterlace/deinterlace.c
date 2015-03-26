@@ -198,7 +198,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2015-3-2a";//enable pre vdin link when input2pre
+static char version_s[] = "2015-3-25a";//get vdin2nr in timerc
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -3943,6 +3943,9 @@ static unsigned char pre_de_buf_config(void)
             if(vframe->canvas0Addr == READ_CBUS_REG_BITS((VDIN_WR_CTRL + 0), WR_CANVAS_BIT, WR_CANVAS_WID)){
                 same_w_r_canvas_count++;
             }
+            #ifdef RUN_DI_PROCESS_IN_IRQ
+            di_pre_stru.vdin2nr = is_input2pre();
+            #endif
         }
 #endif
 
@@ -6282,7 +6285,9 @@ static void di_unreg_process_irq(void)
         di_pre_stru.force_unreg_req_flag = 0;
         di_pre_stru.disable_req_flag = 0;
         recovery_flag = 0;
-
+        #ifdef NEW_DI_V3
+        di_pre_stru.cur_prog_flag = 0;
+        #endif
         di_pre_stru.unreg_req_flag = 0;
         di_pre_stru.unreg_req_flag2 = 0;
     }
@@ -6632,11 +6637,11 @@ static int di_receiver_event_fun(int type, void* data, void* arg)
         provider_vframe_level = 0;
         bypass_dynamic_flag = 0;
         post_ready_empty_count = 0;
-
+        vdin_source_flag = 0;
         trigger_pre_di_process('n');
         while(di_pre_stru.unreg_req_flag){
             msleep(10);
-		    }
+        }
 #ifdef SUPPORT_MPEG_TO_VDIN
 	if(mpeg2vdin_flag){
 	    vdin_arg_t vdin_arg;
