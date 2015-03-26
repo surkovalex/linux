@@ -27,6 +27,7 @@
 #include "axp-gpio.h"
 
 #include <linux/amlogic/battery_parameter.h>
+#include <linux/amlogic/aml_pmu_common.h>
 #ifdef CONFIG_OF
 
 #ifdef CONFIG_AMLOGIC_USB
