@@ -1256,7 +1256,7 @@ static void vh264_isr(void)
                     last_pts_remainder = 0;
                 }
 
-            } else {
+            } else if ((READ_VREG(AV_SCRATCH_F) & 2) == 0) {
                 pts = pts_inc_by_duration(&pts, &last_pts_remainder);
                 pts_valid = 1;
             }
@@ -1342,6 +1342,12 @@ static void vh264_isr(void)
                 } else {
                     vf->type = poc_sel ? VIDTYPE_INTERLACE_BOTTOM : VIDTYPE_INTERLACE_TOP;
                 }
+
+                if (READ_VREG(AV_SCRATCH_F) & 2) {
+                    // swap field type for I only mode
+                    vf->type ^= VIDTYPE_INTERLACE_TOP ^ VIDTYPE_INTERLACE_BOTTOM;
+                }
+
 #ifdef NV21
                 vf->type |= VIDTYPE_VIU_NV21;
 #endif
@@ -1354,6 +1360,7 @@ static void vh264_isr(void)
                 vf->pts_us64= (pts_valid) ? pts_us64 : 0;
                 vf->canvas0Addr = vf->canvas1Addr = spec2canvas(&buffer_spec[buffer_index]);
                 vfbuf_use[buffer_index]++;
+                p_last_vf = vf;
                 vf->ready_jiffies64=jiffies_64;
 
                 if ((error_recovery_mode_use & 2) && error) {
