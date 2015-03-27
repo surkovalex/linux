@@ -554,7 +554,7 @@ void enable_mc_di_post(DI_MC_MIF_t *di_mcvecrd_mif,int urgent)
 }
 
 #endif
-
+#if 0
 static void set_vd1_fmt_more (
 		int hfmt_en,
         int hz_yc_ratio,        //2bit
@@ -586,7 +586,7 @@ static void set_vd1_fmt_more (
                              (c_length << 0)      			// vt format width
                         );
 }
-
+#endif
 static void set_di_inp_fmt_more (int hfmt_en,
                 int hz_yc_ratio,        //2bit
                 int hz_ini_phase,       //4bit
@@ -1026,97 +1026,27 @@ static void set_di_if1_fmt_more (int hfmt_en,
              		);
 }
 
-extern int di_vscale_skip_count;
+extern int di_vscale_skip_count_real;
+static const u32 vpat[] = {0, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf};
 
-#ifdef DI_POST_SKIP_LINE
-static int di_vscale_skip_mode = 0;
-static const u32 vpat[] = {0, 0x8, 0x9, 0xa, 0xb, 0xc};
-
-int 	l_luma0_rpt_loop_start = 0;
-int 	l_luma0_rpt_loop_end = 0;
-int 	l_chroma0_rpt_loop_start = 0;
-int 	l_chroma0_rpt_loop_end = 0;
-int   l_luma0_rpt_loop_pat = 0;
-int   l_chroma0_rpt_loop_pat = 0;
-
-#endif
-
-static void set_di_if1_mif ( DI_MIF_t *mif, int urgent, int hold_line)
+static void set_di_if1_mif (DI_MIF_t *mif, int urgent, int hold_line)
 {
-    unsigned long bytes_per_pixel;
-    unsigned long demux_mode;
-    unsigned long chro_rpt_lastl_ctrl;
-    unsigned long luma0_rpt_loop_start;
-    unsigned long luma0_rpt_loop_end;
-    unsigned long luma0_rpt_loop_pat;
-    unsigned long chroma0_rpt_loop_start;
-    unsigned long chroma0_rpt_loop_end;
-    unsigned long chroma0_rpt_loop_pat;
+    unsigned int bytes_per_pixel,demux_mode;
+    unsigned int pat, loop = 0,chro_rpt_lastl_ctrl = 0;
 
-    if ( mif->set_separate_en != 0 && mif->src_field_mode == 1 )
-    {
-      	chro_rpt_lastl_ctrl =1;
-      	luma0_rpt_loop_start = 1;
-      	luma0_rpt_loop_end = 1;
-      	chroma0_rpt_loop_start = 1;
-      	chroma0_rpt_loop_end = 1;
-        luma0_rpt_loop_pat = 0x80;
-        chroma0_rpt_loop_pat = 0x80;
-    }
-    else if ( mif->set_separate_en != 0 && mif->src_field_mode == 0 )
-    {
-      	chro_rpt_lastl_ctrl =1;
-      	luma0_rpt_loop_start = 0;
-      	luma0_rpt_loop_end = 0;
-      	chroma0_rpt_loop_start = 0;
-      	chroma0_rpt_loop_end = 0;
-      	luma0_rpt_loop_pat = 0x0;
-      	chroma0_rpt_loop_pat = 0x0;
-    }
-    else if ( mif->set_separate_en == 0 && mif->src_field_mode == 1 )
-    {
-      	chro_rpt_lastl_ctrl =1;
-      	luma0_rpt_loop_start = 1;
-      	luma0_rpt_loop_end = 1;
-      	chroma0_rpt_loop_start = 0;
-      	chroma0_rpt_loop_end = 0;
-        luma0_rpt_loop_pat = 0x80;
-        chroma0_rpt_loop_pat = 0x00;
-    }
-    else
-    {
-      	chro_rpt_lastl_ctrl =0;
-#ifdef DI_POST_SKIP_LINE
-      	if((di_vscale_skip_mode==1)&&(di_vscale_skip_count > 0)){
-          	luma0_rpt_loop_start = 1;
-          	luma0_rpt_loop_end = 1;
-          	chroma0_rpt_loop_start = 1;
-          	chroma0_rpt_loop_end = 1;
-      	    luma0_rpt_loop_pat = vpat[di_vscale_skip_count]<<4; //0x00;
-      	    chroma0_rpt_loop_pat = vpat[di_vscale_skip_count]<<4; //0x00;
-      	}
-      	else
-#endif
-      	{
-          	luma0_rpt_loop_start = 0;
-          	luma0_rpt_loop_end = 0;
-          	chroma0_rpt_loop_start = 0;
-          	chroma0_rpt_loop_end = 0;
-      	    luma0_rpt_loop_pat = 0x00;
-      	    chroma0_rpt_loop_pat = 0x00;
+    if (mif->set_separate_en == 1) {
+        pat = vpat[(di_vscale_skip_count_real<<1)+1];
+        /*top*/
+        if (mif->src_field_mode == 0)
+        {
+            chro_rpt_lastl_ctrl = 1;
+            loop = 0x11;
+            pat <<= 4;
         }
+    }else{
+        loop = 0;
+        pat = vpat[di_vscale_skip_count_real];
     }
-
-#ifdef DI_POST_SKIP_LINE
-    if(di_vscale_skip_mode == 2){ //force pat, for debugging
-        luma0_rpt_loop_start = l_luma0_rpt_loop_start;
-        luma0_rpt_loop_end = l_luma0_rpt_loop_end;
-        chroma0_rpt_loop_start = l_chroma0_rpt_loop_start;
-        chroma0_rpt_loop_end = l_chroma0_rpt_loop_end;
-        luma0_rpt_loop_pat = l_luma0_rpt_loop_pat;
-        chroma0_rpt_loop_pat = l_chroma0_rpt_loop_pat;
-    }
-#endif
 
     bytes_per_pixel = mif->set_separate_en ? 0 : (mif->video_mode ? 2 : 1);
     demux_mode = mif->video_mode;
@@ -1169,44 +1099,40 @@ static void set_di_if1_mif ( DI_MIF_t *mif, int urgent, int hold_line)
     // ----------------------
     // Repeat or skip
     // ----------------------
-    VSYNC_WR_MPEG_REG(DI_IF1_RPT_LOOP, (0 << 28)	|
-                               (0   << 24) 		|
-                               (0   << 20) 		|
-                               (0     << 16) 	|
-                               (chroma0_rpt_loop_start << 12) |
-                               (chroma0_rpt_loop_end << 8) |
-                               (luma0_rpt_loop_start << 4) |
-                               (luma0_rpt_loop_end << 0)
-        ) ;
+    VSYNC_WR_MPEG_REG(DI_IF1_RPT_LOOP, (loop << 24) |
+                               (loop << 16) |
+                               (loop << 8) |
+                               (loop << 0)
+                     );
 
-    VSYNC_WR_MPEG_REG(DI_IF1_LUMA0_RPT_PAT, luma0_rpt_loop_pat);
-    VSYNC_WR_MPEG_REG(DI_IF1_CHROMA0_RPT_PAT, chroma0_rpt_loop_pat);
+    VSYNC_WR_MPEG_REG(DI_IF1_LUMA0_RPT_PAT, pat);
+    VSYNC_WR_MPEG_REG(DI_IF1_CHROMA0_RPT_PAT, pat);
 
     // Dummy pixel value
     VSYNC_WR_MPEG_REG(DI_IF1_DUMMY_PIXEL, 0x00808000);
-    if ( (mif->set_separate_en != 0))   // 4:2:0 block mode.
+    if (mif->set_separate_en != 0)   // 4:2:0 block mode.
     {
         set_di_if1_fmt_more (
-                        1,                										// hfmt_en
-                        1,                										// hz_yc_ratio
-                        0,                										// hz_ini_phase
-                        1,                										// vfmt_en
-                        1,                										// vt_yc_ratio
-                        0,                										// vt_ini_phase
-                        mif->luma_x_end0 - mif->luma_x_start0 + 1, 				// y_length
-                        mif->chroma_x_end0 - mif->chroma_x_start0 + 1 , 		// c length
-                        0 );                 									// hz repeat.
+                             1, // hfmt_en
+                             1,	// hz_yc_ratio
+                             0,	// hz_ini_phase
+                             1,	// vfmt_en
+                             1, // vt_yc_ratio
+                             0, // vt_ini_phase
+                        mif->luma_x_end0 - mif->luma_x_start0 + 1, // y_length
+                        mif->chroma_x_end0 - mif->chroma_x_start0 + 1, // c length
+                             0 ); // hz repeat.
     } else {
         set_di_if1_fmt_more (
-                        1,                											// hfmt_en
-                        1,                											// hz_yc_ratio
-                        0,                											// hz_ini_phase
-                        0,                											// vfmt_en
-                        0,                											// vt_yc_ratio
-                        0,                											// vt_ini_phase
-                        mif->luma_x_end0 - mif->luma_x_start0 + 1, 					// y_length
-                        ((mif->luma_x_end0 >>1 ) - (mif->luma_x_start0>>1) + 1),  	// c length
-                        0 );                 // hz repeat.
+                             1,	// hfmt_en
+                             1,	// hz_yc_ratio
+                             0, // hz_ini_phase
+                             0,	// vfmt_en
+                             0,	// vt_yc_ratio
+                             0, // vt_ini_phase
+                        mif->luma_x_end0 - mif->luma_x_start0 + 1, // y_length
+                        ((mif->luma_x_end0 >>1 ) - (mif->luma_x_start0>>1) + 1), // c length
+                             0); // hz repeat
     }
 }
 
@@ -1320,106 +1246,20 @@ static void set_di_chan2_mif ( DI_MIF_t *mif, int urgent, int hold_line)
 
 }
 
-static void set_di_if0_mif ( DI_MIF_t *mif, int urgent, int hold_line)
+static void set_di_if0_mif (DI_MIF_t *mif, int urgent, int hold_line)
 {
-    unsigned long bytes_per_pixel;
-    unsigned long demux_mode;
-    unsigned long chro_rpt_lastl_ctrl;
-    unsigned long luma0_rpt_loop_start;
-    unsigned long luma0_rpt_loop_end;
-    unsigned long luma0_rpt_loop_pat;
-    unsigned long chroma0_rpt_loop_start;
-    unsigned long chroma0_rpt_loop_end;
-    unsigned long chroma0_rpt_loop_pat;
+    unsigned int pat, loop=0;
 
-    if ( mif->set_separate_en != 0 && mif->src_field_mode == 1 )
-    {
-      	chro_rpt_lastl_ctrl =1;
-      	luma0_rpt_loop_start = 1;
-      	luma0_rpt_loop_end = 1;
-      	chroma0_rpt_loop_start = 1;
-      	chroma0_rpt_loop_end = 1;
-        luma0_rpt_loop_pat = 0x80;
-        chroma0_rpt_loop_pat = 0x80;
-    }
-    else if ( mif->set_separate_en != 0 && mif->src_field_mode == 0 )
-    {
-      	chro_rpt_lastl_ctrl =1;
-      	luma0_rpt_loop_start = 0;
-      	luma0_rpt_loop_end = 0;
-      	chroma0_rpt_loop_start = 0;
-      	chroma0_rpt_loop_end = 0;
-      	luma0_rpt_loop_pat = 0x0;
-      	chroma0_rpt_loop_pat = 0x0;
-    }
-    else if ( mif->set_separate_en == 0 && mif->src_field_mode == 1 )
-    {
-      	chro_rpt_lastl_ctrl =1;
-      	luma0_rpt_loop_start = 1;
-      	luma0_rpt_loop_end = 1;
-      	chroma0_rpt_loop_start = 0;
-      	chroma0_rpt_loop_end = 0;
-        luma0_rpt_loop_pat = 0x80;
-        chroma0_rpt_loop_pat = 0x00;
-    }
-    else
-    {
-#ifdef DI_POST_SKIP_LINE
-      	if((di_vscale_skip_mode==1)&&(di_vscale_skip_count > 0)){
-          	luma0_rpt_loop_start = 1;
-          	luma0_rpt_loop_end = 1;
-          	chroma0_rpt_loop_start = 1;
-          	chroma0_rpt_loop_end = 1;
-          	luma0_rpt_loop_pat = vpat[di_vscale_skip_count]<<4; //0x00;
-          	chroma0_rpt_loop_pat = vpat[di_vscale_skip_count]<<4; //0x00;
-      	}
-      	else
-#endif
+    if (mif->set_separate_en == 1) {
+	pat = vpat[(di_vscale_skip_count_real<<1)+1];
+        if (mif->src_field_mode == 0)//top
         {
-          	chro_rpt_lastl_ctrl =0;
-          	luma0_rpt_loop_start = 0;
-          	luma0_rpt_loop_end = 0;
-          	chroma0_rpt_loop_start = 0;
-          	chroma0_rpt_loop_end = 0;
-      	    luma0_rpt_loop_pat = 0x00;
-      	    chroma0_rpt_loop_pat = 0x00;
+            loop = 0x11;
+            pat <<= 4;
         }
-    }
-
-#ifdef DI_POST_SKIP_LINE
-    if(di_vscale_skip_mode == 2){ //force pat, for debugging
-        luma0_rpt_loop_start = l_luma0_rpt_loop_start;
-        luma0_rpt_loop_end = l_luma0_rpt_loop_end;
-        chroma0_rpt_loop_start = l_chroma0_rpt_loop_start;
-        chroma0_rpt_loop_end = l_chroma0_rpt_loop_end;
-        luma0_rpt_loop_pat = l_luma0_rpt_loop_pat;
-        chroma0_rpt_loop_pat = l_chroma0_rpt_loop_pat;
-    }
-#endif
-    bytes_per_pixel = mif->set_separate_en ? 0 : (mif->video_mode ? 2 : 1);
-    demux_mode = mif->video_mode;
-
-
-    // ----------------------
-    // General register
-    // ----------------------
-
-    VSYNC_WR_MPEG_REG(VD1_IF0_GEN_REG, (1 << 29) |              //reset on go field
-                                (urgent << 28)      	|   	// urgent
-                                (urgent << 27)          	|  		// luma urgent
-                                (1 << 25)					| 		// no dummy data.
-                                (hold_line << 19)       	| 		// hold lines
-                                (1 << 18)               	| 		// push dummy pixel
-                                (demux_mode << 16)     		| 		// demux_mode
-                                (bytes_per_pixel << 14)    	|
-                                (mif->burst_size_cr << 12) 	|
-                                (mif->burst_size_cb << 10)	|
-                                (mif->burst_size_y << 8)  	|
-                                (chro_rpt_lastl_ctrl << 6) 	|
-                                ((mif->set_separate_en!=0) << 1)	|
-                                (1 << 0)                     		// cntl_enable
-      	);
-
+    } else {
+        loop = 0;
+	pat = vpat[di_vscale_skip_count_real];
     // ----------------------
     // Canvas
     // ----------------------
@@ -1444,61 +1284,17 @@ static void set_di_if0_mif ( DI_MIF_t *mif, int urgent, int hold_line)
                                (mif->chroma_y_start0 << 0)
     	);
 
+    }
     // ----------------------
     // Repeat or skip
     // ----------------------
-    VSYNC_WR_MPEG_REG(VD1_IF0_RPT_LOOP, (0 << 28) 		|
-                               (0   << 24) 			|
-                               (0   << 20) 			|
-                               (0   << 16) 			|
-                               (chroma0_rpt_loop_start << 12) |
-                               (chroma0_rpt_loop_end << 8) |
-                               (luma0_rpt_loop_start << 4) |
-                               (luma0_rpt_loop_end << 0)
-        ) ;
-
-    VSYNC_WR_MPEG_REG(VD1_IF0_LUMA0_RPT_PAT, luma0_rpt_loop_pat);
-    VSYNC_WR_MPEG_REG(VD1_IF0_CHROMA0_RPT_PAT, chroma0_rpt_loop_pat);
-
-    // Dummy pixel value
-    VSYNC_WR_MPEG_REG(VD1_IF0_DUMMY_PIXEL, 0x00808000);
-
-   	// ----------------------
-    // Picture 1 unused
-    // ----------------------
-    VSYNC_WR_MPEG_REG(VD1_IF0_LUMA_X1, 0);                      		// unused
-    VSYNC_WR_MPEG_REG(VD1_IF0_LUMA_Y1, 0);                           // unused
-    VSYNC_WR_MPEG_REG(VD1_IF0_CHROMA_X1, 0);                        // unused
-    VSYNC_WR_MPEG_REG(VD1_IF0_CHROMA_Y1, 0);                        // unused
-    VSYNC_WR_MPEG_REG(VD1_IF0_LUMA_PSEL, 0);                        	// unused only one picture
-    VSYNC_WR_MPEG_REG(VD1_IF0_CHROMA_PSEL, 0);                      // unused only one picture
-
-    if ( (mif->set_separate_en != 0))   // 4:2:0 block mode.
-    {
-        set_vd1_fmt_more (
-                        1,                									// hfmt_en
-                        1,                									// hz_yc_ratio
-                        0,                									// hz_ini_phase
-                        1,                									// vfmt_en
-                        1,                									// vt_yc_ratio
-                        0,                									// vt_ini_phase
-                        mif->luma_x_end0 - mif->luma_x_start0 + 1, 			// y_length
-                        mif->chroma_x_end0 - mif->chroma_x_start0 + 1 , 	// c length
-                        0 );                 								// hz repeat.
-    }
-    else
-    {
-        set_vd1_fmt_more (
-                        1,                											// hfmt_en
-                        1,                											// hz_yc_ratio
-                        0,                											// hz_ini_phase
-                        0,                											// vfmt_en
-                        0,                											// vt_yc_ratio
-                        0,                											// vt_ini_phase
-                        mif->luma_x_end0 - mif->luma_x_start0 + 1, 					// y_length
-                        ((mif->luma_x_end0 >>1 ) - (mif->luma_x_start0>>1) + 1) , 	//c length
-                        0 );                 										// hz repeat.
-    }
+    VSYNC_WR_MPEG_REG(VD1_IF0_RPT_LOOP,
+                   (loop << 24) |
+                   (loop << 16)   |
+                   (loop << 8) |
+                   (loop << 0));
+    VSYNC_WR_MPEG_REG(VD1_IF0_LUMA0_RPT_PAT,   pat);
+    VSYNC_WR_MPEG_REG(VD1_IF0_CHROMA0_RPT_PAT, pat);
 }
 
 void initial_di_pre_aml ( int hsize_pre, int vsize_pre, int hold_line )
@@ -1586,30 +1382,26 @@ void di_post_switch_buffer (
 #endif 
 )
 {
-  	int ei_only;
-  	int buf1_en;
+    int ei_only, buf1_en;
 
     /**/
-  	ei_only = ei_en && !blend_en && (di_vpp_en || di_ddr_en );
-  	buf1_en =  ( !ei_only && (di_ddr_en || di_vpp_en ) );
+    ei_only = ei_en && !blend_en && (di_vpp_en || di_ddr_en );
+    buf1_en =  ( !ei_only && (di_ddr_en || di_vpp_en ) );
 
-  	if ( ei_en || di_vpp_en || di_ddr_en )
-  	{
-    VSYNC_WR_MPEG_REG(VD1_IF0_CANVAS0, (di_buf0_mif->canvas0_addr2 << 16) 		| 	// cntl_canvas0_addr2
-                               (di_buf0_mif->canvas0_addr1 << 8)      		| 	// cntl_canvas0_addr1
-                               (di_buf0_mif->canvas0_addr0 << 0)        		// cntl_canvas0_addr0
-    	);
-  	}
+    if (ei_en || di_vpp_en || di_ddr_en)
+    {
+        set_di_if0_mif(di_buf0_mif,urgent,hold_line);
+    }
 
-  	if ( !ei_only && (di_ddr_en || di_vpp_en ) )
-  	{
-    VSYNC_WR_MPEG_REG(DI_IF1_CANVAS0, (di_buf1_mif->canvas0_addr2 << 16)	| 	// cntl_canvas0_addr2
+    if ( !ei_only && (di_ddr_en || di_vpp_en ) )
+    {
+        VSYNC_WR_MPEG_REG(DI_IF1_CANVAS0, (di_buf1_mif->canvas0_addr2 << 16)	| 	// cntl_canvas0_addr2
                                (di_buf1_mif->canvas0_addr1 << 8)      	| 	// cntl_canvas0_addr1
-                               (di_buf1_mif->canvas0_addr0 << 0)        	// cntl_canvas0_addr0
-    	);
-  	}
+                                (di_buf1_mif->canvas0_addr0 << 0)        	// cntl_canvas0_addr0
+                        );
+    }
 
-   	// motion for current display field.
+    // motion for current display field.
     if (blend_mtn_en)
     {
 
@@ -1631,15 +1423,16 @@ void di_post_switch_buffer (
                         (urgent << 8));            													// urgent.
 #endif
     }
-   	if (ei_only == 0)
-   	{
+    if (ei_only == 0)
+    {
 
 	//VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&(~(3<<20))&~(0xff))|(blend_mode<<20)|kdeint);
-    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)| (blend_mode<<20) | (0xff&kdeint0));
+        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)| (blend_mode<<20) | (0xff&kdeint0));
     #ifndef NEW_DI_V1
     //if (di_pre_stru.di_wr_buf->mtn_info[4] > di_pre_stru.di_wr_buf->mtn_info[3] & di_pre_stru.di_wr_buf->mtn_info[3] > di_pre_stru.di_wr_buf->mtn_info[2])
-    if((reg_mtn_info[0]>mtn_thre_1_high)&(reg_mtn_info[4]<mtn_thre_2_low)){
- 	VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,((blend_ctrl&0xffcfff00) | (blend_mode<<20)| (0xff&kdeint1)));}
+        if ((reg_mtn_info[0]>mtn_thre_1_high)&(reg_mtn_info[4]<mtn_thre_2_low)) {
+            VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,((blend_ctrl&0xffcfff00) | (blend_mode<<20)| (0xff&kdeint1)));
+        }
     //if((reg_mtn_info[0]<mtn_thre_1_low)&(reg_mtn_info[4]<mtn_thre_2_low)){
     //VSYNC_WR_MPEG_REG(DI_BLEND_CTRL,(0x19700000 | kdeint1));}
 	if(reg_mtn_info[4]>mtn_thre_2_high){
@@ -1659,9 +1452,27 @@ void di_post_switch_buffer (
         else
    	    VSYNC_WR_MPEG_REG_BITS(MCDI_MC_CRTL,0,0,2);  //diable mc
 #endif
-   	}
+  }else{
+      VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)|(blend_mode<<20)|(0xff&kdeint0));
+  }
 
-    VSYNC_WR_MPEG_REG_BITS(DI_POST_CTRL, post_field_num, 29, 1);
+  VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en|blend_en) << 0 ) | 		// line buffer 0 enable
+                      ((blend_mode==1?1:0) << 1)  |        							// line buffer 1 enable
+                      (ei_en << 2) |        						// ei  enable
+                      (blend_mtn_en << 3) |        					// mtn line buffer enable
+                      (blend_mtn_en  << 4) |        				// mtnp read mif enable
+                      ((post_ctrl__di_blend_en!=0xff)?(post_ctrl__di_blend_en&0x1):(blend_en << 5)) |        						// di blend enble.
+                      (1 << 6) |        							// di mux output enable
+                      (di_ddr_en << 7) |        					// di write to SDRAM enable.
+                      (di_vpp_en << 8) |        					// di to VPP enable.
+                      (0 << 9) |        							// mif0 to VPP enable.
+                      (0 << 10) |        							// post drop first.
+                      ((post_ctrl__di_post_repeat!=0xff)?(post_ctrl__di_post_repeat&0x1):(0 << 11)) |      // post repeat.
+                      (di_vpp_en << 12) |   						// post viu link
+                      (hold_line << 16) |       					// post hold line number
+                      (post_field_num << 29) |        				// post field number.
+                      (0x1 << 30 )       							// post soft rst  post frame rst.
+        );
 }
 
 void enable_di_post_2 (
@@ -1689,8 +1500,7 @@ void enable_di_post_2 (
 #ifdef NEW_DI_V1
    	VSYNC_WR_MPEG_REG(DI_EI_CTRL3, ei_ctrl3);
 #endif
-    /**/
-  	ei_only = ei_en && !blend_en && (di_vpp_en || di_ddr_en );
+	ei_only = ei_en && !blend_en && (di_vpp_en || di_ddr_en);
   	buf1_en =  ( !ei_only && (di_ddr_en || di_vpp_en ) );
 
   	if ( ei_en || di_vpp_en || di_ddr_en )
@@ -1734,8 +1544,8 @@ void enable_di_post_2 (
 #endif
     }
 
-   	if ( ei_only == 0)
-   	{
+    if ( ei_only == 0)
+    {
 
 	//VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&(~(3<<20))&~(0xff))|(blend_mode<<20)|kdeint);
     VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)|(blend_mode<<20)|(0xff&kdeint0));
@@ -1757,10 +1567,11 @@ void enable_di_post_2 (
 #ifdef NEW_DI_V1
 //    VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, Rd(DI_BLEND_CTRL)&(~(1<<31)));
 #endif
-   	}
-
-   	VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en | blend_en) << 0 ) | 		// line buffer 0 enable
-                      (0 << 1)  |        							// line buffer 1 enable
+    } else {
+        VSYNC_WR_MPEG_REG(DI_BLEND_CTRL, (blend_ctrl&0xffcfff00)|(0xff&kdeint0));
+    }
+    VSYNC_WR_MPEG_REG(DI_POST_CTRL, ((ei_en | blend_en) << 0 ) | 		// line buffer 0 enable
+                      ((blend_mode==1?1:0) << 1)  |        							// line buffer 1 enable
                       (ei_en << 2) |        						// ei  enable
                       (blend_mtn_en << 3) |        					// mtn line buffer enable
                       (blend_mtn_en  << 4) |        				// mtnp read mif enable
@@ -2232,26 +2043,3 @@ static void di_nr_init()
     Wr(NR2_MATNR_DEGHOST, 0x133);
 #endif    
 }
-
-#ifdef DI_POST_SKIP_LINE
-MODULE_PARM_DESC(di_vscale_skip_mode, "\n di_vscale_skip_mode\n");
-module_param(di_vscale_skip_mode, uint, 0664);
-
-MODULE_PARM_DESC(l_luma0_rpt_loop_start, "\n l_luma0_rpt_loop_start\n");
-module_param(l_luma0_rpt_loop_start, uint, 0664);
-
-MODULE_PARM_DESC(l_luma0_rpt_loop_end, "\n l_luma0_rpt_loop_end\n");
-module_param(l_luma0_rpt_loop_end, uint, 0664);
-
-MODULE_PARM_DESC(l_chroma0_rpt_loop_start, "\n l_chroma0_rpt_loop_start\n");
-module_param(l_chroma0_rpt_loop_start, uint, 0664);
-
-MODULE_PARM_DESC(l_chroma0_rpt_loop_end, "\n l_chroma0_rpt_loop_end\n");
-module_param(l_chroma0_rpt_loop_end, uint, 0664);
-
-MODULE_PARM_DESC(l_luma0_rpt_loop_pat, "\n l_luma0_rpt_loop_pat\n");
-module_param(l_luma0_rpt_loop_pat, uint, 0664);
-
-MODULE_PARM_DESC(l_chroma0_rpt_loop_pat, "\n l_chroma0_rpt_loop_pat\n");
-module_param(l_chroma0_rpt_loop_pat, uint, 0664);
-#endif
