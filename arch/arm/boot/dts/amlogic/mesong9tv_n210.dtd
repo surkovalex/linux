@@ -426,7 +426,7 @@ ethmac: ethernet@0xc9410000{
 ///	-	WATCHDOG
 	amlogic-watchdog {
 		compatible = "amlogic,aml-wdt";
-		status = "okay";
+		status = "disable";
 		default_timeout=<8>;
 		reset_watchdog_method=<1>;//0:sysfs,1:kernel
 		reset_watchdog_time=<2>;
