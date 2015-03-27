@@ -389,12 +389,13 @@ static int tsync_mode_switch(int mode,unsigned long diff_pts,int jump_pts)
 
 	printk("%c-discontinue,pcr=%d,vpts=%d,apts=%d,diff_pts=%lu,jump_Pts=%d\n",mode,timestamp_pcrscr_get(),timestamp_vpts_get(),timestamp_apts_get(),diff_pts,jump_pts);
 	if (!tsync_enable) {
-        if(tsync_mode != TSYNC_MODE_VMASTER)
+        if (tsync_mode != TSYNC_MODE_VMASTER) {
 			tsync_mode = TSYNC_MODE_VMASTER;
         tsync_av_mode=TSYNC_STATE_S;
 		tsync_av_dynamic_duration_ms=0;
         printk("tsync_enable [%d] \n",tsync_enable);
 		return 0;
+	}
     }
 	if(mode=='T'){/*D/A--> ...*/
 		if(tsync_av_mode==TSYNC_STATE_D){
