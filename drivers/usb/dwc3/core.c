@@ -321,6 +321,44 @@ static void dwc3_cache_hwparams(struct dwc3 *dwc)
 	parms->hwparams8 = dwc3_readl(dwc->regs, DWC3_GHWPARAMS8);
 }
 
+#ifdef  CONFIG_AMLOGIC_USB_3
+struct dwc3 *g_dwc;
+
+void aml_enable_scrambling(void)
+{
+	u32			reg;
+
+	reg = dwc3_readl(g_dwc->regs, DWC3_GCTL);
+	reg &= ~DWC3_GCTL_DISSCRAMBLE;
+	dwc3_writel(g_dwc->regs, DWC3_GCTL, reg);
+
+	udelay(500);
+
+	usb_phy_init(g_dwc->usb3_phy);
+
+	return;
+}
+EXPORT_SYMBOL_GPL(aml_enable_scrambling);
+
+void aml_disable_scrambling(void)
+{
+	u32			reg;
+
+	reg = dwc3_readl(g_dwc->regs, DWC3_GCTL);
+	if (!(reg & DWC3_GCTL_DISSCRAMBLE)) {
+		reg |= DWC3_GCTL_DISSCRAMBLE;
+		dwc3_writel(g_dwc->regs, DWC3_GCTL, reg);
+
+		udelay(500);
+
+		usb_phy_init(g_dwc->usb3_phy);
+	}
+
+	return;
+}
+EXPORT_SYMBOL_GPL(aml_disable_scrambling);
+#endif
+
 /**
  * dwc3_core_init - Low-level initialization of DWC3 Core
  * @dwc: Pointer to our controller context structure
@@ -403,6 +441,7 @@ static void dwc3_core_exit(struct dwc3 *dwc)
 #ifdef CONFIG_AMLOGIC_USB_3
 static u64 dwc3_dmamask = DMA_BIT_MASK(32);
 #endif
+
 static int dwc3_probe(struct platform_device *pdev)
 {
 	struct device_node	*node = pdev->dev.of_node;
@@ -514,6 +553,10 @@ static int dwc3_probe(struct platform_device *pdev)
 	dwc->regs	= regs;
 	dwc->regs_size	= resource_size(res);
 	dwc->dev	= dev;
+
+#ifdef  CONFIG_AMLOGIC_USB_3
+	g_dwc = dwc;
+#endif
 
 #ifdef CONFIG_AMLOGIC_USB_3
 	dev->dma_mask	= &dwc3_dmamask;

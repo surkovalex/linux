@@ -245,8 +245,7 @@ static int amlogic_usb3_init(struct usb_phy *x)
 		* MPLL_LOOP_CTL.PROP_CNTRL
 		*/
 		data = cr_bus_read(0x30);
-		data |= (1 << 4);
-		data &= ~(0x7 << 5);
+		data &= ~(0xf << 4);
 		cr_bus_write(0x30, data);
 
 		/*
