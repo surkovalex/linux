@@ -577,6 +577,20 @@ static ssize_t store_edid(struct device * dev, struct device_attribute *attr, co
             printk("%02x", hdmitx_device.EDID_hash[i]);
         printk("\n");
     }
+    // show singal EDID raw data
+    if ((buf[0] == '0') && ((buf[1] == 'x') || (buf[1] == 'X'))) {
+        unsigned long addr;
+        unsigned char idx, val;
+        addr = simple_strtoul(buf, NULL, 16);
+        if (addr > 0xff) {
+            printk("Invaild EDID Addr: 0x%x\n", (unsigned int)addr);
+            return 16;
+        }
+        idx = (unsigned char) addr;
+        val = hdmitx_device.EDID_buf[idx];
+        printk("EDID[0x%02x]=0x%02x\n", idx, val);
+    }
+
     if(buf[0]=='d'){
         int ii,jj;
         int block_idx;
@@ -1151,11 +1165,11 @@ void hdmitx_hpd_plugin_handler(struct work_struct *work)
 
     if(!(hdev->hdmitx_event & (HDMI_TX_HPD_PLUGIN)))
         return;
-    printk("TODO plugin\n");
+    printk("hdmitx: plugin\n");
     mutex_lock(&setclk_mutex);
     // start reading E-EDID
     hdev->hpd_state = 1;
-    goto tmp_no_edid_handler;
+
     hdmitx_edid_ram_buffer_clear(hdev);
     hdev->HWOp.CntlDDC(hdev, DDC_RESET_EDID, 0);
     hdev->HWOp.CntlDDC(hdev, DDC_PIN_MUX_OP, PIN_MUX);
@@ -1168,7 +1182,7 @@ void hdmitx_hpd_plugin_handler(struct work_struct *work)
     hdmitx_edid_buf_compare_print(hdev);
     hdmitx_edid_clear(hdev);
     hdmitx_edid_parse(hdev);
-tmp_no_edid_handler:
+
     set_disp_mode_auto();
     hdmitx_set_audio(hdev, &(hdev->cur_audio_param), hdmi_ch);
     switch_set_state(&sdev, 1);
@@ -1187,7 +1201,7 @@ void hdmitx_hpd_plugout_handler(struct work_struct *work)
     mutex_lock(&setclk_mutex);
     hdev->hpd_state = 0;
     //hdev->HWOp.CntlConfig(hdev, CONF_CLR_AVI_PACKET, 0);
-    printk("TODO plugout\n");
+    printk("hdmitx: plugout\n");
     switch_set_state(&sdev, 0);
     hdev->hdmitx_event &= ~HDMI_TX_HPD_PLUGOUT;
     mutex_unlock(&setclk_mutex);
