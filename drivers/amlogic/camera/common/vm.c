@@ -82,7 +82,10 @@ static int VM_CANVAS_ID = 24;
 
 static vm_device_t  vm_device;
 static int vm_skip_count = 0 ; //deprecated
+
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON6TV
 static bool isvmused = false;
+#endif
 
 #if 0
 new interface please refer to http://wiki-china.amlogic.com/%E5%86%85%E9%83%A8%E4%B
