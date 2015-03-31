@@ -340,6 +340,24 @@ static int aml_set_bias_level(struct snd_soc_card *card,
     return 0;
 }
 
+static const char *output_swap_texts[] = { "L/R","L/L","R/R","R/L"};
+
+static const struct soc_enum output_swap_enum = SOC_ENUM_SINGLE(
+        SND_SOC_NOPM, 0, ARRAY_SIZE(output_swap_texts),
+        output_swap_texts);
+
+static int aml_output_swap_get_enum(struct snd_kcontrol *kcontrol,
+        struct snd_ctl_elem_value *ucontrol) {
+    ucontrol->value.enumerated.item[0] = read_i2s_mute_swap_reg();
+    return 0;
+}
+
+static int aml_output_swap_set_enum(struct snd_kcontrol *kcontrol,
+        struct snd_ctl_elem_value *ucontrol) {
+    audio_i2s_swap_left_right(ucontrol->value.enumerated.item[0]);
+    return 0;
+}
+
 static const struct snd_soc_dapm_widget aml_asoc_dapm_widgets[] = {
         SND_SOC_DAPM_INPUT("LINEIN"), SND_SOC_DAPM_OUTPUT("LINEOUT"), };
 
@@ -362,6 +380,9 @@ SOC_ENUM_EXT("SPDIFIN Audio Type", spdif_audio_type_enum,
 
 SOC_ENUM_EXT("Hardware resample enable", hardware_resample_enum,
         aml_hardware_resample_get_enum, aml_hardware_resample_set_enum),
+
+SOC_ENUM_EXT("Output Swap", output_swap_enum,
+        aml_output_swap_get_enum, aml_output_swap_set_enum),
 
 };
 
