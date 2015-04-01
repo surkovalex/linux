@@ -1813,7 +1813,7 @@ void enable_di_mode_check_2( int win0_start_x, int win0_end_x, int win0_start_y,
 }
 
 static int fdn[5] = {0};
-void read_pulldown_info(pulldown_detect_info_t* field_pd_info,
+bool read_pulldown_info(pulldown_detect_info_t* field_pd_info,
                         pulldown_detect_info_t* win_pd_info)
 {
     int i;
@@ -1873,6 +1873,7 @@ void read_pulldown_info(pulldown_detect_info_t* field_pd_info,
     for(i = 0; i< MAX_WIN_NUM; i++){
         win_pd_info[i].field_diff_num = (Rd(DI_INFO_DATA)&0xfffff)<<4;
     }
+    return frame_dynamic;
 }
 
 #ifndef NEW_DI_V1

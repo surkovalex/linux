@@ -198,7 +198,7 @@ static dev_t di_id;
 static struct class *di_class;
 
 #define INIT_FLAG_NOT_LOAD 0x80
-static char version_s[] = "2015-3-27a";//enable skip process in post
+static char version_s[] = "2015-3-31a";//add static pic detection
 static unsigned char boot_init_flag=0;
 static int receiver_is_amvideo = 1;
 
@@ -295,7 +295,7 @@ static bool use_2_interlace_buff = false;
 static int input2pre_buf_miss_count = 0;
 static int input2pre_proc_miss_count = 0;
 static int input2pre_throw_count = 0;
-
+static int static_pic_threshold = 10;
 #ifdef NEW_DI_V1
 static int input2pre_miss_policy = 0; /* 0, do not force pre_de_busy to 0, use di_wr_buf after de_irq happen; 1, force pre_de_busy to 0 and call pre_de_done_buf_clear to clear di_wr_buf */
 #else
@@ -1676,6 +1676,8 @@ typedef struct{
     int pre_de_irq_timeout_count;
     int pre_throw_flag;
     int bad_frame_throw_count;
+    /*for static pic*/
+    int static_frame_count;
     bool force_interlace;
     bool bypass_pre;
 }di_pre_stru_t;
@@ -3587,6 +3589,7 @@ static void top_bot_config(di_buf_t* di_buf)
 static void pre_de_done_buf_config(void)
 {
     ulong fiq_flag=0, irq_flag2=0;
+    bool dynamic_flag = false;
     if(di_pre_stru.di_wr_buf){
         if(di_pre_stru.pre_throw_flag>0){
             di_pre_stru.di_wr_buf->throw_flag = 1;
@@ -3595,9 +3598,17 @@ static void pre_de_done_buf_config(void)
         else{
             di_pre_stru.di_wr_buf->throw_flag = 0;
         }
-        read_pulldown_info(&(di_pre_stru.di_wr_buf->field_pd_info),
+
+        dynamic_flag = read_pulldown_info(&(di_pre_stru.di_wr_buf->field_pd_info),
                             &(di_pre_stru.di_wr_buf->win_pd_info[0])
                             );
+        di_pre_stru.static_frame_count = dynamic_flag?0:(di_pre_stru.static_frame_count+1);
+        if (di_pre_stru.static_frame_count > static_pic_threshold) {
+	    di_pre_stru.static_frame_count = static_pic_threshold;
+            di_pre_stru.di_wr_buf->pulldown_mode = PULL_DOWN_BLEND_0;
+        } else {
+	    di_pre_stru.di_wr_buf->pulldown_mode = PULL_DOWN_NORMAL;
+        }
         #ifndef NEW_DI_V1
         read_mtn_info(di_pre_stru.di_wr_buf->mtn_info,reg_mtn_info);
         #endif
@@ -5762,12 +5773,12 @@ static void force_bob_vframe(di_buf_t* di_buf)
 }
 #endif
 #ifdef NEW_DI_TV
-static int blend_mode = -2;
+static int pulldown_mode = 1;
 #else
-static int blend_mode = 5;
+static int pulldown_mode = 0;
 #endif
-module_param(blend_mode,int,0664);
-MODULE_PARM_DESC(blend_mode,"\n force post blend mode \n");
+static int debug_blend_mode = -1;
+
 static int process_post_vframe(void)
 {
 /*
@@ -5875,8 +5886,17 @@ static int process_post_vframe(void)
                         di_buf->pulldown_mode = PULL_DOWN_BLEND_2; /* blend with di_buf->di_buf_dup_p[2] */
                     }
                     else{
-                    	if(blend_mode == -2)
+                        if (pulldown_mode&1) {
                             pulldown_mode_hise = pulldown_process(di_buf, buffer_keep_count);
+                            if (di_buf->pulldown_mode == -1)
+                                di_buf->pulldown_mode = PULL_DOWN_NORMAL;
+                            else if (di_buf->pulldown_mode == 0)
+                                di_buf->pulldown_mode = PULL_DOWN_BLEND_0;
+                            else if (di_buf->pulldown_mode == 1)
+                                di_buf->pulldown_mode = PULL_DOWN_BLEND_2;
+                        } else {
+                            di_buf->pulldown_mode = di_buf->di_buf_dup_p[1]->pulldown_mode;
+                        }
                     }
 #ifdef FORCE_BOB_SUPPORT
                     if(force_bob_flag!=0){
@@ -5903,15 +5923,10 @@ static int process_post_vframe(void)
                             di_buf->process_fun_index = PROCESS_FUN_NULL;
                         }
                         else {
-                            if (di_buf->pulldown_mode == -1)
-                                di_buf->pulldown_mode = PULL_DOWN_NORMAL;
-                            else if (di_buf->pulldown_mode == 0)
-                                di_buf->pulldown_mode = PULL_DOWN_BLEND_0;
-                            else if (di_buf->pulldown_mode == 1)
-                                di_buf->pulldown_mode = PULL_DOWN_BLEND_2;
+
                		    /*for debug*/
-                            if (blend_mode != -2)
-                                di_buf->pulldown_mode = blend_mode;
+                            if (debug_blend_mode != -1)
+                                di_buf->pulldown_mode = debug_blend_mode;
                             di_buf->vframe->process_fun = de_post_process;
                             di_buf->process_fun_index = PROCESS_FUN_DI;
                             inc_post_ref_count(di_buf);
@@ -7789,6 +7804,14 @@ module_param(update_post_reg_count, uint, 0664);
 module_param(use_2_interlace_buff,bool,0664);
 MODULE_PARM_DESC(use_2_interlace_buff,"/n debug for progress interlace mixed source /n");
 
+module_param(pulldown_mode,int,0664);
+MODULE_PARM_DESC(pulldown_mode,"\n option for pulldown \n");
+
+module_param(debug_blend_mode,int,0664);
+MODULE_PARM_DESC(debug_blend_mode,"\n force post blend mode \n");
+
+module_param(static_pic_threshold,int,0664);
+MODULE_PARM_DESC(static_pic_threshold,"/n threshold for static pic /n");
 MODULE_DESCRIPTION("AMLOGIC DEINTERLACE driver");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("1.0.0");

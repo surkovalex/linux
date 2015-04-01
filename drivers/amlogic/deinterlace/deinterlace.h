@@ -443,7 +443,7 @@ void di_post_switch_buffer_pd(
     int ei_en, int blend_en, int blend_mtn_en, int blend_mode, int di_vpp_en, int di_ddr_en,
     int post_field_num, int hold_line, int urgent);
 #endif
-void read_pulldown_info(pulldown_detect_info_t* field_pd_info,
+bool read_pulldown_info(pulldown_detect_info_t* field_pd_info,
                         pulldown_detect_info_t* win_pd_info);
 #ifndef NEW_DI_V1
 void read_mtn_info(unsigned long* mtn_info, unsigned long* );
