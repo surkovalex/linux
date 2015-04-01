@@ -70,7 +70,7 @@
 #define DUR2PTS(x) ((x)*90/96)
 #define PTS2DUR(x) ((x)*96/90)
 #define DUR2PTS_REM(x) (x*90 - DUR2PTS(x)*96)
-#define FIX_FRAME_RATE_CHECK_IDRFRAME_NUM 2
+#define FIX_FRAME_RATE_CHECK_IDRFRAME_NUM 3
 
 static inline bool close_to(int a, int b, int m)
 {
