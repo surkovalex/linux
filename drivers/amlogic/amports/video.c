@@ -4048,6 +4048,14 @@ unsigned int vf_keep_current(void)
     }
 #endif
     cur_index = READ_VCBUS_REG(VD1_IF0_CANVAS0 + cur_dev->viu_off);
+
+#ifdef CONFIG_VSYNC_RDMA
+    if (cur_index != disp_canvas[rdma_canvas_id][0]) {
+        msleep(60);
+        cur_index = READ_VCBUS_REG(VD1_IF0_CANVAS0 + cur_dev->viu_off);
+    }
+#endif
+
     y_index = cur_index & 0xff;
     u_index = (cur_index >> 8) & 0xff;
     v_index = (cur_index >> 16) & 0xff;
