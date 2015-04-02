@@ -143,18 +143,18 @@ static const tvmode_t vmode_tvmode_map(vmode_t mode)
 {
     int i = 0;
 
-    for(i = 0; i < ARRAY_SIZE(mode_tab); i++) {
-        if(mode == mode_tab[i].mode)
+    for (i = 0; i < ARRAY_SIZE(mode_tab); i++) {
+        if (mode == mode_tab[i].mode)
             return mode_tab[i].tvmode;
     }
     return TVMODE_MAX;
 }
 
-static const vinfo_t tv_info[] = 
+static const vinfo_t tv_info[] =
 {
     { /* VMODE_480I */
-		.name              = "480i",
-		.mode              = VMODE_480I,
+        .name              = "480i",
+        .mode              = VMODE_480I,
         .width             = 720,
         .height            = 480,
         .field_height      = 240,
@@ -176,9 +176,9 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 27000000,
     },
-     { /* VMODE_480CVBS*/
-		.name              = "480cvbs",
-		.mode              = VMODE_480CVBS,
+    { /* VMODE_480CVBS*/
+        .name              = "480cvbs",
+        .mode              = VMODE_480CVBS,
         .width             = 720,
         .height            = 480,
         .field_height      = 240,
@@ -186,11 +186,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 3,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 27000000,
+        .video_clk         = 27000000,
     },
     { /* VMODE_480P */
-		.name              = "480p",
-		.mode              = VMODE_480P,
+        .name              = "480p",
+        .mode              = VMODE_480P,
         .width             = 720,
         .height            = 480,
         .field_height      = 480,
@@ -201,9 +201,9 @@ static const vinfo_t tv_info[] =
         .video_clk         = 27000000,
     },
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	{ /* VMODE_480P_59HZ */
-		.name              = "480p59hz",
-		.mode              = VMODE_480P_59HZ,
+    { /* VMODE_480P_59HZ */
+        .name              = "480p59hz",
+        .mode              = VMODE_480P_59HZ,
         .width             = 720,
         .height            = 480,
         .field_height      = 480,
@@ -227,8 +227,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 27000000,
     },
     { /* VMODE_576I */
-		.name              = "576i",
-		.mode              = VMODE_576I,
+        .name              = "576i",
+        .mode              = VMODE_576I,
         .width             = 720,
         .height            = 576,
         .field_height      = 288,
@@ -251,8 +251,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 27000000,
     },
     { /* VMODE_576I */
-		.name              = "576cvbs",
-		.mode              = VMODE_576CVBS,
+        .name              = "576cvbs",
+        .mode              = VMODE_576CVBS,
         .width             = 720,
         .height            = 576,
         .field_height      = 288,
@@ -260,11 +260,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 3,
         .sync_duration_num = 50,
         .sync_duration_den = 1,
-		.video_clk         = 27000000,
+        .video_clk         = 27000000,
     },
     { /* VMODE_576P */
-		.name              = "576p",
-		.mode              = VMODE_576P,
+        .name              = "576p",
+        .mode              = VMODE_576P,
         .width             = 720,
         .height            = 576,
         .field_height      = 576,
@@ -287,8 +287,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 27000000,
     },
     { /* VMODE_720P */
-		.name              = "720p",
-		.mode              = VMODE_720P,
+        .name              = "720p",
+        .mode              = VMODE_720P,
         .width             = 1280,
         .height            = 720,
         .field_height      = 720,
@@ -299,9 +299,9 @@ static const vinfo_t tv_info[] =
         .video_clk         = 74250000,
     },
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	{ /* VMODE_720P_59HZ */
-		.name              = "720p59hz",
-		.mode              = VMODE_720P_59HZ,
+    { /* VMODE_720P_59HZ */
+        .name              = "720p59hz",
+        .mode              = VMODE_720P_59HZ,
         .width             = 1280,
         .height            = 720,
         .field_height      = 720,
@@ -313,8 +313,8 @@ static const vinfo_t tv_info[] =
     },
 #endif
     { /* VMODE_1080I */
-		.name              = "1080i",
-		.mode              = VMODE_1080I,
+        .name              = "1080i",
+        .mode              = VMODE_1080I,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 540,
@@ -324,10 +324,10 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 74250000,
     },
-#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION    
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
     { /* VMODE_1080I_59HZ */
-		.name              = "1080i59hz",
-		.mode              = VMODE_1080I_59HZ,
+        .name              = "1080i59hz",
+        .mode              = VMODE_1080I_59HZ,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 540,
@@ -339,8 +339,8 @@ static const vinfo_t tv_info[] =
     },
 #endif
     { /* VMODE_1080P */
-		.name              = "1080p",
-		.mode              = VMODE_1080P,
+        .name              = "1080p",
+        .mode              = VMODE_1080P,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 1080,
@@ -351,22 +351,22 @@ static const vinfo_t tv_info[] =
         .video_clk         = 148500000,
     },
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	{ /* VMODE_1080P_59HZ */
-		.name			   = "1080p59hz",
-		.mode			   = VMODE_1080P_59HZ,
-		.width			   = 1920,
-		.height 		   = 1080,
-		.field_height	   = 1080,
-		.aspect_ratio_num  = 16,
-		.aspect_ratio_den  = 9,
-		.sync_duration_num = 60000,
-		.sync_duration_den = 1001,
-		.video_clk		   = 148500000,
-	},
+    { /* VMODE_1080P_59HZ */
+        .name			   = "1080p59hz",
+        .mode			   = VMODE_1080P_59HZ,
+        .width			   = 1920,
+        .height 		   = 1080,
+        .field_height	   = 1080,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 60000,
+        .sync_duration_den = 1001,
+        .video_clk		   = 148500000,
+    },
 #endif
     { /* VMODE_720P_50hz */
-		.name              = "720p50hz",
-		.mode              = VMODE_720P_50HZ,
+        .name              = "720p50hz",
+        .mode              = VMODE_720P_50HZ,
         .width             = 1280,
         .height            = 720,
         .field_height      = 720,
@@ -377,8 +377,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 74250000,
     },
     { /* VMODE_1080I_50HZ */
-		.name              = "1080i50hz",
-		.mode              = VMODE_1080I_50HZ,
+        .name              = "1080i50hz",
+        .mode              = VMODE_1080I_50HZ,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 540,
@@ -389,8 +389,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 74250000,
     },
     { /* VMODE_1080P_50HZ */
-		.name              = "1080p50hz",
-		.mode              = VMODE_1080P_50HZ,
+        .name              = "1080p50hz",
+        .mode              = VMODE_1080P_50HZ,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 1080,
@@ -401,8 +401,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 148500000,
     },
     { /* VMODE_1080P_24HZ */
-		.name              = "1080p24hz",
-		.mode              = VMODE_1080P_24HZ,
+        .name              = "1080p24hz",
+        .mode              = VMODE_1080P_24HZ,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 1080,
@@ -413,17 +413,17 @@ static const vinfo_t tv_info[] =
         .video_clk         = 74250000,
     },
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	{ /* VMODE_1080P_23HZ */
-		.name			   = "1080p23hz",
-		.mode			   = VMODE_1080P_23HZ,
-		.width			   = 1920,
-		.height 		   = 1080,
-		.field_height	   = 1080,
-		.aspect_ratio_num  = 16,
-		.aspect_ratio_den  = 9,
-		.sync_duration_num = 2397,
-		.sync_duration_den = 100,
-		.video_clk		   = 74250000,
+    { /* VMODE_1080P_23HZ */
+        .name			   = "1080p23hz",
+        .mode			   = VMODE_1080P_23HZ,
+        .width			   = 1920,
+        .height 		   = 1080,
+        .field_height	   = 1080,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 2397,
+        .sync_duration_den = 100,
+        .video_clk		   = 74250000,
 	},
 #endif
     { /* VMODE_4K2K_30HZ */
@@ -439,17 +439,17 @@ static const vinfo_t tv_info[] =
         .video_clk         = 297000000,
     },
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	{ /* VMODE_4K2K_29HZ */
-		.name			   = "4k2k29hz",
-		.mode			   = VMODE_4K2K_29HZ,
-		.width			   = 3840,
-		.height 		   = 2160,
-		.field_height	   = 2160,
-		.aspect_ratio_num  = 16,
-		.aspect_ratio_den  = 9,
-		.sync_duration_num = 2997,
-		.sync_duration_den = 100,
-		.video_clk		   = 297000000,
+    { /* VMODE_4K2K_29HZ */
+        .name			   = "4k2k29hz",
+        .mode			   = VMODE_4K2K_29HZ,
+        .width			   = 3840,
+        .height 		   = 2160,
+        .field_height	   = 2160,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 2997,
+        .sync_duration_den = 100,
+        .video_clk		   = 297000000,
 	},
 #endif
     { /* VMODE_4K2K_25HZ */
@@ -477,18 +477,18 @@ static const vinfo_t tv_info[] =
         .video_clk         = 297000000,
     },
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-	{ /* VMODE_4K2K_23HZ */
-		.name			   = "4k2k23hz",
-		.mode			   = VMODE_4K2K_23HZ,
-		.width			   = 3840,
-		.height 		   = 2160,
-		.field_height	   = 2160,
-		.aspect_ratio_num  = 16,
-		.aspect_ratio_den  = 9,
-		.sync_duration_num = 2397,
-		.sync_duration_den = 100,
-		.video_clk		   = 297000000,
-	},
+    { /* VMODE_4K2K_23HZ */
+        .name			   = "4k2k23hz",
+        .mode			   = VMODE_4K2K_23HZ,
+        .width			   = 3840,
+        .height 		   = 2160,
+        .field_height	   = 2160,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 2397,
+        .sync_duration_den = 100,
+        .video_clk         = 297000000,
+    },
 #endif
     { /* VMODE_4K2K_SMPTE */
         .name              = "4k2ksmpte",
@@ -647,8 +647,8 @@ static const vinfo_t tv_info[] =
         .video_clk         = 594000000,
     },
     { /* VMODE_vga */
-		.name              = "vga",
-		.mode              = VMODE_VGA,
+        .name              = "vga",
+        .mode              = VMODE_VGA,
         .width             = 640,
         .height            = 480,
         .field_height      = 240,
@@ -656,11 +656,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 3,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 25175000,
-    }, 
+        .video_clk         = 25175000,
+    },
     { /* VMODE_SVGA */
-		.name              = "svga",
-		.mode              = VMODE_SVGA,
+        .name              = "svga",
+        .mode              = VMODE_SVGA,
         .width             = 800,
         .height            = 600,
         .field_height      = 600,
@@ -668,11 +668,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 3,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 40000000,
-    }, 
+        .video_clk         = 40000000,
+    },
     { /* VMODE_XGA */
-		.name              = "xga",
-		.mode              = VMODE_XGA,
+        .name              = "xga",
+        .mode              = VMODE_XGA,
         .width             = 1024,
         .height            = 768,
         .field_height      = 768,
@@ -680,11 +680,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 3,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 65000000,
-    }, 
+        .video_clk         = 65000000,
+    },
     { /* VMODE_sxga */
-		.name              = "sxga",
-		.mode              = VMODE_SXGA,
+        .name              = "sxga",
+        .mode              = VMODE_SXGA,
         .width             = 1280,
         .height            = 1024,
         .field_height      = 1024,
@@ -692,11 +692,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 4,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 108000000,
-    }, 
-	{ /* VMODE_wsxga */
-		.name              = "wsxga",
-		.mode              = VMODE_WSXGA,
+        .video_clk         = 108000000,
+    },
+    { /* VMODE_wsxga */
+        .name              = "wsxga",
+        .mode              = VMODE_WSXGA,
         .width             = 1440,
         .height            = 900,
         .field_height      = 900,
@@ -704,11 +704,11 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 5,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 88750000,
+        .video_clk         = 88750000,
     },
-	{ /* VMODE_fhdvga */
-		.name              = "fhdvga",
-		.mode              = VMODE_FHDVGA,
+    { /* VMODE_fhdvga */
+        .name              = "fhdvga",
+        .mode              = VMODE_FHDVGA,
         .width             = 1920,
         .height            = 1080,
         .field_height      = 1080,
@@ -716,44 +716,44 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 9,
         .sync_duration_num = 60,
         .sync_duration_den = 1,
-		.video_clk         = 148500000,
+        .video_clk         = 148500000,
     },
 };
 
 static const struct file_operations am_tv_fops = {
-	.open	= NULL,  
-	.read	= NULL,//am_tv_read, 
-	.write	= NULL, 
-	.unlocked_ioctl	= NULL,//am_tv_ioctl, 
-	.release	= NULL, 	
-	.poll		= NULL,
+    .open	= NULL,
+    .read	= NULL,//am_tv_read,
+    .write	= NULL,
+    .unlocked_ioctl	= NULL,//am_tv_ioctl,
+    .release	= NULL,
+    .poll		= NULL,
 };
 
 static const vinfo_t *get_valid_vinfo(char  *mode)
 {
-	const vinfo_t * vinfo = NULL;
-	int  i,count=ARRAY_SIZE(tv_info);
-	int mode_name_len=0;
-	
-	for(i=0;i<count;i++)
-	{
-		if(strncmp(tv_info[i].name,mode,strlen(tv_info[i].name))==0)
-		{
-			if((vinfo==NULL)||(strlen(tv_info[i].name)>mode_name_len)){
-			    vinfo = &tv_info[i];
-			    mode_name_len = strlen(tv_info[i].name);
-			}
-		}
-	}
-	return vinfo;
+    const vinfo_t * vinfo = NULL;
+    int  i,count=ARRAY_SIZE(tv_info);
+    int mode_name_len=0;
+
+    for (i=0;i<count;i++)
+    {
+        if (strncmp(tv_info[i].name,mode,strlen(tv_info[i].name)) == 0)
+        {
+            if ((vinfo == NULL) || (strlen(tv_info[i].name)>mode_name_len)) {
+                vinfo = &tv_info[i];
+                mode_name_len = strlen(tv_info[i].name);
+            }
+        }
+    }
+    return vinfo;
 }
 
 static const vinfo_t *tv_get_current_info(void)
 {
-	return info->vinfo;
+    return info->vinfo;
 }
 
-tvmode_t vmode_to_tvmode(vmode_t mod) 
+tvmode_t vmode_to_tvmode(vmode_t mod)
 {
     return vmode_tvmode_map(mod);
 }
@@ -761,8 +761,8 @@ tvmode_t vmode_to_tvmode(vmode_t mod)
 static const vinfo_t *get_tv_info(vmode_t mode)
 {
     int i = 0;
-    for(i = 0; i < ARRAY_SIZE(tv_info); i++) {
-        if(mode == tv_info[i].mode)
+    for (i = 0; i < ARRAY_SIZE(tv_info); i++) {
+        if (mode == tv_info[i].mode)
             return &tv_info[i];
     }
     return NULL;
@@ -770,155 +770,155 @@ static const vinfo_t *get_tv_info(vmode_t mode)
 
 static int tv_set_current_vmode(vmode_t mod)
 {
-	if ((mod&VMODE_MODE_BIT_MASK)> VMODE_MAX)
-		return -EINVAL;
+    if ((mod&VMODE_MODE_BIT_MASK)> VMODE_MAX)
+        return -EINVAL;
     info->vinfo = get_tv_info(mod & VMODE_MODE_BIT_MASK);
-    if(!info->vinfo) {
+    if (!info->vinfo) {
         printk("don't get tv_info, mode is %d\n", mod);
         return 1;
     }
 //	info->vinfo = &tv_info[mod & VMODE_MODE_BIT_MASK];
-	printk("mode is %d,sync_duration_den=%d,sync_duration_num=%d\n", mod,info->vinfo->sync_duration_den,info->vinfo->sync_duration_num);
-	if(mod&VMODE_LOGO_BIT_MASK)  return 0;
+    printk("mode is %d,sync_duration_den=%d,sync_duration_num=%d\n", mod,info->vinfo->sync_duration_den,info->vinfo->sync_duration_num);
+    if (mod&VMODE_LOGO_BIT_MASK)  return 0;
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-	switch_vpu_mem_pd_vmod(info->vinfo->mode, VPU_MEM_POWER_ON);
-	request_vpu_clk_vmod(info->vinfo->video_clk, info->vinfo->mode);
+    switch_vpu_mem_pd_vmod(info->vinfo->mode, VPU_MEM_POWER_ON);
+    request_vpu_clk_vmod(info->vinfo->video_clk, info->vinfo->mode);
 #endif
-	tvoutc_setmode(vmode_to_tvmode(mod));
+    tvoutc_setmode(vmode_to_tvmode(mod));
 //	change_vdac_setting(get_current_vdac_setting(),mod);
-	return 0;
+    return 0;
 }
 
 static vmode_t tv_validate_vmode(char *mode)
 {
-	const vinfo_t *info = get_valid_vinfo(mode);
-	if (info)
-		return info->mode;
-	
-	return VMODE_MAX;
+    const vinfo_t *info = get_valid_vinfo(mode);
+    if (info)
+        return info->mode;
+
+    return VMODE_MAX;
 }
 static int tv_vmode_is_supported(vmode_t mode)
 {
-	int  i,count=ARRAY_SIZE(tv_info);
-	mode&=VMODE_MODE_BIT_MASK;
-	for(i=0;i<count;i++)
-	{
-		if(tv_info[i].mode==mode)
-		{
-			return true;
-		}
-	}
-	return false;
+    int  i,count=ARRAY_SIZE(tv_info);
+    mode&=VMODE_MODE_BIT_MASK;
+    for (i=0;i<count;i++)
+    {
+        if (tv_info[i].mode == mode)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 static int tv_module_disable(vmode_t cur_vmod)
 {
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
-	if (info->vinfo) {
-		release_vpu_clk_vmod(info->vinfo->mode);
-		switch_vpu_mem_pd_vmod(info->vinfo->mode, VPU_MEM_POWER_DOWN);
-	}
+    if (info->vinfo) {
+        release_vpu_clk_vmod(info->vinfo->mode);
+        switch_vpu_mem_pd_vmod(info->vinfo->mode, VPU_MEM_POWER_DOWN);
+    }
 #endif
-	//video_dac_disable();
-	return 0;
+    //video_dac_disable();
+    return 0;
 }
 
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 char* get_name_from_vmode(vmode_t mode)
 {
-	int i = 0, count = 0;
-	
-	count = ARRAY_SIZE(tv_info);
-	for( i=0; i<count; i++ )
-	{
-		if( tv_info[i].mode == mode )
-			break;
-	}
+    int i = 0, count = 0;
 
-	if( i == count )
-		return NULL;
+    count = ARRAY_SIZE(tv_info);
+    for ( i=0; i<count; i++ )
+    {
+        if ( tv_info[i].mode == mode )
+            break;
+    }
 
-	return tv_info[i].name;
+    if ( i == count )
+        return NULL;
+
+    return tv_info[i].name;
 }
 
 // frame_rate = 9600/duration/100 hz
 static int get_vsource_frame_rate(int duration)
 {
-	int frame_rate = 0;
+    int frame_rate = 0;
 
-	switch( duration )
-	{
-		case 1600:
-			frame_rate = 6000;
-			break;
-		case 1601:
-		case 1602:
-			frame_rate = 5994;
-			break;
-		case 1920:
-			frame_rate = 5000;
-			break;
-		case 3200:
-			frame_rate = 3000;
-			break;
-		case 3203:
-			frame_rate = 2997;
-			break;
-		case 3840:
-			frame_rate = 2500;
-			break;
-		case 4000:
-			frame_rate = 2400;
-			break;
-		case 4004:
-			frame_rate = 2397;
-			break;
-		default:
-			break;
-	}
+    switch ( duration )
+    {
+        case 1600:
+            frame_rate = 6000;
+            break;
+        case 1601:
+        case 1602:
+            frame_rate = 5994;
+            break;
+        case 1920:
+            frame_rate = 5000;
+            break;
+        case 3200:
+            frame_rate = 3000;
+            break;
+        case 3203:
+            frame_rate = 2997;
+            break;
+        case 3840:
+            frame_rate = 2500;
+            break;
+        case 4000:
+            frame_rate = 2400;
+            break;
+        case 4004:
+            frame_rate = 2397;
+            break;
+        default:
+            break;
+    }
 
-	return frame_rate;
+    return frame_rate;
 }
 
 static int get_target_frame_rate(int framerate_vsource, int policy)
 {
-	const vinfo_t *pvinfo ;
-	int framerate_target = 0;
-	pvinfo = tv_get_current_info();
-	switch( policy )
-	{
-		case 0: // not change
-			break;
-		case 1: // change to the frame rate of video source
-			if( (framerate_vsource==2397) || (framerate_vsource==2997) || (framerate_vsource==5994) ){
-				switch(pvinfo->sync_duration_num)
-				{
-				case 24:
-					framerate_target=2397;
-					break;
-				case 30:
-					framerate_target=2997;
-					break;
-				case 60:
-					framerate_target=5994;
-					break;	
-				default:
-					framerate_target = ( pvinfo->sync_duration_num > 100 ? pvinfo->sync_duration_num : pvinfo->sync_duration_num*100 );
-					break;
-				}
-			}
-			else
-				framerate_target = framerate_vsource;
-			break;
-		case 2: // change to the frame rate of video source, but use 59.94 for 23.97/29.97
-			if( (framerate_vsource==2397) || (framerate_vsource==2997) )
-				framerate_target = 5994;
-			else
-				framerate_target = framerate_vsource;
-			break;
-		default:
-			break;
-	}
-	return framerate_target;
+    const vinfo_t *pvinfo ;
+    int framerate_target = 0;
+    pvinfo = tv_get_current_info();
+    switch ( policy )
+    {
+        case 0: // not change
+            break;
+        case 1: // change to the frame rate of video source
+            if ( (framerate_vsource == 2397) || (framerate_vsource == 2997) || (framerate_vsource == 5994) ) {
+                switch (pvinfo->sync_duration_num)
+                {
+                case 24:
+                    framerate_target=2397;
+                    break;
+                case 30:
+                    framerate_target=2997;
+                    break;
+                case 60:
+                    framerate_target=5994;
+                    break;
+                default:
+                    framerate_target = ( pvinfo->sync_duration_num > 100 ? pvinfo->sync_duration_num : pvinfo->sync_duration_num*100 );
+                    break;
+                }
+            }
+            else
+                framerate_target = framerate_vsource;
+            break;
+        case 2: // change to the frame rate of video source, but use 59.94 for 23.97/29.97
+            if ( (framerate_vsource == 2397) || (framerate_vsource == 2997) )
+                framerate_target = 5994;
+            else
+                framerate_target = framerate_vsource;
+            break;
+        default:
+            break;
+    }
+    return framerate_target;
 }
 
 //extern int hdmitx_is_vmode_supported(char *mode_name);
@@ -926,61 +926,61 @@ static int get_target_frame_rate(int framerate_vsource, int policy)
 static int get_target_vmode(int framerate_target)
 {
 //	int is_receiver_supported = 0;
-	const vinfo_t *pvinfo ;
-	vmode_t mode_target = VMODE_INIT_NULL;
+    const vinfo_t *pvinfo ;
+    vmode_t mode_target = VMODE_INIT_NULL;
 
-	printk("vout [%s] frame_rate_target = %d\n", __FUNCTION__, framerate_target);
+    printk("vout [%s] frame_rate_target = %d\n", __FUNCTION__, framerate_target);
 
-	pvinfo = tv_get_current_info();
+    pvinfo = tv_get_current_info();
 
-	mode_target = pvinfo->mode;
+    mode_target = pvinfo->mode;
 
-	if( (framerate_target==2397) || (framerate_target==2997) || (framerate_target==5994) ){
-		switch( mode_target ){
-			case VMODE_480P:
-				mode_target = VMODE_480P_59HZ;
-				break;
-			case VMODE_720P:
-				mode_target = VMODE_720P_59HZ;
-				break;
-			case VMODE_1080I:
-				mode_target = VMODE_1080I_59HZ;
-				break;
-			case VMODE_1080P_24HZ:
-				mode_target = VMODE_1080P_23HZ;
-				break;
-			case VMODE_1080P:
-				mode_target = VMODE_1080P_59HZ;
-				break;
-			case VMODE_4K2K_24HZ:
-				mode_target = VMODE_4K2K_23HZ;
-				break;
-			case VMODE_4K2K_30HZ:
-				mode_target = VMODE_4K2K_29HZ;
-				break;
-			default:
-				break;
-		}
-	}
+    if ( (framerate_target == 2397) || (framerate_target == 2997) || (framerate_target == 5994) ) {
+        switch ( mode_target ) {
+            case VMODE_480P:
+                mode_target = VMODE_480P_59HZ;
+                break;
+            case VMODE_720P:
+                mode_target = VMODE_720P_59HZ;
+                break;
+            case VMODE_1080I:
+                mode_target = VMODE_1080I_59HZ;
+                break;
+            case VMODE_1080P_24HZ:
+                mode_target = VMODE_1080P_23HZ;
+                break;
+            case VMODE_1080P:
+                mode_target = VMODE_1080P_59HZ;
+                break;
+            case VMODE_4K2K_24HZ:
+                mode_target = VMODE_4K2K_23HZ;
+                break;
+            case VMODE_4K2K_30HZ:
+                mode_target = VMODE_4K2K_29HZ;
+                break;
+            default:
+                break;
+        }
+    }
 /*
-	is_receiver_supported = hdmitx_is_vmode_supported(get_name_from_vmode(mode_target));
-	
-	switch( is_receiver_supported )
-	{
-		case 0: // not supported in edid
-			mode_target = pvinfo->mode;
-			break;
-		case 1: // supported in edid
-			break;
-		case 2: // no edid
-			mode_target = pvinfo->mode;
-			break;
-		default:
-			break;
-	}
+    is_receiver_supported = hdmitx_is_vmode_supported(get_name_from_vmode(mode_target));
+
+    switch ( is_receiver_supported )
+    {
+        case 0: // not supported in edid
+            mode_target = pvinfo->mode;
+            break;
+        case 1: // supported in edid
+            break;
+        case 2: // no edid
+            mode_target = pvinfo->mode;
+            break;
+        default:
+            break;
+    }
 */
-	fps_target_mode=mode_target;
-	return mode_target;
+    fps_target_mode=mode_target;
+    return mode_target;
 }
 
 // return values:
@@ -990,88 +990,102 @@ static int get_target_vmode(int framerate_target)
 //		2: 		different vmode, need change mode
 static int get_exchange_mode(vmode_t mode_target)
 {
-	const vinfo_t *pvinfo;
-	vmode_t mode_current = VMODE_INIT_NULL;
-	
-	pvinfo = tv_get_current_info();
-	mode_current = pvinfo->mode;
-	
-	if( mode_current == mode_target )
-		return 0;
-	
-	if( ((mode_current==VMODE_480P) && (mode_target==VMODE_480P_59HZ)) ||
-		((mode_current==VMODE_480P_59HZ) && (mode_target==VMODE_480P)) ||
-		((mode_current==VMODE_720P) && (mode_target==VMODE_720P_59HZ)) ||
-		((mode_current==VMODE_720P_59HZ) && (mode_target==VMODE_720P)) ||
-		((mode_current==VMODE_1080I) && (mode_target==VMODE_1080I_59HZ))||
-		((mode_current==VMODE_1080I_59HZ) && (mode_target==VMODE_1080I))||
-		((mode_current==VMODE_1080P) && (mode_target==VMODE_1080P_59HZ))||
-		((mode_current==VMODE_1080P_59HZ) && (mode_target==VMODE_1080P))||
-		((mode_current==VMODE_1080P_24HZ) && (mode_target==VMODE_1080P_23HZ))||
-		((mode_current==VMODE_1080P_23HZ) && (mode_target==VMODE_1080P_24HZ) )||
-		((mode_current==VMODE_4K2K_30HZ) && (mode_target==VMODE_4K2K_29HZ))||
-		((mode_current==VMODE_4K2K_29HZ) && (mode_target==VMODE_4K2K_30HZ))||
-		((mode_current==VMODE_4K2K_24HZ) && (mode_target==VMODE_4K2K_23HZ))||
-		((mode_current==VMODE_4K2K_23HZ) && (mode_target==VMODE_4K2K_24HZ)) )
-		return 0x1;
+    const vinfo_t *pvinfo;
+    vmode_t mode_current = VMODE_INIT_NULL;
 
-	return 2;
+    pvinfo = tv_get_current_info();
+    mode_current = pvinfo->mode;
+
+    if ( mode_current == mode_target )
+        return 0;
+
+    if ( ((mode_current == VMODE_480P) && (mode_target == VMODE_480P_59HZ)) ||
+        ((mode_current == VMODE_480P_59HZ) && (mode_target == VMODE_480P)) ||
+        ((mode_current == VMODE_720P) && (mode_target == VMODE_720P_59HZ)) ||
+        ((mode_current == VMODE_720P_59HZ) && (mode_target == VMODE_720P)) ||
+        ((mode_current == VMODE_1080I) && (mode_target == VMODE_1080I_59HZ)) ||
+        ((mode_current == VMODE_1080I_59HZ) && (mode_target == VMODE_1080I)) ||
+        ((mode_current == VMODE_1080P) && (mode_target == VMODE_1080P_59HZ)) ||
+        ((mode_current == VMODE_1080P_59HZ) && (mode_target == VMODE_1080P)) ||
+        ((mode_current == VMODE_1080P_24HZ) && (mode_target == VMODE_1080P_23HZ)) ||
+        ((mode_current == VMODE_1080P_23HZ) && (mode_target == VMODE_1080P_24HZ) ) ||
+        ((mode_current == VMODE_4K2K_30HZ) && (mode_target == VMODE_4K2K_29HZ)) ||
+        ((mode_current == VMODE_4K2K_29HZ) && (mode_target == VMODE_4K2K_30HZ)) ||
+        ((mode_current == VMODE_4K2K_24HZ) && (mode_target == VMODE_4K2K_23HZ)) ||
+        ((mode_current == VMODE_4K2K_23HZ) && (mode_target == VMODE_4K2K_24HZ)) )
+        return 0x1;
+
+    return 2;
 }
+
+extern int hdmitx_is_special_tv_process(void);
 
 // just to fine tune the 0.1% clock
 static int clock_fine_tune(void)
 {
-	const vinfo_t *pvinfo ;
-	pvinfo = tv_get_current_info();
-#if (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B)
-	switch( pvinfo->mode )
-	{
-		case VMODE_720P_59HZ:
-		case VMODE_1080I_59HZ:
-		case VMODE_1080P_23HZ:
-		case VMODE_1080P_59HZ:
-		case VMODE_4K2K_29HZ:
-		case VMODE_4K2K_23HZ:
-			if( MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B )
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84cf8);
-			else
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84d04);
-			break;
-		case VMODE_720P:
-		case VMODE_1080I:
-		case VMODE_1080P:
-		case VMODE_1080P_24HZ:
-		case VMODE_4K2K_30HZ:	
-		case VMODE_4K2K_24HZ:
-			aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84e00);
-			break;
-		case VMODE_480P_59HZ:
-			if( (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B) || (IS_MESON_M8M2_CPU) ){
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84f48);
-				aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x400d042c);
-			}
-			else{
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8cf48);
-				aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4008042c);
-			}
-			break;
-		case VMODE_480P:
-			if( (MESON_CPU_TYPE==MESON_CPU_TYPE_MESON8B) || (IS_MESON_M8M2_CPU) ){
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84000);
-				aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x400d042d);
-			}
-			else{
-				aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c88000);
-				aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4008042d);
-			}
-			break;
-		default:
-			break;
-	}
+    const vinfo_t *pvinfo ;
+    pvinfo = tv_get_current_info();
+#if (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8) || (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B)
+    switch ( pvinfo->mode )
+    {
+        case VMODE_720P_59HZ:
+        case VMODE_1080I_59HZ:
+        case VMODE_1080P_23HZ:
+        case VMODE_1080P_59HZ:
+            if ( MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B )
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84cf8);
+            else
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84d04);
+            break;
+        case VMODE_4K2K_23HZ:
+        case VMODE_4K2K_29HZ:
+            if ( MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B )
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69d84cf8);
+            else if (IS_MESON_M8_CPU && hdmitx_is_special_tv_process())//SAMSUNG future TV, M8, in 4K2K mode
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c84d04);
+            else
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69d84d04);
+            break;
+        case VMODE_720P:
+        case VMODE_1080I:
+        case VMODE_1080P:
+        case VMODE_1080P_24HZ:
+            aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84e00);
+            break;
+        case VMODE_4K2K_24HZ:
+        case VMODE_4K2K_30HZ:
+            if (IS_MESON_M8_CPU && hdmitx_is_special_tv_process())//SAMSUNG future TV, M8, in 4K2K mode
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x59c84e00);
+            else
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84e00);
+            break;
+        case VMODE_480P_59HZ:
+            if ( (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (IS_MESON_M8M2_CPU) ) {
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84f48);
+                aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x400d042c);
+            }
+            else {
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c8cf48);
+                aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4008042c);
+            }
+            break;
+        case VMODE_480P:
+            if ( (MESON_CPU_TYPE == MESON_CPU_TYPE_MESON8B) || (IS_MESON_M8M2_CPU) ) {
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c84000);
+                aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x400d042d);
+            }
+            else {
+                aml_write_reg32(P_HHI_VID_PLL_CNTL2, 0x69c88000);
+                aml_write_reg32(P_HHI_VID_PLL_CNTL,  0x4008042d);
+            }
+            break;
+        default:
+            break;
+    }
 
 #endif
 
-	return 0;
+    return 0;
 }
 
 extern void update_vmode_status(char* name);

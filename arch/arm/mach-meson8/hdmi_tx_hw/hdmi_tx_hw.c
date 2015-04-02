@@ -2215,7 +2215,12 @@ static int hdmitx_set_dispmode(hdmitx_dev_t* hdmitx_device, Hdmi_tx_video_para_t
     }
 
     hdmitx_set_phy(hdmitx_device);
-
+    if (IS_MESON_M8_CPU && hdmitx_is_special_tv_process()) {
+        unsigned ret = 0;
+        ret = reset_hpll();
+        if (!ret)
+            reset_hpll();
+    }
     return 0;
 }
 
