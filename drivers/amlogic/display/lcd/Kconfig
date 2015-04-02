@@ -2,7 +2,8 @@
 # Kconfig for Amlogic LCD Devices
 #
 
-menu "Amlogic TV LCD Support"
+choice
+  prompt "Amlogic TV LCD Support"
 
 config AML_TV_LCD
 	bool "Amlogic TV LCD Driver"
@@ -19,4 +20,4 @@ config AML_TV_LCD_V2
 	  the LCD panel on TV.
 
 
-endmenu
+endchoice
