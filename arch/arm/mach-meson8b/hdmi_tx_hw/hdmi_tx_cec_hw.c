@@ -91,15 +91,16 @@ void cec_hw_reset(void)
 
 }
 
-void cec_rx_buf_check(void)
+int cec_rx_buf_check(void)
 {
     if (0xf == aocec_rd_reg(CEC_RX_NUM_MSG))
     {
         aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x1);
         aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x0);
+        hdmi_print(INF, CEC "rx buf clean\n");
+        return 1;
     }
-    aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
-    aocec_wr_reg(CEC_RX_MSG_CMD,  RX_NO_OP);
+    return 0;
 }
 
 int cec_ll_rx( unsigned char *msg, unsigned char *len)
@@ -108,32 +109,23 @@ int cec_ll_rx( unsigned char *msg, unsigned char *len)
     int ret = -1;
     int pos;
 
-    if (1 != aocec_rd_reg(CEC_RX_NUM_MSG))
+    if ((RX_DONE != aocec_rd_reg(CEC_RX_MSG_STATUS)) || (1 != aocec_rd_reg(CEC_RX_NUM_MSG)))
     {
         //cec_rx_buf_check();
-        //aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
-        //aocec_wr_reg(CEC_RX_MSG_CMD,  RX_NO_OP);
-        return ret;
-    }
-
-    if (RX_DONE != aocec_rd_reg(CEC_RX_MSG_STATUS))
-    {
-        //cec_rx_buf_check();
-        //aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
-        //aocec_wr_reg(CEC_RX_MSG_CMD,  RX_NO_OP);
+        aml_write_reg32(P_AO_CEC_INTR_CLR, aml_read_reg32(P_AO_CEC_INTR_CLR) | (1 << 2));
+        aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
+        aocec_wr_reg(CEC_RX_MSG_CMD,  RX_NO_OP);
         return ret;
     }
 
     *len = aocec_rd_reg(CEC_RX_MSG_LENGTH) + 1;
-
+printk("--------------rx start::\n");
     for (i = 0; i < (*len) && i < MAX_MSG; i++)
     {
-        *msg++= aocec_rd_reg(CEC_RX_MSG_0_HEADER +i);
+        msg[i]= aocec_rd_reg(CEC_RX_MSG_0_HEADER +i);
     }
 
     ret = aocec_rd_reg(CEC_RX_MSG_STATUS);
-
-    aml_write_reg32(P_AO_CEC_INTR_CLR, aml_read_reg32(P_AO_CEC_INTR_CLR) | (1 << 2));
 
     if (cec_msg_dbg_en  == 1)
     {
@@ -147,9 +139,12 @@ int cec_ll_rx( unsigned char *msg, unsigned char *len)
         msg_log_buf[pos] = '\0';
         hdmi_print(INF, CEC "%s", msg_log_buf);
     }
+
     //cec_rx_buf_check();
-    //aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
-    //aocec_wr_reg(CEC_RX_MSG_CMD, RX_NO_OP);
+    aml_write_reg32(P_AO_CEC_INTR_CLR, aml_read_reg32(P_AO_CEC_INTR_CLR) | (1 << 2));
+    aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
+    aocec_wr_reg(CEC_RX_MSG_CMD, RX_NO_OP);
+
     return ret;
 }
 
