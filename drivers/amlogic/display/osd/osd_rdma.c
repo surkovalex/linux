@@ -39,6 +39,7 @@ static int ctrl_ahb_wr_burst_size = 3;
 static int  osd_rdma_init(void);
 void osd_rdma_start(void);
 
+#define OSD_RDMA_UPDATE_RETRY_COUNT 100
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #define Wr(adr,val) WRITE_VCBUS_REG(adr, val)
@@ -62,11 +63,15 @@ static void inline reset_rdma_table(void)
 	item_count = 1;
 }
 
-static  int  update_table_item(u32 addr, u32 val)
+static int update_table_item(u32 addr, u32 val)
 {
+	int retry_count = OSD_RDMA_UPDATE_RETRY_COUNT;
 retry:
 	//in reject region then we wait for hw rdma operation complete.
-	if (OSD_RDMA_STATUS_IS_REJECT) goto retry ;
+	if (OSD_RDMA_STATUS_IS_REJECT && (retry_count > 0)) {
+		retry_count--;
+		goto retry;
+	}
 	if (!OSD_RDMA_STAUS_IS_DIRTY) { //since last HW op,no new wirte request. rdma HW op will clear DIRTY flag.
 		//reset all pointer. set table start margin.
 		reset_rdma_table();
@@ -74,19 +79,18 @@ retry:
 	//atom_lock_start:
 	//set write op aotmic lock flag.
 	OSD_RDMA_STAUS_MARK_DIRTY;
-	rdma_table[item_count].addr = addr;
-	rdma_table[item_count].val = val;
-	rdma_table[item_count + 1].addr = OSD_RDMA_FLAG_REG;
-	rdma_table[item_count + 1].val = OSD_RDMA_STATUS_MARK_COMPLETE;
 	item_count++;
+	rdma_table[item_count].addr = OSD_RDMA_FLAG_REG;
+	rdma_table[item_count].val = OSD_RDMA_STATUS_MARK_COMPLETE;
 	aml_write_reg32(END_ADDR, (table_paddr + item_count * 8 + 7));
+	rdma_table[item_count - 1].addr = addr;
+	rdma_table[item_count - 1].val = val;
 	//if dirty flag is cleared, then RDMA hw write and cpu sw write is racing.
 	//if reject flag is true,then hw RDMA hw write start when cpu write.
 	//atom_lock_end:
 	if (!OSD_RDMA_STAUS_IS_DIRTY || OSD_RDMA_STATUS_IS_REJECT) {
-		item_count --;
+		item_count--;
 		goto retry ;
-
 	}
 	return 0;
 }
