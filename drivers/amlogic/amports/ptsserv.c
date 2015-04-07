@@ -726,7 +726,8 @@ static int _pts_lookup_offset_inline(
         else if ((type == PTS_TYPE_AUDIO) &&
             (p2 != NULL) &&
             (!list_is_last(&p2->list,  &pTable->valid_list)) &&
-            (VAL_DIFF((p = list_entry(p2->list.next, pts_rec_t, list))->val, p2->val) < INTERPOLATE_AUDIO_RESOLUTION)) {
+            (VAL_DIFF((p = list_entry(p2->list.next, pts_rec_t, list))->val, p2->val) < INTERPOLATE_AUDIO_RESOLUTION) &&
+            (VAL_DIFF(p->val,p2->val) >= 0)) {
             /* do interpolation between [p2, p] */
             *val = div_u64(((p->val - p2->val) * (offset - p2->offset)), (p->offset - p2->offset)) + p2->val;
             *uS64 = (u64)(*val) << 32;
