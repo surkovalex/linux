@@ -526,6 +526,18 @@ static const vinfo_t tv_info[] =
         .sync_duration_den = 1,
         .video_clk         = 594000000,
     },
+    { /* VMODE_4K2K_50HZ_Y420 */
+        .name              = "4k2k50hz420",
+        .mode              = VMODE_4K2K_50HZ_Y420,
+        .width             = 3840,
+        .height            = 2160,
+        .field_height      = 2160,
+        .aspect_ratio_num  = 16,
+        .aspect_ratio_den  = 9,
+        .sync_duration_num = 50,
+        .sync_duration_den = 1,
+        .video_clk         = 594000000,
+    },
     { /* VMODE_4K2K_60HZ */
         .name              = "4k2k60hz",
         .mode              = VMODE_4K2K_60HZ,
