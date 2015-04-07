@@ -67,6 +67,7 @@
 #define RATE_CORRECTION_THRESHOLD 5
 #define RATE_24_FPS  4004   /* 23.97 */
 #define RATE_25_FPS  3840   /* 25 */
+#define RATE_30_FPS  3203   /* 29.97 */
 #define DUR2PTS(x) ((x)*90/96)
 #define PTS2DUR(x) ((x)*96/90)
 #define DUR2PTS_REM(x) (x*90 - DUR2PTS(x)*96)
@@ -1202,7 +1203,9 @@ static void vh264_isr(void)
                                     if ((close_to(pts_duration, RATE_24_FPS, RATE_CORRECTION_THRESHOLD) &&
                                          close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD))
                                          || (close_to(pts_duration, RATE_25_FPS, RATE_CORRECTION_THRESHOLD) &&
-                                             close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD))) {
+                                             close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD))
+                                         || (close_to(pts_duration, RATE_30_FPS, RATE_CORRECTION_THRESHOLD) &&
+                                             close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD))) {
                                         printk("----H.264: Correct frame duration from %d to duration based on PTS %d ---\n",
                                                 frame_dur, pts_duration);
                                         frame_dur = pts_duration;
