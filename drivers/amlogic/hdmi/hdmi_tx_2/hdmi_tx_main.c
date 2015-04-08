@@ -622,6 +622,12 @@ static ssize_t store_edid(struct device * dev, struct device_attribute *attr, co
     return 16;
 }
 
+static ssize_t show_edid_info(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    int edid_info_len = 256;
+    memcpy(buf, hdmitx_device.EDID_buf,edid_info_len);
+    return edid_info_len;
+}
 /*config attr*/
 static ssize_t show_config(struct device * dev, struct device_attribute *attr, char * buf)
 {
@@ -920,6 +926,7 @@ void hdmi_print(int dbg_lvl, const char *fmt, ...)
 static DEVICE_ATTR(disp_mode, S_IWUSR | S_IRUGO | S_IWGRP, show_disp_mode, store_disp_mode);
 static DEVICE_ATTR(aud_mode, S_IWUSR | S_IRUGO, show_aud_mode, store_aud_mode);
 static DEVICE_ATTR(edid, S_IWUSR | S_IRUGO, show_edid, store_edid);
+static DEVICE_ATTR(edid_info, S_IWUSR | S_IRUGO, show_edid_info, NULL);
 static DEVICE_ATTR(config, S_IWUSR | S_IRUGO | S_IWGRP, show_config, store_config);
 static DEVICE_ATTR(debug, S_IWUSR | S_IRUGO, NULL, store_debug);
 static DEVICE_ATTR(disp_cap, S_IWUSR | S_IRUGO, show_disp_cap, NULL);
@@ -1471,6 +1478,7 @@ static int amhdmitx_probe(struct platform_device *pdev)
     ret=device_create_file(hdmitx_dev, &dev_attr_disp_mode);
     ret=device_create_file(hdmitx_dev, &dev_attr_aud_mode);
     ret=device_create_file(hdmitx_dev, &dev_attr_edid);
+    ret=device_create_file(hdmitx_dev, &dev_attr_edid_info);
     ret=device_create_file(hdmitx_dev, &dev_attr_config);
     ret=device_create_file(hdmitx_dev, &dev_attr_debug);
     ret=device_create_file(hdmitx_dev, &dev_attr_disp_cap);
@@ -1604,6 +1612,7 @@ static int amhdmitx_remove(struct platform_device *pdev)
     device_remove_file(hdmitx_dev, &dev_attr_disp_mode);
     device_remove_file(hdmitx_dev, &dev_attr_aud_mode);
     device_remove_file(hdmitx_dev, &dev_attr_edid);
+    device_remove_file(hdmitx_dev, &dev_attr_edid_info);
     device_remove_file(hdmitx_dev, &dev_attr_config);
     device_remove_file(hdmitx_dev, &dev_attr_debug);
     device_remove_file(hdmitx_dev, &dev_attr_disp_cap);
