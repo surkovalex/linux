@@ -2943,7 +2943,7 @@ static irqreturn_t vsync_isr(int irq, void *dev_id)
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 
     vdin_ops=get_vdin_v4l2_ops();
-    if(vdin_ops){
+    if (vdin_ops && (vdin_ops->tvin_vdin_func != NULL)) {
 	arg.cmd = VDIN_CMD_ISR;
 	vdin_ops->tvin_vdin_func(1,&arg);
 #ifdef CONFIG_AM_VIDEO2
