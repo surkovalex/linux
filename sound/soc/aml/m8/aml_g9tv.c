@@ -175,42 +175,26 @@ static int aml_audio_get_in_source(struct snd_kcontrol *kcontrol,
     ucontrol->value.enumerated.item[0] = 1;//ATV
     else if (value == 2)
     ucontrol->value.enumerated.item[0] = 2;//hdmi
-    else
-    printk(KERN_INFO "unknown source\n");
-
     return 0;
 }
 
+static int audio_source = 0;
 static int aml_audio_set_in_source(struct snd_kcontrol *kcontrol,
         struct snd_ctl_elem_value *ucontrol) {
     if (ucontrol->value.enumerated.item[0] == 0) { // select external codec output as I2S source
         WRITE_MPEG_REG(AUDIN_SOURCE_SEL, 0);
-        WRITE_MPEG_REG(AUDIN_I2SIN_CTRL,
-                (1 << I2SIN_CHAN_EN) | (3 << I2SIN_SIZE)
-                        | (1 << I2SIN_LRCLK_INVT) | (1 << I2SIN_LRCLK_SKEW)
-                        | (0 << I2SIN_POS_SYNC) | (1 << I2SIN_LRCLK_SEL)
-                        | (1 << I2SIN_CLK_SEL) | (1 << I2SIN_DIR));
-        WRITE_MPEG_REG_BITS(AUDIN_I2SIN_CTRL, 1, I2SIN_EN, 1);
+        audio_source = 0;
     } else if (ucontrol->value.enumerated.item[0] == 1) { // select ATV output as I2S source
         WRITE_MPEG_REG(AUDIN_SOURCE_SEL, 1);
-        WRITE_MPEG_REG(AUDIN_I2SIN_CTRL,
-                (1 << I2SIN_CHAN_EN) | (0 << I2SIN_SIZE)
-                        | (0 << I2SIN_LRCLK_INVT) | (0 << I2SIN_LRCLK_SKEW)
-                        | (0 << I2SIN_POS_SYNC) | (0 << I2SIN_LRCLK_SEL)
-                        | (0 << I2SIN_CLK_SEL) | (0 << I2SIN_DIR));
-        WRITE_MPEG_REG_BITS(AUDIN_I2SIN_CTRL, 1, I2SIN_EN, 1);
+        audio_source = 1;
     } else if (ucontrol->value.enumerated.item[0] == 2) { // select HDMI-rx as I2S source
         WRITE_MPEG_REG(AUDIN_SOURCE_SEL, (0 << 12) | // [14:12]cntl_hdmirx_chsts_sel: 0=Report chan1 status; 1=Report chan2 status; ...;
                 (0xf << 8) | // [11:8] cntl_hdmirx_chsts_en
                 (1 << 4) | // [5:4]  spdif_src_sel: 1=Select HDMIRX SPDIF output as AUDIN source
                 (2 << 0)); // [1:0]  i2sin_src_sel: 2=Select HDMIRX I2S output as AUDIN source
-        WRITE_MPEG_REG(AUDIN_I2SIN_CTRL,
-                (1 << I2SIN_CHAN_EN) | (3 << I2SIN_SIZE)
-                        | (1 << I2SIN_LRCLK_INVT) | (1 << I2SIN_LRCLK_SKEW)
-                        | (0 << I2SIN_POS_SYNC) | (1 << I2SIN_LRCLK_SEL)
-                        | (1 << I2SIN_CLK_SEL) | (1 << I2SIN_DIR));
-        WRITE_MPEG_REG_BITS(AUDIN_I2SIN_CTRL, 1, I2SIN_EN, 1);
+        audio_source = 2;
     }
+    set_i2s_source(audio_source);
     return 0;
 }
 
