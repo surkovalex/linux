@@ -25,6 +25,7 @@
  */
 #include "osd_rdma.h"
 #include <linux/amlogic/amlog.h>
+#include <linux/delay.h>
 
 static rdma_table_item_t *rdma_table = NULL;
 static u32		   table_paddr = 0;
@@ -238,13 +239,23 @@ int reset_rdma(void)
 }
 EXPORT_SYMBOL(reset_rdma);
 
+static DEFINE_MUTEX(rdma_mutex);
+
 int osd_rdma_enable(u32  enable)
 {
 	if (!osd_rdma_init_flat)
 		osd_rdma_init();
-
-	if (enable == rdma_enable) return 0;
+	mutex_lock(&rdma_mutex);
+	if (enable == rdma_enable) {
+		mutex_unlock(&rdma_mutex);
+		return 0;
+	}
 	rdma_enable = enable;
+	while (aml_read_reg32(P_RDMA_STATUS) & 0x0fffff0f) {
+		printk("rdma still work£¬ RDMA_STATUS: 0x%x\n",
+				aml_read_reg32(P_RDMA_STATUS));
+		msleep(10);
+	}
 	if (enable) {
 		aml_write_reg32(START_ADDR, table_paddr);
 		//enable then start it.
@@ -252,6 +263,7 @@ int osd_rdma_enable(u32  enable)
 		start_osd_rdma(RDMA_CHANNEL_INDEX);
 	} else
 		stop_rdma(RDMA_CHANNEL_INDEX);
+	mutex_unlock(&rdma_mutex);
 	return 1;
 }
 EXPORT_SYMBOL(osd_rdma_enable);

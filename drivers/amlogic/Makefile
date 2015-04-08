@@ -131,6 +131,8 @@ endif
 
 obj-$(CONFIG_AMLOGIC_ION) += ion_dev/
 
+obj-$(CONFIG_HIBERNATION) += instaboot/
+
 obj-y += crypto/
 
 #obj-$(CONFIG_MESON_TRUSTZONE) += trustzone/

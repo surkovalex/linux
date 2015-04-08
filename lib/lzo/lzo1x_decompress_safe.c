@@ -10,7 +10,6 @@
  *  Nitin Gupta <nitingupta910@gmail.com>
  *  Richard Purdie <rpurdie@openedhand.com>
  */
-
 #ifndef STATIC
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -18,13 +17,11 @@
 #include <asm/unaligned.h>
 #include <linux/lzo.h>
 #include "lzodefs.h"
-
 #define HAVE_IP(x)      ((size_t)(ip_end - ip) >= (size_t)(x))
 #define HAVE_OP(x)      ((size_t)(op_end - op) >= (size_t)(x))
 #define NEED_IP(x)      if (!HAVE_IP(x)) goto input_overrun
 #define NEED_OP(x)      if (!HAVE_OP(x)) goto output_overrun
 #define TEST_LB(m_pos)  if ((m_pos) < out) goto lookbehind_overrun
-
 int lzo1x_decompress_safe(const unsigned char *in, size_t in_len,
 			  unsigned char *out, size_t *out_len)
 {
@@ -35,10 +32,8 @@ int lzo1x_decompress_safe(const unsigned char *in, size_t in_len,
 	const unsigned char *m_pos;
 	const unsigned char * const ip_end = in + in_len;
 	unsigned char * const op_end = out + *out_len;
-
 	op = out;
 	ip = in;
-
 	if (unlikely(in_len < 3))
 		goto input_overrun;
 	if (*ip > 17) {
@@ -49,7 +44,6 @@ int lzo1x_decompress_safe(const unsigned char *in, size_t in_len,
 		}
 		goto copy_literal_run;
 	}
-
 	for (;;) {
 		t = *ip++;
 		if (t < 16) {
@@ -72,9 +66,11 @@ copy_literal_run:
 						COPY8(op, ip);
 						op += 8;
 						ip += 8;
+#  if !defined(__arm__)
 						COPY8(op, ip);
 						op += 8;
 						ip += 8;
+#  endif
 					} while (ip < ie);
 					ip = ie;
 					op = oe;
@@ -159,9 +155,11 @@ copy_literal_run:
 					COPY8(op, m_pos);
 					op += 8;
 					m_pos += 8;
+#  if !defined(__arm__)
 					COPY8(op, m_pos);
 					op += 8;
 					m_pos += 8;
+#  endif
 				} while (op < oe);
 				op = oe;
 				if (HAVE_IP(6)) {
@@ -209,29 +207,23 @@ match_next:
 			}
 		}
 	}
-
 eof_found:
 	*out_len = op - out;
 	return (t != 3       ? LZO_E_ERROR :
 		ip == ip_end ? LZO_E_OK :
 		ip <  ip_end ? LZO_E_INPUT_NOT_CONSUMED : LZO_E_INPUT_OVERRUN);
-
 input_overrun:
 	*out_len = op - out;
 	return LZO_E_INPUT_OVERRUN;
-
 output_overrun:
 	*out_len = op - out;
 	return LZO_E_OUTPUT_OVERRUN;
-
 lookbehind_overrun:
 	*out_len = op - out;
 	return LZO_E_LOOKBEHIND_OVERRUN;
 }
 #ifndef STATIC
 EXPORT_SYMBOL_GPL(lzo1x_decompress_safe);
-
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("LZO1X Decompressor");
-
 #endif

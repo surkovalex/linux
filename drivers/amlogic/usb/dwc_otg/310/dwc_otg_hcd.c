@@ -520,7 +520,9 @@ int dwc_otg_hcd_suspend(dwc_otg_hcd_t * hcd)
 {
 	hcd->core_if->suspend_mode = 1;
 	DWC_DEBUGPL(DBG_HCD, "DWC OTG HCD SUSPEND\n");
-	dwc_otg_hcd_power_save(hcd, 0);
+
+	if (!hcd->pm_freeze_flag)
+		dwc_otg_hcd_power_save(hcd, 0);
 
  	return 0;
 }
@@ -529,7 +531,6 @@ extern void dwc_otg_power_notifier_call(char is_power_on);
 /** dwc_otg_hcd resume  */
 int dwc_otg_hcd_resume(dwc_otg_hcd_t *hcd)
 {
-
 	DWC_DEBUGPL(DBG_HCD, "DWC OTG HCD RESUME\n");
 
 	hcd->ssplit_lock = 0;
@@ -540,7 +541,9 @@ int dwc_otg_hcd_resume(dwc_otg_hcd_t *hcd)
 	}
 
 	hcd->core_if->suspend_mode = 0;
-	dwc_otg_hcd_power_save(hcd, 1);
+
+	if (!hcd->pm_freeze_flag)
+		dwc_otg_hcd_power_save(hcd, 1);
 	
 	return 0;
 }

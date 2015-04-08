@@ -64,6 +64,15 @@ SET_VOUT_CLASS_ATTR(axis,set_vout_window)
 SET_VOUT_CLASS_ATTR(wr_reg,write_reg)
 SET_VOUT_CLASS_ATTR(rd_reg,read_reg)
 
+void update_vout_mode_attr(const vinfo_t* vinfo)
+{
+	if (vinfo == NULL) {
+		printk("error vinfo is null\n");
+		return;
+	} else
+		printk("vinfo mode is: %s\n", vinfo->name);
+	snprintf(mode,40,"%s",vinfo->name);
+}
 
 static  vout_info_t	vout_info;
 int power_level=0;
@@ -357,13 +366,13 @@ static int  create_vout_attr(void)
 
 #ifdef  CONFIG_PM
 static int  meson_vout_suspend(struct platform_device *pdev, pm_message_t state)
-{	
+{
 #ifdef CONFIG_HAS_EARLYSUSPEND
     if (early_suspend_flag)
         return 0;
 #endif
-	vout_suspend();
-	return 0;
+    vout_suspend(PM_EVENT_SUSPEND);
+    return 0;
 }
 
 static int  meson_vout_resume(struct platform_device *pdev)
@@ -378,10 +387,30 @@ static int  meson_vout_resume(struct platform_device *pdev)
     if (early_suspend_flag)
         return 0;
 #endif
-	vout_resume();
-	return 0;
+    vout_resume(PM_EVENT_RESUME);
+    return 0;
 }
 #endif 
+
+#ifdef CONFIG_HIBERNATION
+static int  meson_vout_freeze(struct device *dev)
+{
+    vout_suspend(PM_EVENT_FREEZE);
+    return 0;
+}
+
+static int  meson_vout_thaw(struct device *dev)
+{
+    vout_resume(PM_EVENT_THAW);
+    return 0;
+}
+
+static int  meson_vout_restore(struct device *dev)
+{
+    vout_resume(PM_EVENT_RESTORE);
+    return 0;
+}
+#endif
 
 #ifdef CONFIG_SCREEN_ON_EARLY
 void resume_vout_early(void)
@@ -402,7 +431,7 @@ static void meson_vout_early_suspend(struct early_suspend *h)
     if (early_suspend_flag)
         return;
     //meson_vout_suspend((struct platform_device *)h->param, PMSG_SUSPEND);
-    vout_suspend();
+    vout_suspend(PM_EVENT_SUSPEND);
     early_suspend_flag = 1;
 }
 
@@ -412,7 +441,7 @@ static void meson_vout_late_resume(struct early_suspend *h)
         return;
     early_suspend_flag = 0;
     //meson_vout_resume((struct platform_device *)h->param);
-    vout_resume();
+    vout_resume(PM_EVENT_RESUME);
 }
 #endif
 
@@ -477,6 +506,14 @@ static const struct of_device_id meson_vout_dt_match[]={
 	{},
 };
 
+#ifdef CONFIG_HIBERNATION
+struct dev_pm_ops vout_pm = {
+	.freeze		= meson_vout_freeze,
+	.thaw		= meson_vout_thaw,
+	.restore	= meson_vout_restore,
+};
+#endif
+
 static struct platform_driver
 vout_driver = {
     .probe      = meson_vout_probe,
@@ -488,6 +525,9 @@ vout_driver = {
     .driver     = {
         .name   = "mesonvout",
         .of_match_table=meson_vout_dt_match,
+#ifdef CONFIG_HIBERNATION
+        .pm	= &vout_pm,
+#endif
     }
 };
 static int __init vout_init_module(void)

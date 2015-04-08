@@ -39,6 +39,9 @@
 #include <linux/ctype.h>
 #include <linux/amlogic/vout/vinfo.h>
 #include <mach/am_regs.h>
+#ifdef CONFIG_HIBERNATION
+#include <linux/syscore_ops.h>
+#endif
 
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 #include <mach/vpu.h>
@@ -53,7 +56,8 @@
 
 #define PIN_MUX_REG_0	  0x202c
 #define P_PIN_MUX_REG_0  CBUS_REG_ADDR(PIN_MUX_REG_0)
-static    disp_module_info_t    *info;
+static    disp_module_info_t	disp_module_info __nosavedata;
+static    disp_module_info_t    *info __nosavedata;
 static void  parse_vdac_setting(char *para);
 
 SET_TV_CLASS_ATTR(vdac_setting,parse_vdac_setting)
@@ -1220,8 +1224,11 @@ static int tv_set_vframe_rate_end_hint(void)
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 extern void cvbs_cntl_output(unsigned int open);
 #endif
-static int tv_suspend(void)
+static int tv_suspend(int pm_event)
 {
+	/* in freeze process do not turn off the display devices */
+	if (pm_event == PM_EVENT_FREEZE)
+		return 0;
 	video_dac_disable();
 #if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
 	cvbs_cntl_output(0);
@@ -1229,8 +1236,12 @@ static int tv_suspend(void)
 
 	return 0;
 }
-static int tv_resume(void)
+static int tv_resume(int pm_event)
 {
+	/* in thaw/restore process do not reset the display mode */
+	if (pm_event == PM_EVENT_THAW
+		|| pm_event == PM_EVENT_RESTORE)
+		return 0;
 	video_dac_enable(0xff);
 	tv_set_current_vmode(info->vinfo->mode);
 	return 0;
@@ -1351,18 +1362,44 @@ static int  create_tv_attr(disp_module_info_t* info)
 
 	return   0;
 }
+
+#ifdef CONFIG_HIBERNATION
+struct class  *info_base_class;
+static int tvconf_suspend(void)
+{
+	info_base_class = info->base_class;
+	return 0;
+}
+
+static void tvconf_resume(void)
+{
+	info->base_class = info_base_class;
+}
+
+static struct syscore_ops tvconf_ops = {
+	.suspend = tvconf_suspend,
+	.resume = tvconf_resume,
+	.shutdown = NULL,
+};
+#endif
+
 static int __init tv_init_module(void)
 {
 	int  ret ;
 
-	info=(disp_module_info_t*)kmalloc(sizeof(disp_module_info_t),GFP_KERNEL) ;
-    printk("%s\n", __func__);
+#ifdef CONFIG_HIBERNATION
+	INIT_LIST_HEAD(&tvconf_ops.node);
+	register_syscore_ops(&tvconf_ops);
+#endif
 
-	if (!info)
+	info=&disp_module_info;
+	printk("%s\n", __func__);
+
+	/*if (!info)
 	{
 		amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"can't alloc display info struct\n");
 		return -ENOMEM;
-	}
+	}*/
 	
 	memset(info, 0, sizeof(disp_module_info_t));
 
@@ -1404,7 +1441,7 @@ static __exit void tv_exit_module(void)
 	if(info)
 	{
 		unregister_chrdev(info->major,info->name)	;
-		kfree(info);
+		//kfree(info);
 	}
 	vout_unregister_server(&tv_server);
 	
