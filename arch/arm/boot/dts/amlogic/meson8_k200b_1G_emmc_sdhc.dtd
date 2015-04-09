@@ -149,14 +149,14 @@ void root_func(){
 		4k2k_fb = <0>;
  		display_size_default = <1920 1080 1920 3240 32>; //1920*1080*4*3 = 0x17BB000
 	};
-	
+
 	continuemem{
                 compatible = "amlogic,contimuemem";
                 dev_name = "contimuemem";
                 reserve-memory = <0x06100000>; // 88M deinterlace+vdec
 	};
 
-	
+
 //$$ DEVICE="deinterlace"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 2 = "reg"
@@ -206,12 +206,12 @@ void root_func(){
 //$$ L3 PROP_U32 2 ="reg"
     picdec{
 		compatible = "amlogic,picdec";
-		dev_name = "picdec";								
+		dev_name = "picdec";
 		status = "okay";
                 share-memory-name = "continuemem0";
                 share-memory-offset = <0x02100000>;
                 share-memory-size = <0x04000000>; //64M
-	}; 
+	};
 
 /// ***************************************************************************************
 ///	-	DISP&MM-PostProcess
