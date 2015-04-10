@@ -3797,8 +3797,9 @@ int get_current_vscale_skip_count(vframe_t* vf)
 {
     static vpp_frame_par_t frame_par;
 
-    vpp_set_filters(process_3d_type,wide_setting, vf, &frame_par, vinfo);
-
+    if ((vf->height > 0) && (vf->width > 0)) {
+       vpp_set_filters(process_3d_type,wide_setting, vf, &frame_par, vinfo);
+    }
     return frame_par.vscale_skip_count;
 }
 
