@@ -120,7 +120,7 @@ static DEFINE_MUTEX(frontend_mutex);
 extern unsigned int jiffies_to_msecs(const unsigned long j);
 int jiffiestime;
 //#define LOCK_TIMEOUT 2000
-static int LOCK_TIMEOUT = 2000;
+static int LOCK_TIMEOUT = 3000;
 
 struct dvb_frontend_private {
 
