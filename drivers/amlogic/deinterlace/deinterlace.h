@@ -372,7 +372,7 @@ void enable_di_pre_aml (
 
 #ifdef NEW_DI_V3
 void enable_mc_di_pre(DI_MC_MIF_t *di_mcinford_mif,DI_MC_MIF_t *di_mcinfowr_mif,DI_MC_MIF_t *di_mcvecwr_mif,int urgent);
-void enable_mc_di_post(DI_MC_MIF_t *di_mcvecrd_mif,int urgent);
+void enable_mc_di_post(DI_MC_MIF_t *di_mcvecrd_mif,int urgent,bool reverse);
 #endif
 
 void enable_region_blend (
