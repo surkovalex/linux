@@ -807,10 +807,9 @@ RESTART:
     filter->vpp_hsc_start_phase_step = ratio_x << 6;
     next_frame_par->VPP_hf_ini_phase_ = vpp_zoom_center_x & 0xff;
 
-    if ((ratio_x == (1 << 18)) && (next_frame_par->VPP_hf_ini_phase_ == 0)) {
+    if ((ratio_x == (1 << 18)) && (next_frame_par->VPP_hf_ini_phase_ == 0) &&
+        (vpp_wide_mode != VIDEO_WIDEOPTION_NONLINEAR)) {
         filter->vpp_horz_coeff = vpp_filter_coefs_bicubic_sharp;
-    } else {
-        filter->vpp_horz_coeff = filter_table[COEF_BICUBIC];
     }
 
     /* screen position for source */
