@@ -1,5 +1,5 @@
 /*************************************************************
- * Amlogic 
+ * Amlogic
  * vout  serve program
  *
  * Copyright (C) 2010 Amlogic, Inc.
@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA
  *
  * Author:   jianfeng_wang@amlogic
- *		   
- *		   
+ *
+ *
  **************************************************************/
 #include <linux/version.h>
 #include <linux/module.h>
@@ -86,7 +86,7 @@ EXPORT_SYMBOL(get_power_level);
 
 /*****************************************************************
 **
-**	sysfs impletement part  
+**	sysfs impletement part
 **
 ******************************************************************/
 static  void   func_default_null(char  *str)
@@ -95,7 +95,7 @@ static  void   func_default_null(char  *str)
 }
 static   int* parse_para(char *para,char   *para_num)
 {
-	 static unsigned   int  buffer[MAX_NUMBER_PARA] ; 
+	 static unsigned   int  buffer[MAX_NUMBER_PARA] ;
 	 char  *endp ;
 	 int *pt=NULL;
 	 int len=0,count=0;
@@ -107,20 +107,20 @@ static   int* parse_para(char *para,char   *para_num)
 	endp=(char*)buffer;
 	do
 	{
-		//filter space out 
+		//filter space out
 		while(para && ( isspace(*para) || !isalnum(*para)) && len)
 		{
 			para++;
-			len --; 
+			len --;
 		}
 		if(len==0) break;
 		*pt++=simple_strtoul(para,&endp,0);
-		
+
 		para=endp;
 		len=strlen(para);
 	}while(endp && ++count<*para_num&&count<MAX_NUMBER_PARA) ;
 	*para_num=count;
-	
+
 	return  buffer;
 }
 
@@ -137,7 +137,7 @@ static  void  write_reg(char *para)
 }
 
 
-	
+
 #ifdef  CONFIG_PM
 static int  meson_vout_suspend(struct platform_device *pdev, pm_message_t state);
 static int  meson_vout_resume(struct platform_device *pdev);
@@ -157,9 +157,9 @@ static int want_hdmi_mode(vmode_t mode)
 		case VMODE_480I:
 		case VMODE_480I_RPT:
 		case VMODE_480P:
-#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION    
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 		case VMODE_480P_59HZ:// for framerate automation 480p 59.94hz
-#endif   
+#endif
 		case VMODE_480P_RPT:
 		case VMODE_576I:
 		case VMODE_576I_RPT:
@@ -172,7 +172,7 @@ static int want_hdmi_mode(vmode_t mode)
 		case VMODE_1080I:
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 		case VMODE_1080I_59HZ: // for framerate automation 1080i 59.94hz
-#endif   
+#endif
 		case VMODE_1080P:
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 		case VMODE_1080P_59HZ: // for framerate automation 1080p 59.94hz
@@ -196,6 +196,7 @@ static int want_hdmi_mode(vmode_t mode)
 		case VMODE_4K2K_SMPTE:
 		case VMODE_4K2K_FAKE_5G:  // timing same as 4k2k30hz, Vsync from 30hz to 50hz
 		case VMODE_4K2K_60HZ:	  // timing same as 4k2k30hz, Vsync from 30hz to 60hz
+		case VMODE_4K2K_50HZ:	  // timing same as 4k2k30hz, Vsync from 30hz to 60hz
 		case VMODE_4K2K_5G:
 			ret=1;
 			break;
@@ -237,7 +238,7 @@ static  void  set_vout_mode(char * name)
 	if(VMODE_MAX==mode)
 	{
 		amlog_mask_level(LOG_MASK_PARA,LOG_LEVEL_HIGH,"no matched vout mode\n");
-		return ; 
+		return ;
 	}
 
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
@@ -274,14 +275,14 @@ void set_vout_mode_fr_auto(char* name)
 	if(VMODE_MAX==vmode)
 	{
 		amlog_mask_level(LOG_MASK_PARA,LOG_LEVEL_HIGH,"no matched vout mode\n");
-		return ; 
+		return ;
 	}
 	if(vmode==get_current_vmode())
 	{
 		amlog_mask_level(LOG_MASK_PARA,LOG_LEVEL_HIGH,"don't set the same mode as current.\n");
 		return ;
 	}
-	
+
 	update_vmode_status(name);
 
 	set_current_vmode(vmode);
@@ -300,17 +301,17 @@ char* get_vout_mode_internal(void)
 EXPORT_SYMBOL(get_vout_mode_internal);
 
 //axis type : 0x12  0x100 0x120 0x130
-static void  set_vout_window(char *para) 
+static void  set_vout_window(char *para)
 {
 #define   OSD_COUNT   2
 	static  disp_rect_t  disp_rect[OSD_COUNT];
-	char  count=OSD_COUNT*4;	
+	char  count=OSD_COUNT*4;
 	int   *pt=&disp_rect[0].x;
-	
+
 
 	//parse window para .
 	memcpy(pt,parse_para(para,&count),sizeof(disp_rect_t)*OSD_COUNT);
-	
+
 	if(count >=4 && count <8 )
 	{
 		disp_rect[1]=disp_rect[0] ;
@@ -322,13 +323,13 @@ static void  set_vout_window(char *para)
 
 /*****************************************************************
 **
-**	sysfs  declare part 
+**	sysfs  declare part
 **
 ******************************************************************/
 
 static  struct  class_attribute   *vout_attr[]={
 &class_vout_attr_enable,
-&class_vout_attr_mode,	
+&class_vout_attr_mode,
 &class_vout_attr_axis ,
 &class_vout_attr_wr_reg,
 &class_vout_attr_rd_reg,
@@ -390,7 +391,7 @@ static int  meson_vout_resume(struct platform_device *pdev)
     vout_resume(PM_EVENT_RESUME);
     return 0;
 }
-#endif 
+#endif
 
 #ifdef CONFIG_HIBERNATION
 static int  meson_vout_freeze(struct device *dev)
@@ -447,14 +448,14 @@ static void meson_vout_late_resume(struct early_suspend *h)
 
 /*****************************************************************
 **
-**	vout driver interface  
+**	vout driver interface
 **
 ******************************************************************/
-static int 
+static int
  meson_vout_probe(struct platform_device *pdev)
 {
 	int ret =-1;
-	
+
 	vout_info.base_class=NULL;
 	amlog_mask_level(LOG_MASK_INIT,LOG_LEVEL_HIGH,"start init vout module\n");
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -488,14 +489,14 @@ static int
 #ifdef CONFIG_HAS_EARLYSUSPEND
     unregister_early_suspend(&early_suspend);
 #endif
-	
+
 	for(i=0;i<VOUT_ATTR_MAX;i++)
 	{
 		class_remove_file(vout_info.base_class,vout_attr[i]) ;
 	}
-		
+
 	class_destroy(vout_info.base_class);
-	
+
 	return 0;
 }
 
@@ -518,10 +519,10 @@ static struct platform_driver
 vout_driver = {
     .probe      = meson_vout_probe,
     .remove     = meson_vout_remove,
-#ifdef  CONFIG_PM      
+#ifdef  CONFIG_PM
     .suspend  =meson_vout_suspend,
     .resume    =meson_vout_resume,
-#endif    
+#endif
     .driver     = {
         .name   = "mesonvout",
         .of_match_table=meson_vout_dt_match,
@@ -533,20 +534,20 @@ vout_driver = {
 static int __init vout_init_module(void)
 {
 	int ret =0;
-    
+
     printk("%s\n", __func__);
-	if (platform_driver_register(&vout_driver)) 
+	if (platform_driver_register(&vout_driver))
 	{
        		amlog_level(LOG_LEVEL_HIGH,"failed to register osd driver\n");
         	ret= -ENODEV;
     	}
-	
+
 	return ret;
 
 }
 static __exit void vout_exit_module(void)
 {
-	
+
 	amlog_level(LOG_LEVEL_HIGH,"osd_remove_module.\n");
 
     	platform_driver_unregister(&vout_driver);
