@@ -56,9 +56,10 @@ void cec_enable_irq(void)
     hdmi_print(INF, CEC "enable:int mask:0x%x\n", aml_read_reg32(P_SYS_CPU_0_IRQ_IN1_INTR_MASK));
 }
 
-void cec_rx_buf_check(void)
+int cec_rx_buf_check(void)
 {
-  ;
+    // TODO
+    return 0;
 }
 void cec_hw_reset(void)
 {
