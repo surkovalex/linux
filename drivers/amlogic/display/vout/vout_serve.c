@@ -144,7 +144,7 @@ static int  meson_vout_resume(struct platform_device *pdev);
 #endif
 
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
-vmode_t mode_by_user = VMODE_INIT_NULL;
+__nosavedata vmode_t mode_by_user = VMODE_INIT_NULL;
 extern int fps_playing_flag;
 extern vmode_t fps_target_mode;
 extern char* get_name_from_vmode(vmode_t mode);
@@ -408,7 +408,10 @@ static int  meson_vout_thaw(struct device *dev)
 
 static int  meson_vout_restore(struct device *dev)
 {
+    vmode_t mode;
     vout_resume(PM_EVENT_RESTORE);
+    mode = get_current_vmode();
+    vout_notifier_call_chain(VOUT_EVENT_MODE_CHANGE, &mode);
     return 0;
 }
 #endif

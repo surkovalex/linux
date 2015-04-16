@@ -1,1 +1,2 @@
-obj-$(CONFIG_HIBERNATION) += instaboot_hook.o instaboot_kernel.o
+obj-y += instaboot_kernel.o
+obj-$(CONFIG_HIBERNATION) += instaboot_hook.o

@@ -330,6 +330,9 @@ static int create_image(int platform_mode)
 	return error;
 }
 
+extern void platform_reg_save(void);
+extern void platform_reg_restore(void);
+
 /**
  * hibernation_snapshot - Quiesce devices and create a hibernation image.
  * @platform_mode: If set, use platform driver to prepare for the transition.
@@ -369,6 +372,7 @@ int hibernation_snapshot(int platform_mode)
 		dpm_complete(PMSG_RECOVER);
 		goto Thaw;
 	}
+	platform_reg_save();
 
 	suspend_console();
 	ftrace_stop();
@@ -380,6 +384,9 @@ int hibernation_snapshot(int platform_mode)
 		platform_recover(platform_mode);
 	else
 		error = create_image(platform_mode);
+
+	if (!in_suspend)
+		platform_reg_restore();
 
 	/*
 	 * In the case that we call create_image() above, the control

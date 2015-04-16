@@ -14,6 +14,9 @@
 #include <linux/delay.h>
 #include <linux/sched.h>
 
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+extern vmode_t mode_by_user;
+#endif
 
 static BLOCKING_NOTIFIER_HEAD(vout_notifier_list);
 static DEFINE_MUTEX(vout_mutex);
@@ -212,6 +215,12 @@ int set_current_vmode(vmode_t mode)
 			{
 				BUG_ON(vout_module.curr_vout_server->op.get_vinfo == NULL);
 				update_vout_mode_attr(vout_module.curr_vout_server->op.get_vinfo());
+#ifdef CONFIG_HIBERNATION
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+				if (VMODE_INIT_NULL == mode_by_user)
+					mode_by_user = mode;
+#endif /* CONFIG_AML_VOUT_FRAMERATE_AUTOMATION */
+#endif /* CONFIG_HIBERNATION */
 			}
 		}
 		else

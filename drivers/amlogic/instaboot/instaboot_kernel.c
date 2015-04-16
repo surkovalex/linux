@@ -3,6 +3,14 @@
 #include <linux/atomic.h>
 #include <linux/init.h>
 #include <linux/printk.h>
+#include <linux/list.h>
+#include <linux/slab.h>
+#include <asm/memory.h>
+
+static void* nftl_info_trans_buffer[3]  __nosavedata;
+EXPORT_SYMBOL(nftl_info_trans_buffer);
+
+#ifdef CONFIG_HIBERNATION
 
 atomic_t snapshot_device_available = ATOMIC_INIT(1);
 
@@ -76,7 +84,6 @@ EXPORT_SYMBOL(aml_bio_set_pages_dirty);
    in kernel booting process, acquire some memory for device probe,
    which will not be crush when recovery the instaboot image.
 */
-static int alloc_permission = 1;
 struct reserve_mem{
 	unsigned long long startaddr;
 	unsigned long long size;
@@ -95,47 +102,106 @@ struct reserve_mgr{
 	struct reserve_mem reserve[MAX_RESERVE_BLOCK];
 };
 
+struct mem_block {
+	struct list_head hook;
+	unsigned long start;
+	unsigned long end;
+};
+
+static LIST_HEAD(mem_list);
+
 extern struct reserve_mgr *get_reserve_mgr(void);
 extern unsigned long long get_reserve_base(void);
 
 void* aml_boot_alloc_mem(size_t size)
 {
-	phys_addr_t buf;
+	phys_addr_t buf = 0;
+	unsigned int page_num, blk_pfn_n;
+	struct mem_block* mem_blk;
+	unsigned long buf_pfn = 0;
+
+	page_num = (size + (1 << PAGE_SHIFT) - 1) >> PAGE_SHIFT;
+
+	list_for_each_entry(mem_blk, &mem_list, hook) {
+		blk_pfn_n = mem_blk->end - mem_blk->start;
+		if (page_num < blk_pfn_n) {
+			buf_pfn = mem_blk->start;
+			mem_blk->start += page_num;
+			break;
+		}
+	}
+	if (buf_pfn) {
+		buf = (phys_addr_t)pfn_to_kaddr(buf_pfn);
+	}
+	pr_info("alloc buf: 0x%x, size: %lu\n", buf, (unsigned long)size);
+	return (void*)buf;
+}
+EXPORT_SYMBOL(aml_boot_alloc_mem);
+
+static int regist_free_memblk(unsigned long start, unsigned long end)
+{
+	struct mem_block* mem_blk;
+	unsigned long s_pfn, e_pfn;
+
+	s_pfn = (start + (1 << PAGE_SHIFT) - 1) >> PAGE_SHIFT;
+	e_pfn = (end + (1 << PAGE_SHIFT) - 1) >> PAGE_SHIFT;
+	list_for_each_entry(mem_blk, &mem_list, hook) {
+		if (!mem_blk)
+			break;
+		if (s_pfn > mem_blk->end || e_pfn < mem_blk->start)
+			continue;
+		if (s_pfn <= mem_blk->start)
+			mem_blk->start = s_pfn;
+		if (e_pfn >= mem_blk->end)
+			mem_blk->end = e_pfn;
+		return 0;
+	}
+
+	mem_blk = kzalloc(sizeof(struct mem_block), GFP_KERNEL);
+	if (!mem_blk)
+		return -ENOMEM;
+
+	mem_blk->start = s_pfn;
+	mem_blk->end = e_pfn;
+
+	list_add(&mem_blk->hook, &mem_list);
+	/*pr_info("reg memblk: 0x%lx ~ 0x%lx\n", start, end);*/
+
+	return 0;
+}
+
+static int __init aml_boot_mem_init(void)
+{
 	struct reserve_mgr* rsv_mgr;
 	struct reserve_mem* prm;
-	unsigned long addr = 0;
+	unsigned long start = 0, end = 0;
 	int i;
 	unsigned long long base_addr;
-
-	if (!alloc_permission) {
-		pr_err("%s can only be useful in booting time\n", __FUNCTION__);
-		return NULL;
-	}
 
 	base_addr = get_reserve_base();
 
 	rsv_mgr = get_reserve_mgr();
 	if (!rsv_mgr)
-		return NULL;
+		return 0;
 
 	for (i = 0; i < rsv_mgr->count; i++) {
 		prm = &rsv_mgr->reserve[i];
-		if ((!(prm->flag & 2)) && prm->size > size) {
-			addr = (unsigned long)(prm->startaddr + base_addr);
-			break;
+		if ((!(prm->flag & 2))) {
+			start = (unsigned long)(prm->startaddr + base_addr);
+			end = (unsigned long)(prm->startaddr +
+					prm->size - 1 + base_addr);
+			regist_free_memblk(start, end);
 		}
 	}
 
-	buf = (phys_addr_t)phys_to_virt(addr);
-	/* pr_info("alloc nosave buffer: 0x%x\n", buf); */
-
-	return (void*)buf;
-}
-EXPORT_SYMBOL(aml_boot_alloc_mem);
-
-static int __init aml_boot_complete(void)
-{
-	alloc_permission = 0;
 	return 0;
 }
-late_initcall(aml_boot_complete);
+core_initcall(aml_boot_mem_init);
+
+#else
+void* aml_boot_alloc_mem(size_t size)
+{
+	return NULL;
+}
+EXPORT_SYMBOL(aml_boot_alloc_mem);
+#endif /* CONFIG_HIBERNATION */

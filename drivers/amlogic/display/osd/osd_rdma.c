@@ -268,6 +268,7 @@ int osd_rdma_enable(u32  enable)
 		msleep(10);
 	}
 	if (enable) {
+		reset_rdma_table();
 		aml_write_reg32(START_ADDR, table_paddr);
 		//enable then start it.
 		OSD_RDMA_STATUS_CLEAR_ALL;
