@@ -1023,21 +1023,7 @@ void set_vx1_pinmux(void)
 
 static void _init_display_driver(Lcd_Config_t *pConf)
 {
-	int lcd_type;
-
-	const char* lcd_type_table[]={
-		"NULL",
-		"TTL",
-		"LVDS",
-		"MINILVDS",
-		"VBYONE",
-		"invalid",
-	};
-
-	lcd_type = pDev->conf.lcd_basic.lcd_type;
-	printk("\nInit LCD type: %s.\n", lcd_type_table[lcd_type]);
-
-	switch(lcd_type){
+	switch (pDev->conf.lcd_basic.lcd_type) {
 		case LCD_DIGITAL_TTL:
 			printk("ttl mode is selected!\n");
 			set_pll_ttl(pConf);
@@ -1424,7 +1410,7 @@ static int lcd_probe(struct platform_device *pdev)
 
 	printk("LCD probe ok\n");
 	vout_register_client(&lcd_mode_notifier_nb_v);
-	_lcd_init(&pDev->conf);
+	//lcd_output_mode_info();
 	lcd_reboot_nb.notifier_call = lcd_reboot_notifier;
 	err = register_reboot_notifier(&lcd_reboot_nb);
 	if (err) {
