@@ -26,6 +26,10 @@
 #include "osd_rdma.h"
 #include <linux/amlogic/amlog.h>
 #include <linux/delay.h>
+#include <linux/spinlock.h>
+
+static DEFINE_MUTEX(rdma_mutex);
+static DEFINE_SPINLOCK(rdma_lock);
 
 static rdma_table_item_t *rdma_table = NULL;
 static u32		   table_paddr = 0;
@@ -58,14 +62,19 @@ void osd_rdma_start(void);
 
 static void inline reset_rdma_table(void)
 {
+	unsigned long flags;
+
+	spin_lock_irqsave(&rdma_lock, flags);
 	aml_write_reg32(END_ADDR, table_paddr - 1);
 	rdma_table[0].addr = OSD_RDMA_FLAG_REG;
 	rdma_table[0].val = OSD_RDMA_STATUS_MARK_TBL_RST;
 	item_count = 1;
+	spin_unlock_irqrestore(&rdma_lock, flags);
 }
 
 static int update_table_item(u32 addr, u32 val)
 {
+	unsigned long flags;
 	int retry_count = OSD_RDMA_UPDATE_RETRY_COUNT;
 retry:
 	//in reject region then we wait for hw rdma operation complete.
@@ -80,17 +89,21 @@ retry:
 	//atom_lock_start:
 	//set write op aotmic lock flag.
 	OSD_RDMA_STAUS_MARK_DIRTY;
+	spin_lock_irqsave(&rdma_lock, flags);
 	item_count++;
 	rdma_table[item_count].addr = OSD_RDMA_FLAG_REG;
 	rdma_table[item_count].val = OSD_RDMA_STATUS_MARK_COMPLETE;
 	aml_write_reg32(END_ADDR, (table_paddr + item_count * 8 + 7));
 	rdma_table[item_count - 1].addr = addr;
 	rdma_table[item_count - 1].val = val;
+	spin_unlock_irqrestore(&rdma_lock, flags);
 	//if dirty flag is cleared, then RDMA hw write and cpu sw write is racing.
 	//if reject flag is true,then hw RDMA hw write start when cpu write.
 	//atom_lock_end:
 	if (!OSD_RDMA_STAUS_IS_DIRTY || OSD_RDMA_STATUS_IS_REJECT) {
+		spin_lock_irqsave(&rdma_lock, flags);
 		item_count--;
+		spin_unlock_irqrestore(&rdma_lock, flags);
 		goto retry ;
 	}
 	return 0;
@@ -238,8 +251,6 @@ int reset_rdma(void)
 	return 0;
 }
 EXPORT_SYMBOL(reset_rdma);
-
-static DEFINE_MUTEX(rdma_mutex);
 
 int osd_rdma_enable(u32  enable)
 {
