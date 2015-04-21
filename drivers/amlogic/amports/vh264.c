@@ -547,7 +547,7 @@ static void vh264_ppmgr_reset(void)
     printk("vh264dec: vf_ppmgr_reset\n");
 }
 #endif
-static int get_max_dpb_size(int max_dpb_size, int level_idc, int mb_width, int mb_height)
+static int get_max_dpb_size(int level_idc, int mb_width, int mb_height)
 {
     int size, r;
     switch (level_idc) {
@@ -584,16 +584,16 @@ static int get_max_dpb_size(int max_dpb_size, int level_idc, int mb_width, int m
         r = 414000;
         break;
       case 51:
+      case 52:
         r = 691200;
         break;
       default:
-        return max_dpb_size;
+        return 0;
     }
     size = (mb_width * mb_height + (mb_width * mb_height / 2)) * 256 * 10;
     r = (r * 1024 + size-1) / size;
     r = min(r, 16);
-    r = min(r, max_dpb_size);
-    printk("max_dpb %d->%d size:%d\n", max_dpb_size, r, size);
+    printk("max_dpb %d size:%d\n", r, size);
     return r;
 }
 
@@ -677,51 +677,20 @@ static int vh264_set_params(void)
         return -1;  
     }
 
-    max_dpb_size = (frame_buffer_size - mb_total * 384 * 4 - mb_total * mb_mv_byte) / (mb_total * 384 + mb_total * mb_mv_byte);
-    if (max_reference_size <= max_dpb_size) {
-        max_dpb_size = MAX_DPB_BUFF_SIZE / (mb_total * 384);
-        if (max_dpb_size > 16) {
-            max_dpb_size = 16;
-        }
-
-        if (max_refer_buf && (max_reference_size < max_dpb_size)) {
-            max_reference_size = max_dpb_size + 1;
-        } else {
-            max_dpb_size = max_reference_size;
-            max_reference_size++;
-        }
-    } else {
-        max_dpb_size = max_reference_size;
-        max_reference_size++;
-    }
-
-    if (mb_total * 384 * (max_dpb_size + 3) + mb_total * mb_mv_byte * max_reference_size > frame_buffer_size) {
-        max_dpb_size = (frame_buffer_size - mb_total * 384 * 3 - mb_total * mb_mv_byte) / (mb_total * 384 + mb_total * mb_mv_byte);
-        max_reference_size = max_dpb_size + 1;
-    }
-
+    // max_reference_size <= max_dpb_size <= actual_dpb_size
     actual_dpb_size = (frame_buffer_size - mb_total * mb_mv_byte * max_reference_size) / (mb_total * 384);
-    if (actual_dpb_size > 24) {
-        actual_dpb_size = 24;
+    actual_dpb_size = min(actual_dpb_size, 24);
+
+    max_dpb_size = get_max_dpb_size(level_idc, mb_width, mb_height);
+    if (max_dpb_size == 0) {
+        max_dpb_size = actual_dpb_size;
+    } else {
+        max_dpb_size = min(max_dpb_size, actual_dpb_size);
     }
 
-    if (max_dpb_size > 5) {
-        if (actual_dpb_size < max_dpb_size + 3) {
-            actual_dpb_size = max_dpb_size + 3;
-        if (actual_dpb_size > 24) {
-            actual_dpb_size = 24;
-        }
-            max_reference_size = (frame_buffer_size - mb_total * 384 * actual_dpb_size) / (mb_total * mb_mv_byte);
-        }
-    } else {
-        if (actual_dpb_size < max_dpb_size + 4) {
-            actual_dpb_size = max_dpb_size + 4;
-        if (actual_dpb_size > 24) {
-            actual_dpb_size = 24;
-        }
-            max_reference_size = (frame_buffer_size - mb_total * 384 * actual_dpb_size) / (mb_total * mb_mv_byte);
-        }
-    }
+    max_reference_size = min(max_reference_size, actual_dpb_size-1);
+    max_dpb_size = max(max_reference_size, max_dpb_size);
+    max_reference_size++;
 
     if (!(READ_VREG(AV_SCRATCH_F) & 0x1)) {
         addr = buf_start;
@@ -965,8 +934,8 @@ static int vh264_set_params(void)
     WRITE_VREG(AV_SCRATCH_3, post_canvas); // should be modified later
     addr += mb_total * mb_mv_byte * max_reference_size;
     WRITE_VREG(AV_SCRATCH_4, addr);
-    max_dpb_size = get_max_dpb_size(max_dpb_size, level_idc, mb_width, mb_height);
     WRITE_VREG(AV_SCRATCH_0, (max_reference_size << 24) | (actual_dpb_size << 16) | (max_dpb_size << 8));
+
     return 0;
 }
 
