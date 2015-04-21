@@ -93,7 +93,10 @@ void cec_hw_reset(void)
 
 int cec_rx_buf_check(void)
 {
-    if (0xf == aocec_rd_reg(CEC_RX_NUM_MSG))
+    unsigned long rx_num_msg = aocec_rd_reg(CEC_RX_NUM_MSG);
+
+    hdmi_print(INF, CEC "rx msg num:0x%02x\n", rx_num_msg);
+    if (0xf == rx_num_msg)
     {
         aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x1);
         aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x0);
