@@ -535,6 +535,7 @@ void dumpaocecreg(void);
 void raocec(unsigned int addr);
 void waocec(unsigned int addr, unsigned int value);
 int cec_rx_buf_check(void);
+void cec_rx_buf_clear(void);
 void cec_hw_reset(void);
 
 unsigned int dispatch_buffer_parse(const char *buf, const char *string,  char *param, size_t count);

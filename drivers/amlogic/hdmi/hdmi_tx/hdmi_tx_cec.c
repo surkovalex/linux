@@ -140,7 +140,9 @@ static void hdmitx_cec_early_suspend(struct early_suspend *h)
 static void hdmitx_cec_late_resume(struct early_suspend *h)
 {
     cec_enable_irq();
-    cec_rx_buf_check();
+    if (cec_rx_buf_check()) {
+        cec_rx_buf_clear();
+    }
     hdmitx_device->hpd_state = hdmitx_device->HWOp.CntlMisc(hdmitx_device, MISC_HPD_GPI_ST, 0);
     if (!hdmitx_device->hpd_state)
     { //if none HDMI out,no CEC features.
@@ -391,6 +393,15 @@ static enum hrtimer_restart cec_late_check_rx_buffer(struct hrtimer *timer)
         /*
          * start another check if rx buffer is full
          */
+        if ((-1) == cec_ll_rx(rx_msg, &rx_len)) {
+            hdmi_print(INF, CEC, "buffer got unrecorgnized msg\n");
+            cec_rx_buf_clear();
+        } else {
+            register_cec_rx_msg(rx_msg, rx_len);
+            queue_work(cec_workqueue, &hdmitx_device->cec_work);
+        }
+    }
+    if (hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) {
         hrtimer_start(&cec_late_timer, ktime_set(0, 384*1000*1000), HRTIMER_MODE_REL);
     }
 
@@ -422,8 +433,10 @@ static void cec_task(struct work_struct *work)
     if (!hdmitx_device->hpd_state) {
         hdp_status = 0;
     }
-    /* start timer for late cec rx buffer check */
-    hrtimer_start(&cec_late_timer, ktime_set(0, 384*1000*1000), HRTIMER_MODE_REL);
+    if (hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) {
+        /* start timer for late cec rx buffer check */
+        hrtimer_start(&cec_late_timer, ktime_set(0, 384*1000*1000), HRTIMER_MODE_REL);
+    }
 }
 
 /***************************** cec low level code end *****************************/

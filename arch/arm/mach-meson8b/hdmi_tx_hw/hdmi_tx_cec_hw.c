@@ -91,19 +91,21 @@ void cec_hw_reset(void)
 
 }
 
+void cec_rx_buf_clear(void)
+{
+    aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x1);
+    aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x0);
+    hdmi_print(INF, CEC "rx buf clean\n");
+}
+
 int cec_rx_buf_check(void)
 {
     unsigned long rx_num_msg = aocec_rd_reg(CEC_RX_NUM_MSG);
 
-    hdmi_print(INF, CEC "rx msg num:0x%02x\n", rx_num_msg);
-    if (0xf == rx_num_msg)
-    {
-        aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x1);
-        aocec_wr_reg(CEC_RX_CLEAR_BUF, 0x0);
-        hdmi_print(INF, CEC "rx buf clean\n");
-        return 1;
-    }
-    return 0;
+    if (rx_num_msg)
+        hdmi_print(INF, CEC "rx msg num:0x%02x\n", rx_num_msg);
+
+    return rx_num_msg;
 }
 
 int cec_ll_rx( unsigned char *msg, unsigned char *len)
@@ -111,10 +113,12 @@ int cec_ll_rx( unsigned char *msg, unsigned char *len)
     int i;
     int ret = -1;
     int pos;
+    int rx_stat;
 
-    if ((RX_DONE != aocec_rd_reg(CEC_RX_MSG_STATUS)) || (1 != aocec_rd_reg(CEC_RX_NUM_MSG)))
+    rx_stat = aocec_rd_reg(CEC_RX_MSG_STATUS);
+    if ((RX_DONE != rx_stat) || (1 != aocec_rd_reg(CEC_RX_NUM_MSG)))
     {
-        //cec_rx_buf_check();
+        hdmi_print(INF, CEC, "rx status:%x\n", rx_stat);
         aml_write_reg32(P_AO_CEC_INTR_CLR, aml_read_reg32(P_AO_CEC_INTR_CLR) | (1 << 2));
         aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
         aocec_wr_reg(CEC_RX_MSG_CMD,  RX_NO_OP);
@@ -122,18 +126,18 @@ int cec_ll_rx( unsigned char *msg, unsigned char *len)
     }
 
     *len = aocec_rd_reg(CEC_RX_MSG_LENGTH) + 1;
-printk("--------------rx start::\n");
     for (i = 0; i < (*len) && i < MAX_MSG; i++)
     {
         msg[i]= aocec_rd_reg(CEC_RX_MSG_0_HEADER +i);
     }
 
-    ret = aocec_rd_reg(CEC_RX_MSG_STATUS);
+    ret = rx_stat;
 
     if (cec_msg_dbg_en  == 1)
     {
         pos = 0;
-        pos += sprintf(msg_log_buf + pos, "CEC: rx msg len: %d   dat: ", *len);
+        pos += sprintf(msg_log_buf + pos, "CEC[%d]: rx msg len: %d   dat: ",
+                       cec_global_info.my_node_index, *len);
         for (i = 0; i < (*len); i++)
         {
             pos += sprintf(msg_log_buf + pos, "%02x ", msg[i]);
@@ -145,7 +149,7 @@ printk("--------------rx start::\n");
 
     //cec_rx_buf_check();
     aml_write_reg32(P_AO_CEC_INTR_CLR, aml_read_reg32(P_AO_CEC_INTR_CLR) | (1 << 2));
-    aocec_wr_reg(CEC_RX_MSG_CMD,  RX_ACK_CURRENT);
+    aocec_wr_reg(CEC_RX_MSG_CMD, RX_ACK_NEXT);
     aocec_wr_reg(CEC_RX_MSG_CMD, RX_NO_OP);
 
     return ret;
