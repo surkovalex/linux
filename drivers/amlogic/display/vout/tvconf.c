@@ -425,8 +425,8 @@ static const vinfo_t tv_info[] =
         .field_height	   = 1080,
         .aspect_ratio_num  = 16,
         .aspect_ratio_den  = 9,
-        .sync_duration_num = 2397,
-        .sync_duration_den = 100,
+        .sync_duration_num = 24000,
+        .sync_duration_den = 1001,
         .video_clk		   = 74250000,
 	},
 #endif
@@ -489,8 +489,8 @@ static const vinfo_t tv_info[] =
         .field_height	   = 2160,
         .aspect_ratio_num  = 16,
         .aspect_ratio_den  = 9,
-        .sync_duration_num = 2397,
-        .sync_duration_den = 100,
+        .sync_duration_num = 24000,
+        .sync_duration_den = 1001,
         .video_clk         = 297000000,
     },
 #endif
