@@ -202,7 +202,8 @@ static int detect_tv_support_cec(unsigned addr)
     ret = cec_ll_tx_polling(msg, 1);
     cec_hw_reset();
     hdmi_print(INF, CEC "tv%s have CEC feature\n", ret ? " " : " don\'t ");
-    return (hdmitx_device->tv_cec_support = ret);
+    hdmitx_device->tv_cec_support = (ret == TX_DONE) ? 1 : 0;
+    return hdmitx_device->tv_cec_support;
 }
 
 void cec_node_init(hdmitx_dev_t* hdmitx_device)
@@ -216,6 +217,7 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
                                                    };
 
     unsigned long cec_phy_addr;
+    unsigned int reg;
 
     if ((hdmitx_device->cec_init_ready == 0) || (hdmitx_device->hpd_state == 0))
     {   // If no connect, return directly
@@ -316,6 +318,14 @@ void cec_node_init(hdmitx_dev_t* hdmitx_device)
 
             cec_global_info.cec_node_info[cec_global_info.my_node_index].power_status = TRANS_STANDBY_TO_ON;
             cec_global_info.my_node_index = player_dev[i];
+            /*
+             * use DEBUG_REG1 bit 16 ~ 31 to save logic address.
+             * So uboot can use this logic address directly
+             */
+            reg  = (aml_read_reg32(P_AO_DEBUG_REG1) & 0xffff);
+            reg |= player_dev[i] << 16;
+            aml_write_reg32(P_AO_DEBUG_REG1, reg);
+
             aml_write_reg32(P_AO_DEBUG_REG3, aml_read_reg32(P_AO_DEBUG_REG3) | (cec_global_info.my_node_index & 0xf));
             cec_global_info.cec_node_info[player_dev[i]].log_addr = player_dev[i];
             // Set Physical address
