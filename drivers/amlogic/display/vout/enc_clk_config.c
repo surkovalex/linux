@@ -447,20 +447,26 @@ static void set_hdmi_tx_pixel_div(unsigned div)
 {
     check_div();
     WRITE_CBUS_REG_BITS(HHI_HDMI_CLK_CNTL, div, 16, 4);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 5, 1);
+#endif
 }
 static void set_encp_div(unsigned div)
 {
     check_div();
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_DIV, div, 24, 4);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 2, 1);
+#endif
 }
 
 static void set_enci_div(unsigned div)
 {
     check_div();
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_DIV, div, 28, 4);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 0, 1);
+#endif
 }
 
 static void set_enct_div(unsigned div)
@@ -473,14 +479,18 @@ static void set_encl_div(unsigned div)
 {
     check_div();
     WRITE_CBUS_REG_BITS(HHI_VIID_CLK_DIV, div, 12, 4);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 3, 1);
+#endif
 }
 
 static void set_vdac0_div(unsigned div)
 {
     check_div();
     WRITE_CBUS_REG_BITS(HHI_VIID_CLK_DIV, div, 28, 4);
+#if MESON_CPU_TYPE >= MESON_CPU_TYPE_MESON8
     WRITE_CBUS_REG_BITS(HHI_VID_CLK_CNTL2, 1, 4, 1);
+#endif
 }
 
 static void set_vdac1_div(unsigned div)
