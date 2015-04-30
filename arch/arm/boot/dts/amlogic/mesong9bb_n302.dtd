@@ -82,27 +82,19 @@
 //$$ L2 PROP_U32 = "aml_reserved_end"
 //$$ L2 PROP_U32 6 = "linux,usable-memory"
 	memory {
-		#address-cells = <1>;
-		#size-cells = <1>;
 		device_type = "memory";
 		aml_reserved_start = <0x06000000>; /**reserved memory start */
-		aml_reserved_end = <0x05000000>; /** reserved memory end : dtb start for uboot */
+		aml_reserved_end = <0x05000000>;/**reserved memory end : dtb start for uboot*/
 		phys_offset = <0x00200000>;
 		linux,total-memory = <0x3fe00000>; // 1G reference m8b
+        #address-cells = <1>;
+        #size-cells = <1>;
 
-		//$$ DEVICE="mem_4k2k_decoder"
-		//$$ L3 PROP_U32 2 ="reg"
-		mem_4k2k_decoder: region@1 {
-			region_name = "cma_4k2k";
-			linux,contiguous-region;
-			reg = <0x00000000 0x0ca00000>;
-		};
-
-		cma_0:region@0 {
-			region_name = "cma_0";
-           reg = <0 0x02400000>;
-			linux,contiguous-region;
-		};
+        cma_0:region@0 {
+           region_name = "cma_0";
+           reg = <0 0x01200000>;
+           linux,contiguous-region;
+        };
 	};
 
 
@@ -702,19 +694,16 @@
 //$$ DEVICE="vpu"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_U32 = "clk_level"
-	vpu{
+    vpu{
 		compatible = "amlogic,vpu";
 		dev_name = "vpu";
 		status = "ok";
 		clk_level = <3>;
-		/**	0: 106.25M	1: 127.5M
-			2: 159.4M	3: 212.5M	*/
-		};
+		/**    	0: 106.25M		1: 127.5M		2: 159.375M
+				3: 182.15M		4: 212.5M	 */
+	};
 
-
-
-
-/// ****************************************************************************
+/// **************************************************************************************
 /// -   DISP&MM-FB
 //$$ MODULE = "DISP&MM-FB"
 //$$ DEVICE = "mesonfb"
@@ -723,31 +712,43 @@
 //$$ L2 PROP_U32 = "vmode"
 //$$ L2 PROP_U32 5 = "display_size_default"
 	mesonfb{
-		compatible = "amlogic,mesonfb";
-		dev_name = "mesonfb";
-		status = "okay";
-		reserve-memory = <0x01800000  0x00100000>;
-		reserve-iomap = "true";
-		vmode = <3>;
-		/**	0:VMODE_720P
-			1:VMODE_LCD
-			2:VMODE_LVDS_1080P
-			3:VMODE_1080P*/
-		scale_mode = <1>; /*0:default 1:new*/
-		4k2k_fb = <0>;
-		display_size_default = <1920 1080 1920 3240 32>;
-		/** 1920*1080*4*3 = 0x17BB000 **/
+			compatible = "amlogic,mesonfb";
+			dev_name = "mesonfb";
+			status = "okay";
+			reserve-memory = <0x01800000  0x00100000>;
+			reserve-iomap = "true";
+			vmode = <3>; /**0:VMODE_720P 1:VMODE_LCD  2:VMODE_LVDS_1080P 3:VMODE_1080P*/
+			scale_mode = <1>; /*0:default 1:new*/
+			4k2k_fb = <0>;
+			display_size_default = <1920 1080 1920 3240 32>; //1920*1080*4*3 = 0x17BB000
+			};
+
+	continuemem{
+                compatible = "amlogic,contimuemem";
+                dev_name = "contimuemem";
+                reserve-memory = <0x06100000>; // 88M deinterlace+vdec
 	};
 
 
+//$$ DEVICE="deinterlace"
+//$$ L2 PROP_STR = "status"
+//$$ L2 PROP_U32 2 = "reg"
+	deinterlace{
+		compatible = "amlogic,deinterlace";
+		dev_name = "deinterlace";
+		status = "ok";
+		share-memory-name = "continuemem0";
+                share-memory-offset = <0>;
+		reserve-memory = <0x02100000>; //10x1920x1088x3/2=33M
+	};
 
-/// ****************************************************************************
+/// ***************************************************************************************
 ///	-	DISP&MM-A/V stream
 //$$ MODULE = "DISP&MM-A/V stream"
 //$$ DEVICE="mesonstream"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 4 ="reg"
-	mesonstream {
+	mesonstream{
 		compatible = "amlogic,mesonstream";
 		dev_name = "mesonstream.0";
 		status = "okay";
@@ -755,50 +756,44 @@
 		//reserve-iomap = "true";
 	};
 
-
-
-
-/// ****************************************************************************
-///	-	DISP&MM-A/V video dec
-// MODULE = "DISP&MM-A/V video dec"
-// DEVICE = "vdec"
-// L2 PROP_STR = "status"
-// L3 PROP_U32 4 ="reg"
-	vdec {
-		compatible = "amlogic,vdec";
-		dev_name = "vdec.0";
-		status = "okay";
-		reserve-memory = <0x04000000>; // 64M
-		//reserve-iomap = "true";
-		linux,contiguous-region = <&mem_4k2k_decoder>;
-	};
-
-
-
-/// ****************************************************************************
+/// ***************************************************************************************
+///     -       DISP&MM-A/V stream
+//$$ MODULE = "DISP&MM-A/V video dec"
+//$$ DEVICE="vdec"
+//$$ L2 PROP_STR = "status"
+//$$ L3 PROP_U32 4 ="reg"
+        vdec{
+                compatible = "amlogic,vdec";
+                dev_name = "vdec.0";
+                status = "okay";
+                share-memory-name = "continuemem0";
+                share-memory-offset = <0x02100000>;
+                share-memory-size = <0x04000000>; //64M
+//		reserve-iomap = "true";
+        };
 ///	-	picture decoder
 //$$ MODULE="picture decoder"
 //$$ DEVICE="picdec"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-	picdec {
+    picdec{
 		compatible = "amlogic,picdec";
 		dev_name = "picdec";
 		status = "okay";
-		share-memory-name = "vdec0";
-		share-memory-offset = <0>;
-		share-memory-size = <0x04000000>; //64M
+                share-memory-name = "continuemem0";
+                share-memory-offset = <0x02100000>;
+                share-memory-size = <0x04000000>; //64M
 	};
 
 
 
-/// ****************************************************************************
+/// ***************************************************************************************
 ///	-	DISP&MM-PostProcess
 //$$ MODULE="DISP&MM-PostProcess"
 //$$ DEVICE="ppmgr"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-	ppmgr {
+    ppmgr{
 		compatible = "amlogic,ppmgr";
 		dev_name = "ppmgr";
 		status = "okay";
@@ -807,34 +802,19 @@
 
 
 
-/// ****************************************************************************
+/// ***************************************************************************************
 ///	-	DISP&MM-AVC Video Encoder
 //$$ MODULE = "DISP&MM-AVC Video Encoder"
 //$$ DEVICE="amvenc_avc"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-	amvenc_avc{
+    amvenc_avc{
 		compatible = "amlogic,amvenc_avc";
 		dev_name = "amvenc_avc.0";
 		status = "okay";
 		linux,contiguous-region = <&cma_0>;
+		reserve-iomap = "true";
 	};
-
-
-/// ****************************************************************************
-///	-	deinterlace
-// DEVICE="deinterlace"
-// L2 PROP_STR = "status"
-// L2 PROP_U32 2 = "reg"
-	deinterlace{
-		compatible = "amlogic,deinterlace";
-		dev_name = "deinterlace";
-		status = "ok";
-		reserve-memory = <0x02200000>;
-		/** 10x(1920x1088x(3/2+1/5)+1088)=34M **/
-	};
-
-
 
 /// ****************************************************************************
 ///	-	DISP&MM-VDIN
@@ -849,7 +829,6 @@
 		dev_name = "vdin0";
 		status = "ok";
 		reserve-memory = <0x01000000>;
-		reserve-iomap = "true";
 		max_size = <1920 1080>;//1920x1080x2x4=17M
 		irq = <115>;
 		vdin_id = <0>;
@@ -865,7 +844,6 @@
 		dev_name = "vdin1";
 		status = "ok";
 		reserve-memory = <0x01000000>;
-		reserve-iomap = "true";
 		miracast_size = <1920 1080>;//1920x1080x2x4=17M
 		irq = <117>;
 		vdin_id = <1>;
@@ -894,13 +872,14 @@
 //$$ DEVICE="amlvideo2"
 //$$ L2 PROP_STR = "status"
 //$$ L3 PROP_U32 2 ="reg"
-    amlvideo2{
-        compatible = "amlogic,amlvideo2";
-        dev_name = "amlvideo2.0";
-        status = "okay";
-        reserve-memory = <0x01800000>;
-        reserve-iomap = "true";
-    };
+//    amlvideo2{
+//		compatible = "amlogic,amlvideo2";
+//		dev_name = "amlvideo2.0";
+//		status = "okay";
+//		reserve-memory = <0x01800000>;
+//		reserve-iomap = "true";
+//	};
+
 
 /// ****************************************************************************
 ///	-	ION
@@ -926,21 +905,6 @@
 		dev_name = "mesonvout";
 		status = "okay";
 	};
-
-/// ***************************************************************************************
-///	-	DISP&MM-A/V Amvideocap
-//$$ MODULE = "DISP&MM-Amvideocap"
-//$$ DEVICE="amvideocap"
-//$$ L2 PROP_STR = "status"
-//$$ L3 PROP_U32 4 ="reg"
-	amvideocap{
-		compatible = "amlogic,amvideocap";
-		dev_name = "amvideocap.0";
-		status = "okay";
-		reserve-memory = <0x00800000>;//1920*1088*4
-		reserve-iomap = "true";
-	};
-
 
 ///*****************************************************************************
 ///	-	AMLOGIC-PMU
