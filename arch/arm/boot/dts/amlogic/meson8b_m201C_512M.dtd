@@ -161,7 +161,7 @@ void root_func(){
 		dev_name = "mesonstream.0";
 		status = "okay";
 		reserve-memory = <0x00800000>;//10M,you can use 8M if memory isn't enough
-		//reserve-iomap = "true";
+		reserve-iomap = "true";
 	};
 
 /// ***************************************************************************************
@@ -175,7 +175,7 @@ void root_func(){
                 dev_name = "vdec.0";
                 status = "okay";
 								reserve-memory = <0x04000000>; // 64M
-//		reserve-iomap = "true";
+		reserve-iomap = "true";
         };
 ///	-	picture decoder
 //$$ MODULE="picture decoder"
