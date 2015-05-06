@@ -68,10 +68,15 @@
 #define RATE_24_FPS  4004   /* 23.97 */
 #define RATE_25_FPS  3840   /* 25 */
 #define RATE_30_FPS  3203   /* 29.97 */
+
 #define DUR2PTS(x) ((x)*90/96)
 #define PTS2DUR(x) ((x)*96/90)
 #define DUR2PTS_REM(x) (x*90 - DUR2PTS(x)*96)
-#define FIX_FRAME_RATE_CHECK_IDRFRAME_NUM 3
+#define FIX_FRAME_RATE_CHECK_IFRAME_NUM 2
+
+#define FIX_FRAME_RATE_OFF                0
+#define FIX_FRAME_RATE_ON                 1
+#define FIX_FRAME_RATE_SMOOTH_CHECKING    2
 
 static inline bool close_to(int a, int b, int m)
 {
@@ -114,6 +119,9 @@ static DEFINE_MUTEX(vh264_mutex);
 
 #define DEC_CONTROL_FLAG_FORCE_2997_1080P_INTERLACE 0x0001
 #define DEC_CONTROL_FLAG_FORCE_2500_576P_INTERLACE  0x0002
+
+#define DEC_CONTROL_FLAG_FORCE_RATE_2397_FPS_FIX_FRAME_RATE  0x0010
+#define DEC_CONTROL_FLAG_FORCE_RATE_2997_FPS_FIX_FRAME_RATE  0x0020
 
 #define INCPTR(p) ptr_atomic_wrap_inc(&p)
 
@@ -172,7 +180,7 @@ static const struct vframe_operations_s vh264_vf_provider_ops = {
 static struct vframe_provider_s vh264_vf_prov;
 
 static u32 frame_buffer_size;
-static u32 frame_width, frame_height, frame_dur, frame_prog, frame_packing_type, last_duration;
+static u32 frame_width, frame_height, frame_dur, frame_prog, frame_packing_type;
 static u32 last_mb_width, last_mb_height;
 
 static DECLARE_KFIFO(newframe_q, vframe_t *, VF_POOL_SIZE);
@@ -190,6 +198,7 @@ static u32 buf_start, buf_size;
 static s32 buf_offset;
 static u32 ucode_map_start;
 static u32 pts_outside = 0;
+static u32 pts_unstable = 0;
 static u32 sync_outside = 0;
 static u32 dec_control = 0;
 static u32 vh264_ratio;
@@ -199,7 +208,8 @@ static u32 use_idr_framerate = 0;
 static u32 seq_info;
 static u32 timing_info_present_flag;
 static u32 fixed_frame_rate_flag;
-static u32 fixed_frame_rate_check_count;
+static u32 fixed_frame_rate_mode;
+static u32 iframe_count;
 static u32 aspect_ratio_info;
 static u32 num_units_in_tick;
 static u32 time_scale;
@@ -210,7 +220,8 @@ static u32 last_interlaced;
 static unsigned char h264_first_pts_ready;
 static bool h264_first_valid_pts_ready;
 static u32 h264pts1, h264pts2;
-static u32 h264_pts_count, duration_from_pts_done,duration_on_correcting;
+static u32 pts_duration;
+static u32 h264_pts_count, duration_from_pts_done,last_checkout_pts;
 static u32 vh264_error_count;
 static u32 vh264_no_disp_count;
 static u32 fatal_error_flag;
@@ -622,7 +633,6 @@ static int vh264_set_params(void)
     mb_mv_byte = (mb_width & 0x80000000) ? 24 : 96;
     mb_width = mb_width & 0xff;
     mb_height = mb_total / mb_width;
-    last_duration=0;
 
     /* AV_SCRATCH_2
        bit 15: frame_mbs_only_flag
@@ -855,6 +865,14 @@ static int vh264_set_params(void)
         printk("H.264: timing_info not present\n");
     }
 
+    if (pts_unstable && (fixed_frame_rate_flag == 0)) {
+        if (((RATE_24_FPS == frame_dur) && (dec_control & DEC_CONTROL_FLAG_FORCE_RATE_2397_FPS_FIX_FRAME_RATE)) ||
+            ((RATE_30_FPS == frame_dur) && (dec_control & DEC_CONTROL_FLAG_FORCE_RATE_2997_FPS_FIX_FRAME_RATE))) {
+            printk("force fix frame rate\n");
+            fixed_frame_rate_flag = 0x40;
+        }
+    }
+
     if (aspect_ratio_info_present_flag) {
         if (aspect_ratio_idc == EXTEND_SAR) {
             //printk("v264dec: aspect_ratio_idc = EXTEND_SAR, aspect_ratio_info = 0x%x\n", aspect_ratio_info);
@@ -966,7 +984,7 @@ static void vh264_isr(void)
     unsigned int buffer_index;
     vframe_t *vf;
     unsigned int cpu_cmd;
-    unsigned int pts,pts_lookup_save,pts_valid_save, pts_valid = 0, pts_duration = 0;
+    unsigned int pts,pts_lookup_save,pts_valid_save, pts_valid = 0;
     u64 pts_us64;
     bool force_interlaced_frame = false;
     unsigned int sei_itu35_flags;
@@ -1114,20 +1132,20 @@ static void vh264_isr(void)
             }
 
             /* on second IDR frame,check the diff between pts compute from duration and pts from lookup ,
-             * if large than frame_dur,we think it is uncorrect.
+             * if large than frame_dur,we think it is incorrect.
              */
             pts_lookup_save = pts;
             pts_valid_save = pts_valid;
-            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
-                if (idr_flag && pts_valid) {
-                    fixed_frame_rate_check_count ++ ;
-                    //printk("diff:%d\n",last_pts - pts_lookup_save);
-                    if ((fixed_frame_rate_check_count == FIX_FRAME_RATE_CHECK_IDRFRAME_NUM) && (abs(pts - (last_pts + DUR2PTS(frame_dur))) > DUR2PTS(frame_dur))) {
-                        fixed_frame_rate_flag = 0;
+            if (fixed_frame_rate_mode == FIX_FRAME_RATE_SMOOTH_CHECKING && iframe_count <= FIX_FRAME_RATE_CHECK_IFRAME_NUM) {
+                if (slice_type == SLICE_TYPE_I && pts_valid) {
+                    iframe_count ++;
+                    if (abs(pts - (last_pts + DUR2PTS(frame_dur))) > DUR2PTS(2*frame_dur)) {
+                        fixed_frame_rate_mode = FIX_FRAME_RATE_OFF;
                         printk("pts sync mode play\n");
                     }
-
-                    if (fixed_frame_rate_flag && (fixed_frame_rate_check_count > FIX_FRAME_RATE_CHECK_IDRFRAME_NUM)) {
+                    if ((fixed_frame_rate_mode == FIX_FRAME_RATE_SMOOTH_CHECKING) &&
+                        (iframe_count >= FIX_FRAME_RATE_CHECK_IFRAME_NUM )) {
+                        fixed_frame_rate_mode = FIX_FRAME_RATE_ON;
                         printk("fix_frame_rate mode play\n");
                     }
                 }
@@ -1154,73 +1172,63 @@ static void vh264_isr(void)
                         kfifo_put(&recycle_q, (const vframe_t **)&vf);
                         continue;
                     }
-
-                    h264pts1 = pts;
-                    h264_pts_count = 0;
                     h264_first_pts_ready = 1;
-                } else {
+                }
 
-                    if (pts_valid && (pts > h264pts1) && h264_pts_count > 24) {
-                        if (duration_from_pts_done == 0) {
-                            unsigned int old_duration=frame_dur;
-                            h264pts2 = pts;
+                if (duration_from_pts_done == 0) {
+                    //printk("@@@%d,%d\n",pts - last_checkout_pts,slice_type);
+                    if (slice_type == SLICE_TYPE_I && h264_pts_count == 0) {
+                        h264pts1 = pts;
+                        h264_pts_count = 2;
+                    }
+                    // checkout pts jump happen,reset calculate
+                    if (h264_pts_count >0 && (abs(pts - last_checkout_pts) > DUR2PTS(frame_dur)*3)) {
+                        printk("checkout pts jump,reset frame rate calculate:%d,%d\n",pts,last_checkout_pts);
+                        h264pts1 = pts;
+                        h264_pts_count = 0;
+                    }
 
-                            pts_duration = (h264pts2 - h264pts1) * 16 / (h264_pts_count * 15);
+                    if (pts_valid && (pts > h264pts1) && h264_pts_count > 48 && slice_type == SLICE_TYPE_I) {
+                        h264pts2 = pts;
 
-                            if ((pts_duration != frame_dur) && (!pts_outside)) {
-                                if (use_idr_framerate) {
-                                    if ((close_to(pts_duration, RATE_24_FPS, RATE_CORRECTION_THRESHOLD) &&
-                                         close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD))
-                                         || (close_to(pts_duration, RATE_25_FPS, RATE_CORRECTION_THRESHOLD) &&
-                                             close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD))
-                                         || (close_to(pts_duration, RATE_30_FPS, RATE_CORRECTION_THRESHOLD) &&
-                                             close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD))) {
-                                        printk("----H.264: Correct frame duration from %d to duration based on PTS %d ---\n",
-                                                frame_dur, pts_duration);
-                                        frame_dur = pts_duration;
-                                        duration_from_pts_done = 1;
-                                        //printk("used calculate frame rate,on frame_dur problem=%d\n",frame_dur);
-                                    } else if (((frame_dur<96000/240) && (pts_duration>96000/240)) || 
-                                        (!duration_on_correcting && (!close_to(frame_dur, RATE_25_FPS, RATE_CORRECTION_THRESHOLD)) && (!close_to(frame_dur, RATE_24_FPS, RATE_CORRECTION_THRESHOLD)))){//fft: if the frame rate is not regular, use the calculate rate insteadof.
-                                        printk("H.264: Correct frame duration from %d to duration based on PTS %d\n",
-                                                frame_dur, pts_duration);
-                                        frame_dur = pts_duration;
-                                        //printk("used calculate frame rate,on frame_dur error=%d\n",frame_dur);
-                                        duration_on_correcting=1;
-                                    }
+                        if (pts_duration == 0) {
+                            pts_duration = (h264pts2 - h264pts1) * 16 * 2 / ((h264_pts_count - 2) * 15);
+                            printk("pts_duration:%d,frame_dur=%d\n",pts_duration,frame_dur);
+
+                            // 24FPS - 25FPS,4000-3840=160
+                            if (close_to(pts_duration, frame_dur, 160)) {
+                                // keep use frame_dur
+                                duration_from_pts_done = 1;
+                                if (use_idr_framerate || (fixed_frame_rate_flag != 0)) {
+                                    fixed_frame_rate_mode = FIX_FRAME_RATE_SMOOTH_CHECKING;
+                                    iframe_count = 0;
+                                }
+                            } else { // start second time caculate
+                                h264pts1 = pts;
+                                h264_pts_count = 2;
+                            }
+                        } else { // second time caculate result
+                            u32 new_pts_duration = (h264pts2 - h264pts1) * 16 * 2 / ((h264_pts_count - 2) * 15);
+                            printk("new_pts_duration:%d,frame_dur=%d\n",new_pts_duration,frame_dur);
+
+                            if (close_to(pts_duration,new_pts_duration,5)) {
+                                frame_dur = (pts_duration + new_pts_duration)/2;
+                                if (use_idr_framerate || (fixed_frame_rate_flag != 0)) {
+                                    fixed_frame_rate_mode = FIX_FRAME_RATE_SMOOTH_CHECKING;
+                                    iframe_count = 0;
                                 } else {
-                                    if (close_to(pts_duration, frame_dur, 2000)) {
-                                        frame_dur = pts_duration;
-                                        printk("used calculate frame rate,on duration =%d\n", frame_dur);
-                                    } else {
-                                        printk("don't use calculate frame rate pts_duration =%d\n", pts_duration);
-                                    }
+                                    printk("incorrect duration,pts mode play\n");
                                 }
                             }
-
-                            if (duration_from_pts_done == 0) {
-                                if (close_to(pts_duration, old_duration, RATE_CORRECTION_THRESHOLD)) {
-                                    printk("finished correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
-                                    duration_from_pts_done = 1;
-                                }
-                                else{/*not the same,redo it.*/
-                                    if (!close_to(pts_duration, old_duration, 1000) &&
-                                        !close_to(pts_duration, frame_dur, 1000) &&
-                                        close_to(pts_duration, last_duration, 200))	// yangle: frame_dur must wrong,recover it.
-                                        frame_dur=pts_duration;
-
-                                    printk("restart correct frame duration new=%d,old_duration=%d,cnt=%d\n",pts_duration,old_duration,h264_pts_count);
-                                    h264pts1 = h264pts2;
-                                    h264_pts_count = 0;
-                                    duration_from_pts_done = 0;
-                                }
-                            }
-                            last_duration=pts_duration;
+                            duration_from_pts_done = 1;
                         }
                     }
                 }
 
-                h264_pts_count++;
+                last_checkout_pts = pts_valid? pts : (pts + DUR2PTS(frame_dur));
+                if (h264_pts_count) {
+                    h264_pts_count += 2;
+                }
             } else {
                 if (!idr_flag) {
                     pts_valid = 0;
@@ -1234,7 +1242,7 @@ static void vh264_isr(void)
             // if use_idr_framerate or fixed frame rate, only use PTS for IDR frames except for pts discontinue
             if (timing_info_present_flag &&
                 frame_dur && 
-                (use_idr_framerate || (fixed_frame_rate_flag != 0)) &&
+                (fixed_frame_rate_mode != FIX_FRAME_RATE_OFF) &&
                 pts_valid &&
                 h264_first_valid_pts_ready && 
                 (!pts_discontinue)) {
@@ -1248,7 +1256,7 @@ static void vh264_isr(void)
             }
             // calculate PTS of next frame and smooth PTS for fixed rate source
             if (pts_valid) {
-                if ((fixed_frame_rate_flag) &&
+                if ((fixed_frame_rate_mode != FIX_FRAME_RATE_OFF) &&
                     (!pts_discontinue) &&
                     (abs(pts_inc_by_duration(NULL, NULL) - pts)  < DUR2PTS(frame_dur))) {
                     pts = pts_inc_by_duration(&pts, &last_pts_remainder);
@@ -1289,7 +1297,7 @@ static void vh264_isr(void)
 
             last_pts = pts;
 
-            if (fixed_frame_rate_flag && (fixed_frame_rate_check_count <= FIX_FRAME_RATE_CHECK_IDRFRAME_NUM) && (sync_outside == 0) && pts_valid_save) {
+            if ((fixed_frame_rate_mode == FIX_FRAME_RATE_SMOOTH_CHECKING) && (sync_outside == 0) && pts_valid_save) {
                 pts = pts_lookup_save;
             }
 
@@ -1307,6 +1315,9 @@ static void vh264_isr(void)
                         vf->duration += vf->duration;
                     } else if (pic_struct == PIC_TRIPLE_FRAME) {
                         vf->duration += vf->duration << 1;
+                    }
+                    if (duration_from_pts_done == 0 && h264_pts_count) {
+                        h264_pts_count = h264_pts_count + ((vf->duration - frame_dur) * 2 + 1) / frame_dur;
                     }
                 }
 
@@ -1749,9 +1760,10 @@ static void vh264_local_init(void)
     sync_outside = ((u32)vh264_amstream_dec_info.param & 0x02) >> 1;
     use_idr_framerate = ((u32)vh264_amstream_dec_info.param & 0x04) >> 2;
     max_refer_buf = !(((u32)vh264_amstream_dec_info.param & 0x10) >> 4);
+    pts_unstable = ((u32)vh264_amstream_dec_info.param & 0x40) >> 6;
 
-    printk("H264 sysinfo: %dx%d duration=%d, pts_outside=%d, sync_outside=%d, use_idr_framerate=%d\n",
-            frame_width, frame_height, frame_dur, pts_outside, sync_outside, use_idr_framerate);
+    printk("H264 sysinfo: %dx%d duration=%d, pts_outside=%d, sync_outside=%d, use_idr_framerate=%d,pts_unstable=%d\n",
+            frame_width, frame_height, frame_dur, pts_outside, sync_outside, use_idr_framerate,pts_unstable);
 
     if ((u32)vh264_amstream_dec_info.param & 0x08)
     {
@@ -1809,6 +1821,8 @@ static void vh264_local_init(void)
     pts_hit = 0;
 #endif
     pts_discontinue = false;
+    fixed_frame_rate_mode = FIX_FRAME_RATE_OFF;
+    pts_duration = 0;
     return;
 }
 
@@ -1824,12 +1838,11 @@ static s32 vh264_init(void)
 
     vh264_running = 0;    //init here to reset last_mb_width&last_mb_height
     vh264_eos = 0;
-    duration_on_correcting=0;
     first_pts = 0;
     first_pts64 = 0;
     first_offset = 0;
     first_pts_cached = false;
-    fixed_frame_rate_check_count = 0;
+    iframe_count = 0;
     vh264_local_init();
 
     query_video_status(0, &trickmode_fffb);
@@ -2353,8 +2366,8 @@ module_param(ucode_type, uint, 0664);
 MODULE_PARM_DESC(ucode_type, "\n amvdec_h264 decoder buffering or not for reference frame \n");
 module_param(debugfirmware, uint, 0664);
 MODULE_PARM_DESC(debugfirmware, "\n amvdec_h264 debug load firmware \n");
-module_param(fixed_frame_rate_flag, uint, 0664);
-MODULE_PARM_DESC(fixed_frame_rate_flag, "\n amvdec_h264 fixed_frame_rate_flag \n");
+module_param(fixed_frame_rate_mode, uint, 0664);
+MODULE_PARM_DESC(fixed_frame_rate_mode, "\n amvdec_h264 fixed_frame_rate_mode \n");
 
 module_init(amvdec_h264_driver_init_module);
 module_exit(amvdec_h264_driver_remove_module);
