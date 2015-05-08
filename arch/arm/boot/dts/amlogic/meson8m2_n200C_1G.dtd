@@ -401,12 +401,12 @@ void root_func(){
 //$$ DEVICE="bt-dev"
 //$$ L2 PROP_STR = "status"
 //$$ L2 PROP_STR = "gpio_reset"
-    bt-dev{
-        compatible = "amlogic,bt-dev";
-        dev_name = "bt-dev";
-        status = "ok";
-        gpio_reset = "GPIOX_20";
-    };
+//    bt-dev{
+//        compatible = "amlogic,bt-dev";
+//        dev_name = "bt-dev";
+//        status = "ok";
+//        gpio_reset = "GPIOX_20";
+//    };
 
 /// ***************************************************************************************
 ///	-	WiFi
@@ -425,7 +425,7 @@ void root_func(){
 		interrupt_pin = "GPIOX_21";
 		irq_num = <4>;
 		irq_trigger_type = "GPIO_IRQ_HIGH";
-		power_on_pin = "GPIOAO_6";
+		power_on_pin = "GPIOX_20";
 		power_on_pin2 = "GPIOX_11";
 //		clock_32k_pin = "GPIOX_10";
 	};
