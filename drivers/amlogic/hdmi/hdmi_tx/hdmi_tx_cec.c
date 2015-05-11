@@ -423,14 +423,16 @@ static void cec_task(struct work_struct *work)
     extern void dump_hdmi_cec_reg(void);
     static int hdp_status = 0;
     hdmitx_dev_t* hdmitx_device = (hdmitx_dev_t*)container_of(work, hdmitx_dev_t, cec_work);
-    cec_global_info.cec_flag.cec_init_flag = 1;
 
     // Get logical address
     hdmi_print(INF, CEC "CEC task process\n");
     if (hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK) &&
        (hdmitx_device->hpd_state && !hdp_status))
     {
-        msleep_interruptible(15000);
+        if (cec_global_info.cec_flag.cec_init_flag == 0) {
+            msleep_interruptible(15000);
+            cec_global_info.cec_flag.cec_init_flag = 1;
+        }
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
         cec_gpi_init();
 #endif
@@ -1782,6 +1784,7 @@ static int __init cec_init(void)
 #endif
 
     hdmitx_device->cec_init_ready = 1;
+    cec_global_info.cec_flag.cec_init_flag = 0;
     hdmi_print(INF, CEC "hdmitx_device->cec_init_ready:0x%x", hdmitx_device->cec_init_ready);
     queue_work(cec_workqueue, &hdmitx_device->cec_work);    // for init
     return 0;
