@@ -119,22 +119,14 @@ static void hdmitx_cec_early_suspend(struct early_suspend *h)
     cec_global_info.cec_node_info[cec_global_info.my_node_index].power_status = POWER_STANDBY;
     printk("CEC return, power status:%d\n", cec_global_info.cec_node_info[cec_global_info.my_node_index].power_status);
     cec_report_power_status(NULL);
-    return ;
-    // Below should move to uboot cec init
-    if (hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK))
+    if (rc_long_press_pwr_key == 1)
     {
-        cec_menu_status_smp(DEVICE_MENU_INACTIVE);
-        cec_inactive_source();
-
-        if (rc_long_press_pwr_key == 1)
-        {
-            cec_set_standby();
-            msleep(100);
-            hdmi_print(INF, CEC "get power-off command from Romote Control\n");
-            rc_long_press_pwr_key = 0;
-        }
+        cec_set_standby();
+        msleep(100);
+        hdmi_print(INF, CEC "get power-off command from Romote Control\n");
+        rc_long_press_pwr_key = 0;
     }
-    cec_disable_irq();
+    return ;
 }
 
 static void hdmitx_cec_late_resume(struct early_suspend *h)
