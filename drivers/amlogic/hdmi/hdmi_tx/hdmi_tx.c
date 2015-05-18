@@ -1990,7 +1990,7 @@ static  int __init hdmitx_boot_para_setup(char *s)
             }
             else if(strncmp(token, "cec", 3)==0) {
                 unsigned int list = simple_strtoul(token+3,NULL,16);
-                if((list >= 0) && (list <= 0xf)) {
+                if ((list >= 0) && (list <= 0x2f)) {
                     hdmitx_device.cec_func_config = list;
                     aml_write_reg32(P_AO_DEBUG_REG0, hdmitx_device.cec_func_config);         // save cec function list to AO_REG
                 }
