@@ -175,8 +175,8 @@ void root_func(){
                 compatible = "amlogic,vdec";
                 dev_name = "vdec.0";
                 status = "okay";
-								reserve-memory = <0x04000000>; // 64M
-//		reserve-iomap = "true";
+								reserve-memory = <0x10000000>; // 256M
+								reserve-iomap = "true";
         };
 ///	-	picture decoder
 //$$ MODULE="picture decoder"
