@@ -611,6 +611,7 @@ void cec_inactive_source(void);
 void cec_set_standby(void);
 void cec_isr_post_process(void);
 void cec_clear_buf(unsigned int flag);
+void cec_keep_reset(void);
 
 void cec_tx_irq_handle(void);
 

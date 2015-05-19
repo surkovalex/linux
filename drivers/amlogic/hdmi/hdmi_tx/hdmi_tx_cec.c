@@ -413,30 +413,22 @@ static enum hrtimer_restart cec_late_check_rx_buffer(struct hrtimer *timer)
 static void cec_task(struct work_struct *work)
 {
     extern void dump_hdmi_cec_reg(void);
-    static int hdp_status = 0;
     hdmitx_dev_t* hdmitx_device = (hdmitx_dev_t*)container_of(work, hdmitx_dev_t, cec_work);
 
     // Get logical address
     hdmi_print(INF, CEC "CEC task process\n");
-    if (hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK) &&
-       (hdmitx_device->hpd_state && !hdp_status))
-    {
-        if (cec_global_info.cec_flag.cec_init_flag == 0) {
-            msleep_interruptible(15000);
-            cec_global_info.cec_flag.cec_init_flag = 1;
-        }
+    if ((hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) &&
+        !cec_global_info.cec_flag.cec_init_flag) {
+        msleep_interruptible(15000);
+        cec_global_info.cec_flag.cec_init_flag = 1;
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
         cec_gpi_init();
 #endif
         cec_node_init(hdmitx_device);
-        hdp_status = hdmitx_device->hpd_state;
     }
     //cec_rx_buf_check();
     cec_isr_post_process();
     //cec_usr_cmd_post_process();
-    if (!hdmitx_device->hpd_state) {
-        hdp_status = 0;
-    }
     if (hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) {
         /* start timer for late cec rx buffer check */
         hrtimer_start(&cec_late_timer, ktime_set(0, 384*1000*1000), HRTIMER_MODE_REL);
@@ -1882,10 +1874,6 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
     value = aml_read_reg32(P_AO_DEBUG_REG0);
     aml_set_reg32_bits(P_AO_DEBUG_REG0, param[0], 0, 32);
     hdmitx_device->cec_func_config = aml_read_reg32(P_AO_DEBUG_REG0);
-    if (!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) || !hdmitx_device->hpd_state )
-    {
-        return ;
-    }
     if ((0 == (value & 0x1)) && (1 == (param[0] & 1)))
     {
         hdmitx_device->cec_init_ready = 1;
@@ -1893,7 +1881,17 @@ void cec_usrcmd_set_config(const char * buf, size_t count)
 #if MESON_CPU_TYPE == MESON_CPU_TYPE_MESON6
         cec_gpi_init();
 #endif
+        cec_global_info.cec_flag.cec_init_flag = 1;
         cec_node_init(hdmitx_device);
+    } else if ((value & 0x01) && !(param[0] & 0x01)) {
+        /* toggle off cec funtion by user */
+        hdmi_print(INF, CEC "user disable cec\n");
+        /* disable irq to stop rx/tx process */
+        cec_keep_reset();
+    }
+    if (!(hdmitx_device->cec_func_config & (1 << CEC_FUNC_MSAK)) ||
+        !hdmitx_device->hpd_state) {
+        return ;
     }
     if ((1 == (param[0] & 1)) && (0x2 == (value & 0x2)) && (0x0 == (param[0] & 0x2)))
     {
