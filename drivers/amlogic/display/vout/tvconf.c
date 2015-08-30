@@ -428,7 +428,7 @@ static const vinfo_t tv_info[] =
         .aspect_ratio_den  = 9,
         .sync_duration_num = 24000,
         .sync_duration_den = 1001,
-        .video_clk		   = 74250000,
+        .video_clk		   = 74176000,//74250000,
 	},
 #endif
     { /* VMODE_4K2K_30HZ */
