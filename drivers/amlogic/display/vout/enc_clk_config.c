@@ -653,17 +653,32 @@ static enc_clk_val_t setting_enc_clk_val[] = {
     {VMODE_480I,       1080, 4, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480CVBS,    1080, 4, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_480P,       1080, 4, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    {VMODE_480P_59HZ,  1081, 4, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
+#endif
     {VMODE_576I,       1080, 4, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_576CVBS,    1080, 4, 1, VIU_ENCI,  5, 4, 2,-1,  2, -1, -1,  2,  -1},
     {VMODE_576P,       1080, 4, 1, VIU_ENCP,  5, 4, 2, 1, -1, -1, -1,  1,  -1},
     {VMODE_720P,       1488, 2, 1, VIU_ENCP, 10, 1, 2, 1, -1, -1, -1,  1,  -1},
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    {VMODE_720P_59HZ,  1490, 2, 1, VIU_ENCP, 10, 1, 2, 1, -1, -1, -1,  1,  -1},
+#endif
     {VMODE_1080I,      1488, 2, 1, VIU_ENCP, 10, 1, 2, 1, -1, -1, -1,  1,  -1},
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    {VMODE_1080I_59HZ, 1490, 2, 1, VIU_ENCP, 10, 1, 2, 1, -1, -1, -1,  1,  -1},
+#endif
     {VMODE_1080P,      1488, 1, 1, VIU_ENCP, 10, 1, 1, 1, -1, -1, -1,  1,  -1},
     {VMODE_1080P,      1488, 1, 1, VIU_ENCP, 10, 1, 1, 1, -1, -1, -1,  1,  -1},
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    {VMODE_1080P_59HZ, 1490, 1, 1, VIU_ENCP, 10, 1, 1, 1, -1, -1, -1,  1,  -1},
+#endif
     {VMODE_720P_50HZ,  1488, 2, 1, VIU_ENCP, 10, 1, 2, 1, -1, -1, -1,  1,  -1},
     {VMODE_1080I_50HZ, 1488, 2, 1, VIU_ENCP, 10, 1, 2, 1, -1, -1, -1,  1,  -1},
     {VMODE_1080P_50HZ, 1488, 1, 1, VIU_ENCP, 10, 1, 1, 1, -1, -1, -1,  1,  -1},
     {VMODE_1080P_24HZ, 1488, 2, 1, VIU_ENCP, 10, 2, 1, 1, -1, -1, -1,  1,  -1},
+#ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
+    {VMODE_1080P_23HZ, 1490, 2, 1, VIU_ENCP, 10, 2, 1, 1, -1, -1, -1,  1,  -1},
+#endif
     {VMODE_4K2K_30HZ,  2970, 1, 2, VIU_ENCP, 5, 1, 1, 1, -1, -1, -1,  1,  -1},
     {VMODE_4K2K_25HZ,  2970, 1, 2, VIU_ENCP, 5, 1, 1, 1, -1, -1, -1,  1,  -1},
     {VMODE_4K2K_24HZ,  2970, 1, 2, VIU_ENCP, 5, 1, 1, 1, -1, -1, -1,  1,  -1},
