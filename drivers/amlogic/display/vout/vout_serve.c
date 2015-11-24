@@ -145,6 +145,7 @@ static int  meson_vout_resume(struct platform_device *pdev);
 
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 __nosavedata vmode_t mode_by_user = VMODE_INIT_NULL;
+/*
 extern int fps_playing_flag;
 extern vmode_t fps_target_mode;
 extern char* get_name_from_vmode(vmode_t mode);
@@ -219,6 +220,7 @@ static void fps_auto_adjust_mode( vmode_t *pmode)
 		}
 	}
 }
+*/
 
 void update_vmode_status(char* name)
 {
@@ -250,16 +252,21 @@ static  void  set_vout_mode(char * name)
 		amlog_mask_level(LOG_MASK_PARA,LOG_LEVEL_HIGH,"don't set the same mode as current.\n");
 		return ;
 	}
+/*
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 	//if plug hdmi during fps (stream is playing), then adjust mode to fps vmode
 	fps_auto_adjust_mode(&mode);
 	printk("%s[%d]fps_target_mode=%d\n",__func__,__LINE__,mode);
 	update_vmode_status(get_name_from_vmode(mode));
 #endif
+*/
 	set_current_vmode(mode);
+/*
 #ifdef CONFIG_AML_VOUT_FRAMERATE_AUTOMATION
 	amlog_mask_level(LOG_MASK_PARA,LOG_LEVEL_HIGH,"new mode =%s set ok\n",get_name_from_vmode(mode));
 #endif
+*/
+	amlog_mask_level(LOG_MASK_PARA,LOG_LEVEL_HIGH,"new mode %s set ok\n",name);
 	vout_notifier_call_chain(VOUT_EVENT_MODE_CHANGE,&mode) ;
 	printk("%s[%d]\n", __func__, __LINE__);
 }

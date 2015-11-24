@@ -68,8 +68,8 @@ SET_TV_CLASS_ATTR(vdac_setting,parse_vdac_setting)
 
 static int fr_auto_policy = DEFAULT_POLICY_FR_AUTO;
 static int fr_auto_policy_hold = DEFAULT_POLICY_FR_AUTO;
-int fps_playing_flag=0 ;//1:  23.976/29.97/59.94 fps stream is playing
-vmode_t fps_target_mode=VMODE_INIT_NULL;
+//int fps_playing_flag=0 ;//1:  23.976/29.97/59.94 fps stream is playing
+//vmode_t fps_target_mode=VMODE_INIT_NULL;
 static void policy_framerate_automation_switch_store(char* para);
 static void policy_framerate_automation_store(char* para);
 SET_TV_CLASS_ATTR(policy_fr_auto, policy_framerate_automation_store)
@@ -979,7 +979,7 @@ static int get_target_vmode(int framerate_target)
                 break;
         }
     }
-/*
+
     is_receiver_supported = hdmitx_is_vmode_supported(get_name_from_vmode(mode_target));
 
     switch ( is_receiver_supported )
@@ -995,8 +995,8 @@ static int get_target_vmode(int framerate_target)
         default:
             break;
     }
-*/
-    fps_target_mode=mode_target;
+
+    //fps_target_mode=mode_target;
     return mode_target;
 }
 
@@ -1169,17 +1169,7 @@ static int framerate_automation_process(int duration)
 	pvinfo = tv_get_current_info();
 	if( (pvinfo->sync_duration_num==fr_target) || (pvinfo->sync_duration_num==(fr_target/100)) )
 		return 0;
-	switch(fr_vsource){
-	case 5994:
-	case 2997:
-	case 2397:
-    	fps_playing_flag=1;
-		break;
-	default:
-		fps_playing_flag=0;
-		break;
-	}
-	printk("%s[%d] fps_playing_flag = %d\n", __FUNCTION__,__LINE__, fps_playing_flag);
+
 	mode_target = get_target_vmode(fr_target);
 	
 	framerate_automation_set_mode(mode_target);
@@ -1212,7 +1202,7 @@ static int tv_set_vframe_rate_end_hint(void)
 	printk("vout [%s] return mode = %d, policy = %d!\n", __FUNCTION__, mode_by_user, fr_auto_policy);
 	if( fr_auto_policy != 0 )
 	{
-		fps_playing_flag=0;
+		//fps_playing_flag=0;
 		framerate_automation_set_mode(mode_by_user);
 	}
 
