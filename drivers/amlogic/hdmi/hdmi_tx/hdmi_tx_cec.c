@@ -480,7 +480,7 @@ void cec_input_handle_message(void)
 
     opcode = cec_global_info.cec_rx_msg_buf.cec_rx_message[cec_global_info.cec_rx_msg_buf.rx_write_pos].content.msg.opcode;
 
-    hdmi_print(INF, CEC "opcode:0x%x, hdmitx_device->cec_func_config:0x%x\n",opcode,hdmitx_device->cec_func_config);
+//    hdmi_print(INF, CEC "opcode:0x%x, hdmitx_device->cec_func_config:0x%x\n",opcode,hdmitx_device->cec_func_config);
 
     if (NULL == hdmitx_device)
     {
