@@ -1476,12 +1476,7 @@ static int get_dt_vend_init_data(struct device_node *np, struct vendor_info_data
         hdmi_print(INF, SYS "not find cec osd string\n");
         return 1;
     }
-    
-    ret = of_property_read_u32(np, "cec_config", &(vend->cec_config));
-    if(ret) {
-        hdmi_print(INF, SYS "not find cec config\n");
-        return 1;
-    }
+
     ret = of_property_read_u32(np, "ao_cec", &(vend->ao_cec));
     if(ret) {
         hdmi_print(INF, SYS "not find ao cec\n");
