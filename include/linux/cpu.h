@@ -127,13 +127,21 @@ enum {
 #endif /* #else #if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) */
 #ifdef CONFIG_HOTPLUG_CPU
 extern int register_cpu_notifier(struct notifier_block *nb);
+extern int __register_cpu_notifier(struct notifier_block *nb);
 extern void unregister_cpu_notifier(struct notifier_block *nb);
+extern void __unregister_cpu_notifier(struct notifier_block *nb);
 #else
 
 #ifndef MODULE
 extern int register_cpu_notifier(struct notifier_block *nb);
+extern int __register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)
+{
+	return 0;
+}
+
+static inline int __register_cpu_notifier(struct notifier_block *nb)
 {
 	return 0;
 }
@@ -142,12 +150,19 @@ static inline int register_cpu_notifier(struct notifier_block *nb)
 static inline void unregister_cpu_notifier(struct notifier_block *nb)
 {
 }
+
+static inline void __unregister_cpu_notifier(struct notifier_block *nb)
+{
+}
 #endif
 
 int cpu_up(unsigned int cpu);
 void notify_cpu_starting(unsigned int cpu);
 extern void cpu_maps_update_begin(void);
 extern void cpu_maps_update_done(void);
+
+#define cpu_notifier_register_begin	cpu_maps_update_begin
+#define cpu_notifier_register_done	cpu_maps_update_done
 
 #else	/* CONFIG_SMP */
 
@@ -225,5 +240,12 @@ void arch_cpu_idle_prepare(void);
 void arch_cpu_idle_enter(void);
 void arch_cpu_idle_exit(void);
 void arch_cpu_idle_dead(void);
+
+#define IDLE_START 1
+#define IDLE_END 2
+
+void idle_notifier_register(struct notifier_block *n);
+void idle_notifier_unregister(struct notifier_block *n);
+void idle_notifier_call_chain(unsigned long val);
 
 #endif /* _LINUX_CPU_H_ */
