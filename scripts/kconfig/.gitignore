@@ -1,4 +1,113 @@
-#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+<head>
+<title>kernel/git/stable/linux-stable.git - Linux kernel stable tree</title>
+<meta name='generator' content='cgit v0.10.2'/>
+<meta name='robots' content='index, nofollow'/>
+<link rel='stylesheet' type='text/css' href='/cgit-korg-0.10.1.css'/>
+<link rel='shortcut icon' href='/favicon.png'/>
+<link rel='alternate' title='Atom feed' href='http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/atom/scripts/kconfig/.gitignore?h=linux-3.14.y' type='application/atom+xml'/>
+</head>
+<body>
+<div id='cgit'><table id='header'>
+<tr>
+<td class='logo' rowspan='2'><a href='/cgit/'><img src='/tux-cgit.png' alt='cgit logo'/></a></td>
+<td class='main'><a href='/cgit/'>index</a> : <a title='kernel/git/stable/linux-stable.git' href='/cgit/linux/kernel/git/stable/linux-stable.git/'>kernel/git/stable/linux-stable.git</a></td><td class='form'><form method='get' action=''>
+<select name='h' onchange='this.form.submit();'>
+<option value='linux-2.6.11.y'>linux-2.6.11.y</option>
+<option value='linux-2.6.12.y'>linux-2.6.12.y</option>
+<option value='linux-2.6.13.y'>linux-2.6.13.y</option>
+<option value='linux-2.6.14.y'>linux-2.6.14.y</option>
+<option value='linux-2.6.15.y'>linux-2.6.15.y</option>
+<option value='linux-2.6.16.y'>linux-2.6.16.y</option>
+<option value='linux-2.6.17.y'>linux-2.6.17.y</option>
+<option value='linux-2.6.18.y'>linux-2.6.18.y</option>
+<option value='linux-2.6.19.y'>linux-2.6.19.y</option>
+<option value='linux-2.6.20.y'>linux-2.6.20.y</option>
+<option value='linux-2.6.21.y'>linux-2.6.21.y</option>
+<option value='linux-2.6.22.y'>linux-2.6.22.y</option>
+<option value='linux-2.6.23.y'>linux-2.6.23.y</option>
+<option value='linux-2.6.24.y'>linux-2.6.24.y</option>
+<option value='linux-2.6.25.y'>linux-2.6.25.y</option>
+<option value='linux-2.6.26.y'>linux-2.6.26.y</option>
+<option value='linux-2.6.27.y'>linux-2.6.27.y</option>
+<option value='linux-2.6.28.y'>linux-2.6.28.y</option>
+<option value='linux-2.6.29.y'>linux-2.6.29.y</option>
+<option value='linux-2.6.30.y'>linux-2.6.30.y</option>
+<option value='linux-2.6.31.y'>linux-2.6.31.y</option>
+<option value='linux-2.6.32.y'>linux-2.6.32.y</option>
+<option value='linux-2.6.33.y'>linux-2.6.33.y</option>
+<option value='linux-2.6.34.y'>linux-2.6.34.y</option>
+<option value='linux-2.6.35.y'>linux-2.6.35.y</option>
+<option value='linux-2.6.36.y'>linux-2.6.36.y</option>
+<option value='linux-2.6.37.y'>linux-2.6.37.y</option>
+<option value='linux-2.6.38.y'>linux-2.6.38.y</option>
+<option value='linux-2.6.39.y'>linux-2.6.39.y</option>
+<option value='linux-3.0.y'>linux-3.0.y</option>
+<option value='linux-3.1.y'>linux-3.1.y</option>
+<option value='linux-3.10.y'>linux-3.10.y</option>
+<option value='linux-3.11.y'>linux-3.11.y</option>
+<option value='linux-3.12.y'>linux-3.12.y</option>
+<option value='linux-3.13.y'>linux-3.13.y</option>
+<option value='linux-3.14.y' selected='selected'>linux-3.14.y</option>
+<option value='linux-3.15.y'>linux-3.15.y</option>
+<option value='linux-3.16.y'>linux-3.16.y</option>
+<option value='linux-3.17.y'>linux-3.17.y</option>
+<option value='linux-3.18.y'>linux-3.18.y</option>
+<option value='linux-3.19.y'>linux-3.19.y</option>
+<option value='linux-3.2.y'>linux-3.2.y</option>
+<option value='linux-3.3.y'>linux-3.3.y</option>
+<option value='linux-3.4.y'>linux-3.4.y</option>
+<option value='linux-3.5.y'>linux-3.5.y</option>
+<option value='linux-3.6.y'>linux-3.6.y</option>
+<option value='linux-3.7.y'>linux-3.7.y</option>
+<option value='linux-3.8.y'>linux-3.8.y</option>
+<option value='linux-3.9.y'>linux-3.9.y</option>
+<option value='linux-4.0.y'>linux-4.0.y</option>
+<option value='linux-4.1.y'>linux-4.1.y</option>
+<option value='linux-4.2.y'>linux-4.2.y</option>
+<option value='master'>master</option>
+</select> <input type='submit' name='' value='switch'/></form></td></tr>
+<tr><td class='sub'>Linux kernel stable tree</td><td class='sub right'>Greg Kroah-Hartman</td></tr></table>
+<table class='tabs'><tr><td>
+<a href='/cgit/linux/kernel/git/stable/linux-stable.git/?h=linux-3.14.y'>summary</a><a href='/cgit/linux/kernel/git/stable/linux-stable.git/refs/?h=linux-3.14.y'>refs</a><a href='/cgit/linux/kernel/git/stable/linux-stable.git/log/scripts/kconfig/.gitignore?h=linux-3.14.y'>log</a><a class='active' href='/cgit/linux/kernel/git/stable/linux-stable.git/tree/scripts/kconfig/.gitignore?h=linux-3.14.y'>tree</a><a href='/cgit/linux/kernel/git/stable/linux-stable.git/commit/scripts/kconfig/.gitignore?h=linux-3.14.y'>commit</a><a href='/cgit/linux/kernel/git/stable/linux-stable.git/diff/scripts/kconfig/.gitignore?h=linux-3.14.y'>diff</a><a href='/cgit/linux/kernel/git/stable/linux-stable.git/stats/scripts/kconfig/.gitignore?h=linux-3.14.y'>stats</a></td><td class='form'><form class='right' method='get' action='/cgit/linux/kernel/git/stable/linux-stable.git/log/scripts/kconfig/.gitignore'>
+<input type='hidden' name='h' value='linux-3.14.y'/><select name='qt'>
+<option value='grep'>log msg</option>
+<option value='author'>author</option>
+<option value='committer'>committer</option>
+<option value='range'>range</option>
+</select>
+<input class='txt' type='text' size='10' name='q' value=''/>
+<input type='submit' value='search'/>
+</form>
+</td></tr></table>
+<div class='path'>path: <a href='/cgit/linux/kernel/git/stable/linux-stable.git/tree/?h=linux-3.14.y'>root</a>/<a href='/cgit/linux/kernel/git/stable/linux-stable.git/tree/scripts?h=linux-3.14.y'>scripts</a>/<a href='/cgit/linux/kernel/git/stable/linux-stable.git/tree/scripts/kconfig?h=linux-3.14.y'>kconfig</a>/<a href='/cgit/linux/kernel/git/stable/linux-stable.git/tree/scripts/kconfig/.gitignore?h=linux-3.14.y'>.gitignore</a></div><div class='content'>blob: be603c4fef624669ea2bac84e1f41311713a8065 (<a href='/cgit/linux/kernel/git/stable/linux-stable.git/plain/scripts/kconfig/.gitignore?h=linux-3.14.y'>plain</a>)
+<table summary='blob content' class='blob'>
+<tr><td class='linenumbers'><pre><a id='n1' href='#n1'>1</a>
+<a id='n2' href='#n2'>2</a>
+<a id='n3' href='#n3'>3</a>
+<a id='n4' href='#n4'>4</a>
+<a id='n5' href='#n5'>5</a>
+<a id='n6' href='#n6'>6</a>
+<a id='n7' href='#n7'>7</a>
+<a id='n8' href='#n8'>8</a>
+<a id='n9' href='#n9'>9</a>
+<a id='n10' href='#n10'>10</a>
+<a id='n11' href='#n11'>11</a>
+<a id='n12' href='#n12'>12</a>
+<a id='n13' href='#n13'>13</a>
+<a id='n14' href='#n14'>14</a>
+<a id='n15' href='#n15'>15</a>
+<a id='n16' href='#n16'>16</a>
+<a id='n17' href='#n17'>17</a>
+<a id='n18' href='#n18'>18</a>
+<a id='n19' href='#n19'>19</a>
+<a id='n20' href='#n20'>20</a>
+<a id='n21' href='#n21'>21</a>
+<a id='n22' href='#n22'>22</a>
+</pre></td>
+<td class='lines'><pre><code>#
 # Generated files
 #
 config*
@@ -20,3 +129,9 @@ nconf
 qconf
 gconf
 kxgettext
+</code></pre></td></tr></table>
+</div> <!-- class=content -->
+<div class='footer'>generated  by cgit v0.10.2 at 2015-10-17 13:18:56 (GMT)</div>
+</div> <!-- id=cgit -->
+</body>
+</html>

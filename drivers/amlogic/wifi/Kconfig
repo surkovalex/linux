@@ -21,4 +21,7 @@ config DHD_USE_STATIC_BUF
 	boolean "broadcom wifi static buff support"
 	depends on AM_WIFI
 	default n
+	
+source "drivers/amlogic/wifi/realtek/rtl8189ES/Kconfig"
+	
 endif # AM_WIFI
