@@ -23,5 +23,7 @@ config DHD_USE_STATIC_BUF
 	default n
 	
 source "drivers/amlogic/wifi/realtek/rtl8189ES/Kconfig"
-	
+
+source "drivers/amlogic/wifi/broadcom/bcmdhd_1_201_59_x/Kconfig"
+
 endif # AM_WIFI
