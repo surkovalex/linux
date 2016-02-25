@@ -584,7 +584,6 @@ struct dtv_property {
 			__u32 reserved1[3];
 			void *reserved2;
 		} buffer;
-		__u32 reserved[14];
 	} u;
 	int result;
 } __attribute__ ((packed));
@@ -594,10 +593,7 @@ struct dtv_property {
 
 struct dtv_properties {
 	__u32 num;
-	union {
-		struct dtv_property *props;
-		__u64 reserved;
-	};
+	struct dtv_property *props;
 };
 /* for atv */
 struct tuner_status_s {
@@ -605,10 +601,7 @@ struct tuner_status_s {
 	unsigned int rssi;
 	unsigned char mode;	/*dtv:0 or atv:1 */
 	unsigned char tuner_locked;	/*notlocked:0,locked:1 */
-	union {
-		void *ressrved;
-		__u64 reserved1;
-	};
+	void *ressrved;
 };
 
 struct atv_status_s {
@@ -617,20 +610,14 @@ struct atv_status_s {
 	unsigned int audmode;
 	int snr;
 	int afc;
-	union {
-		void *resrvred;
-		__u64 reserved1;
-	};
+	void *resrvred;
 };
 
 struct sound_status_s {
 	/*A2DK/A2BG/NICAM BG/NICAM DK/BTSC/EIAJ */
 	unsigned short sound_sys;
 	unsigned short sound_mode;	/*SETERO/DUAL/MONO/SAP */
-	union {
-		void *resrvred;
-		__u64 reserved1;
-	};
+	void *resrvred;
 };
 enum tuner_param_cmd_e {
 	TUNER_CMD_AUDIO_MUTE = 0x0000,

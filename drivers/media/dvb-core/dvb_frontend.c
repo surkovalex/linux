@@ -2482,18 +2482,12 @@ static int dvb_frontend_ioctl_properties(struct file *file,
 			err = -ENOMEM;
 			goto out;
 		}
-#ifdef CONFIG_COMPAT
-		if (copy_from_user(tvp, compat_ptr((unsigned long)tvps->props),
-				tvps->num * sizeof(struct dtv_property))) {
-			err = -EFAULT;
-			goto out;
-		}
-#else
+
 		if (copy_from_user(tvp, tvps->props, tvps->num * sizeof(struct dtv_property))) {
 			err = -EFAULT;
 			goto out;
 		}
-#endif
+
 		for (i = 0; i < tvps->num; i++) {
 			err = dtv_property_process_set(fe, tvp + i, file);
 			if (err < 0)
@@ -2521,18 +2515,12 @@ static int dvb_frontend_ioctl_properties(struct file *file,
 			err = -ENOMEM;
 			goto out;
 		}
-#ifdef CONFIG_COMPAT
-		if (copy_from_user(tvp, compat_ptr((unsigned long)tvps->props),
-				tvps->num * sizeof(struct dtv_property))) {
-			err = -EFAULT;
-			goto out;
-		}
-#else
+
 		if (copy_from_user(tvp, tvps->props, tvps->num * sizeof(struct dtv_property))) {
 			err = -EFAULT;
 			goto out;
 		}
-#endif
+
 		/*
 		 * Fills the cache out struct with the cache contents, plus
 		 * the data retrieved from get_frontend, if the frontend
@@ -2549,18 +2537,11 @@ static int dvb_frontend_ioctl_properties(struct file *file,
 				goto out;
 			(tvp + i)->result = err;
 		}
-#ifdef CONFIG_COMPAT
-		if (copy_to_user(compat_ptr((unsigned long)tvps->props), tvp,
-				tvps->num * sizeof(struct dtv_property))) {
-			err = -EFAULT;
-			goto out;
-		}
-#else
+
 		if (copy_to_user(tvps->props, tvp, tvps->num * sizeof(struct dtv_property))) {
 			err = -EFAULT;
 			goto out;
 		}
-#endif
 
 	} else
 		err = -EOPNOTSUPP;
