@@ -942,9 +942,9 @@ static struct amlogic_thermal_platform_data * amlogic_thermal_init_from_dts(stru
             goto err;
         }
         pdata->idle_interval=val;
-        ret=of_property_read_string(pdev->dev.of_node,"dev_name",&pdata->name);
+        ret=of_property_read_string(pdev->dev.of_node,"device_name",&pdata->name);
         if (ret){
-            dev_err(&pdev->dev, "read %s  error\n","dev_name");
+            dev_err(&pdev->dev, "read %s  error\n","device_name");
             goto err;
         }
         pdata->mode=THERMAL_DEVICE_ENABLED;
@@ -1005,7 +1005,6 @@ static int amlogic_thermal_probe(struct platform_device *pdev)
     int ret, trim_flag;
     struct amlogic_thermal_platform_data *pdata=NULL;
 
-    device_rename(&pdev->dev, "thermal");
     dbg_dev = &pdev->dev;
     ret = thermal_firmware_init();
     if (ret < 0) {
