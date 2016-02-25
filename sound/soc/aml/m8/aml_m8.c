@@ -40,6 +40,7 @@
 #include "aml_i2s.h"
 #include "aml_m8.h"
 #include "aml_audio_hw.h"
+#include "aml_alsa_common.h"
 #include <linux/amlogic/sound/audin_regs.h>
 #include <linux/of.h>
 #include <linux/pinctrl/consumer.h>
@@ -660,6 +661,7 @@ static int aml_m8_audio_probe(struct platform_device *pdev)
 		goto err;
 	}
 
+	aml_alsa_create_ctrl(card->snd_card, NULL);
 	aml_m8_pinmux_init(card);
 	return 0;
  err:

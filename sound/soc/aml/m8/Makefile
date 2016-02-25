@@ -15,6 +15,7 @@ obj-$(CONFIG_SND_AML_M8_SOC) += snd-soc-aml-hw.o
 obj-$(CONFIG_SND_AML_M8_SOC) += aml_notify.o
 obj-$(CONFIG_SND_AML_M8_SOC) += snd-soc-aml-hw-pcm2bt.o
 obj-$(CONFIG_SND_AML_M8_SOC) += snd-soc-aml-spdif-dai.o
+obj-$(CONFIG_SND_AML_M8_SOC) += aml_mixer.o
 
 # AML spdif codec support
 snd-soc-aml-spdif-codec-objs := aml_spdif_codec.o

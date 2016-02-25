@@ -57,6 +57,10 @@
 #define ALSA_TRACE()
 #endif
 
+int output_volume = 100;  // volume control
+
+#define VOL_CTL(s) ((unsigned int)(((signed short)(s))*(vol)) >> 15) // volume scaling from 0~100
+
 unsigned long aml_i2s_playback_start_addr = 0;
 EXPORT_SYMBOL(aml_i2s_playback_start_addr);
 
@@ -596,6 +600,7 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 	struct snd_dma_buffer *buffer = &substream->dma_buffer;
 	struct aml_audio_buffer *tmp_buf = buffer->private_data;
 	void *ubuf = tmp_buf->buffer_start;
+	unsigned int vol;
 	struct audio_stream *s = &prtd->s;
 
 	if (s->device_type == AML_AUDIO_I2SOUT)
@@ -616,6 +621,8 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 			int16_t *tfrom, *to, *left, *right;
 			tfrom = (int16_t *) ubuf;
 			to = (int16_t *) hwbuf;
+			
+			vol = (output_volume * 0x8000) / 100;
 
 			left = to;
 			right = to + 16;
@@ -626,8 +633,8 @@ static int aml_i2s_copy_playback(struct snd_pcm_runtime *runtime, int channel,
 
 			for (j = 0; j < n; j += 64) {
 				for (i = 0; i < 16; i++) {
-					*left++ = (*tfrom++);
-					*right++ = (*tfrom++);
+					*left++ = (int16_t)(VOL_CTL(*tfrom++));
+					*right++ = (int16_t)(VOL_CTL(*tfrom++));
 				}
 				left += 16;
 				right += 16;
@@ -934,6 +941,17 @@ static int aml_i2s_resume(struct snd_soc_dai *dai)
 #define aml_i2s_suspend	NULL
 #define aml_i2s_resume	NULL
 #endif
+
+int get_mixer_output_volume(void)
+{
+    return output_volume;
+}
+
+int set_mixer_output_volume(int volume)
+{
+    output_volume = volume;
+    return output_volume;
+}
 
 struct snd_soc_platform_driver aml_soc_platform = {
 	.ops = &aml_i2s_ops,
