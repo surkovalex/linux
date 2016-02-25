@@ -2071,15 +2071,15 @@ sub process {
 		next if ($realfile !~ /\.(h|c|s|S|pl|sh)$/);
 
 #line length limit
-		if ($line =~ /^\+/ && $prevrawline !~ /\/\*\*/ &&
-		    $rawline !~ /^.\s*\*\s*\@$Ident\s/ &&
-		    !($line =~ /^\+\s*$logFunctions\s*\(\s*(?:(KERN_\S+\s*|[^"]*))?"[X\t]*"\s*(?:|,|\)\s*;)\s*$/ ||
-		    $line =~ /^\+\s*"[^"]*"\s*(?:\s*|,|\)\s*;)\s*$/) &&
-		    $length > $max_line_length)
-		{
-			WARN("LONG_LINE",
-			     "line over $max_line_length characters\n" . $herecurr);
-		}
+#		if ($line =~ /^\+/ && $prevrawline !~ /\/\*\*/ &&
+#		    $rawline !~ /^.\s*\*\s*\@$Ident\s/ &&
+#		    !($line =~ /^\+\s*$logFunctions\s*\(\s*(?:(KERN_\S+\s*|[^"]*))?"[X\t]*"\s*(?:|,|\)\s*;)\s*$/ ||
+#		    $line =~ /^\+\s*"[^"]*"\s*(?:\s*|,|\)\s*;)\s*$/) &&
+#		    $length > $max_line_length)
+#		{
+#			WARN("LONG_LINE",
+#			     "line over $max_line_length characters\n" . $herecurr);
+#		}
 
 # Check for user-visible strings broken across lines, which breaks the ability
 # to grep for the string.  Make exceptions when the previous string ends in a
