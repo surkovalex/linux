@@ -246,6 +246,7 @@ config DECOMPRESS_LZ4
 #
 config GENERIC_ALLOCATOR
 	boolean
+	default y
 
 #
 # reed solomon support is select'ed if needed
