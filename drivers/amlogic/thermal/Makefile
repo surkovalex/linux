@@ -1,15 +1,12 @@
 #
 #Makefile for the thermal dirver
 #
-#$(obj)/aml_thermal.o:
-#	$(obj)/aml_thermal.o $(obj)/aml_thermal_f.o FORCE
 
 $(obj)/thermal_clean:
 	$(call cmd,clean)
 
-KBUILD_CFLAGS += -Wno-error=date-time
 CONFIG_AMLOGIC_THERMAL=m
-obj-$(CONFIG_AMLOGIC_THERMAL)+= aml_thermal.o
+obj-$(CONFIG_AMLOGIC_THERMAL)+= aml_thermal.o aml_thermal_hw.o
 
 $(obj)/amlogic_thermal.o: $(obj)/thermal_clean FORCE
 
