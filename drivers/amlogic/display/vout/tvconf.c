@@ -980,6 +980,7 @@ static int get_target_vmode(int framerate_target)
         }
     }
 
+/*
     is_receiver_supported = hdmitx_is_vmode_supported(get_name_from_vmode(mode_target));
 
     switch ( is_receiver_supported )
@@ -995,7 +996,7 @@ static int get_target_vmode(int framerate_target)
         default:
             break;
     }
-
+*/
     //fps_target_mode=mode_target;
     return mode_target;
 }

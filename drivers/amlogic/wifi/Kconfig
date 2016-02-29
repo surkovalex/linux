@@ -17,20 +17,20 @@ config AM_WIFI_USB
 	depends on AM_WIFI
 	default n
 
-source "broadcom/broadcm_40181/Kconfig"
-source "broadcom/bcmdhd_1_141_xx/Kconfig"
-source "broadcom/broadcm_4354/Kconfig"
-source "realtek/rtl8xxx_EU/Kconfig"
-source "realtek/rtl8xxx_EU_MP/Kconfig"
-source "realtek/rtl8xxx_CU/Kconfig"
-source "realtek/rtl8xxx_DU/Kconfig"
-source "realtek/rtl8192EU/Kconfig"
-source "realtek/rtl8189ES/Kconfig"
-source "realtek/rtl8723BS/Kconfig"
-source "realtek/rtl8723AU/Kconfig"
-source "realtek/rtl8723BU/Kconfig"
-source "realtek/rtl8811AU/Kconfig"
-source "realtek/rtl8812AU/Kconfig"
+source "drivers/amlogic/wifi/broadcom/broadcm_40181/Kconfig"
+source "drivers/amlogic/wifi/broadcom/bcmdhd_1_141_xx/Kconfig"
+source "drivers/amlogic/wifi/broadcom/broadcm_4354/Kconfig"
+
+source "drivers/amlogic/wifi/realtek/rtl8xxx_EU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8xxx_CU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8xxx_DU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8192EU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8189ES/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8723BS/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8723AU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8723BU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8811AU/Kconfig"
+source "drivers/amlogic/wifi/realtek/rtl8812AU/Kconfig"
 
 endif # AM_WIFI
 

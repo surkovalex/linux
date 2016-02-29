@@ -135,25 +135,6 @@ static int  wifi_power_release(struct inode *inode,struct file *file)
     return 0;
 }
 
-static long wifi_power_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
-{
-	switch (cmd)
-	{
-		case POWER_UP:
-			wifi_power_control(1);
-			break;
-
-		case POWER_DOWN:
-			wifi_power_control(0);
-			break;
-
-		default:
-			pr_err("usb wifi_power_ioctl: default !!!\n");
-			return -EINVAL;
-	}
-	return 0;
-}
-
 int wifi_power_control(int power_up)
 {
 	struct wifi_power_platform_data *pdata = NULL;
@@ -180,6 +161,25 @@ int wifi_power_control(int power_up)
 	return 0;
 }
 EXPORT_SYMBOL(wifi_power_control);
+
+static long wifi_power_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	switch (cmd)
+	{
+		case POWER_UP:
+			wifi_power_control(1);
+			break;
+
+		case POWER_DOWN:
+			wifi_power_control(0);
+			break;
+
+		default:
+			pr_err("usb wifi_power_ioctl: default !!!\n");
+			return -EINVAL;
+	}
+	return 0;
+}
 
 int wifi_set_power(int val)
 {

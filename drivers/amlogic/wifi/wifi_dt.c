@@ -127,11 +127,11 @@ static int wifi_dev_probe(struct platform_device *pdev)
 
 		ret = of_property_read_string(pdev->dev.of_node, "clock_32k_pin", &value);
 		//CHECK_PROP(ret, "clock_32k_pin", value);
-		if(ret)
-				plat->clock_32k_pin = 0;
-		else {
-				plat->clock_32k_pin = amlogic_gpio_name_map_num(value);
-		}
+        if(ret)
+            plat->clock_32k_pin = 0;
+        else {
+            plat->clock_32k_pin = amlogic_gpio_name_map_num(value);
+        }
 
 		plat->plat_info_valid = 1;
 		
@@ -287,10 +287,10 @@ void wifi_request_32k_clk(int is_on, const char *requestor)
 //		printk("wifi_request_32k_clk : invalid device tree setting\n");
 //		return;
 //	}
-	if(!wifi_info.clock_32k_pin) {
-			printk("wifi_request_32k_clk : no 32k pin");
-			return;
-	}
+    if(!wifi_info.clock_32k_pin) {
+        printk("wifi_request_32k_clk : no 32k pin");
+        return;
+    }
 	printk("wifi_request_32k_clk : %s-->%s for %s\n", 
 		clk_32k_on > 0 ? "ON" : "OFF", is_on ? "ON" : "OFF", requestor);
 	
@@ -304,6 +304,13 @@ void wifi_request_32k_clk(int is_on, const char *requestor)
 			SHOW_PIN_OWN("clock_32k_pin", wifi_info.clock_32k_pin);
 #if ((defined CONFIG_ARCH_MESON8) || (defined CONFIG_ARCH_MESON8B))
 			aml_set_reg32_mask(P_PERIPHS_PIN_MUX_3,0x1<<22);//set mode GPIOX_10-->CLK_OUT3
+#elif (defined CONFIG_ARCH_MESONG9BB)
+            if(wifi_info.clock_32k_pin == 42) { //GPIOH_7, as PWM_C output
+                aml_write_reg32(P_PERIPHS_PIN_MUX_3, aml_read_reg32(P_PERIPHS_PIN_MUX_3) | (1<<24)); //PWM_C pinmux GPIOH_7
+                aml_write_reg32(P_PWM_MISC_REG_CD, (aml_read_reg32(P_PWM_MISC_REG_CD) & ~(0x7f<<8)) | ((1 << 15) | (0<<8) | (3<<4) | (1<<0)));//
+                aml_set_reg32_bits(P_PWM_PWM_C, 0x3254-1, 0, 16);   //pwm low
+                aml_set_reg32_bits(P_PWM_PWM_C, 0x3254-1, 16, 16); //pwm high
+            }
 #else
             if(wifi_info.clock_32k_pin == 96) { // GPIOD_1, as PWM_D output
                 aml_write_reg32(P_PERIPHS_PIN_MUX_2, aml_read_reg32(P_PERIPHS_PIN_MUX_2) | (1<<3)); //pwm_D pinmux£¬D13£¬GPIOD_1
