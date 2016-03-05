@@ -2136,9 +2136,3 @@ MODULE_LICENSE("GPL");
 
 MODULE_PARM_DESC(cec_msg_dbg_en, "\n cec_msg_dbg_en\n");
 module_param(cec_msg_dbg_en, bool, 0664);
-
-
-
-
-
->>>>>>> 06f2866... amlogic: cec: LG Simplink support
