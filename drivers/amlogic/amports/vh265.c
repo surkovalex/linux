@@ -4827,6 +4827,9 @@ static irqreturn_t vh265_isr(int irq, void *dev_id)
 			/* add to fix RAP_B_Bossen_1 */
 			hevc->m_pocRandomAccess = MAX_INT;
 			flush_output(hevc, pic);
+			WRITE_VREG(HEVC_DEC_STATUS_REG, HEVC_DISCARD_NAL);
+			/* Interrupt Amrisc to excute */
+			WRITE_VREG(HEVC_MCPU_INTR_REQ, AMRISC_MAIN_REQ);
 			return IRQ_HANDLED;
 		}
 
