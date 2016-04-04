@@ -479,12 +479,14 @@ void cec_polling_online_dev(int log_addr, int *bool)
 
 }
 
+#ifndef CONFIG_AML_HDMI_TX_NEW_CEC_DRIVER
 void hdmitx_setup_cecirq(struct hdmitx_dev *phdev)
 {
 	int r;
 	r = request_irq(phdev->irq_cec, &cec_isr_handler, IRQF_SHARED,
 		"hdmitx_cec", (void *) phdev);
 }
+#endif
 
 /* -------------------------------------------------------------------------- */
 /* AO CEC0 config */
