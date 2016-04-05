@@ -21,12 +21,14 @@
 #include <linux/module.h>
 #include <linux/cdev.h>
 #include <linux/list.h>
+#include <linux/of.h>
+#include <linux/of_irq.h>
 #include <linux/delay.h>
 #include <linux/types.h>
 #include <linux/atomic.h>
 #include <linux/semaphore.h>
 #include <linux/amlogic/tvin/tvin.h>
-#include <linux/wakelock_android.h>
+#include <linux/pinctrl/consumer.h>
 
 /*
  * #include <asm/uaccess.h>
@@ -64,15 +66,12 @@ printk(KERN_INFO "[%s] %s(): " fmt, DRV_NAME, __func__, ##__VA_ARGS__)
 
 #define VERSION   "0.0.1" /* Driver version number */
 #define CEC_MINOR 243	/* Major 10, Minor 242, /dev/cec */
-#define INT_AO_CEC 231 /* AO CEC IRQ */
+//#define INT_AO_CEC 231 /* AO CEC IRQ */
 
 /* CEC Rx buffer size */
 #define CEC_RX_BUFF_SIZE            16
 /* CEC Tx buffer size */
 #define CEC_TX_BUFF_SIZE            16
-#ifdef CONFIG_PM
-static int cec_suspend;
-#endif
 
 static DEFINE_SEMAPHORE(init_mutex);
 
@@ -115,19 +114,6 @@ struct cec_global_info_t cec_global_info;
 
 static struct hdmitx_dev* hdmitx_device = NULL;
 
-struct wake_lock cec_lock;
-void cec_wake_lock(void)
-{
-    if (!cec_suspend)
-        wake_lock(&cec_lock);
-}
-
-void cec_wake_unlock(void)
-{
-    if (!cec_suspend)
-        wake_unlock(&cec_lock);
-}
-
 static void amlogic_cec_set_rx_state(enum cec_state state)
 {
     atomic_set(&cec_rx_struct.state, state);
@@ -154,8 +140,7 @@ static void amlogic_cec_msg_dump(char * msg_tag, const unsigned char *data, unsi
         }
         pos += sprintf(msg_log_buf + pos, "\n");
         msg_log_buf[pos] = '\0';
-        //hdmi_print(INF, "[amlogic_cec] dump: %s", msg_log_buf);
-        printk("[amlogic_cec] dump: %s", msg_log_buf);
+        amlogic_cec_log_dbg("CEC MSG dump: %s", msg_log_buf);
     }
 }
 
@@ -198,9 +183,10 @@ static int amlogic_cec_read_hw(unsigned char *data, unsigned char *count)
         ret = RX_DONE;
     }
 
-    hd_write_reg(P_AO_CEC_INTR_CLR, hd_read_reg(P_AO_CEC_INTR_CLR) | (1 << 2));
+	hd_write_reg(P_AO_CEC_INTR_CLR, (1 << 2));
+	amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_ACK_NEXT);
     amlogic_cec_write_reg(CEC_RX_MSG_CMD, valid_msg ? RX_ACK_NEXT : RX_ACK_CURRENT);
-    amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_NO_OP);
+	amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_NO_OP);
 
     return ret;
 }
@@ -225,6 +211,19 @@ unsigned short cec_log_addr_to_dev_type(unsigned char log_addr)
     return log_addr;
 }
 
+static int detect_tv_support_cec(unsigned addr)
+{
+	unsigned int ret = 0;
+	unsigned char msg[1];
+	cec_msg_dbg_en = 0;
+	msg[0] = (addr << 4) | 0x0;	/* 0x0, TV's root address */
+	cec_polling_online_dev(msg[0], &ret);
+	amlogic_cec_log_dbg("TV %s support CEC\n", ret ? "does" : "does not");
+	cec_msg_dbg_en = 1;
+	hdmitx_device->tv_cec_support = ret;
+	return hdmitx_device->tv_cec_support;
+}
+
 int cec_node_init(struct hdmitx_dev* hdmitx_device)
 {
     unsigned long cec_phy_addr;
@@ -236,6 +235,12 @@ int cec_node_init(struct hdmitx_dev* hdmitx_device)
         | (((hdmitx_device->hdmi_info.vsdb_phy_addr.b) & 0xf) << 8)
         | (((hdmitx_device->hdmi_info.vsdb_phy_addr.c) & 0xf) << 4)
         | (((hdmitx_device->hdmi_info.vsdb_phy_addr.d) & 0xf) << 0);
+
+    cec_pinmux_set();
+    ao_cec_init();
+    cec_arbit_bit_time_set(3, 0x118, 0);
+    cec_arbit_bit_time_set(5, 0x000, 0);
+    cec_arbit_bit_time_set(7, 0x2aa, 0);
 
     // If VSDB is not valid,use last or default physical address.
     if (hdmitx_device->hdmi_info.vsdb_phy_addr.valid == 0)
@@ -371,6 +376,12 @@ static irqreturn_t amlogic_cec_irq_handler(int irq, void *dummy)
 static int amlogic_cec_open(struct inode *inode, struct file *file)
 {
     int ret = 0;
+    int irq_idx = 0;
+    unsigned int reg;
+
+    // TODO return -EOPNOTSUPP if cec is not supported by TV
+	if (!(hdmitx_device->tv_cec_support) && (!detect_tv_support_cec(0xE)))
+		return -EOPNOTSUPP;
 
     if (atomic_read(&hdmi_on))
     {
@@ -380,16 +391,15 @@ static int amlogic_cec_open(struct inode *inode, struct file *file)
     else
     {
         atomic_inc(&hdmi_on);
-        cec_pinmux_set();
-        ao_cec_init();
-        cec_arbit_bit_time_set(3, 0x118, 0);
-        cec_arbit_bit_time_set(5, 0x000, 0);
-        cec_arbit_bit_time_set(7, 0x2aa, 0);
+        irq_idx = hdmitx_device->irq_cec;
 
-        if (request_irq(INT_AO_CEC, &amlogic_cec_irq_handler,
+        reg = hd_read_reg(P_AO_RTI_PIN_MUX_REG);
+        amlogic_cec_log_dbg("P_AO_RTI_PIN_MUX_REG:%d\n", reg);
+        amlogic_cec_log_dbg("Requesting irq. irq_idx: %d\n", irq_idx);
+        if (request_irq(irq_idx, &amlogic_cec_irq_handler,
                     IRQF_SHARED, "hdmitx_cec",(void *)hdmitx_device))
         {
-            amlogic_cec_log_dbg("Can't register IRQ %d\n", INT_AO_CEC);
+            amlogic_cec_log_dbg("Can't register IRQ %d\n", irq_idx);
             return -EFAULT;
         }
 
@@ -402,7 +412,9 @@ static int amlogic_cec_open(struct inode *inode, struct file *file)
 
 static int amlogic_cec_release(struct inode *inode, struct file *file)
 {
-    free_irq(INT_AO_CEC, (void *)hdmitx_device);
+    int irq_idx = 0;
+    irq_idx = hdmitx_device->irq_cec;
+    free_irq(irq_idx, (void *)hdmitx_device);
 
     cec_logicaddr_set(0xf);
 
@@ -499,7 +511,6 @@ static ssize_t amlogic_cec_write(struct file *file, const char __user *buffer,
         goto error_exit;
     }
 
-    amlogic_cec_log_dbg("after cec tx state: 0x%x\n", amlogic_cec_read_reg(CEC_TX_MSG_STATUS));
     if (atomic_read(&cec_tx_struct.state) != STATE_DONE)
     {
         printk(KERN_ERR "[amlogic] ##### cec write error! #####\n");
@@ -574,6 +585,81 @@ static struct miscdevice cec_misc_device = {
     .fops  = &cec_fops,
 };
 
+static ssize_t show_amlogic_cec_debug_config(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    return snprintf(buf, PAGE_SIZE, "amlogic_cec_debug:%lu\n", amlogic_cec_debug_flag);
+}
+
+static ssize_t store_amlogic_cec_debug_config(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+    return kstrtoul(buf, 16, &amlogic_cec_debug_flag) ? 0 : count;
+}
+
+static DEVICE_ATTR(amlogic_cec_debug_config, S_IWUSR | S_IRUGO | S_IWGRP, show_amlogic_cec_debug_config, store_amlogic_cec_debug_config);
+
+static int aml_cec_probe(struct platform_device *pdev)
+{
+#ifdef CONFIG_OF
+    struct device_node *node = pdev->dev.of_node;
+    int irq_idx = 0, r;
+    const char *pin_name = NULL;
+    struct pinctrl *p;
+    struct device *dev;
+
+    /* pinmux set */
+    if (of_get_property(node, "pinctrl-names", NULL)) {
+        r = of_property_read_string(node,
+                "pinctrl-names",
+                &pin_name);
+        if (!r) {
+            p = devm_pinctrl_get_select(&pdev->dev, pin_name);
+        }
+    }
+
+    irq_idx = of_irq_get(node, 0);
+    hdmitx_device->irq_cec = irq_idx;
+    amlogic_cec_log_dbg("cec platform init done. irq_idx: %d\n", irq_idx);
+    dev = dev_get_platdata(&pdev->dev);
+    if (dev) {
+        r = device_create_file(dev, &dev_attr_amlogic_cec_debug_config);
+    }
+#endif
+    return 0;
+}
+
+static int aml_cec_remove(struct platform_device *pdev)
+{
+    struct device *dev;
+
+    amlogic_cec_log_dbg("cec platform uninit!\n");
+    dev = dev_get_platdata(&pdev->dev);
+    if (dev) {
+        device_remove_file(dev, &dev_attr_amlogic_cec_debug_config);
+    }
+    return 0;
+}
+
+#ifdef CONFIG_OF
+static const struct of_device_id aml_cec_dt_match[] = {
+    {
+        .compatible = "amlogic, amlogic-cec",
+    },
+    {},
+};
+#endif
+
+static struct platform_driver aml_cec_driver = {
+    .driver = {
+        .name  = "amlogic-cec",
+        .owner = THIS_MODULE,
+#ifdef CONFIG_OF
+        .of_match_table = aml_cec_dt_match,
+#endif
+    },
+    .probe  = aml_cec_probe,
+    .remove = aml_cec_remove,
+};
+
 static int __init amlogic_cec_init(void)
 {
     int retval = 0;
@@ -586,10 +672,11 @@ static int __init amlogic_cec_init(void)
 
     INIT_LIST_HEAD(&cec_rx_struct.list);
     hdmitx_device = get_hdmitx_device();
-
     printk("%s, Version: %s\n", banner, VERSION);
-
     amlogic_cec_log_dbg("CEC init\n");
+
+    // register platform driver
+    platform_driver_register(&aml_cec_driver);
 
     cec_logicaddr_set(0xf);
 

@@ -200,6 +200,7 @@ int cec_queue_tx_msg(const unsigned char *msg, unsigned char len)
 
 	s_idx = cec_tx_msgs.send_idx;
 	q_idx = cec_tx_msgs.queue_idx;
+#ifndef CONFIG_AML_HDMI_TX_NEW_CEC_DRIVER
 	if (s_idx == q_idx) {
 		/*
 		 * cec is slow speed device, we need wait messages send
@@ -207,6 +208,7 @@ int cec_queue_tx_msg(const unsigned char *msg, unsigned char len)
 		 */
 		cec_wake_lock();
 	}
+#endif
 	if (((q_idx + 1) & CEC_TX_MSG_BUF_MASK) == s_idx) {
 		hdmi_print(INF, CEC "tx buffer full, abort msg\n");
 		cec_hw_reset();
@@ -366,7 +368,9 @@ void tx_irq_handle(void)
 			cec_ll_trigle_tx();
 		} else {
 			hdmi_print(INF, CEC "@TX_FINISHED\n");
+#ifndef CONFIG_AML_HDMI_TX_NEW_CEC_DRIVER
 			cec_wake_unlock();    /* unlock */
+#endif
 		}
 		break;
 
@@ -519,7 +523,9 @@ void ao_cec_init(void)
 	cec_enable_irq();
 
 	memset(&cec_tx_msgs, 0, sizeof(struct cec_tx_msg));
+#ifndef CONFIG_AML_HDMI_TX_NEW_CEC_DRIVER
 	cec_wake_unlock();
+#endif
 }
 
 
