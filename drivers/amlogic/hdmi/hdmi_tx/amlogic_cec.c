@@ -37,16 +37,16 @@
 #include <mach/hdmi_tx_reg.h>
 #include <linux/amlogic/hdmi_tx/hdmi_tx_cec.h>
 
-#define CONFIG_TV_DEBUG // for verbose output
-//#undef CONFIG_TV_DEBUG
-unsigned long amlogic_cec_debug_flag = 1;
+//#define CONFIG_TV_DEBUG // for verbose output
+#undef CONFIG_TV_DEBUG
+unsigned long amlogic_cec_debug_flag = 0;
 
 MODULE_AUTHOR("Gerald Dachs");
 MODULE_DESCRIPTION("Amlogic CEC driver");
 MODULE_LICENSE("GPL");
 
 //unused, only left to satisfy the linker
-bool cec_msg_dbg_en = 1;
+bool cec_msg_dbg_en = 0;
 
 #define DRV_NAME "amlogic_cec"
 #ifndef amlogic_cec_log_dbg
