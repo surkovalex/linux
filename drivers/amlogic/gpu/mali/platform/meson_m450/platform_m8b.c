@@ -226,7 +226,7 @@ void meson_platform_get_clock_info(struct mali_gpu_clock **data) {
 
 /* Function that get the current clock info, needed when CONFIG_MALI_DVFS enabled */
 int meson_platform_get_freq(void) {
-    printk("get cur_gpu_clk_index =%d\n", cur_gpu_clk_index);
+    //printk("get cur_gpu_clk_index =%d\n", cur_gpu_clk_index);
     return  cur_gpu_clk_index;
 }
 
@@ -240,7 +240,7 @@ int meson_platform_set_freq(int setting_clock_step) {
     mali_clock_set(setting_clock_step);
 
     cur_gpu_clk_index = setting_clock_step;
-    printk("set cur_gpu_clk_index =%d\n", cur_gpu_clk_index);
+    //printk("set cur_gpu_clk_index =%d\n", cur_gpu_clk_index);
 
     return 0;
 }
