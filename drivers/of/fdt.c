@@ -897,11 +897,11 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 		if (concat_cmdline) {
 			int cmdline_len;
 			int copy_len;
+			strlcpy(cmdline, p, min((int)l, COMMAND_LINE_SIZE));
 			strlcat(cmdline, " ", COMMAND_LINE_SIZE);
+			strlcat(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
 			cmdline_len = strlen(cmdline);
-			copy_len = COMMAND_LINE_SIZE - cmdline_len - 1;
 			copy_len = min((int)l, copy_len);
-			strncpy(cmdline + cmdline_len, p, copy_len);
 			cmdline[cmdline_len + copy_len] = '\0';
 		} else {
 			strlcpy(cmdline, p, min((int)l, COMMAND_LINE_SIZE));
