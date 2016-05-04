@@ -184,7 +184,6 @@ static int amlogic_cec_read_hw(unsigned char *data, unsigned char *count)
     }
 
 	hd_write_reg(P_AO_CEC_INTR_CLR, (1 << 2));
-	amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_ACK_NEXT);
     amlogic_cec_write_reg(CEC_RX_MSG_CMD, valid_msg ? RX_ACK_NEXT : RX_ACK_CURRENT);
 	amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_NO_OP);
 
@@ -542,13 +541,7 @@ static long amlogic_cec_ioctl(struct file *file, unsigned int cmd,
 
             cec_logicaddr_set(logical_addr);
             cec_global_info.my_node_index = logical_addr;
-            /*
-             * use DEBUG_REG1 bit 16 ~ 31 to save logic address.
-             * So uboot can use this logic address directly
-             */
-            reg  = (hd_read_reg(P_AO_DEBUG_REG1) & 0xffff);
-            reg |= ((unsigned int)logical_addr) << 16;
-            hd_write_reg(P_AO_DEBUG_REG1, reg);
+            cec_logicaddr_config(logical_addr, 1);
 
             amlogic_cec_log_dbg("amlogic_cec_ioctl: Set logical address: %d\n", logical_addr);
             return 0;
