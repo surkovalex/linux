@@ -65,7 +65,7 @@ printk(KERN_INFO "[%s] %s(): " fmt, DRV_NAME, __func__, ##__VA_ARGS__)
 #define CEC_IOC_GETPADDR     _IO(CEC_IOC_MAGIC, 1)
 
 #define VERSION   "0.0.1" /* Driver version number */
-#define CEC_MINOR 243	/* Major 10, Minor 242, /dev/cec */
+#define CEC_MINOR 243   /* Major 10, Minor 242, /dev/cec */
 //#define INT_AO_CEC 231 /* AO CEC IRQ */
 
 /* CEC Rx buffer size */
@@ -183,9 +183,9 @@ static int amlogic_cec_read_hw(unsigned char *data, unsigned char *count)
         ret = RX_DONE;
     }
 
-	hd_write_reg(P_AO_CEC_INTR_CLR, (1 << 2));
+    hd_write_reg(P_AO_CEC_INTR_CLR, (1 << 2));
     amlogic_cec_write_reg(CEC_RX_MSG_CMD, valid_msg ? RX_ACK_NEXT : RX_ACK_CURRENT);
-	amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_NO_OP);
+    amlogic_cec_write_reg(CEC_RX_MSG_CMD, RX_NO_OP);
 
     return ret;
 }
@@ -212,15 +212,15 @@ unsigned short cec_log_addr_to_dev_type(unsigned char log_addr)
 
 static int detect_tv_support_cec(unsigned addr)
 {
-	unsigned int ret = 0;
-	unsigned char msg[1];
-	cec_msg_dbg_en = 0;
-	msg[0] = (addr << 4) | 0x0;	/* 0x0, TV's root address */
-	cec_polling_online_dev(msg[0], &ret);
-	amlogic_cec_log_dbg("TV %s support CEC\n", ret ? "does" : "does not");
-	cec_msg_dbg_en = 1;
-	hdmitx_device->tv_cec_support = ret;
-	return hdmitx_device->tv_cec_support;
+    unsigned int ret = 0;
+    unsigned char msg[1];
+    cec_msg_dbg_en = 0;
+    msg[0] = (addr << 4) | 0x0; /* 0x0, TV's root address */
+    cec_polling_online_dev(msg[0], &ret);
+    amlogic_cec_log_dbg("TV %s support CEC\n", ret ? "does" : "does not");
+    cec_msg_dbg_en = 1;
+    hdmitx_device->tv_cec_support = ret;
+    return hdmitx_device->tv_cec_support;
 }
 
 int cec_node_init(struct hdmitx_dev* hdmitx_device)
@@ -379,8 +379,8 @@ static int amlogic_cec_open(struct inode *inode, struct file *file)
     unsigned int reg;
 
     // TODO return -EOPNOTSUPP if cec is not supported by TV
-	if (!(hdmitx_device->tv_cec_support) && (!detect_tv_support_cec(0xE)))
-		return -EOPNOTSUPP;
+    if (!(hdmitx_device->tv_cec_support) && (!detect_tv_support_cec(0xE)))
+        return -EOPNOTSUPP;
 
     if (atomic_read(&hdmi_on))
     {
