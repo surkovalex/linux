@@ -529,7 +529,6 @@ static long amlogic_cec_ioctl(struct file *file, unsigned int cmd,
         unsigned long arg)
 {
     unsigned char logical_addr;
-    unsigned int reg;
 
     switch(cmd) {
         case CEC_IOC_SETLADDR:
