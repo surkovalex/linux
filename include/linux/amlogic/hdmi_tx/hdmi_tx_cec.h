@@ -124,7 +124,6 @@ void cec_pinmux_set(void);
 void cec_arbit_bit_time_set(unsigned , unsigned , unsigned);
 void cec_clear_buf(unsigned int flag);
 void cec_keep_reset(void);
-void cec_logicaddr_set(int logicaddr);
 void ao_cec_init(void);
 void tx_irq_handle(void);
 int  cec_node_init(struct hdmitx_dev *hdmitx_device);
@@ -508,7 +507,14 @@ struct cec_global_info_t {
 	unsigned int power_status;
 	unsigned int menu_lang;
 	unsigned int cec_version;
-	unsigned int log_addr;
+	//struct {
+	//    unsigned int log_addr1;
+	//    unsigned int log_addr2;
+	//    unsigned int log_addr3;
+	//    unsigned int log_addr4;
+	//    unsigned int log_addr5;
+	//} log_addr;
+	unsigned int log_addr[5];
 	unsigned int menu_status;
 	unsigned char osd_name[16];
 	struct input_dev *remote_cec_dev;	/* cec input device */
@@ -688,7 +694,11 @@ unsigned int cec_intr_stat(void);
 void cec_pinmux_set(void);
 irqreturn_t cec_isr_handler(int irq, void *dev_instance);
 void hdmitx_setup_cecirq(struct hdmitx_dev *phdev);
+#ifndef CONFIG_AML_AO_CEC
 void cec_logicaddr_set(int logicaddr);
+#else
+void cec_logicaddr_set(int logicaddr, int logreg);
+#endif
 void cec_arbit_bit_time_set(unsigned bit_set, unsigned time_set,
 	unsigned flag);
 void tx_irq_handle(void);

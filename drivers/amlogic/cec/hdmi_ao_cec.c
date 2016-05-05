@@ -81,6 +81,7 @@ struct ao_cec_dev {
 	unsigned int arc_port;
 	unsigned int hal_flag;
 	unsigned int phy_addr;
+    unsigned int port_seq;
 	unsigned long irq_cec;
 	void __iomem *exit_reg;
 	void __iomem *cec_reg;
@@ -256,16 +257,70 @@ static void cec_hw_buf_clear(void)
 	aocec_wr_reg(CEC_TX_MSG_CMD, TX_NO_OP);
 }
 
-void cec_logicaddr_set(int logicaddr)
+void cec_logicaddr_clear(void)
 {
-	aocec_wr_reg(CEC_LOGICAL_ADDR0, 0);
+    int i;
+    for (i = 0; i < 5; i++) {
+    	aocec_wr_reg((CEC_LOGICAL_ADDR0 + i), 0);
+        cec_dev->cec_info.log_addr[i] = 0;
+	    udelay(100);
+    }
+    cec_hw_buf_clear();
+}
+
+void cec_logicaddr_setByMask(unsigned int mask)
+{
+    int i, j;
+    int reg = 0;
+    int primary = -1;
+    // ignore reserved device type
+    const int device_types[5] = {CEC_RECORDING_DEVICE, 
+                                 CEC_PLAYBACK_DEVICE, 
+                                 CEC_TUNER_DEVICE,
+                                 CEC_AUDIO_SYSTEM_DEVICE,
+                                 CEC_DISPLAY_DEVICE|CEC_UNREGISTERED 
+                                 };
+    mask &= 0xffff;
+
+    if (mask == 0) {
+        cec_logicaddr_clear();
+        return;
+    }
+
+	for (i = CEC_TV_ADDR; i <= CEC_UNREGISTERED_ADDR; i++) {
+        if (reg > 4) {
+            break;
+        }
+		if ((mask & 1<<i) == 1<<i) {
+            for (j = 0; j <= sizeof(device_types); j++) {
+                // Max. one of each type
+                if (1<<i & device_types[j]) {
+             	    CEC_INFO("ADDING LA:0x%d reg:0x%d\n", i, 
+                            (CEC_LOGICAL_ADDR0 + reg));
+                    mask &= ~(mask & device_types[j]);
+		            cec_dev->cec_info.log_addr[reg] = i;
+                    cec_logicaddr_set(i, (CEC_LOGICAL_ADDR0 + reg));
+                    if (primary == -1);
+                        primary = i;
+		                cec_logicaddr_config(primary, 1);
+                    reg++;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void cec_logicaddr_set(int logicaddr, int logreg)
+{
+	aocec_wr_reg(logreg, 0);
 	cec_hw_buf_clear();
-	aocec_wr_reg(CEC_LOGICAL_ADDR0, (logicaddr & 0xf));
+	aocec_wr_reg(logreg, (logicaddr & 0xf));
 	udelay(100);
-	aocec_wr_reg(CEC_LOGICAL_ADDR0, (0x1 << 4) | (logicaddr & 0xf));
+	aocec_wr_reg(logreg, (0x1 << 4) | (logicaddr & 0xf));
 	if (cec_msg_dbg_en)
 		CEC_INFO("set logical addr:0x%x\n",
-			aocec_rd_reg(CEC_LOGICAL_ADDR0));
+			aocec_rd_reg(logreg));
 }
 
 void cec_hw_reset(void)
@@ -280,7 +335,7 @@ void cec_hw_reset(void)
 	/* Enable all AO_CEC interrupt sources */
 	cec_set_reg_bits(AO_CEC_INTR_MASKN, 0x6, 0, 3);
 
-	cec_logicaddr_set(cec_dev->cec_info.log_addr);
+	cec_logicaddr_set(cec_dev->cec_info.log_addr[0], CEC_LOGICAL_ADDR0);
 
 	/* Cec arbitration 3/5/7 bit time set. */
 	cec_arbit_bit_time_set(3, 0x118, 0);
@@ -355,7 +410,7 @@ void cec_polling_online_dev(int log_addr, int *bool)
 
 	msg[0] = (log_addr<<4) | log_addr;
 	/* set broadcast address first */
-	cec_logicaddr_set(0xf);
+	cec_logicaddr_set(0xf, CEC_LOGICAL_ADDR0);
 	if (cec_msg_dbg_en == 1)
 		CEC_INFO("CEC_LOGICAL_ADDR0:0x%i\n",
 			   aocec_rd_reg(CEC_LOGICAL_ADDR0));
@@ -697,7 +752,7 @@ void cec_key_report(int suspend)
 
 void cec_give_version(unsigned int dest)
 {
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char msg[3];
 
 	if (0xf != dest) {
@@ -711,7 +766,7 @@ void cec_give_version(unsigned int dest)
 void cec_report_physical_address_smp(void)
 {
 	unsigned char msg[5];
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char phy_addr_ab, phy_addr_cd;
 
 	phy_addr_ab = (cec_dev->phy_addr >> 8) & 0xff;
@@ -727,7 +782,7 @@ void cec_report_physical_address_smp(void)
 
 void cec_device_vendor_id(void)
 {
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char msg[5];
 	unsigned int vendor_id;
 
@@ -743,7 +798,7 @@ void cec_device_vendor_id(void)
 
 void cec_give_deck_status(unsigned int dest)
 {
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char msg[3];
 
 	msg[0] = ((index & 0xf) << 4) | dest;
@@ -755,7 +810,7 @@ void cec_give_deck_status(unsigned int dest)
 void cec_menu_status_smp(int dest, int status)
 {
 	unsigned char msg[3];
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 
 	msg[0] = ((index & 0xf) << 4) | dest;
 	msg[1] = CEC_OC_MENU_STATUS;
@@ -768,7 +823,7 @@ void cec_menu_status_smp(int dest, int status)
 
 void cec_inactive_source(int dest)
 {
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char msg[4];
 	unsigned char phy_addr_ab, phy_addr_cd;
 
@@ -784,7 +839,7 @@ void cec_inactive_source(int dest)
 
 void cec_set_osd_name(int dest)
 {
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char osd_len = strlen(cec_dev->cec_info.osd_name);
 	unsigned char msg[16];
 
@@ -800,7 +855,7 @@ void cec_set_osd_name(int dest)
 void cec_active_source_smp(void)
 {
 	unsigned char msg[4];
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char phy_addr_ab;
 	unsigned char phy_addr_cd;
 
@@ -831,7 +886,7 @@ void cec_set_stream_path(unsigned char *msg)
 
 void cec_report_power_status(int dest, int status)
 {
-	unsigned char index = cec_dev->cec_info.log_addr;
+	unsigned char index = cec_dev->cec_info.log_addr[0];
 	unsigned char msg[3];
 
 	msg[0] = ((index & 0xf) << 4) | dest;
@@ -873,7 +928,7 @@ int cec_node_init(struct hdmitx_dev *hdmitx_device)
 		CEC_INFO("player_dev[%d]:0x%x\n", i, player_dev[i]);
 		if (bool == 0) {   /* 0 means that no any respond */
 	/* If VSDB is not valid, use last or default physical address. */
-			cec_logicaddr_set(player_dev[i]);
+			cec_logicaddr_set(player_dev[i], CEC_LOGICAL_ADDR0);
 			if (hdmitx_device->hdmi_info.vsdb_phy_addr.valid == 0) {
 				phy_addr_ok = 0;
 				CEC_INFO("invalid cec PhyAddr\n");
@@ -891,16 +946,15 @@ int cec_node_init(struct hdmitx_dev *hdmitx_device)
 
 	            cec_dev->cec_info.power_status = TRANS_STANDBY_TO_ON;
 		        cec_logicaddr_config(player_dev[i], 1);
-		        cec_dev->cec_info.log_addr = player_dev[i];
+		        cec_dev->cec_info.log_addr[0] = player_dev[i];
 	    		/* Set Physical address */
 	    		cec_dev->phy_addr = cec_phy_addr;
 
 		        cec_dev->cec_info.cec_version = CEC_VERSION_14A;
 		        cec_dev->cec_info.vendor_id = cec_dev->v_data.vendor_id;
-	            //cec_dev->dev_type = cec_log_addr_to_dev_type(player_dev[i]);
 		        strcpy(cec_dev->cec_info.osd_name,
 		               cec_dev->v_data.cec_osd_string);
-			    cec_logicaddr_set(player_dev[i]);
+			    cec_logicaddr_set(player_dev[i], CEC_LOGICAL_ADDR0);
 
 			    CEC_INFO("Set logical address: %d\n",
 			    	player_dev[i]);
@@ -946,7 +1000,7 @@ static void cec_rx_process(void)
 	memcpy(msg, rx_msg, len);
 	initiator = ((msg[0] >> 4) & 0xf);
 	follower  = msg[0] & 0xf;
-	if (follower != 0xf && follower != cec_dev->cec_info.log_addr) {
+	if (follower != 0xf && follower != cec_dev->cec_info.log_addr[0]) {
 		CEC_ERR("wrong rx message of bad follower:%x", follower);
 		return;
 	}
@@ -975,8 +1029,6 @@ static void cec_rx_process(void)
 	case CEC_OC_STANDBY:
 		cec_inactive_source(initiator);
 		cec_menu_status_smp(initiator, DEVICE_MENU_INACTIVE);
-		if (!cec_dev->cec_suspend)
-			cec_key_report(1);
 		break;
 
 	case CEC_OC_SET_STREAM_PATH:
@@ -1099,7 +1151,7 @@ static void cec_task(struct work_struct *work)
 	dwork = &cec_dev->cec_work;
 	if (cec_dev &&
 	   !(cec_dev->hal_flag & (1 << HDMI_OPTION_SYSTEM_CEC_CONTROL))) {
-        if (1 << cec_dev->cec_info.log_addr & (1 << 0x0 | 1 << 0xF)) {
+        if (1 << cec_dev->cec_info.log_addr[0] & (1 << 0x0 | 1 << 0xF)) {
 		    ret = cec_node_init(cec_dev->tx_dev);
 		    if (ret < 0) {
                 return;
@@ -1132,23 +1184,6 @@ irqreturn_t cec_isr_handler(int irq, void *dev_instance)
 	return IRQ_HANDLED;
 }
 
-unsigned short cec_log_addr_to_dev_type(unsigned char log_addr)
-{
-	unsigned short us = CEC_UNREGISTERED_DEVICE_TYPE;
-	if ((1 << log_addr) & CEC_DISPLAY_DEVICE)
-		us = CEC_DISPLAY_DEVICE_TYPE;
-	else if ((1 << log_addr) & CEC_RECORDING_DEVICE)
-		us = CEC_RECORDING_DEVICE_TYPE;
-	else if ((1 << log_addr) & CEC_PLAYBACK_DEVICE)
-		us = CEC_PLAYBACK_DEVICE_TYPE;
-	else if ((1 << log_addr) & CEC_TUNER_DEVICE)
-		us = CEC_TUNER_DEVICE_TYPE;
-	else if ((1 << log_addr) & CEC_AUDIO_SYSTEM_DEVICE)
-		us = CEC_AUDIO_SYSTEM_DEVICE_TYPE;
-	else
-		;
-	return us;
-}
 /******************** cec class interface *************************/
 static ssize_t device_type_show(struct class *cla,
 	struct class_attribute *attr, char *buf)
@@ -1227,6 +1262,12 @@ static ssize_t osd_name_show(struct class *cla,
 	return sprintf(buf, "%s\n", cec_dev->cec_info.osd_name);
 }
 
+static ssize_t port_seq_show(struct class *cla,
+	struct class_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%x\n", cec_dev->port_seq);
+}
+
 static ssize_t port_status_show(struct class *cla,
 	struct class_attribute *attr, char *buf)
 {
@@ -1294,6 +1335,7 @@ static ssize_t dbg_en_store(struct class *cla, struct class_attribute *attr,
 
 static struct class_attribute aocec_class_attr[] = {
 	__ATTR_RO(port_num),
+	__ATTR_RO(port_seq),
 	__ATTR_RO(osd_name),
 	__ATTR_RO(port_status),
 	__ATTR_RO(arc_port),
@@ -1369,6 +1411,33 @@ static ssize_t hdmitx_cec_write(struct file *f, const char __user *buf,
     else {
 	    return size;
     }
+}
+
+static void init_cec_port_info(struct hdmi_port_info *port,
+			       struct ao_cec_dev *cec_dev)
+{
+	unsigned int a, b, c;
+
+	b = cec_dev->port_num;
+	for (a = 0; a < b; a++) {
+		port[a].type = HDMI_INPUT;
+		port[a].port_id = a + 1;
+		port[a].cec_supported = 1;
+		/* set ARC feature according mask */
+		if (cec_dev->arc_port & (1 << a))
+			port[a].arc_supported = 1;
+		else
+			port[a].arc_supported = 0;
+
+		/* set port physical address according port sequence */
+		if (cec_dev->port_seq) {
+			c = (cec_dev->port_seq >> (4 * a)) & 0xf;
+			port[a].physical_address = (c + 1) * 0x1000;
+		} else {
+			/* asending order if port_seq is not set */
+			port[a].physical_address = (a + 1) * 0x1000;
+		}
+	}
 }
 
 static long hdmitx_cec_ioctl(struct file *f,
@@ -1449,17 +1518,7 @@ static long hdmitx_cec_ioctl(struct file *f,
 			}
 		} else {
 			b = cec_dev->port_num;
-			for (a = 0; a < b; a++) {
-				port[a].type = HDMI_INPUT;
-				port[a].port_id = a + 1;
-				port[a].cec_supported = 1;
-				/* set ARC feature according mask */
-				if (cec_dev->arc_port & (1 << a))
-					port[a].arc_supported = 1;
-				else
-					port[a].arc_supported = 0;
-				port[a].physical_address = (a + 1) * 0x1000;
-			}
+			init_cec_port_info(port, cec_dev);
 			if (copy_to_user(argp, port, sizeof(*port) * b)) {
 				kfree(port);
 				return -EINVAL;
@@ -1516,9 +1575,11 @@ static long hdmitx_cec_ioctl(struct file *f,
 
 	case CEC_IOC_ADD_LOGICAL_ADDR:
 		tmp = arg & 0xf;
-		cec_logicaddr_set(tmp);
+		CEC_INFO("CEC LA ARG:%ld", arg);
+		cec_logicaddr_set(tmp, CEC_LOGICAL_ADDR0);
+		cec_dev->cec_info.log_addr[0] = tmp;
+		cec_logicaddr_setByMask(tmp);
 		/* add by hal, to init some data structure */
-		cec_dev->cec_info.log_addr = tmp;
 		cec_dev->cec_info.power_status = POWER_ON;
 		cec_logicaddr_config(tmp, 1);
 
@@ -1533,6 +1594,7 @@ static long hdmitx_cec_ioctl(struct file *f,
 
 	case CEC_IOC_CLR_LOGICAL_ADDR:
 		/* TODO: clear global info */
+        cec_logicaddr_clear();
 		break;
 
 	case CEC_IOC_SET_DEV_TYPE:
@@ -1768,6 +1830,18 @@ static int aml_cec_probe(struct platform_device *pdev)
 		CEC_INFO("not find cec osd string\n");
 		strcpy(vend->cec_osd_string, "AML TV/BOX");
 	}
+
+	/* get port sequence */
+	node = of_find_node_by_path("/hdmirx");
+	if (node == NULL) {
+		CEC_ERR("can't find hdmirx\n");
+		cec_dev->port_seq = 0;
+	} else {
+		r = of_property_read_u32(node, "rx_port_maps",
+					 &(cec_dev->port_seq));
+		if (r)
+			CEC_INFO("not find rx_port_maps\n");
+	}
 #endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	aocec_suspend_handler.level   = EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 20;
@@ -1778,8 +1852,13 @@ static int aml_cec_probe(struct platform_device *pdev)
 #endif
 	/* for init */
 	cec_pre_init();
+	CEC_INFO("CEC_LOGICAL_ADDR0: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR0));
+	CEC_INFO("CEC_LOGICAL_ADDR1: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR1));
+	CEC_INFO("CEC_LOGICAL_ADDR2: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR2));
+	CEC_INFO("CEC_LOGICAL_ADDR3: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR3));
+	CEC_INFO("CEC_LOGICAL_ADDR4: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR4));
+    CEC_INFO("CEC log_addr: %d\n", cec_dev->cec_info.log_addr[0])
 	queue_delayed_work(cec_dev->cec_thread, &cec_dev->cec_work, 0);
-    CEC_INFO("CEC log_addr: %d\n", cec_dev->cec_info.log_addr)
 	cec_dev->tx_dev->cec_init_ready = 1;
 	return 0;
 }
