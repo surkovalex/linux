@@ -1578,7 +1578,7 @@ static long hdmitx_cec_ioctl(struct file *f,
 		CEC_INFO("CEC LA ARG:%ld", arg);
 		cec_logicaddr_set(tmp, CEC_LOGICAL_ADDR0);
 		cec_dev->cec_info.log_addr[0] = tmp;
-		cec_logicaddr_setByMask(tmp);
+		//cec_logicaddr_setByMask(tmp);
 		/* add by hal, to init some data structure */
 		cec_dev->cec_info.power_status = POWER_ON;
 		cec_logicaddr_config(tmp, 1);
