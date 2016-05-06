@@ -698,6 +698,8 @@ void hdmitx_setup_cecirq(struct hdmitx_dev *phdev);
 void cec_logicaddr_set(int logicaddr);
 #else
 void cec_logicaddr_set(int logicaddr, int logreg);
+void cec_logicaddr_clear(void);
+void cec_logicaddr_setByMask(unsigned int mask);
 #endif
 void cec_arbit_bit_time_set(unsigned bit_set, unsigned time_set,
 	unsigned flag);
@@ -711,8 +713,6 @@ void cec_send_event(struct cec_rx_message_t *pcec_message);
 void cec_user_control_pressed(struct cec_rx_message_t *pcec_message);
 void cec_user_control_released(struct cec_rx_message_t *pcec_message);
 void cec_standby(struct cec_rx_message_t *pcec_message);
-void cec_send_simplink_alive(struct cec_rx_message_t *pcec_message);
-void cec_send_simplink_ack(struct cec_rx_message_t *pcec_message);
 
 extern void cec_key_init(void);
 extern __u16 cec_key_map[];
@@ -720,8 +720,12 @@ extern struct cec_global_info_t cec_global_info;
 
 #ifndef CONFIG_AML_AO_CEC
 extern __u16 cec_key_map[128];
+void cec_send_simplink_alive(struct cec_rx_message_t *pcec_message);
+void cec_send_simplink_ack(struct cec_rx_message_t *pcec_message);
 #else
 extern __u16 cec_key_map[160];
+void cec_send_simplink_alive(void);
+void cec_send_simplink_ack(void);
 #endif
 extern bool cec_msg_dbg_en;
 extern void cec_rx_buf_clear(void);
