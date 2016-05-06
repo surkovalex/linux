@@ -48,8 +48,8 @@
 #include <linux/amlogic/tvin/tvin.h>
 #include <linux/wakelock_android.h>
 
-//#include <linux/amlogic/hdmi_tx/hdmi_tx_cec_20.h>
-#include <linux/amlogic/hdmi_tx/hdmi_tx_cec.h>
+#include <linux/amlogic/hdmi_tx/hdmi_tx_cec_20.h>
+//#include <linux/amlogic/hdmi_tx/hdmi_tx_cec.h>
 #include <linux/amlogic/hdmi_tx/hdmi_tx_module.h>
 #include <linux/of.h>
 #include <linux/pinctrl/consumer.h>
@@ -236,7 +236,7 @@ void aocec_wr_reg(unsigned long addr, unsigned long data)
     spin_unlock_irqrestore(&cec_dev->cec_reg_lock, flags);
 } /* aocec_wr_only_reg */
 
-void cec_enable_irq(void)
+static void cec_enable_irq(void)
 {
     cec_set_reg_bits(AO_CEC_INTR_MASKN, 0x6, 0, 3);
     CEC_INFO("enable:int mask:0x%x\n",
@@ -323,7 +323,7 @@ void cec_logicaddr_set(int logicaddr, int logreg)
             aocec_rd_reg(logreg));
 }
 
-void cec_hw_reset(void)
+static void cec_hw_reset(void)
 {
     writel(0x1, cec_dev->cec_reg + AO_CEC_GEN_CNTL);
     /* Enable gated clock (Normal mode). */
