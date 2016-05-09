@@ -49,7 +49,6 @@
 #include <linux/wakelock_android.h>
 
 #include <linux/amlogic/hdmi_tx/hdmi_tx_cec_20.h>
-//#include <linux/amlogic/hdmi_tx/hdmi_tx_cec.h>
 #include <linux/amlogic/hdmi_tx/hdmi_tx_module.h>
 #include <linux/of.h>
 #include <linux/pinctrl/consumer.h>
@@ -142,7 +141,7 @@ static unsigned char msg_log_buf[128] = { 0 };
         } \
     } while (0)
 
-#define HR_DELAY(n)		(ktime_set(0, n * 1000 * 1000))
+#define HR_DELAY(n)     (ktime_set(0, n * 1000 * 1000))
 __u16 cec_key_map[160] = {
     KEY_ENTER, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 0 , 0 , 0 ,//0x00
     0 , KEY_HOMEPAGE , KEY_MENU, 0, 0, KEY_BACK, 0, 0,
@@ -174,9 +173,9 @@ enum hrtimer_restart cec_key_up(struct hrtimer *timer)
     input_event(cec_dev->cec_info.remote_cec_dev,
         EV_KEY, cec_key_map[last_key_irq], 0);
     input_sync(cec_dev->cec_info.remote_cec_dev);
-	CEC_INFO("last:%d up\n", cec_key_map[last_key_irq]);
+    CEC_INFO("last:%d up\n", cec_key_map[last_key_irq]);
 
-	return HRTIMER_NORESTART;
+    return HRTIMER_NORESTART;
 }
 
 void cec_user_control_pressed_irq(unsigned char message_irq)
@@ -187,7 +186,7 @@ void cec_user_control_pressed_irq(unsigned char message_irq)
                 cec_key_map[message_irq], 1);
         input_sync(cec_dev->cec_info.remote_cec_dev);
         last_key_irq = message_irq;
-	    hrtimer_start(&cec_key_timer, HR_DELAY(200), HRTIMER_MODE_REL);
+        hrtimer_start(&cec_key_timer, HR_DELAY(200), HRTIMER_MODE_REL);
         CEC_INFO(":key map:%d\n", cec_key_map[message_irq]);
     }
 }
@@ -199,7 +198,7 @@ void cec_user_control_released_irq(void)
      */
     if (last_key_irq != -1) {
         CEC_INFO("Key released: %d\n",last_key_irq);
-		hrtimer_cancel(&cec_key_timer);
+        hrtimer_cancel(&cec_key_timer);
         input_event(cec_dev->cec_info.remote_cec_dev,
             EV_KEY, cec_key_map[last_key_irq], 0);
         input_sync(cec_dev->cec_info.remote_cec_dev);
@@ -1627,7 +1626,9 @@ static long hdmitx_cec_ioctl(struct file *f,
         CEC_INFO("CEC LA ARG:%ld", arg);
         cec_logicaddr_set(tmp, CEC_LOGICAL_ADDR0);
         cec_dev->cec_info.log_addr[0] = tmp;
-        //cec_logicaddr_setByMask(tmp);
+        /* TODO set multiple LA's. Does not work yet
+         * cec_logicaddr_setByMask(tmp);
+        */
         /* add by hal, to init some data structure */
         cec_dev->cec_info.power_status = POWER_ON;
         cec_logicaddr_config(tmp, 1);
@@ -1642,7 +1643,6 @@ static long hdmitx_cec_ioctl(struct file *f,
         break;
 
     case CEC_IOC_CLR_LOGICAL_ADDR:
-        /* TODO: clear global info */
         cec_logicaddr_clear();
         break;
 
@@ -1781,8 +1781,8 @@ static int aml_cec_probe(struct platform_device *pdev)
         return -EFAULT;
     }
     INIT_DELAYED_WORK(&cec_dev->cec_work, cec_task);
-	hrtimer_init(&cec_key_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	cec_key_timer.function = cec_key_up;
+    hrtimer_init(&cec_key_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+    cec_key_timer.function = cec_key_up;
     cec_dev->cec_info.remote_cec_dev = input_allocate_device();
     if (!cec_dev->cec_info.remote_cec_dev)
         CEC_INFO("No enough memory\n");
