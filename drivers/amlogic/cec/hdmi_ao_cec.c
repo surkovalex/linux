@@ -125,7 +125,7 @@ bool cec_msg_dbg_en = 1;
 
 #define CEC_INFO(format, args...)               \
     {if (cec_msg_dbg_en && cec_dev->dbg_dev)        \
-        dev_info(cec_dev->dbg_dev, format, ##args); \
+        dev_info(cec_dev->dbg_dev, "%s(): " format, __func__, ##args); \
     }
 
 static unsigned char msg_log_buf[128] = { 0 };
@@ -1433,6 +1433,7 @@ static ssize_t hdmitx_cec_read(struct file *f, char __user *buf,
 
     if (copy_to_user(buf, rx_msg, rx_len))
         return -EINVAL;
+    CEC_INFO("RX len: %d\n", rx_len);
     return rx_len;
 }
 
