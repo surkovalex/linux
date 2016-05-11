@@ -1009,7 +1009,7 @@ int cec_node_init(struct hdmitx_dev *hdmitx_device)
                 cec_set_osd_name(0);
                 cec_active_source_smp();
 
-                cec_menu_status_smp(player_dev[i], DEVICE_MENU_ACTIVE);
+                cec_menu_status_smp(CEC_TV_ADDR, DEVICE_MENU_ACTIVE);
 
                 msleep(100);
                 cec_dev->cec_info.menu_status = DEVICE_MENU_ACTIVE;
