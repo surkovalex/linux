@@ -833,6 +833,28 @@ void cec_menu_status_smp(int dest, int status)
     cec_ll_tx(msg, 3);
 }
 
+void cec_imageview_on_smp(void)
+{
+    unsigned char msg[2];
+    unsigned char index = cec_dev->cec_info.log_addr[0];
+
+    msg[0] = ((index & 0xf) << 4) | CEC_TV_ADDR;
+    msg[1] = CEC_OC_IMAGE_VIEW_ON;
+    cec_ll_tx(msg, 2);
+}
+
+void cec_get_menu_language_smp(void)
+{
+    unsigned char msg[2];
+    unsigned char index = cec_dev->cec_info.log_addr[0];
+
+    msg[0] = ((index & 0xf) << 4) | CEC_TV_ADDR;
+    msg[1] = CEC_OC_GET_MENU_LANGUAGE;
+
+    cec_ll_tx(msg, 2);
+}
+
+
 void cec_inactive_source(int dest)
 {
     unsigned char index = cec_dev->cec_info.log_addr[0];
@@ -1008,10 +1030,12 @@ int cec_node_init(struct hdmitx_dev *hdmitx_device)
                 cec_device_vendor_id();
                 cec_set_osd_name(0);
                 cec_active_source_smp();
+                //TODO cec_imageview_on_smp();
 
                 cec_menu_status_smp(CEC_TV_ADDR, DEVICE_MENU_ACTIVE);
 
                 msleep(100);
+			    cec_get_menu_language_smp();
                 cec_dev->cec_info.menu_status = DEVICE_MENU_ACTIVE;
             break;
         }

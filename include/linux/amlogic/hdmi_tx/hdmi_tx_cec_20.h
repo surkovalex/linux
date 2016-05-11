@@ -343,6 +343,8 @@ unsigned int cec_phyaddr_config(unsigned int value, bool wr_flag);
 unsigned int cec_logicaddr_config(unsigned int value, bool wr_flag);
 int  cec_node_init(struct hdmitx_dev *hdmitx_device);
 void cec_polling_online_dev(int log_addr, int *bool);
+void cec_imageview_on_smp(void);
+void cec_get_menu_language_smp(void);
 
 void cec_user_control_pressed_irq(unsigned char message_irq);
 void cec_user_control_released_irq(void);
