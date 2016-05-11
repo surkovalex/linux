@@ -1903,12 +1903,6 @@ static int aml_cec_probe(struct platform_device *pdev)
 #endif
     /* for init */
     cec_pre_init();
-    CEC_INFO("CEC_LOGICAL_ADDR0: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR0));
-    CEC_INFO("CEC_LOGICAL_ADDR1: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR1));
-    CEC_INFO("CEC_LOGICAL_ADDR2: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR2));
-    CEC_INFO("CEC_LOGICAL_ADDR3: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR3));
-    CEC_INFO("CEC_LOGICAL_ADDR4: 0x%x\n",aocec_rd_reg(CEC_LOGICAL_ADDR4));
-    CEC_INFO("CEC log_addr: %d\n", cec_dev->cec_info.log_addr[0])
     queue_delayed_work(cec_dev->cec_thread, &cec_dev->cec_work, 0);
     cec_dev->tx_dev->cec_init_ready = 1;
     return 0;
