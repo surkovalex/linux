@@ -120,7 +120,7 @@ bool cec_msg_dbg_en = 1;
 
 #define CEC_ERR(format, args...)                \
     {if (cec_dev->dbg_dev)                  \
-        dev_err(cec_dev->dbg_dev, format, ##args);  \
+        dev_err(cec_dev->dbg_dev, "%s(): " format, __func__, ##args);  \
     }
 
 #define CEC_INFO(format, args...)               \
