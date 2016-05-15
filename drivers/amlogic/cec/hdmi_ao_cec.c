@@ -168,12 +168,16 @@ __u16 cec_key_map[160] = {
 
 struct hrtimer cec_key_timer;
 static int last_key_irq = -1;
+static int key_value = 1;
 enum hrtimer_restart cec_key_up(struct hrtimer *timer)
 {
-    input_event(cec_dev->cec_info.remote_cec_dev,
-        EV_KEY, cec_key_map[last_key_irq], 0);
+    if (key_value == 1){
+        input_event(cec_dev->cec_info.remote_cec_dev,
+            EV_KEY, cec_key_map[last_key_irq], 0);
+    }
     input_sync(cec_dev->cec_info.remote_cec_dev);
     CEC_INFO("last:%d up\n", cec_key_map[last_key_irq]);
+    key_value = 2;
 
     return HRTIMER_NORESTART;
 }
@@ -183,7 +187,7 @@ void cec_user_control_pressed_irq(unsigned char message_irq)
     if (message_irq < 160) {
         CEC_INFO("Key pressed: %d\n", message_irq);
         input_event(cec_dev->cec_info.remote_cec_dev, EV_KEY,
-                cec_key_map[message_irq], 1);
+                cec_key_map[message_irq], key_value);
         input_sync(cec_dev->cec_info.remote_cec_dev);
         last_key_irq = message_irq;
         hrtimer_start(&cec_key_timer, HR_DELAY(200), HRTIMER_MODE_REL);
@@ -202,6 +206,7 @@ void cec_user_control_released_irq(void)
         input_event(cec_dev->cec_info.remote_cec_dev,
             EV_KEY, cec_key_map[last_key_irq], 0);
         input_sync(cec_dev->cec_info.remote_cec_dev);
+        key_value = 1;
     }
 }
 
@@ -1029,13 +1034,21 @@ int cec_node_init(struct hdmitx_dev *hdmitx_device)
                 }
                 cec_device_vendor_id();
                 cec_set_osd_name(0);
+
+                /* Disable switch TV on automatically */
+                if (!(hdmitx_device->cec_func_config &
+                     (1 << AUTO_POWER_ON_MASK))) {
+                    CEC_INFO("Auto TV switch on disabled\n");
+                    break;
+                }
+
                 cec_active_source_smp();
-                //TODO cec_imageview_on_smp();
+                cec_imageview_on_smp();
 
                 cec_menu_status_smp(CEC_TV_ADDR, DEVICE_MENU_ACTIVE);
 
                 msleep(100);
-			    cec_get_menu_language_smp();
+                cec_get_menu_language_smp();
                 cec_dev->cec_info.menu_status = DEVICE_MENU_ACTIVE;
             break;
         }
