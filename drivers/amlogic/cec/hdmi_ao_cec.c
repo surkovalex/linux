@@ -1220,6 +1220,8 @@ static void cec_rx_process(void)
             cec_send_simplink_ack();
         }
         break;
+	case CEC_OC_DEVICE_VENDOR_ID:
+		break;
 
     default:
         CEC_ERR("unsupported command:%x\n", opcode);
