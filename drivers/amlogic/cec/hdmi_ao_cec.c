@@ -116,7 +116,7 @@ static int cec_tx_result;
 static unsigned char rx_msg[MAX_MSG];
 static unsigned char rx_len;
 static unsigned int  new_msg;
-bool cec_msg_dbg_en = 1;
+bool cec_msg_dbg_en = 0;
 
 #define CEC_ERR(format, args...)                \
     {if (cec_dev->dbg_dev)                  \
