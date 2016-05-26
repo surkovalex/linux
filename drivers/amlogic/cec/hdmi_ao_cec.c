@@ -983,6 +983,11 @@ int cec_node_init(struct hdmitx_dev *hdmitx_device)
     b = hdmitx_device->hdmi_info.vsdb_phy_addr.b;
     c = hdmitx_device->hdmi_info.vsdb_phy_addr.c;
     d = hdmitx_device->hdmi_info.vsdb_phy_addr.d;
+
+    /* Don't init if switched to libcec mode*/
+    if ((cec_dev->hal_flag & (1 << HDMI_OPTION_SYSTEM_CEC_CONTROL)))
+        return -1;
+
     CEC_INFO("cec_node_init started\n");
 
     cec_phy_addr = ((a << 12) | (b << 8) | (c << 4) | (d << 0));
