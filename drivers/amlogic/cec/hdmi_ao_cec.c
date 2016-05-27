@@ -467,19 +467,27 @@ static int cec_ll_trigle_tx(const unsigned char *msg, int len)
     unsigned int j = 20;
     unsigned tx_stat;
     static int cec_timeout_cnt = 1;
+	int flag = 0;
 
     while (1) {
         tx_stat = aocec_rd_reg(CEC_TX_MSG_STATUS);
         if (tx_stat != TX_BUSY)
             break;
 
+		if (!flag && tx_stat == TX_BUSY) {
+            CEC_INFO("TX is busy. Sending TX_ABORT\n");
+			aocec_wr_reg(CEC_TX_MSG_CMD, TX_ABORT);
+			flag = 1;
+		}
+
         if (!(j--)) {
-            CEC_INFO("wating busy timeout\n");
-            aocec_wr_reg(CEC_TX_MSG_CMD, TX_ABORT);
+            CEC_INFO("TX is still busy. Sending TX_NO_OP\n");
+            aocec_wr_reg(CEC_TX_MSG_CMD, TX_NO_OP);
             cec_timeout_cnt++;
-            if (cec_timeout_cnt > 0x08)
+            if (cec_timeout_cnt > 0x08) {
                 cec_hw_reset();
-            break;
+                break;
+            }
         }
         msleep(20);
     }
@@ -569,7 +577,7 @@ int cec_ll_tx(const unsigned char *msg, unsigned char len)
     cec_tx_result = 0;
     ret = wait_for_completion_timeout(&cec_dev->tx_ok, timeout);
     if (ret <= 0) {
-        /* timeout or interrupt */
+        /* timeout of interrupt */
         ret = CEC_FAIL_OTHER;
         CEC_INFO("tx timeout\n");
     } else {
