@@ -895,8 +895,8 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 
 	if (p != NULL && l > 0) {
 		if (concat_cmdline) {
-			int cmdline_len;
-			int copy_len;
+			int cmdline_len = 0;
+			int copy_len = 0;
 			strlcpy(cmdline, p, min((int)l, COMMAND_LINE_SIZE));
 			strlcat(cmdline, " ", COMMAND_LINE_SIZE);
 			strlcat(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
