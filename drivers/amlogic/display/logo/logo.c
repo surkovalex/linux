@@ -151,8 +151,8 @@ static int refresh_mode_and_logo(bool first)
 			vmode_mode_to_name(cur_mode));
 		last_mode = cur_mode;
 		vout_notifier_call_chain(VOUT_EVENT_MODE_CHANGE, &cur_mode);
-		if (logo_info.index >= 0)
-			set_osd_freescaler(logo_info.index, cur_mode);
+		// if (logo_info.index >= 0)
+		//	set_osd_freescaler(logo_info.index, cur_mode);
 	}
 
 	return 0;
