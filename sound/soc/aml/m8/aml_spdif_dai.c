@@ -486,6 +486,47 @@ static struct snd_soc_dai_ops spdif_dai_ops = {
 	.startup = aml_dai_spdif_startup,
 };
 
+static int aml_spdif_dai_info(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_info *uinfo)
+{
+	uinfo->type = SNDRV_CTL_ELEM_TYPE_IEC958;
+	uinfo->count = 1;
+	return 0;
+}
+
+static int aml_spdif_dai_pb_get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *uvalue)
+{
+	return 0;
+}
+
+static int aml_spdif_dai_pb_put(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *uvalue)
+{
+	struct snd_soc_dai *dai = snd_kcontrol_chip(kcontrol);
+	pr_info("aml_spdif_dai_pb_put: AES0=%02x, AES1=%02x, AES2=%02x, AES3=%02x\n",
+		uvalue->value.iec958.status[0], uvalue->value.iec958.status[1],
+		uvalue->value.iec958.status[2], uvalue->value.iec958.status[3]);
+	return 0;
+}
+
+static struct snd_kcontrol_new aml_spdif_dai_ctrls[] = {
+	{
+		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,
+		.name = SNDRV_CTL_NAME_IEC958("", PLAYBACK, DEFAULT),
+		.access = SNDRV_CTL_ELEM_ACCESS_READWRITE,
+		.info = aml_spdif_dai_info,
+		.get = aml_spdif_dai_pb_get,
+		.put = aml_spdif_dai_pb_put,
+	},
+};
+
+static int aml_spdif_dai_probe(struct snd_soc_dai *dai)
+{
+	snd_soc_add_dai_controls(dai, aml_spdif_dai_ctrls, ARRAY_SIZE(aml_spdif_dai_ctrls));
+	return 0;
+}
+
 static struct snd_soc_dai_driver aml_spdif_dai[] = {
 	{
 	 .playback = {
@@ -512,6 +553,7 @@ static struct snd_soc_dai_driver aml_spdif_dai[] = {
 	 .ops = &spdif_dai_ops,
 	 .suspend = aml_dai_spdif_suspend,
 	 .resume = aml_dai_spdif_resume,
+	 .probe = &aml_spdif_dai_probe
 	 }
 };
 
